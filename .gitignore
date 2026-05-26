@@ -27,9 +27,11 @@ yarn-error.log*
 dist/
 build/
 .next/
-.expo/
-.expo-shared/
 *.tsbuildinfo
+
+# PWA / service worker
+sw.js.map
+workbox-*.js
 
 # Env / secrets
 .env
@@ -43,13 +45,9 @@ build/
 coverage/
 .nyc_output/
 
-# Mobile (Expo / React Native)
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Local Directus / Docker (when running locally)
+docker-compose.override.yml
+.directus-local/
+
+# OS-generated backup files
 *.orig.*
-android/
-ios/
-web-build/

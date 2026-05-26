@@ -6,6 +6,8 @@ description: Plan a new feature from requirement or idea to implementation-ready
 
 Structured workflow for turning a requirement, idea, or section of the brief into an implementation-ready feature plan under `docs/features/{name}/` — with TDD-shaped steps, cardinal-principle gates, privacy gates, security gates, and v1.5/v2 readiness checks.
 
+> **Stack note**: per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md), the locked stack is **Next.js 15 PWA + Directus on Fly.io**. Some examples below still reference the earlier Expo / HealthKit framing (ADR 0001, now superseded) — update on encounter. The structure of the gates is platform-agnostic and stays correct.
+
 **This command never writes source code.** It produces planning docs only. Implementation happens via [`/build-step`](build-step.md), which walks each step through the strict RED → GREEN → REFACTOR loop.
 
 **TDD is mandatory** — see [`.claude/testing.md`](../testing.md) for the doctrine. The step files this command produces must include acceptance criteria, technical constraints, and a test plan that names every test before any code is written. The only escape is pure-styling work (replaced by a visual baseline screenshot, not skipped).
@@ -89,7 +91,7 @@ For each major decision, write:
 - **When to revisit** (trigger signals — e.g. "if HealthKit gives us workouts but not Body Battery, revisit Garmin direct integration")
 - **Migration path** when the trigger fires
 
-The brief mentions specific tradeoffs (Expo vs. Swift, Supabase vs. Firebase, OAuth scopes, Garmin Body Battery gap) — re-decide them in writing for the current feature even if the brief settled them in principle. The brief's reasoning is a starting point, not a closed decision.
+The brief mentions specific tradeoffs (OAuth scopes, Garmin Body Battery gap, framework choices) — re-decide them in writing for the current feature even if the brief settled them in principle. The brief's reasoning is a starting point, not a closed decision. Note: framework was re-decided in [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md) to Next.js PWA + Directus, superseding the brief's Expo proposal.
 
 ---
 
@@ -345,7 +347,7 @@ Walk every step and the README against each of the 6 cardinal principles from [C
 - [ ] Personal data does not enter the repo. Any sample / fixture data is anonymized.
 - [ ] OS-level permissions are requested **per type**, not as a bundle (HealthKit: per `HKQuantityType`; Google Calendar: only `calendar.readonly`).
 - [ ] User can see in Settings which data sources / types are active and disable each one.
-- [ ] **Export still covers new data this feature introduces.** CSV export, JSON export, SQLite dump all include the new fields.
+- [ ] **Export still covers new data this feature introduces.** CSV export, JSON export, and direct Postgres access (via Directus admin or `pg_dump`) all include the new fields.
 - [ ] **Delete still wipes new data.** Full-wipe leaves no orphan rows / files / cached tokens / pending sync queues.
 - [ ] If cloud sync is touched: only aggregates, not raw HealthKit samples; opt-in per source.
 
@@ -357,9 +359,9 @@ Health data on a personal device is a security model with a different shape than
 
 **At rest**
 
-- [ ] SQLite encryption is on for the main DB. Master key derived via OS keystore (iOS Keychain / Android Keystore) — never hardcoded, never in `AsyncStorage`, never in a config file.
-- [ ] OAuth refresh tokens (v1.5+) stored in Keychain/Keystore. Never in `AsyncStorage`, never in plaintext.
-- [ ] SQLite DB is excluded from iCloud / Google Drive auto-backup, OR backup is explicit opt-in with a clear toggle. Health data leaking via "cloud backup the user forgot they enabled" is a real failure mode.
+- [ ] Postgres at-rest encryption is enabled (Fly.io default). Directus admin password and any service credentials managed via Fly secrets, never committed.
+- [ ] OAuth refresh tokens (v1.5+) stored server-side in Directus, not in browser `localStorage`. Browser session tokens via `httpOnly` cookies, not JS-accessible storage.
+- [ ] Directus instance is HTTPS-only, no HTTP fallback. CORS configured to allow only the frontend origin.
 
 **In transit**
 
@@ -375,10 +377,10 @@ Health data on a personal device is a security model with a different shape than
 
 **Permissions (least privilege)**
 
-- [ ] HealthKit: requested per `HKQuantityType`. Never the bundled "all" prompt.
 - [ ] Google Calendar: `calendar.readonly` only. No write scope, ever.
-- [ ] Location: only requested if the feature actually needs it (v2 weather). Decline by default.
-- [ ] Notifications: not requested in v1 at all.
+- [ ] Browser geolocation: only requested if the feature actually needs it (v2 weather). Decline by default.
+- [ ] Browser notifications: not requested in v1 at all.
+- [ ] HealthKit / Garmin native integrations are not available in PWA. If pursued at v2, they require a separate native iOS app that queries the same Directus backend.
 
 **Mobile-specific**
 
@@ -402,7 +404,7 @@ Health data on a personal device is a security model with a different shape than
 
 ### 5.4 v1.5 / v2 readiness gate
 
-The brief is explicit: v1 architecture must enable v1.5 (projects, calendar) and v2 (HealthKit, Garmin, weather, reminders) without schema migrations or large refactors.
+The brief is explicit: v1 architecture must enable v1.5 (projects, calendar) and v2 (HealthKit / Garmin via a separate native iOS app per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md), weather, reminders) without schema migrations or large refactors. The schema lives in Directus and the Directus admin UI is the migration tool.
 
 - [ ] If `DayEntry` is touched: nullable fields for `garmin`, `health`, `weather`, `calendar_events`, `project_entries`, `derived` remain present and untouched.
 - [ ] If `Project` / `ProjectEntry` / `ProjectFieldConfig` is touched: schema stays open enough for arbitrary `numeric_values` / `tag_set` configurations.

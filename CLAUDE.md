@@ -2,6 +2,8 @@
 
 Personal Long COVID daily-tracking app. One tap to log a "gevoelscore", optional note + tags, timeline to spot patterns. Pre-prototype: docs only, no source code yet.
 
+**Stack** (per [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md)): Next.js 15 PWA frontend, Directus backend on Fly.io, PostgreSQL managed by Directus. Online-first; offline support is a v1.5+ feature, not a v1 requirement.
+
 ## Source of truth
 
 Read the relevant doc before suggesting anything. Don't restate them here.

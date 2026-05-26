@@ -11,19 +11,22 @@ Loaded on demand by Claude when it needs file-layout or coding-convention detail
 
 ## Proposed file structure (once code exists)
 
+Per [ADR 0002](../docs/decisions/0002-pwa-with-directus-backend.md), the stack is Next.js 15 (App Router) + Directus backend.
+
 ```
 src/
-  screens/              — top-level screen components (Daily, Timeline, Calendar, Settings, Import, Export)
-  components/           — shared UI primitives (ScoreButton, TagChip, etc.)
+  app/                  — Next.js App Router (root layout, daily page, timeline, calendar, settings, import, export)
+  components/           — shared React components (ScoreButton, TagChip, etc.)
   lib/
-    db/                 — SQLite schema, migrations, query helpers
-    domain/             — DayEntry, Tag, Project — typed domain logic, no UI
-    integrations/       — per-source modules (healthkit, google-calendar, weather, garmin) with shared "fetch + aggregate + store per day" interface
+    api/                — Directus SDK client + typed query/mutation wrappers (the only place that knows the API surface)
+    domain/             — DayEntry, Tag, Project — typed domain logic, pure TS, no platform imports
+    validation/         — Zod schemas at API boundaries (CSV import, Directus response shape)
+    integrations/       — per-source modules (google-calendar v1.5, weather v2) with shared "fetch + aggregate + store per day" interface
     import/             — Google Sheet / CSV / XLSX importers
-    export/             — CSV / JSON / SQLite dump exporters
-  hooks/                — React hooks
+    export/             — CSV / JSON exporters
+  hooks/                — React hooks (data fetching, form state)
   __tests__/            — co-located by module (prefer per-module __tests__/ over a top-level test folder)
-app/                    — Expo Router screens (if Expo Router is chosen)
+public/                 — static assets (icons, manifest.webmanifest, robots.txt)
 docs/
   features/{name}/      — per-feature plans (README + step-N-*.md), created via /plan-feature
 ```

@@ -29,10 +29,10 @@ Loaded on demand by Claude when planning (`/plan-feature`) or implementing (`/bu
 **Mandatory** for any code path with testable behavior:
 
 - Domain logic — `DayEntry`, `Tag`, `Project`, score validation, date math, streak calculation
-- Storage — SQLite queries, migrations, encryption round-trips
+- API client — Directus query/mutation wrappers, response validation, error mapping
 - Importers — CSV / XLSX / Google Sheet parsing, validation, dedup
-- Exporters — CSV / JSON / SQLite dump generation (including CSV formula-injection escaping)
-- Integrations — HealthKit / Google Calendar / weather fetchers, aggregation, "store per day" pipeline
+- Exporters — CSV / JSON generation (including CSV formula-injection escaping)
+- Integrations — Google Calendar (v1.5) / weather (v2) fetchers, aggregation, "store per day" pipeline
 - Security utilities — encryption key derivation, OAuth token storage, sanitizers
 
 **Replaced by visual baseline** (not skipped — replaced) for pure-styling work:
@@ -55,14 +55,14 @@ The replacement is: capture a baseline screenshot before, capture the new screen
 
 | Layer | What | Runner | Location |
 |-------|------|--------|----------|
-| **Domain** | Pure logic on plain TS types — score validation, tag merging, date math, CSV parsing. No React, no SQLite, no network. | Vitest (Node) | `src/lib/{module}/__tests__/*.test.ts` |
-| **Storage** | SQLite schema, queries, migrations, encryption round-trip. Uses a real in-memory or tmp-file SQLite DB. | Vitest (Node) | `src/lib/db/__tests__/*.test.ts` |
-| **Integration** | Per-source modules (HealthKit, Google Calendar, weather) with mocked transport but real aggregation. | Vitest (Node) | `src/lib/integrations/{source}/__tests__/*.test.ts` |
-| **Component** | Render-and-assert for React Native components. Once Expo is chosen, use `@testing-library/react-native`. | Vitest (or Jest if Expo defaults) | `src/components/__tests__/*.test.tsx` |
-| **Screen / flow** | End-to-end behavior on the daily-entry flow, timeline, import. Once Expo is chosen, use Maestro or Detox. | Maestro / Detox | `e2e/` |
+| **Domain** | Pure logic on plain TS types — score validation, tag merging, date math, CSV parsing. No React, no Directus client, no network. | Vitest (Node) | `src/lib/{module}/__tests__/*.test.ts` |
+| **API client** | Directus client wrappers — query shape, response validation, error mapping. Uses a mocked Directus SDK or a real Directus test instance. | Vitest (Node) | `src/lib/api/__tests__/*.test.ts` |
+| **Integration** | Per-source modules (Google Calendar v1.5, weather v2) with mocked transport but real aggregation. | Vitest (Node) | `src/lib/integrations/{source}/__tests__/*.test.ts` |
+| **Component** | Render-and-assert for React components. `@testing-library/react`. | Vitest (jsdom) | `src/components/__tests__/*.test.tsx` |
+| **Screen / flow** | End-to-end behavior on the daily-entry flow, timeline, import. Playwright. | Playwright | `e2e/` |
 | **Walkthrough** | Brainfog walkthrough, sub-10s flow check — human-in-the-loop, not automated. | n/a | Done checkboxes in step file |
 
-In v1 we will primarily write **domain**, **storage**, and **integration** tests. Component / screen / e2e tests come in once Expo is chosen and the first daily-entry screen exists.
+In v1 we will primarily write **domain**, **API-client**, and **integration** tests. Component / screen / e2e tests come in once the first daily-entry screen exists.
 
 ---
 
@@ -153,16 +153,16 @@ A step is only complete when every checkbox is checked.
 - **Watch**: `npm test -- --watch`
 - **Coverage**: `npm test -- --coverage` (target: 100% on `src/lib/domain/` and `src/lib/db/`, best-effort elsewhere)
 
-The runner is configured in `vitest.config.ts`. The TS config is `tsconfig.json`. Both stay framework-agnostic until Expo is added — at which point a separate config for component / screen tests will be added without removing the domain-layer setup.
+The runner is configured in `vitest.config.ts`. The TS config is `tsconfig.json`. Both stay platform-agnostic for the domain + API-client layers; when component / screen tests land, a jsdom environment + `@testing-library/react` config will be added without removing the domain-layer setup.
 
 ---
 
 ## Anti-patterns (don't do these)
 
 - **Tests after the fact.** "I'll write tests once the feature works" → tests will be skipped or shaped to fit the code, defeating their purpose.
-- **Mocking what you don't own to the point of testing the mock.** If you're mocking SQLite, you're not testing SQLite behavior. Use a real in-memory SQLite.
+- **Mocking what you don't own to the point of testing the mock.** If you're mocking the Directus SDK so heavily that you're asserting your own mock returned what you told it to return, the test is worthless. Either mock at the transport (`fetch`) boundary or run against a real ephemeral Directus test instance.
 - **Snapshot-everything.** Snapshots are good for stable HTML/text output. They are bad for testing logic — a logic test should assert a specific value, not "matches snapshot".
 - **`expect(true).toBe(true)` as a placeholder.** A test that can't fail is worse than no test.
 - **Skipped tests left in the suite.** `it.skip` is a TODO that the suite stops reminding you about. Delete or fix.
 - **Tests that depend on the current date / time / timezone without mocking.** Tomorrow's CI run will fail. Mock the clock.
-- **Tests that touch real network / real HealthKit / real Google.** Stub the transport at the integration boundary.
+- **Tests that touch real network / real Directus production / real Google.** Stub the transport at the integration boundary, or run against an ephemeral local Directus instance.

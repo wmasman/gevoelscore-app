@@ -13,7 +13,7 @@ These are hard constraints. A v1 that violates them is a failure regardless of f
 3. **No friction in the main flow**: dropdowns, sliders, required tags or multi-step forms on the daily screen are forbidden.
 4. **Low cognitive load**: usable on a "4-out-of-6 day" with brainfog. No flashing colors, no unnecessary animations, no sound.
 5. **No notifications, ads, analytics, or tracking** (the optional end-of-day reminder is v2 and silent).
-6. **Local-first, user-owned data**: raw data never leaves the device without explicit, per-source opt-in.
+6. **User-owned data**: data lives on infrastructure the author controls (self-hosted Directus + Postgres). No third-party telemetry, no data sold or shared. Full export and full delete are first-class features. _(Note: this principle changed from the original "local-first" framing when the architecture pivoted to cloud-backed — see [ADR 0002](decisions/0002-pwa-with-directus-backend.md).)_
 
 ---
 
@@ -32,8 +32,8 @@ These are hard constraints. A v1 that violates them is a failure regardless of f
 - [ ] Calendar view for backfill — empty days clearly marked, one tap to fill
 - [ ] Import existing 1.363-day Google Sheet (CSV/XLSX): column B → score, column C → note
 - [ ] Export everything to CSV at any time
-- [ ] Works fully offline
-- [ ] Mobile-first UI (designed for one-handed phone use in bed)
+- [ ] Online-first (daily entry requires network connectivity; offline support is a v1.5+ feature, not a v1 requirement — see [ADR 0002](decisions/0002-pwa-with-directus-backend.md) for the deliberate scope shift)
+- [ ] Mobile-first responsive UI (designed for one-handed phone use in bed, installable as PWA via "Add to Home Screen")
 
 ### Out of scope for v1
 
@@ -51,44 +51,47 @@ These are hard constraints. A v1 that violates them is a failure regardless of f
 
 ### Framework
 
-**Decision: Expo (React Native), managed workflow.** See [decisions/0001-framework-expo.md](decisions/0001-framework-expo.md) for the reasoning.
+**Decision: Next.js 15 PWA with Directus backend on Fly.io.** See [decisions/0002-pwa-with-directus-backend.md](decisions/0002-pwa-with-directus-backend.md) for the reasoning (supersedes [0001-framework-expo.md](decisions/0001-framework-expo.md)).
 
-- [x] Mobile-first — Expo ships real native iOS/Android binaries
-- [x] Offline-capable — `expo-sqlite` + local-first design
-- [x] Path to HealthKit without rebuilding — `react-native-health` for most metrics, targeted Swift native modules for edge cases
-- [x] Author's React/TypeScript stack — direct match
-- [x] No Mac required — EAS Build for iOS, EAS Submit for App Store
+- [x] Mobile-first responsive — installable as PWA, works on any modern browser
+- [x] Author's Next.js / TypeScript stack — direct match with TVO infrastructure
+- [x] No Apple platform friction — no Apple Developer Program, no App Store review, instant updates
+- [x] Cloud is source of truth — multi-device, schema admin UI, file uploads all free via Directus
+- [x] Analysis pipeline trivial — query Postgres directly with DuckDB / pandas / R / Excel
+- [ ] HealthKit + Garmin paths require a separate native iOS app at v2 — deferred
 
 ### Storage
 
-- [ ] Local-first with encrypted SQLite (SQLCipher or CryptoKit-backed)
-- [ ] One entry per date (date is primary key; updates overwrite, never duplicate)
+- [ ] Cloud-backed: PostgreSQL managed by Directus on Fly.io. TLS in transit, Postgres at-rest encryption per Fly.io defaults
+- [ ] One entry per date (`date` is a UNIQUE constraint on `day_entries`; updates overwrite, never duplicate)
 - [ ] Tags as references, not strings (so rename/merge is cheap)
-- [ ] Schema includes nullable fields for v1.5 / v2 data sources (`project_entries`, `garmin`, `health`, `weather`, `calendar_events`) — left empty in v1 but present
-- [ ] All data exportable as CSV / JSON / SQLite dump
+- [ ] Schema includes collections for v1.5 / v2 data sources (`project_entries`, `garmin_daily`, `health_daily`, `weather_daily`, `calendar_events`) — left empty in v1 but present in the Directus instance
+- [ ] All data exportable as CSV / JSON / Postgres dump (via Directus or direct Postgres access)
 
 ### Architecture readiness for v1.5 / v2
 
 These items add **no v1 features** but prevent a future rewrite. Required in v1 even though unused:
 
-- [ ] `Project`, `ProjectEntry`, `ProjectFieldConfig` schemas defined (empty tables ok)
-- [ ] `CalendarEvent` schema defined
+- [ ] `projects`, `project_entries`, `project_field_configs` Directus collections defined (empty in v1)
+- [ ] `calendar_events` Directus collection defined
 - [ ] Tag category supports `project:<id>` and `custom`
-- [ ] Data-source integrations designed as modules with a standard "fetch + aggregate + store per day" interface (no v1 modules implemented; structure must exist)
-- [ ] Cloud sync strategy chosen on basis of the eventual passive-data load, not v1's needs
+- [ ] Data-source integrations designed as modules with a standard "fetch + aggregate + store per day" interface (no v1 modules implemented; structure must exist in `src/lib/integrations/`)
+- [ ] Future native iOS app (if v2 HealthKit ambitions activate) queries the same Directus backend — no data migration needed
 
 ### Privacy
 
 - [ ] No analytics, tracking, ads, telemetry
 - [ ] No third-party SDKs that phone home
-- [ ] Personal data never committed to the repo (this requirements doc, the brief and the tech doc are the only artifacts that may reference personal context)
-- [ ] All HealthKit / OAuth scopes are per-type opt-in (deferred to v1.5+)
+- [ ] Personal data never committed to the repo (this requirements doc, the brief, and the tech doc are the only artifacts that may reference personal context)
+- [ ] All OAuth scopes (Google Calendar v1.5+) are minimal — `calendar.readonly` only
+- [ ] Directus instance is single-admin (author), behind HTTPS only, with sane Fly.io defaults (Postgres encrypted at rest, automatic backups)
 
 ### Quality
 
-- [ ] Works on the author's daily-driver iPhone
+- [ ] Works on the author's daily-driver iPhone (Safari + installed PWA)
 - [ ] Daily flow tested under "tired user" conditions (no fiddly targets, no easy mis-taps)
 - [ ] CSV import covers the existing 1.363-day dataset without manual cleanup
+- [ ] Online-failure UX is graceful: clear "no network, retry" state on the daily screen
 
 ---
 
@@ -96,11 +99,13 @@ These items add **no v1 features** but prevent a future rewrite. Required in v1 
 
 From the brief and tech doc:
 
-1. ~~Final framework choice~~ — resolved: Expo. See [decisions/0001-framework-expo.md](decisions/0001-framework-expo.md).
-2. Sync backend: Supabase vs Firebase vs self-hosted Postgres (when v2 cloud sync is needed).
+1. ~~Final framework choice~~ — resolved: Next.js PWA + Directus. See [decisions/0002-pwa-with-directus-backend.md](decisions/0002-pwa-with-directus-backend.md). (Superseded [0001-framework-expo.md](decisions/0001-framework-expo.md).)
+2. ~~Sync backend~~ — resolved by framework pivot: Directus + Postgres on Fly.io is the backend.
 3. Progressive disclosure pattern for the daily screen — how blocks 2/3/4/5 reveal without cluttering Block 1.
-4. Minimum iOS version: iOS 17+ enables `TimeInDaylight`; iOS 16+ enables sleep stages. Acceptable to require iOS 17?
-5. Garmin Body Battery / Stress score path — only via Apple Health (lossy) or also a nightly Cloud Function fallback?
+4. ~~Minimum iOS version~~ — irrelevant for PWA; minimum browser version is "current Safari, Chrome, Firefox, Edge".
+5. ~~Garmin Body Battery / Stress score path~~ — deferred: not addressable in PWA. Would require a separate native iOS app at v2.
+6. **New**: Offline-cache + write-queue layer — add when real usage proves it's needed; deferred from v1.
+7. **New**: Directus collection schema — to be modeled per [data-model.md](architecture/data-model.md). To be created in the new Directus instance once stood up.
 
 These do **not** need to be resolved before prototyping v1, but should be flagged in any v1.5/v2 planning.
 

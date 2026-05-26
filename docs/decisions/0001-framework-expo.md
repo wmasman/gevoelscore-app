@@ -1,8 +1,10 @@
 # ADR 0001: Use Expo (React Native) for v1
 
-- **Status**: Accepted
+- **Status**: **Superseded by [ADR 0002](0002-pwa-with-directus-backend.md)** (same day, 2026-05-26)
 - **Date**: 2026-05-26
 - **Deciders**: Willem Masman (author), Claude (AI collaborator)
+
+> **Reading note**: this ADR was accepted and then superseded the same session, after fresh inputs (concrete Apple Developer Program cost, Safari PWA storage eviction risk, and the realization that Directus on Fly.io was already a paid-for cost) flipped the math. Keep this ADR for the reasoning trail; the live decision is in [ADR 0002](0002-pwa-with-directus-backend.md).
 
 ## Context
 
