@@ -1,0 +1,22 @@
+{
+  "name": "gevoelscore-app",
+  "version": "0.0.0-pre-prototype",
+  "private": true,
+  "description": "Personal Long COVID daily-tracking app — pre-prototype, docs + test-runner scaffold only",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint not configured yet — add ESLint when the first non-scaffold source file lands' && exit 0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.7"
+  }
+}
