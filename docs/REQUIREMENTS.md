@@ -21,7 +21,7 @@ These are hard constraints. A v1 that violates them is a failure regardless of f
 
 ### Must-have
 
-- [ ] Log a daily score (1–6, half-values allowed, e.g. 4.5)
+- [ ] Log a daily score: integer 1–6 only (no halves, no decimals). Nuance lives in `note` and tags — see [architecture/data-model.md](architecture/data-model.md) (DayEntry, "Score validation") for the rationale
 - [ ] Optional free-text note per day (no length limit)
 - [ ] Optional chip-tags per day, multi-select
 - [ ] Tag set is personal and dynamic: frequently used tags surface, rarely used tags fade
