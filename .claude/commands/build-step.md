@@ -220,8 +220,8 @@ Example:
 
 - [x] AC1: Score > 6 is rejected — test `score.test.ts:validation rejects > 6` GREEN
 - [x] AC2: Score < 1 is rejected — test `score.test.ts:validation rejects < 1` GREEN
-- [x] AC3: Half-values are allowed — test `score.test.ts:validation accepts 4.5` GREEN
-- [x] RED captured: `npm test -- score.test` → 3 failed (validation rejects > 6, < 1, accepts 4.5) on 2026-05-26
+- [x] AC3: Halves are rejected — test `score.test.ts:validation rejects 4.5` GREEN
+- [x] RED captured: `npm test -- score.test` → 3 failed (validation rejects > 6, < 1, rejects 4.5) on 2026-05-26
 - [x] GREEN captured: `npm test -- score.test` → 3 passed on 2026-05-26
 - [x] Type check: `npm run typecheck` clean
 - [x] Lint: `npm run lint` clean

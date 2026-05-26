@@ -164,7 +164,7 @@ For each layer touched, name the test file and the cases that will be written. T
 
 | File | Cases (one per `it`) |
 |------|----------------------|
-| `src/lib/{module}/__tests__/{module}.test.ts` | rejects > 6; rejects < 1; accepts 4.5 |
+| `src/lib/{module}/__tests__/{module}.test.ts` | rejects > 6; rejects < 1; rejects 4.5 (halves not allowed) |
 | `src/lib/db/__tests__/{topic}.test.ts` | round-trip insert + read; overwrites same-day entry |
 
 ## Cardinal-principle impact
