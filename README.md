@@ -38,14 +38,16 @@ Daily entry must not be more friction than the current sheet. The minimum flow i
 - [docs/technisch_document.md](docs/technisch_document.md) — passive context data, integrations, privacy, licensing
 - [docs/sample-data.csv](docs/sample-data.csv) — anonymized sample (60 days, date + score only)
 
-## Tech stack (proposed, not yet decided)
+## Tech stack
 
-- **Framework**: Expo (React Native) with HealthKit bridge — to be confirmed in prototyping
-- **Local storage**: encrypted SQLite
-- **Cloud sync**: opt-in only, aggregates only (Supabase candidate)
-- **Calendar**: Google Calendar API, read-only OAuth
+- **Framework**: Expo (React Native), managed workflow → see [docs/decisions/0001-framework-expo.md](docs/decisions/0001-framework-expo.md)
+- **Local storage**: SQLite via `expo-sqlite`; encryption via community package (e.g. `op-sqlite` with SQLCipher)
+- **Build / distribution**: EAS Build (cloud iOS compilation, no Mac needed) + EAS Submit
+- **Cloud sync**: opt-in, aggregates only, deferred to v2 (Supabase candidate)
+- **Calendar (v1.5)**: Google Calendar API, read-only OAuth
+- **Apple Health (v2)**: `react-native-health` bridge + targeted Swift native modules where the bridge falls short
 
-See [docs/technisch_document.md](docs/technisch_document.md) for the reasoning and alternatives considered.
+See [docs/technisch_document.md](docs/technisch_document.md) for the broader reasoning and alternatives considered.
 
 ## Privacy
 

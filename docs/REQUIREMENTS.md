@@ -51,11 +51,13 @@ These are hard constraints. A v1 that violates them is a failure regardless of f
 
 ### Framework
 
-- [ ] Mobile-first
-- [ ] Offline-capable
-- [ ] Path to HealthKit (iOS) without rebuilding from scratch later
-- [ ] Author's existing React/TypeScript stack is a plus
-- [ ] **Proposed**: Expo (React Native) with `react-native-health` bridge. Final choice in prototype phase.
+**Decision: Expo (React Native), managed workflow.** See [decisions/0001-framework-expo.md](decisions/0001-framework-expo.md) for the reasoning.
+
+- [x] Mobile-first — Expo ships real native iOS/Android binaries
+- [x] Offline-capable — `expo-sqlite` + local-first design
+- [x] Path to HealthKit without rebuilding — `react-native-health` for most metrics, targeted Swift native modules for edge cases
+- [x] Author's React/TypeScript stack — direct match
+- [x] No Mac required — EAS Build for iOS, EAS Submit for App Store
 
 ### Storage
 
@@ -94,7 +96,7 @@ These items add **no v1 features** but prevent a future rewrite. Required in v1 
 
 From the brief and tech doc:
 
-1. Final framework choice: Expo vs native Swift vs Capacitor — pick during prototype.
+1. ~~Final framework choice~~ — resolved: Expo. See [decisions/0001-framework-expo.md](decisions/0001-framework-expo.md).
 2. Sync backend: Supabase vs Firebase vs self-hosted Postgres (when v2 cloud sync is needed).
 3. Progressive disclosure pattern for the daily screen — how blocks 2/3/4/5 reveal without cluttering Block 1.
 4. Minimum iOS version: iOS 17+ enables `TimeInDaylight`; iOS 16+ enables sleep stages. Acceptable to require iOS 17?
