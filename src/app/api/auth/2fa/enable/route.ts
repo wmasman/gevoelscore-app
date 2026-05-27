@@ -5,18 +5,12 @@
 // 2FA on the account.
 
 import { NextResponse } from 'next/server';
+import { allowedOrigins } from '@/lib/auth/allowed-origins';
 import { directusEnableTfa } from '@/lib/auth/directus-auth';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { parseSessionCookie } from '@/lib/auth/session';
 import { getClientIp, pendingTfaStore, tfaEnableRateLimiter } from '@/lib/auth/stores';
-
-function allowedOrigins(): string[] {
-  const origins: string[] = [];
-  if (process.env.NEXT_PUBLIC_APP_URL) origins.push(process.env.NEXT_PUBLIC_APP_URL);
-  if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:3000');
-  return origins;
-}
 
 export async function POST(request: Request) {
   if (

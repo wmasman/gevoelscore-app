@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   sessionCreate: vi.fn(),
   pendingOtpGet: vi.fn(),
   pendingOtpDelete: vi.fn(),
+  pendingOtpIncrementAttempts: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/directus-auth', () => ({
@@ -26,6 +27,7 @@ vi.mock('@/lib/auth/stores', () => ({
     create: vi.fn(),
     get: mocks.pendingOtpGet,
     delete: mocks.pendingOtpDelete,
+    incrementAttempts: mocks.pendingOtpIncrementAttempts,
     cleanupExpired: vi.fn(),
     size: vi.fn(),
   },
@@ -54,13 +56,16 @@ describe('POST /api/auth/login/verify', () => {
     mocks.sessionCreate.mockReset();
     mocks.pendingOtpGet.mockReset();
     mocks.pendingOtpDelete.mockReset();
+    mocks.pendingOtpIncrementAttempts.mockReset();
     mocks.verifyRateCheck.mockReturnValue({ allowed: true, remaining: 4 });
     mocks.sessionCreate.mockReturnValue('session-id-1');
     mocks.pendingOtpGet.mockReturnValue({
       email: 'a@b.com',
       password: 'pw',
       expiresAt: Date.now() + 60_000,
+      attempts: 0,
     });
+    mocks.pendingOtpIncrementAttempts.mockReturnValue(1);
   });
 
   it('AC6: valid OTP + valid pending → 200 + session cookie + cleared pending cookie', async () => {
@@ -119,5 +124,30 @@ describe('POST /api/auth/login/verify', () => {
   it('400 on missing otp', async () => {
     const res = await POST(makeRequest({}, { cookie: 'gs_pending_otp=p-id' }));
     expect(res.status).toBe(400);
+  });
+
+  it('M5: 1st and 2nd wrong OTP keep the pending cookie alive', async () => {
+    mocks.directusLoginWithOtp.mockResolvedValue({ ok: false, error: 'invalid_otp' });
+    mocks.pendingOtpIncrementAttempts.mockReturnValueOnce(1);
+    const res1 = await POST(makeRequest({ otp: '000000' }, { cookie: 'gs_pending_otp=p-id' }));
+    expect(res1.status).toBe(401);
+    expect(res1.headers.getSetCookie().some((c) => c.includes('gs_pending_otp=') && c.includes('Max-Age=0'))).toBe(false);
+    expect(mocks.pendingOtpDelete).not.toHaveBeenCalled();
+
+    mocks.pendingOtpIncrementAttempts.mockReturnValueOnce(2);
+    const res2 = await POST(makeRequest({ otp: '000000' }, { cookie: 'gs_pending_otp=p-id' }));
+    expect(res2.status).toBe(401);
+    expect(res2.headers.getSetCookie().some((c) => c.includes('gs_pending_otp=') && c.includes('Max-Age=0'))).toBe(false);
+    expect(mocks.pendingOtpDelete).not.toHaveBeenCalled();
+  });
+
+  it('M5: 3rd wrong OTP clears pending state + cookie (still generic error)', async () => {
+    mocks.directusLoginWithOtp.mockResolvedValue({ ok: false, error: 'invalid_otp' });
+    mocks.pendingOtpIncrementAttempts.mockReturnValue(3);
+    const res = await POST(makeRequest({ otp: '000000' }, { cookie: 'gs_pending_otp=p-id' }));
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: 'invalid_otp' });
+    expect(res.headers.getSetCookie().some((c) => c.includes('gs_pending_otp=') && c.includes('Max-Age=0'))).toBe(true);
+    expect(mocks.pendingOtpDelete).toHaveBeenCalledWith('p-id');
   });
 });

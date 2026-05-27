@@ -14,6 +14,7 @@ describe('pending-otp', () => {
         email: 'a@b.com',
         password: 'pw',
         expiresAt: Date.now() + 60_000,
+        attempts: 0,
       });
       expect(typeof id).toBe('string');
       expect(id.length).toBeGreaterThan(20);
@@ -25,6 +26,7 @@ describe('pending-otp', () => {
         email: 'a@b.com',
         password: 'pw',
         expiresAt: Date.now() + 60_000,
+        attempts: 0,
       });
       const got = store.get(id);
       expect(got?.email).toBe('a@b.com');
@@ -40,7 +42,7 @@ describe('pending-otp', () => {
       const now = 1_000_000;
       let clock = now;
       const store = createPendingOtpStore({ now: () => clock });
-      const id = store.create({ email: 'a@b.com', password: 'pw', expiresAt: now + 1_000 });
+      const id = store.create({ email: 'a@b.com', password: 'pw', expiresAt: now + 1_000, attempts: 0 });
       clock = now + 2_000;
       expect(store.get(id)).toBeUndefined();
       expect(store.size()).toBe(0);
@@ -48,9 +50,82 @@ describe('pending-otp', () => {
 
     it('delete removes the entry', () => {
       const store = createPendingOtpStore();
-      const id = store.create({ email: 'a@b.com', password: 'pw', expiresAt: Date.now() + 60_000 });
+      const id = store.create({ email: 'a@b.com', password: 'pw', expiresAt: Date.now() + 60_000, attempts: 0 });
       store.delete(id);
       expect(store.get(id)).toBeUndefined();
+    });
+
+    it('incrementAttempts returns 1, 2, 3 on successive calls and persists on the entry', () => {
+      const store = createPendingOtpStore();
+      const id = store.create({
+        email: 'a@b.com',
+        password: 'pw',
+        expiresAt: Date.now() + 60_000,
+        attempts: 0,
+      });
+      expect(store.incrementAttempts(id)).toBe(1);
+      expect(store.incrementAttempts(id)).toBe(2);
+      expect(store.incrementAttempts(id)).toBe(3);
+      expect(store.get(id)?.attempts).toBe(3);
+    });
+
+    it('H3: delete overwrites password before removing the entry', () => {
+      const store = createPendingOtpStore();
+      const id = store.create({
+        email: 'a@b.com',
+        password: 'super-secret-pw',
+        expiresAt: Date.now() + 60_000,
+        attempts: 0,
+      });
+      const before = store.get(id);
+      const original = before?.password;
+      store.delete(id);
+      // Same object reference after delete should no longer hold the plaintext.
+      expect(before?.password).not.toBe(original);
+      expect(before?.password.length).toBeGreaterThanOrEqual(15);
+    });
+
+    it('H3: TTL-expired get overwrites password before evicting', () => {
+      const now = 1_000_000;
+      let clock = now;
+      const store = createPendingOtpStore({ now: () => clock });
+      const id = store.create({
+        email: 'a@b.com',
+        password: 'super-secret-pw',
+        expiresAt: now + 1_000,
+        attempts: 0,
+      });
+      // Snapshot the entry while still alive.
+      const beforeExpire = store.get(id);
+      const original = beforeExpire?.password;
+      clock = now + 2_000;
+      expect(store.get(id)).toBeUndefined(); // triggers wipe + delete
+      expect(beforeExpire?.password).not.toBe(original);
+    });
+
+    it('H3: toString returns a safe placeholder, not the entries map', () => {
+      const store = createPendingOtpStore();
+      store.create({ email: 'a@b.com', password: 'pw', expiresAt: Date.now() + 60_000, attempts: 0 });
+      const str = String(store);
+      expect(str).toMatch(/PendingOtpStore/);
+      expect(str).toMatch(/do not log/i);
+      expect(str).not.toContain('pw');
+      expect(str).not.toContain('a@b.com');
+    });
+
+    it('incrementAttempts returns undefined for unknown or expired entries', () => {
+      const now = 1_000_000;
+      let clock = now;
+      const store = createPendingOtpStore({ now: () => clock });
+      expect(store.incrementAttempts('nope')).toBeUndefined();
+      const id = store.create({
+        email: 'a@b.com',
+        password: 'pw',
+        expiresAt: now + 1_000,
+        attempts: 0,
+      });
+      clock = now + 2_000;
+      expect(store.incrementAttempts(id)).toBeUndefined();
     });
   });
 

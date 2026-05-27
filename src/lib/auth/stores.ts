@@ -21,7 +21,13 @@ export const tfaGenerateRateLimiter = createRateLimiter({ limit: 5, windowMs: FI
 export const tfaEnableRateLimiter = createRateLimiter({ limit: 5, windowMs: FIVE_MIN_MS });
 
 export const sessionStore = createSessionStore();
+
+// @sensitive-store: do not pass to console.log, JSON.stringify, or any logger.
+// Contains the user's plaintext password between /login and /login/verify so
+// the OTP step can re-auth without prompting again. Lifecycle hardened in
+// pending-otp.ts (audit H3 cheap fix); full AES-GCM at rest deferred.
 export const pendingOtpStore = createPendingOtpStore();
+
 export const pendingTfaStore = createPendingTfaStore();
 
 // Resolve the client IP. Precedence:

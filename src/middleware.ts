@@ -13,6 +13,12 @@ import { SESSION_COOKIE_NAME } from '@/lib/auth/session';
 export function middleware(request: NextRequest) {
   const session = request.cookies.get(SESSION_COOKIE_NAME);
   if (!session?.value) {
+    // API requests get a parseable 401 JSON; browser navigations get the
+    // /login redirect. Audit M2 — fetch clients should not have to parse
+    // an HTML redirect to learn they're unauthenticated.
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+    }
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }

@@ -10,6 +10,10 @@ COPY package.json package-lock.json ./
 # optionalDependency (one per platform). Must NOT use --omit=optional or
 # the alpine/linux-x64-musl binary is skipped and the build fails.
 RUN npm ci
+# Supply-chain gate: zero high/critical CVEs in the lockfile (audit L5).
+# Same threshold as `npm run audit` and the local pre-push hook. Moderate
+# findings don't block — track them in docs/audits/*.md.
+RUN npm audit --audit-level=high
 
 # ---- builder ---------------------------------------------------------------
 FROM node:20-alpine AS builder

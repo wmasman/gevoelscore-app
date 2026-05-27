@@ -48,4 +48,15 @@ test.describe('middleware: protected-route gating (AC14)', () => {
     });
     expect([400, 401, 403]).toContain(res.status());
   });
+
+  test('GET /api/probe without cookie returns 401 JSON (M2)', async ({ request }) => {
+    // No /api/probe route exists; the middleware should return 401 JSON before
+    // any route handler is invoked. The point: fetch clients hitting a future
+    // /api/day-entries without a session get a parseable JSON 401 instead of
+    // an HTML redirect.
+    const res = await request.get('/api/probe', { maxRedirects: 0 });
+    expect(res.status()).toBe(401);
+    expect(res.headers()['content-type']).toMatch(/application\/json/);
+    expect(await res.json()).toEqual({ error: 'unauthenticated' });
+  });
 });

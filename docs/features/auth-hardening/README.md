@@ -2,7 +2,7 @@
 
 **Feature:** Close the 4 highest-severity findings from the 2026-05-27 security audit before the daily-entry feature lands on top of the auth layer.
 **Version:** v1 (patch)
-**Status:** In progress — started 2026-05-27.
+**Status:** Priority 1 + 2 shipped 2026-05-27 — 10 steps done (H1/H2/H4/M1 + DRY/M3/M2/M5/H3/L5). 380/380 Vitest, all live + e2e regression green.
 **Parent docs:** [audit](../../audits/2026-05-27-auth-security-and-code-audit.md), [remediation plan](../../plans/2026-05-27-audit-remediation-and-standards-enforcement.md), [security-checklist](../../../.claude/security-checklist.md)
 
 ---
@@ -56,10 +56,19 @@ The four findings:
 
 ## Steps
 
-1. **[Step 1 — Bind TFA secret server-side](step-1-bind-tfa-secret.md)** — closes H2 (AC1–AC5). New `pending-tfa.ts`, both 2FA route handlers updated, body schema for `/enable` drops `secret`.
-2. **[Step 2 — 2FA endpoint rate limits](step-2-rate-limit-2fa.md)** — closes H1 (AC6–AC8). Two new limiters in `stores.ts`, wired into both 2FA routes.
-3. **[Step 3 — Trust Fly-Client-IP over XFF](step-3-fly-client-ip.md)** — closes H4 (AC9–AC10). Rewrite `getClientIp`. Document deploy assumption.
-4. **[Step 4 — Security response headers](step-4-security-headers.md)** — closes M1 (AC11–AC14). `next.config.ts` `async headers()`, `poweredByHeader: false`, live-stack spec.
+**Priority 1 (closed):**
+1. **[Step 1 — Bind TFA secret server-side](step-1-bind-tfa-secret.md)** — H2 (AC1–AC5). ✅
+2. **[Step 2 — 2FA endpoint rate limits](step-2-rate-limit-2fa.md)** — H1 (AC6–AC8). ✅
+3. **[Step 3 — Trust Fly-Client-IP over XFF](step-3-fly-client-ip.md)** — H4 (AC9–AC10). ✅
+4. **[Step 4 — Security response headers](step-4-security-headers.md)** — M1 (AC11–AC14). ✅
+
+**Priority 2 (closed):**
+5. **[Step 5 — Extract `allowedOrigins()` to shared util](step-5-extract-allowed-origins.md)** — DRY. ✅
+6. **[Step 6 — Hard-require allowed origins in production](step-6-hard-require-origins.md)** — M3. ✅
+7. **[Step 7 — API-aware middleware](step-7-api-aware-middleware.md)** — M2. ✅
+8. **[Step 8 — Per-pending-id OTP attempt counter](step-8-otp-attempt-counter.md)** — M5. ✅
+9. **[Step 9 — Pending-OTP password lifecycle hardening (cheap H3)](step-9-pending-otp-password-lifecycle.md)** — H3. ✅
+10. **[Step 10 — Dockerfile `npm audit` gate](step-10-dockerfile-audit-gate.md)** — L5. ✅
 
 Each step follows the strict RED → GREEN → REFACTOR loop with its own Done section.
 

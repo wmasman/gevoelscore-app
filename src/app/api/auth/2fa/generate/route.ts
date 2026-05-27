@@ -4,19 +4,13 @@
 // generate a TOTP secret. Requires a valid gs_session cookie.
 
 import { NextResponse } from 'next/server';
+import { allowedOrigins } from '@/lib/auth/allowed-origins';
 import { directusGenerateTfaSecret } from '@/lib/auth/directus-auth';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { PENDING_TFA_TTL_MS } from '@/lib/auth/pending-tfa';
 import { parseSessionCookie } from '@/lib/auth/session';
 import { getClientIp, pendingTfaStore, tfaGenerateRateLimiter } from '@/lib/auth/stores';
-
-function allowedOrigins(): string[] {
-  const origins: string[] = [];
-  if (process.env.NEXT_PUBLIC_APP_URL) origins.push(process.env.NEXT_PUBLIC_APP_URL);
-  if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:3000');
-  return origins;
-}
 
 export async function POST(request: Request) {
   if (

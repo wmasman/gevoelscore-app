@@ -8,6 +8,7 @@
 // See docs/features/login/step-4-auth-route-handlers.md for AC mapping.
 
 import { NextResponse } from 'next/server';
+import { allowedOrigins } from '@/lib/auth/allowed-origins';
 import { directusLogin } from '@/lib/auth/directus-auth';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { buildSessionCookie, SESSION_MAX_AGE_S } from '@/lib/auth/session';
@@ -21,15 +22,6 @@ import {
 
 const PENDING_OTP_TTL_MS = 5 * 60_000;
 const PENDING_OTP_COOKIE_TTL_S = 300;
-
-function allowedOrigins(): string[] {
-  const origins: string[] = [];
-  if (process.env.NEXT_PUBLIC_APP_URL) origins.push(process.env.NEXT_PUBLIC_APP_URL);
-  if (process.env.NODE_ENV !== 'production') {
-    origins.push('http://localhost:3000');
-  }
-  return origins;
-}
 
 export async function POST(request: Request) {
   if (
@@ -72,6 +64,7 @@ export async function POST(request: Request) {
         email,
         password,
         expiresAt: Date.now() + PENDING_OTP_TTL_MS,
+        attempts: 0,
       });
       const res = NextResponse.json({ requires_otp: true }, { status: 200 });
       res.headers.append('Set-Cookie', buildPendingOtpCookie(pendingId, PENDING_OTP_COOKIE_TTL_S));
