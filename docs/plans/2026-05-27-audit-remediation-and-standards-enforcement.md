@@ -164,25 +164,28 @@ Two `MEMORY.md` updates (the file in `C:\Users\Gebruiker\.claude\projects\...\me
 ## Sequencing
 
 ```
-This week
-  Mon-Tue: Track A1 steps 1-4 (audit-hardening feature folder)
-  Wed:     Track B1 + B2 + B3 (pre-commit + ESLint security + verify script)
-  Thu:     Track B5 (skill extensions) — so everything that lands after Thu is gated
+This week  [DONE 2026-05-27]
+  Track A1 steps 1-4 (audit-hardening feature folder) ✅
+  Track B1 + B2 + B3 (pre-commit + ESLint security + verify script) ✅
+  Track B5 (skill extensions) ✅
+  Track A2 steps 5-10 (hardening pass) ✅
+  Track B6 (/audit-feature skill) ✅
 
-This month
-  Track A2 (steps 5-10, hardening pass)
-  Track B4 (CI on GH Actions) — first
-  Track B6 (/audit-feature skill) — codify the 2026-05-27 audit method
+Next:
+  Daily-entry feature — the hard gate (A1 + B1-B3) is cleared, and A2 has
+  further hardened the auth layer underneath. /plan-feature daily-entry.
 
-This quarter
-  Track A3 (compliance baseline — 3 steps)
-  Track B7 (ADR-or-rationale gate)
-  Track B8 (memory hygiene)
+Pre-launch backlog (deferred until before sharing with anyone else):
+  - Track A3 compliance (directus_auth_events, GDPR Art 9 doc, Neon at-rest)
+  - Track B4 CI on GitHub Actions (needs `git push` first)
+  - Track B7 ADR-or-rationale dep gate
+  - Track B8 memory hygiene (MEMORY.md "no source code yet" claim — audit I4)
+  - Cleanup: src/__hook-smoke-test__.tsx removal
 
 Discipline:
   Each Track A step uses /build-step with its step file.
-  Each Track B item gets its own commit with the matching verify result captured in the commit body.
-  Daily-entry feature does NOT start until A1 + B1-B3 are merged.
+  Each Track B item gets its own commit with the matching verify result.
+  Daily-entry feature WAS gated on A1 + B1-B3 (now cleared).
 ```
 
 ---
