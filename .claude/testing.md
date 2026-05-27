@@ -56,13 +56,22 @@ The replacement is: capture a baseline screenshot before, capture the new screen
 | Layer | What | Runner | Location |
 |-------|------|--------|----------|
 | **Domain** | Pure logic on plain TS types — score validation, tag merging, date math, CSV parsing. No React, no Directus client, no network. | Vitest (Node) | `src/lib/{module}/__tests__/*.test.ts` |
-| **API client** | Directus client wrappers — query shape, response validation, error mapping. Uses a mocked Directus SDK or a real Directus test instance. | Vitest (Node) | `src/lib/api/__tests__/*.test.ts` |
+| **API client** | Directus SDK wrappers — query shape, response validation, error mapping. Uses a mocked `@directus/sdk` (preferred) or a real Directus test instance. | Vitest (Node) | `src/lib/auth/__tests__/*.test.ts`, future `src/lib/api/__tests__/*.test.ts` |
 | **Integration** | Per-source modules (Google Calendar v1.5, weather v2) with mocked transport but real aggregation. | Vitest (Node) | `src/lib/integrations/{source}/__tests__/*.test.ts` |
+| **Route handler** | Next.js Route Handlers tested by constructing a `Request` and asserting on the `Response`. Stores + `directus-auth` mocked via `vi.mock`. Covers happy paths including cookie attrs. | Vitest (Node) | `src/app/api/**/__tests__/route.test.ts` |
+| **API integration (closed-loop)** | Real HTTP against the running Next.js server (Playwright's `request` fixture starts `next dev` automatically). Covers validation, origin check, rate-limit *enforcement*, idempotency. Happy-path 200 with live Directus deferred to live-stack runs. | Playwright (`api` project) | `tests/api/**/*.spec.ts` |
 | **Component** | Render-and-assert for React components. `@testing-library/react`. | Vitest (jsdom) | `src/components/__tests__/*.test.tsx` |
-| **Screen / flow** | End-to-end behavior on the daily-entry flow, timeline, import. Playwright. | Playwright | `e2e/` |
+| **e2e** | End-to-end behavior in a real browser — daily-entry flow, login form, timeline, import. | Playwright (`chromium` project) | `tests/e2e/**/*.spec.ts` |
 | **Walkthrough** | Brainfog walkthrough, sub-10s flow check — human-in-the-loop, not automated. | n/a | Done checkboxes in step file |
 
-In v1 we will primarily write **domain**, **API-client**, and **integration** tests. Component / screen / e2e tests come in once the first daily-entry screen exists.
+**Which layer to pick:**
+
+- Pure logic? Domain (Vitest unit).
+- Calls Directus? API client wrapper layer (Vitest with SDK mocked).
+- Mounts on `/api/*`? Both: route-handler unit test (Vitest, full coverage including cookie attrs) AND a Playwright API spec (real HTTP, unhappy paths). The unit test covers happy paths because module state in `next dev` doesn't persist; the Playwright spec catches wiring bugs.
+- Touches the DOM? Component (Vitest jsdom) or e2e (Playwright browser).
+
+**Running:** `npm test` (Vitest), `npm run test:e2e` (Playwright, both projects), `npm run test:all` (both runners sequentially).
 
 ---
 

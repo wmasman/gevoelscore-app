@@ -21,11 +21,14 @@ What runs where, what depends on what, what data flows across which boundary.
                                    │  Next.js 15 app (App Router)        │
                                    │  Fly.io app: gevoelscore-frontend   │
                                    │  Region: ams                        │
-                                   │  ⚠ NOT YET DEPLOYED — slot only     │
+                                   │  ⚠ NOT YET DEPLOYED — slot only,    │
+                                   │    Dockerfile + fly.toml ready      │
                                    │                                     │
+                                   │  • /api/auth/{login,verify,logout}  │
                                    │  • Route Handlers proxy Directus    │
-                                   │  • Server components fetch via      │
-                                   │    DIRECTUS_URL (internal Fly net)  │
+                                   │  • httpOnly gs_session cookie + a   │
+                                   │    server-side session-id → token   │
+                                   │    map (src/lib/auth/session.ts)    │
                                    │  • Browser code never sees tokens   │
                                    └────────────────┬────────────────────┘
                                                     │
@@ -109,11 +112,13 @@ The join key across all daily-grain entities is `date` — there are no id-array
 | Directus schema (9 user collections + 2 M2M junctions) | ✅ Created | All PostgreSQL types verified (29/29). M2M junctions carry provenance (source, confidence, confirmed_at) per [ADR 0004](../decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md). |
 | Postgres views (`daily_observations`, `day_tags_flat`, `tag_correlations`) | ✅ Applied via Neon Console | Read-only query surface; see [queries-and-views.md](queries-and-views.md) |
 | Role + policy + permissions | ✅ Configured | gevoelscore-frontend-api role, 24 permissions |
-| Frontend-app Directus user | ⏳ Manual step | You create via admin UI when wiring up frontend |
-| Next.js frontend code | ❌ Not started | Feature plan exists ([docs/features/login/](../features/login/)) |
-| Next.js Fly app deploy | ❌ Slot only | App slot `gevoelscore-frontend` exists, no machines |
+| Frontend-app Directus user | ⏳ Manual step | Needed before Step 7 of login (Playwright against live stack) |
+| Next.js frontend code | 🟡 Bootstrapped + auth backend | Next 15.5 + Tailwind v4 + Playwright. App Router shell + `/api/auth/{login, login/verify, logout}` + `/api/health`. Login feature 4 of 7 steps done. |
+| Next.js Fly app deploy | ❌ Slot only | App slot `gevoelscore-frontend` exists, no machines. [Dockerfile](../../Dockerfile) + [fly.toml](../../fly.toml) ready to deploy. |
+| Auth server-side library | ✅ Shipped | `src/lib/auth/*` — rate-limit, session, pending-OTP, origin check, Directus SDK wrapper. 48 tests. |
 | CSV import wired to Directus | ❌ Parser ready, integration pending | [src/lib/import/csv-day-entries.ts](../../src/lib/import/csv-day-entries.ts) parses; needs upsert-to-Directus glue |
-| Domain validation library | ✅ Shipped | 254/254 tests; `src/lib/domain/*` |
+| Domain validation library | ✅ Shipped | 254 tests; `src/lib/domain/*` |
+| Test suite totals | ✅ All green | Vitest 323/323 + Playwright 17 passing / 2 skipped (deferred to Step 7) |
 
 ---
 

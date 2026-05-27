@@ -288,15 +288,22 @@ describe('session', () => {
 
 ## Done criteria
 
-- [ ] Both test files exist and fail BEFORE implementation (RED captured)
-- [ ] `src/lib/auth/rate-limit.ts` exists and tests pass (GREEN captured)
-- [ ] `src/lib/auth/session.ts` exists and tests pass (GREEN captured)
-- [ ] Full Vitest suite still passes (254 existing + new) with zero regressions
-- [ ] `npm run typecheck` clean
-- [ ] `npm run lint` clean
-- [ ] No new HIGH gate findings (no telemetry deps, no PII logged, no `localStorage` use)
-- [ ] No walkthrough needed (no UI changed)
-- [ ] Refactor pass complete (or "none needed")
+- [x] Both test files exist and fail BEFORE implementation (RED captured)
+- [x] `src/lib/auth/rate-limit.ts` exists and tests pass (GREEN captured)
+- [x] `src/lib/auth/session.ts` exists and tests pass (GREEN captured)
+- [x] Full Vitest suite still passes (254 existing + 18 new = 272) with zero regressions
+- [x] `npm run typecheck` clean
+- [x] `npm run lint` clean
+- [x] No new HIGH gate findings (no telemetry deps, no PII logged, no `localStorage` use)
+- [x] No walkthrough needed (no UI changed)
+- [x] Refactor pass complete — fixed `prefer-const` lint warnings on test fixtures; no production-code refactor needed.
+
+### Captured evidence
+
+- **RED**: `npm test -- rate-limit session` → 2 failed test files with `Error: Cannot find module '../rate-limit'` and `Error: Cannot find module '../session'` (2026-05-27 12:49).
+- **GREEN**: `npm test -- rate-limit session` → `Test Files 2 passed (2), Tests 18 passed (18)` (2026-05-27 12:50).
+- **Regression**: `npm test` → `Test Files 13 passed (13), Tests 272 passed (272)`.
+- **Commit**: `5ddd622 feat(auth): rate-limit + session-map primitives (login step 2)`.
 
 ---
 

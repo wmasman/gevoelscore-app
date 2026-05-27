@@ -2,13 +2,13 @@
 
 A personal Long COVID tracking app: one tap to log a daily "feeling score" (gevoelscore), optional note and tags, and a timeline view to spot patterns over time.
 
-**Status**: domain layer + live backend infrastructure shipped (2026-05-27). Next.js frontend not yet started. See [docs/architecture/current-state.md](docs/architecture/current-state.md) for what's actually deployed.
+**Status** (2026-05-27): domain layer + live backend + Next.js bootstrap + auth route handlers shipped. Login feature 4 of 7 steps done. Frontend not yet deployed to Fly (slot exists, no machines). See [docs/architecture/current-state.md](docs/architecture/current-state.md) for the full snapshot.
 
 ## Architecture at a glance
 
 ```
-Browser PWA (Next.js 15, App Router)              ← not yet built
-  ↕ HTTPS, httpOnly cookie auth
+Browser PWA (Next.js 15, App Router, Tailwind v4) ← shipped: src/app/, not yet deployed
+  ↕ HTTPS, httpOnly cookie auth (gs_session)
 Directus 11.17.2 on Fly.io                        ← deployed: gevoelscore-backend.fly.dev
   ↕ TLS via Neon pooler
 Neon PostgreSQL 17 (EU region)                    ← deployed: gevoelscore-db
@@ -57,18 +57,22 @@ Daily entry must not be more friction than the current sheet. The minimum flow i
 | [docs/sample-data.csv](docs/sample-data.csv) | Anonymized sample (60 days, date + score only) |
 | [src/lib/domain/](src/lib/domain/) | Pure-TS domain validators (Score, DayEntry, Tag — 232 tests) |
 | [src/lib/import/](src/lib/import/) | CSV import parser (22 tests) — parses the historical sheet |
+| [src/lib/auth/](src/lib/auth/) | Server-side auth primitives (rate-limit, session, pending-OTP, origin check, Directus SDK wrapper) |
+| [src/app/](src/app/) | Next.js 15 App Router: minimal shell + `/api/auth/{login,login/verify,logout}` route handlers + `/api/health` |
+| [tests/](tests/) | Playwright API + e2e specs (`tests/api/`, `tests/e2e/`) |
 | [directus/](directus/) | Dockerfile, fly.toml, and idempotent schema/permissions scripts |
 | [.claude/](.claude/) | Project-local Claude Code config: conventions, testing doctrine, security checklist, slash commands |
 
 ## Tech stack
 
-- **Frontend**: Next.js 15 (App Router, TypeScript strict) as a PWA — see [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md)
+- **Frontend**: Next.js 15 (App Router, TypeScript strict) + Tailwind CSS v4 as a PWA — see [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md)
 - **Backend**: Directus 11.17.2 on Fly.io (`ams` region)
 - **Database**: Neon PostgreSQL 17 (`aws-eu-central-1`, free tier) — see [ADR 0003 amendment](docs/decisions/0003-directus-fly-infra-setup.md#amendment-2026-05-27-postgres-provider-switched-to-neon) for the Fly-Postgres → Neon pivot
-- **Auth**: Directus auth (email + password + mandatory TOTP 2FA)
-- **API access**: Directus SDK (`@directus/sdk`) with Zod validation at the boundary
+- **Auth**: Directus auth (email + password + mandatory TOTP 2FA); server-side session map + `httpOnly` cookie via Route Handlers
+- **API access (frontend)**: `@directus/sdk` v18 — typed query builder, M2M-aware
+- **API access (server scripts)**: plain `fetch` — dep-free, see [directus/scripts/lib/directus-request.mjs](directus/scripts/lib/directus-request.mjs)
 - **Domain layer**: pure TypeScript, runs in Node + browser, zero third-party deps
-- **Testing**: Vitest (TDD-mandatory — see [`.claude/testing.md`](.claude/testing.md))
+- **Testing**: Vitest for unit + Playwright for API + e2e (TDD-mandatory — see [`.claude/testing.md`](.claude/testing.md))
 - **Calendar (v1.5)**: Google Calendar API, read-only OAuth
 - **Apple Health, Garmin (v2)**: not supported in PWA — would require a separate native iOS app
 

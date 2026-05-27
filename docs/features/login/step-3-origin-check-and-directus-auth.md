@@ -93,13 +93,21 @@ Test cases (one `it` per AC slice):
 
 ## Done criteria
 
-- [ ] Both test files exist and FAIL before implementation (RED captured)
-- [ ] `src/lib/auth/origin-check.ts` exists and tests pass
-- [ ] `src/lib/auth/directus-auth.ts` exists and tests pass
-- [ ] Full Vitest suite still green (272 + ~20 new)
-- [ ] `npm run typecheck` clean
-- [ ] `npm run lint` clean
-- [ ] No new HIGH gate findings
+- [x] Both test files exist and FAIL before implementation (RED captured)
+- [x] `src/lib/auth/origin-check.ts` exists and tests pass
+- [x] `src/lib/auth/directus-auth.ts` exists and tests pass
+- [x] Full Vitest suite still green (272 + 21 new = 293)
+- [x] `npm run typecheck` clean
+- [x] `npm run lint` clean
+- [x] No new HIGH gate findings
+
+### Captured evidence
+
+- **RED**: `npm test -- origin-check directus-auth` → 2 failed test files with `Cannot find module '../origin-check'` and `Cannot find module '../directus-auth'` (2026-05-27 13:02).
+- **First GREEN attempt failed typecheck**: SDK v18.0.3 has positional `login(email, password, options)`, not the object-syntax shown in Context7 docs. Adjusted implementation + tests; re-ran.
+- **GREEN**: `npm test -- origin-check directus-auth` → `Test Files 2 passed (2), Tests 21 passed (21)` (2026-05-27 13:03).
+- **Regression + types + lint**: `npm test && npm run typecheck && npm run lint` all clean. Full suite 293/293.
+- **Commit**: `94c1a3d feat(auth): origin-check + Directus auth client (login step 3)`.
 
 ---
 

@@ -174,15 +174,18 @@ src/
 
 ## Steps
 
-1. **Step 1**: Next.js bootstrap (separate concern — not in this feature; happens once at the terminal).
-2. **Step 2**: Server-side auth library (`src/lib/auth/*`) — RED → GREEN with mocked Directus SDK. ~6 ACs covered (AC3, AC5, AC7, AC8, AC11, AC13).
-3. **Step 3**: Login route handlers (`/api/auth/login*`, `/api/auth/logout`) — wire library to Next.js. RED → GREEN at the unit level.
-4. **Step 4**: `/login` and `/login/verify` UI — RED → GREEN at the component level (`@testing-library/react`).
-5. **Step 5**: Middleware (`middleware.ts`) — protects every page except `/login*`. RED → GREEN.
-6. **Step 6**: `/login/2fa-setup` UI + `/api/auth/2fa-enable` Route Handler — RED → GREEN.
-7. **Step 7**: Playwright e2e against the live stack — verifies AC1, AC2, AC4, AC9, AC15–AC18 end-to-end.
+The original plan bundled "server-side auth library" into a single Step 2. During execution it split into two cleaner TDD-sized chunks (rate-limit + session, then origin-check + Directus client). Numbering below reflects what was actually shipped — the step files in this folder are the source of truth.
 
-Step files (`step-N-*.md`) get written when the prerequisites are met and the feature moves out of `Planning`.
+1. **Step 1**: Next.js bootstrap — Next 15 + React 19 + Tailwind v4 + Playwright + ESLint flat config. Closed-loop test setup (Vitest + Playwright API + Playwright e2e). Commit `45e356b`. **Done 2026-05-27.**
+2. **Step 2**: [Rate-limit + session map](step-2-rate-limit-and-session.md) — `src/lib/auth/rate-limit.ts` + `session.ts`, both injectable-clock for deterministic tests. ~18 ACs partially covered (AC5, AC8, AC11, AC12, AC13). Commit `5ddd622`. **Done 2026-05-27.**
+3. **Step 3**: [Origin check + Directus auth client](step-3-origin-check-and-directus-auth.md) — `origin-check.ts` (CSRF defence A08) + `directus-auth.ts` (wraps `@directus/sdk@18.0.3`, Result-shaped). Includes the explicit decision to use the SDK over plain fetch. Commit `94c1a3d`. **Done 2026-05-27.**
+4. **Step 4**: [Login + verify + logout route handlers](step-4-auth-route-handlers.md) — `src/app/api/auth/{login, login/verify, logout}/route.ts`, plus `pending-otp.ts` for stashing creds between login and verify, plus `stores.ts` barrel for module-singletons. Vitest unit tests + Playwright API specs. ~10 ACs covered (AC1–AC3, AC5–AC8, AC10, AC11, AC13). Commit `dbf59e5`. **Done 2026-05-27.**
+5. **Step 5**: `/login` and `/login/verify` UI pages — forms that POST to the Step 4 routes. Component-level tests + Playwright e2e for form behavior. Covers AC4 (autofocus, autofill, large primary button), AC9 (mobile TOTP input). **Next up.**
+6. **Step 6**: Middleware (`middleware.ts`) — protects every page except `/login*`. Covers AC14.
+7. **Step 7**: `/login/2fa-setup` UI + `/api/auth/2fa-enable` Route Handler. Covers AC15–AC18.
+8. **Step 8**: Playwright e2e against the live stack — un-skips the rate-limit integration specs, adds happy-path 200 + cookie tests. Needs Prereq 3 (frontend-app Directus user).
+
+Each step file follows the TDD template and records its own RED/GREEN evidence in a `Done` section.
 
 ## Verification
 

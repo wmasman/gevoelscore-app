@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade + tag provenance + JSON-array flattening + tag hierarchy + Postgres views)
+**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade + tag provenance + JSON-array flattening + tag hierarchy + Postgres views + Next.js bootstrap + auth route handlers)
 
 ---
 
@@ -13,7 +13,7 @@
 | App | Region | Status | URL | Resources |
 |-----|--------|--------|-----|-----------|
 | `gevoelscore-backend` | `ams` | ✅ deployed, running | https://gevoelscore-backend.fly.dev | 1 GB RAM, 1 shared CPU, Directus 11.17.2 |
-| `gevoelscore-frontend` | `ams` | ⏳ app slot only, no deploy | https://gevoelscore-frontend.fly.dev | Next.js Dockerfile + fly.toml not yet written |
+| `gevoelscore-frontend` | `ams` | ⏳ app slot only, no deploy | https://gevoelscore-frontend.fly.dev | Next.js 15.5 + Tailwind v4. [Dockerfile](../../Dockerfile) (standalone build) + [fly.toml](../../fly.toml) shipped. Awaiting first `fly deploy`. |
 
 **Backend secrets** (set via `fly secrets`, never committed):
 
@@ -146,9 +146,24 @@ directus/
 | `src/lib/domain/tag-category.ts` | 19 | ✅ shipped |
 | `src/lib/domain/tag.ts` | 30 | ✅ shipped |
 | `src/lib/import/csv-day-entries.ts` | 22 | ✅ shipped — parser only, not yet wired to Directus |
-| `src/app/*` (Next.js) | 0 | ❌ not started |
+| `src/lib/auth/rate-limit.ts` | 6 | ✅ shipped — login step 2 |
+| `src/lib/auth/session.ts` | 12 | ✅ shipped — login step 2 |
+| `src/lib/auth/origin-check.ts` | 9 | ✅ shipped — login step 3 |
+| `src/lib/auth/directus-auth.ts` | 12 | ✅ shipped — login step 3, SDK-wrapped |
+| `src/lib/auth/pending-otp.ts` | 9 | ✅ shipped — login step 4 |
+| `src/lib/auth/stores.ts` | — (composed in route tests) | ✅ shipped — login step 4 |
+| `src/app/page.tsx` + `layout.tsx` | (Playwright e2e) | ✅ minimal shell — login step 1 |
+| `src/app/api/health/route.ts` | (Playwright API) | ✅ shipped — bootstrap smoke |
+| `src/app/api/auth/login/route.ts` | 10 + Playwright | ✅ shipped — login step 4 |
+| `src/app/api/auth/login/verify/route.ts` | 7 + Playwright | ✅ shipped — login step 4 |
+| `src/app/api/auth/logout/route.ts` | 4 + Playwright | ✅ shipped — login step 4 |
 
-**Test suite**: 254/254 passing, typecheck clean, `npm audit` clean.
+**Test suite**:
+- **Vitest**: 323/323 passing (domain + auth library + route handlers)
+- **Playwright**: 17 passing / 2 skipped (rate-limit integration deferred to Step 7 — dev mode resets module state; Vitest covers it directly)
+- **TypeScript**: `tsc --noEmit` clean
+- **ESLint**: clean (flat config, `next/core-web-vitals` + `next/typescript`)
+- **`npm audit`**: 2 moderate findings in `postcss` bundled inside Next.js (not actionable — awaits upstream Next patch)
 
 ---
 
@@ -156,22 +171,19 @@ directus/
 
 In the order they should be tackled:
 
-0. **Apply the Postgres views** (one-time, deferred until a consumer exists)
-   - Paste each `directus/scripts/views/*.sql` file into the Neon Console SQL editor, OR run with `psql $env:DB_CONNECTION_STRING -f <file>` if psql is installed.
-   - Optional: register them as read-only collections in the Directus admin UI so they show up in the data studio.
-1. **Create the frontend-app Directus user** (5 min in admin UI)
+1. **Login feature steps 5-7** ([docs/features/login/](../features/login/)) — `/login` + `/login/verify` + `/login/2fa-setup` UI pages, the `middleware.ts` for protected-route gating, then Playwright e2e against the live stack.
+2. **Create the frontend-app Directus user** (manual admin UI step — needed before step 7 of login can run live)
    - Settings → Access Control → Users → Create
    - Assign role `gevoelscore-frontend-api`
    - Set a password (random, store in password manager)
    - Enable 2FA
-2. **Bootstrap Next.js** in this repo (one terminal session, ~20 min)
-   - `pnpm create next-app gevoelscore-frontend --typescript --app --tailwind --eslint`
-   - Adapt the resulting `src/app/` to share the existing `src/lib/domain/` types
-   - Add Dockerfile + reuse the existing `fly.toml` from [ADR 0003](../decisions/0003-directus-fly-infra-setup.md) (or apply the runbook commands)
-3. **Implement login feature** ([docs/features/login/](../features/login/) has the plan)
-4. **Implement daily-entry screen** (the cardinal-principle UI work)
-5. **Wire the CSV import to Directus** (parser is done; needs upsert glue)
-6. **Implement recent-missed-days, calendar, timeline, settings** in order
+3. **First `fly deploy` of the frontend** — Dockerfile + fly.toml are ready; needs the frontend Directus user wired and a sanity check the e2e suite passes against staging.
+4. **Apply the Postgres views** (one-time, deferred until a consumer exists)
+   - Paste each `directus/scripts/views/*.sql` file into the Neon Console SQL editor, OR run with `psql $env:DB_CONNECTION_STRING -f <file>` if psql is installed.
+   - Optional: register them as read-only collections in the Directus admin UI so they show up in the data studio.
+5. **Implement daily-entry screen** (the cardinal-principle UI work) — needs login feature done first
+6. **Wire the CSV import to Directus** (parser is done; needs upsert glue)
+7. **Implement recent-missed-days, calendar, timeline, settings** in order
 
 ---
 
