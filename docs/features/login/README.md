@@ -2,7 +2,7 @@
 
 **Feature:** Email + password login with mandatory TOTP 2FA. Establishes an `httpOnly` session cookie that all subsequent Directus calls use.
 **Version:** v1
-**Status:** Planning (prerequisites pending — see below)
+**Status:** In progress — Step 1 (Next.js bootstrap) done 2026-05-27. Prereq 3 (frontend-app Directus user) still pending, blocks Step 7 only.
 **Parent doc:** [REQUIREMENTS.md "Auth"](../../REQUIREMENTS.md), [security-checklist](../../../.claude/security-checklist.md), [ADR 0002](../../decisions/0002-pwa-with-directus-backend.md), [ADR 0003](../../decisions/0003-directus-fly-infra-setup.md)
 
 ---
