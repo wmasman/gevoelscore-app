@@ -21,6 +21,11 @@ test.describe('/login page', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
+        // Mirror the real route's Set-Cookie so middleware lets the / navigation through.
+        // Real cookie includes Secure; tests run on HTTP so we drop it here.
+        headers: {
+          'set-cookie': 'gs_session=mock-session-id; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600',
+        },
         body: JSON.stringify({ ok: true }),
       }),
     );
@@ -74,6 +79,9 @@ test.describe('/login page', () => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
+        headers: {
+          'set-cookie': 'gs_session=mock-session-id; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600',
+        },
         body: JSON.stringify({ ok: true }),
       }),
     );
