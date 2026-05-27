@@ -9,6 +9,7 @@ import { directusEnableTfa } from '@/lib/auth/directus-auth';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { parseSessionCookie } from '@/lib/auth/session';
+import { getClientIp, pendingTfaStore, tfaEnableRateLimiter } from '@/lib/auth/stores';
 
 function allowedOrigins(): string[] {
   const origins: string[] = [];
@@ -28,25 +29,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
+  const ip = getClientIp(request);
+  const rl = tfaEnableRateLimiter.check(ip);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'rate_limited', retry_after_ms: rl.retryAfterMs },
+      { status: 429 },
+    );
+  }
+
   const sessionId = parseSessionCookie(request.headers.get('cookie'));
-  const session = sessionId ? await getValidatedSession(sessionId) : null;
+  if (!sessionId) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  }
+  const session = await getValidatedSession(sessionId);
   if (!session) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   }
 
-  let body: { secret?: unknown; otp?: unknown };
+  let body: { otp?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
-  const secret = typeof body.secret === 'string' ? body.secret : '';
   const otp = typeof body.otp === 'string' ? body.otp.trim() : '';
-  if (!secret || !otp) {
+  if (!otp) {
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
 
-  const result = await directusEnableTfa(session.accessToken, secret, otp);
+  // Server-side binding: look up the secret stashed by /2fa/generate. Ignore
+  // any `secret` field on the body (audit H2).
+  const pending = pendingTfaStore.get(sessionId);
+  if (!pending) {
+    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+  }
+
+  const result = await directusEnableTfa(session.accessToken, pending.secret, otp);
   if (!result.ok) {
     if (result.error === 'invalid_otp') {
       return NextResponse.json({ error: 'invalid_otp' }, { status: 401 });
@@ -57,5 +76,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'server_error' }, { status: 502 });
   }
 
+  pendingTfaStore.delete(sessionId);
   return NextResponse.json({ ok: true }, { status: 200 });
 }

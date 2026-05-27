@@ -7,8 +7,9 @@ import { NextResponse } from 'next/server';
 import { directusGenerateTfaSecret } from '@/lib/auth/directus-auth';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
+import { PENDING_TFA_TTL_MS } from '@/lib/auth/pending-tfa';
 import { parseSessionCookie } from '@/lib/auth/session';
-import { getClientIp } from '@/lib/auth/stores';
+import { getClientIp, pendingTfaStore, tfaGenerateRateLimiter } from '@/lib/auth/stores';
 
 function allowedOrigins(): string[] {
   const origins: string[] = [];
@@ -28,11 +29,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  // ip kept for future rate-limiting / audit; ignored for now
-  void getClientIp(request);
+  const ip = getClientIp(request);
+  const rl = tfaGenerateRateLimiter.check(ip);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'rate_limited', retry_after_ms: rl.retryAfterMs },
+      { status: 429 },
+    );
+  }
 
   const sessionId = parseSessionCookie(request.headers.get('cookie'));
-  const session = sessionId ? await getValidatedSession(sessionId) : null;
+  if (!sessionId) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  }
+  const session = await getValidatedSession(sessionId);
   if (!session) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   }
@@ -59,6 +69,13 @@ export async function POST(request: Request) {
     // network_error, directus_error → generic
     return NextResponse.json({ error: 'server_error' }, { status: 502 });
   }
+
+  // Bind the secret to the session so /enable can look it up without trusting
+  // the client's posted value (audit H2).
+  pendingTfaStore.create(sessionId, {
+    secret: result.value.secret,
+    expiresAt: Date.now() + PENDING_TFA_TTL_MS,
+  });
 
   return NextResponse.json(
     { secret: result.value.secret, otpauth_url: result.value.otpauthUrl },

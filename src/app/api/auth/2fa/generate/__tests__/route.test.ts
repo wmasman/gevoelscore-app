@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   directusGenerateTfaSecret: vi.fn(),
   getValidatedSession: vi.fn(),
+  pendingTfaCreate: vi.fn(),
+  tfaGenerateRateLimiterCheck: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/directus-auth', () => ({
@@ -16,6 +18,12 @@ vi.mock('@/lib/auth/get-validated-session', () => ({
 vi.mock('@/lib/auth/stores', () => ({
   loginRateLimiter: { check: vi.fn(), sweep: vi.fn(), size: vi.fn() },
   verifyRateLimiter: { check: vi.fn(), sweep: vi.fn(), size: vi.fn() },
+  tfaGenerateRateLimiter: {
+    check: mocks.tfaGenerateRateLimiterCheck,
+    sweep: vi.fn(),
+    size: vi.fn(),
+  },
+  tfaEnableRateLimiter: { check: vi.fn(), sweep: vi.fn(), size: vi.fn() },
   sessionStore: {
     create: vi.fn(),
     get: vi.fn(),
@@ -27,6 +35,13 @@ vi.mock('@/lib/auth/stores', () => ({
   },
   pendingOtpStore: {
     create: vi.fn(),
+    get: vi.fn(),
+    delete: vi.fn(),
+    cleanupExpired: vi.fn(),
+    size: vi.fn(),
+  },
+  pendingTfaStore: {
+    create: mocks.pendingTfaCreate,
     get: vi.fn(),
     delete: vi.fn(),
     cleanupExpired: vi.fn(),
@@ -54,6 +69,9 @@ describe('POST /api/auth/2fa/generate', () => {
   beforeEach(() => {
     mocks.directusGenerateTfaSecret.mockReset();
     mocks.getValidatedSession.mockReset();
+    mocks.pendingTfaCreate.mockReset();
+    mocks.tfaGenerateRateLimiterCheck.mockReset();
+    mocks.tfaGenerateRateLimiterCheck.mockReturnValue({ allowed: true });
     mocks.getValidatedSession.mockResolvedValue({
       accessToken: 'at-1',
       refreshToken: 'rt-1',
@@ -74,6 +92,26 @@ describe('POST /api/auth/2fa/generate', () => {
       otpauth_url: 'otpauth://totp/Directus:a@b.com?secret=JBSWY3DPEHPK3PXP',
     });
     expect(mocks.directusGenerateTfaSecret).toHaveBeenCalledWith('at-1', 'mypassword');
+  });
+
+  it('stashes the generated secret in pendingTfaStore keyed by session id', async () => {
+    mocks.directusGenerateTfaSecret.mockResolvedValue({
+      ok: true,
+      value: { secret: 'JBSWY3DPEHPK3PXP', otpauthUrl: 'otpauth://x' },
+    });
+    await POST(makeRequest({ password: 'mypassword' }, { cookie: 'gs_session=s-id' }));
+    expect(mocks.pendingTfaCreate).toHaveBeenCalledOnce();
+    const [sessionId, data] = mocks.pendingTfaCreate.mock.calls[0]!;
+    expect(sessionId).toBe('s-id');
+    expect(data.secret).toBe('JBSWY3DPEHPK3PXP');
+    expect(typeof data.expiresAt).toBe('number');
+    expect(data.expiresAt).toBeGreaterThan(Date.now());
+  });
+
+  it('does not stash on Directus failure', async () => {
+    mocks.directusGenerateTfaSecret.mockResolvedValue({ ok: false, error: 'invalid_password' });
+    await POST(makeRequest({ password: 'wrong' }, { cookie: 'gs_session=s-id' }));
+    expect(mocks.pendingTfaCreate).not.toHaveBeenCalled();
   });
 
   it('401 when no session cookie', async () => {
@@ -103,5 +141,13 @@ describe('POST /api/auth/2fa/generate', () => {
   it('400 on missing password', async () => {
     const res = await POST(makeRequest({}, { cookie: 'gs_session=s-id' }));
     expect(res.status).toBe(400);
+  });
+
+  it('429 when tfaGenerateRateLimiter rejects (H1)', async () => {
+    mocks.tfaGenerateRateLimiterCheck.mockReturnValue({ allowed: false, retryAfterMs: 1234 });
+    const res = await POST(makeRequest({ password: 'pw' }, { cookie: 'gs_session=s-id' }));
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: 'rate_limited', retry_after_ms: 1234 });
+    expect(mocks.directusGenerateTfaSecret).not.toHaveBeenCalled();
   });
 });
