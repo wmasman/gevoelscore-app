@@ -37,11 +37,12 @@ Bullet checklist of Given/When/Then behaviors. Each line becomes one `it` block 
 
 Hard constraints from cardinal principles, privacy / security rules, and v1.5/v2 readiness that apply to this feature specifically. These shape both the implementation and the test plan.
 
-- **Offline**: [must work without network? specify]
-- **At rest**: [any new persistent data; encryption stance; backup-exclusion stance]
-- **Permissions**: [HealthKit types, OAuth scopes, location, notifications]
-- **Performance**: [any timing budget — e.g. "daily-entry flow stays ≤ 10s"]
-- **Dependencies**: [any new dep is audited per `.claude/conventions.md`]
+- **Online**: [feature requires network; graceful "no network, retry" state per ADR 0002 — or specify if this feature uniquely needs offline support]
+- **Storage**: [any new Directus collection or field; nullable for v1.5/v2 passive-data sources; access only via `src/lib/api/`]
+- **Validation**: [Zod schemas in `src/lib/validation/` for any new boundary input — CSV imports, Directus responses, OAuth payloads]
+- **Permissions**: [OAuth scopes (Google Calendar v1.5+), browser geolocation (v2), browser notifications (v2) — narrowest scope; default deny]
+- **Performance**: [any timing budget — e.g. "daily-entry flow stays ≤ 10s on a 3G connection over Safari iOS"]
+- **Dependencies**: [any new dep audited per `.claude/conventions.md` — license, telemetry, maintainer]
 
 ---
 
@@ -51,8 +52,9 @@ For each layer touched, name the test file and the cases that will be written. T
 
 | File | Cases (one per `it`, mapped to AC) |
 |------|------------------------------------|
-| `src/lib/{module}/__tests__/{module}.test.ts` | AC1: ...; AC2: ... |
-| `src/lib/db/__tests__/{topic}.test.ts` | AC3: ... |
+| `src/lib/domain/__tests__/{module}.test.ts` | AC1: ...; AC2: ... |
+| `src/lib/api/__tests__/{topic}.test.ts` | AC3: ... |
+| `src/lib/validation/__tests__/{schema}.test.ts` | AC4: ... |
 
 ---
 
@@ -65,8 +67,8 @@ Walk each of the 6 cardinal principles. State the impact and how the design stay
 | One-tap entry | e.g. "adds a chip-row below score" | "score still saves on first tap; chip-row is below and optional" |
 | Sub-10-second flow | e.g. "adds ~1s if tags are used" | "tags only render if user has tagged before; defaults to collapsed for new users" |
 | Brainfog-friendly | | |
-| Local-first | | |
-| No telemetry | | |
+| No notifications / ads / analytics | | |
+| User-owned data | | (new data stays in author's Directus; covered by CSV / JSON export and full-delete) |
 | Export / delete still works | | |
 
 ---
@@ -98,33 +100,37 @@ Things deliberately deferred. For each:
 
 User-control framing: what's collected, where it goes, how the user takes it back.
 
-- **OS-level permissions requested**: [HealthKit types / OAuth scope / location / notifications — be specific, no "all"]
-- **Data that leaves the device**: [none / aggregates only / specify]
-- **Opt-in surface**: [where in the UI the user grants / revokes; per-source toggle]
-- **Export coverage**: [confirm new fields are in CSV / JSON / SQLite dump exporters]
-- **Delete coverage**: [confirm full-wipe removes all new data, cached tokens, sync queues]
+- **OAuth scopes / browser permissions requested**: [Google Calendar `calendar.readonly` v1.5+ / geolocation v2 / notifications v2 — be specific, no "all"]
+- **Where the data lives**: [author's self-hosted Directus on Fly.io; column-level encryption stance if applicable]
+- **Data that leaves the author's infrastructure**: [none by default; if any third-party call, justify and add an opt-in toggle]
+- **Opt-in surface**: [where in the UI the user grants / revokes a permission or integration]
+- **Export coverage**: [confirm new fields are in CSV and JSON exporters; full Postgres dump via Directus admin remains available]
+- **Delete coverage**: [confirm full-wipe removes all new data from Directus + clears any client-side cache / cookies]
 
 ---
 
 ## Security
 
-Threat framing: what can be exfiltrated, corrupted, or executed by something/someone that shouldn't. Reference: OWASP MASVS.
+Threat framing: what can be exfiltrated, corrupted, or executed by something/someone that shouldn't. Reference: OWASP ASVS for the web surface, plus the OWASP Top 10 (A01 Broken Access, A03 Injection, A05 Misconfig, A07 Auth, A08 Data Integrity, A09 Logging).
 
-- **At rest**: [encryption status of any new persistent data; key storage location — Keychain/Keystore, never AsyncStorage; backup-exclusion stance]
-- **In transit**: [HTTPS confirmed for any new network calls; OAuth endpoints; certificate-pinning decision]
-- **Injection / untrusted input**: [parameterized SQL; CSV-export formula-injection escaping; import validation rules; deep-link / URL-scheme handling]
-- **Permissions (least privilege)**: [confirm narrowest scope used — `HKQuantityType`-level, `calendar.readonly`, no location-by-default]
-- **Mobile-specific**: [app-switcher snapshot blur; clipboard discipline; universal-link validation if introduced]
-- **Build hygiene**: [no source maps in release; no `console.log` of PII; `__DEV__` gating for debug screens]
-- **Supply chain**: [new deps audited — license, last-published, maintainer, transitive telemetry; `npm audit` clean]
+- **Access control (A01, A07)**: [Directus auth required on every collection touch; session via `httpOnly`+`Secure`+`SameSite=Strict` cookie; CSRF stance for state-changing requests; CORS origin allowlist]
+- **In transit**: [HTTPS-only for the Directus instance + any external API (Google Calendar v1.5, weather v2); TLS validation default; no mixed content]
+- **At rest**: [Fly.io Postgres-at-rest encryption default; any sensitive field column-level encrypted (if applicable); Directus service tokens via Fly secrets, never committed]
+- **Injection / untrusted input (A03)**: [Zod-validated at the API client boundary; CSV-export formula-injection escaping; import validation rules — out-of-range scores, date bounds, column count]
+- **Web surface**: [no `dangerouslySetInnerHTML` without `@security` + DOMPurify; no user-controlled `href` / `src` / `style` without validation; no secrets in client bundle; CSP allowlist documented]
+- **Permissions (least privilege)**: [OAuth scope is narrowest (`calendar.readonly`); browser permissions declined by default]
+- **PWA-specific**: [service worker cache strategy for sensitive responses; `manifest.webmanifest` carries no per-user state]
+- **Build hygiene & logging (A09)**: [no source maps in production; no `console.log` of PII; dev-only routes / screens gated by `process.env.NODE_ENV !== 'production'`; error responses do not leak stack traces or internal paths]
+- **Supply chain**: [new deps audited — license, last-published, maintainer, transitive telemetry; `npm audit` clean before merging]
 
 ---
 
 ## v1.5 / v2 readiness
 
-- **`DayEntry` impact**: [unchanged / added field `X` (nullable) / N/A]
-- **Other schema impact**: [Project / Tag / CalendarEvent / new collection — describe]
-- **Integration shape**: [if this touches a data source: confirm it follows the "fetch + aggregate + store per day" module interface]
+- **Directus schema impact**: [unchanged / added field `X` to collection `Y` (nullable) / new collection — confirm migration is additive only]
+- **`DayEntry` impact**: [unchanged / added field `X` (nullable) / N/A — confirm nullable fields for `garmin`, `health`, `weather`, `calendar_events`, `project_entries`, `derived` still exist]
+- **Other schema impact**: [`projects` / `tags` / `calendar_events` / new collection — describe]
+- **Integration shape**: [if this touches a data source: confirm it follows the "fetch + aggregate + store per day" module interface in `src/lib/integrations/`]
 - **Deferred assumptions**: [what this feature deliberately doesn't decide yet, and where the decision will surface]
 
 ---
@@ -146,9 +152,10 @@ src/
 
 ### Integration with existing code
 
-- Imports from `src/lib/db/`: [...]
+- Imports from `src/lib/api/`: [Directus query / mutation wrappers used]
+- Imports from `src/lib/validation/`: [Zod schemas applied at the boundary]
 - Imports from `src/lib/integrations/`: [...]
-- New hooks / screens / components: [...]
+- New hooks / app routes / components: [...]
 - Existing callers that change: [...]
 
 ---
@@ -198,11 +205,11 @@ src/
 
 ### Manual
 
-1. Device walkthrough: open the app on the target device, perform the daily-entry flow, stopwatch it.
-2. Brainfog walkthrough: one-handed, low-light, arm's length. Any tap that needs a second attempt is a fail.
-3. Offline check: airplane mode, repeat daily-entry flow.
-4. Export check: trigger CSV export after using the feature, confirm new fields are present.
-5. Delete check: trigger full wipe, confirm no orphan data.
+1. Browser walkthrough: open the app in Safari iOS (primary daily-driver context) + cross-check in Chrome / Firefox. Perform the daily-entry flow, stopwatch it.
+2. Brainfog walkthrough: one-handed, low-light, arm's length on a phone. Any tap that needs a second attempt is a fail.
+3. Network-loss check: DevTools Network → Offline (or disable Wi-Fi). Verify the "no network, retry" state per [ADR 0002](../../../docs/decisions/0002-pwa-with-directus-backend.md) — daily entry is allowed to fail; the UX of that failure is not.
+4. Export check: trigger CSV / JSON export after using the feature, confirm new fields are present.
+5. Delete check: trigger full wipe via Directus admin or the app's delete-my-account flow, confirm no orphan rows.
 
 ### Testing strategy
 

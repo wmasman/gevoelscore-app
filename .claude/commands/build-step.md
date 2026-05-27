@@ -53,10 +53,12 @@ Per the doctrine table:
 
 | Layer | Path |
 |-------|------|
-| Domain | `src/lib/{module}/__tests__/{module}.test.ts` |
-| Storage | `src/lib/db/__tests__/{topic}.test.ts` |
+| Domain | `src/lib/domain/__tests__/{module}.test.ts` |
+| API client | `src/lib/api/__tests__/{topic}.test.ts` |
+| Validation | `src/lib/validation/__tests__/{schema}.test.ts` |
 | Integration | `src/lib/integrations/{source}/__tests__/{source}.test.ts` |
 | Component | `src/components/__tests__/{component}.test.tsx` |
+| Screen / flow | `e2e/{flow}.spec.ts` (Playwright) |
 
 Create the file if it doesn't exist. Follow the test file shape from the doctrine.
 
@@ -194,18 +196,18 @@ Zero errors. Warnings reviewed and either fixed or explicitly suppressed with re
 Walk the four gates from `/plan-feature` Phase 5 against the actual code, not the plan:
 
 - [ ] **Cardinal-principle**: nothing this step added blocks one-tap / sub-10s flow / brainfog-friendly.
-- [ ] **Privacy**: new data fields are covered by export and full-wipe.
-- [ ] **Security**: new at-rest data is encrypted; new network calls use HTTPS; new untrusted input is validated; no new telemetry deps.
-- [ ] **v1.5/v2 readiness**: schema additions preserve nullable fields for future passive-data sources.
+- [ ] **Privacy**: new data fields are covered by CSV / JSON export and full-wipe; no third-party services touch user data.
+- [ ] **Security**: new network calls go through `src/lib/api/` with Zod validation; no secrets in the client bundle; no new telemetry deps; `npm audit` still clean.
+- [ ] **v1.5/v2 readiness**: Directus collection additions are additive (no destructive migrations); nullable fields for future passive-data sources preserved.
 
 A "this looks fine, no new findings" is a valid result — but you have to look.
 
 ### 5.4 Walkthrough (only if the step changed the daily screen)
 
-- [ ] Open the app on target device / simulator
+- [ ] Open the app in the target browser (Safari iOS as the primary daily-driver context; Chrome / Firefox as cross-check)
 - [ ] Time the daily entry flow with a stopwatch — must stay ≤ 10s on a good-day simulation
-- [ ] One-handed, low light, arm's length — any tap that needs a second attempt is a fail
-- [ ] Offline check: airplane mode, repeat the flow
+- [ ] One-handed, low light, arm's length on a phone — any tap that needs a second attempt is a fail
+- [ ] Network-loss check: DevTools Network → Offline (or disable Wi-Fi). Verify the "no network, retry" state per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md) — daily entry is allowed to fail; the UX of that failure is not
 
 ---
 

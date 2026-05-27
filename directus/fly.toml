@@ -1,0 +1,32 @@
+# fly.toml — gevoelscore Directus backend
+# Per ADR 0003. Mirrors the TVO `programmeerprobeer/directus/fly.toml` pattern,
+# adapted for single-user personal app (no telemetry, no staging/prod split).
+
+app = 'gevoelscore-backend'
+primary_region = 'ams'
+
+[build]
+
+[[mounts]]
+  source = 'gevoelscore_uploads'
+  destination = '/directus/uploads'
+
+[http_service]
+  internal_port = 8055
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[env]
+  # IPv4/IPv6 dual-stack for Fly internal networking.
+  HOST = "::"
+  PORT = "8055"
+  TZ = "Europe/Amsterdam"
+  # Secrets (KEY, SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, CORS_*, DATABASE_URL etc.)
+  # are set via `fly secrets set` — never committed.

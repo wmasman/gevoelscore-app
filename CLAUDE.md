@@ -14,6 +14,7 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 - [docs/technisch_document.md](docs/technisch_document.md) — tech stack, integrations, privacy, licensing
 - [.claude/conventions.md](.claude/conventions.md) — file structure, code/copy conventions, repo hygiene
 - [.claude/testing.md](.claude/testing.md) — **TDD doctrine** (the loop, mandatory test layers, RED-first rule, anti-patterns)
+- [.claude/security-checklist.md](.claude/security-checklist.md) — **Security checklist** (OWASP ASVS-aligned, curated for single-user Next.js PWA + Directus)
 
 ## Key rules
 
@@ -51,10 +52,10 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 
 ## Working with Claude on this project
 
-- **Planning new work**: `/plan-feature` — turns a requirement or brief section into a feature folder under `docs/features/{name}/` with README + TDD-shaped step files. Enforces cardinal-principle, privacy, security (OWASP MASVS-aligned for mobile + local-first), and v1.5/v2 readiness gates. Every step file produced has Acceptance Criteria, Technical Constraints, and a Test Plan — naming every test before any code is written.
+- **Planning new work**: `/plan-feature` — turns a requirement or brief section into a feature folder under `docs/features/{name}/` with README + TDD-shaped step files. Enforces cardinal-principle, privacy, security (OWASP ASVS-aligned for a web app with a self-hosted Directus backend), and v1.5/v2 readiness gates. Every step file produced has Acceptance Criteria, Technical Constraints, and a Test Plan — naming every test before any code is written.
 - **Implementing a step**: `/build-step` — walks one step file through the strict RED → GREEN → REFACTOR loop. Pairs with `/plan-feature` and reads from [.claude/testing.md](.claude/testing.md). Refuses to run if the step file lacks acceptance criteria or a test plan.
 - **TDD is mandatory.** Tests before implementation, every time. Pure-styling work replaces tests with a visual baseline screenshot — it is not exempt from the loop, only the testing technique changes.
-- **Before suggesting a dependency, framework, or pattern**: check it survives all 6 cardinal principles and the local-first / no-telemetry rule. If it doesn't, propose an alternative.
+- **Before suggesting a dependency, framework, or pattern**: check it survives all 6 cardinal principles and the no-telemetry rule (per [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md), "local-first" is no longer the architectural framing — data lives in self-hosted Directus, exports and full delete remain first-class). If it doesn't, propose an alternative.
 - **When the brief and a clean architecture disagree**: the brief wins. The user has 1.363 days of evidence about what works for daily logging.
 - **UX calls (sub-10-second flow, brainfog-friendly)**: ask. They aren't testable in unit tests.
 - **No source code yet**: don't fabricate paths or imports as if code exists. Update this section when the first prototype starts.

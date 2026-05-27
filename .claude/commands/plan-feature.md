@@ -6,7 +6,7 @@ description: Plan a new feature from requirement or idea to implementation-ready
 
 Structured workflow for turning a requirement, idea, or section of the brief into an implementation-ready feature plan under `docs/features/{name}/` — with TDD-shaped steps, cardinal-principle gates, privacy gates, security gates, and v1.5/v2 readiness checks.
 
-> **Stack note**: per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md), the locked stack is **Next.js 15 PWA + Directus on Fly.io**. Some examples below still reference the earlier Expo / HealthKit framing (ADR 0001, now superseded) — update on encounter. The structure of the gates is platform-agnostic and stays correct.
+> **Stack**: per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md), Next.js 15 PWA frontend + Directus on Fly.io + PostgreSQL. Online-first; offline support deferred per ADR 0002.
 
 **This command never writes source code.** It produces planning docs only. Implementation happens via [`/build-step`](build-step.md), which walks each step through the strict RED → GREEN → REFACTOR loop.
 
@@ -63,7 +63,7 @@ Resolve ambiguity **before** drawing architecture. Always ask if any of these ar
 - **Scope boundary**: What's in, what's explicitly out, what's "later"?
 - **UX flow**: Does this touch the daily screen (Blok 1/2)? If yes, the one-tap and sub-10-second rules apply hard.
 - **Data**: Does this introduce new `DayEntry` fields, new collections, or new integration sources?
-- **Permissions**: Does this require HealthKit, OAuth, location, calendar, or notification permissions?
+- **Permissions**: Does this require OAuth (Google Calendar v1.5+), browser geolocation (v2 weather), or browser notifications (v2)?
 - **Security surface**: Does this introduce new at-rest data, new network calls, new untrusted input (imports, deep links, share-sheet), or new dependencies? (Triggers the security gate in Phase 5.3.)
 
 ---
@@ -156,8 +156,8 @@ Bullet checklist of Given/When/Then behaviors. Each line becomes one `it` block 
 ## Technical constraints
 Hard constraints from the cardinal principles, privacy/security rules, and v1.5/v2 readiness that apply to this feature specifically.
 
-- Offline: must work without network
-- At rest: any new persistent data is in the encrypted SQLite DB
+- Online-first: requires network for daily entry; graceful "no network, retry" state if offline (per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md))
+- Storage: any new data is in a Directus collection, accessed via `src/lib/api/`, validated by Zod in `src/lib/validation/`
 - Permissions: ...
 - Performance: ...
 
@@ -166,17 +166,17 @@ For each layer touched, name the test file and the cases that will be written. T
 
 | File | Cases (one per `it`) |
 |------|----------------------|
-| `src/lib/{module}/__tests__/{module}.test.ts` | rejects > 6; rejects < 1; rejects 4.5 (halves not allowed) |
-| `src/lib/db/__tests__/{topic}.test.ts` | round-trip insert + read; overwrites same-day entry |
+| `src/lib/domain/__tests__/{module}.test.ts` | rejects > 6; rejects < 1; rejects 4.5 (halves not allowed) |
+| `src/lib/api/__tests__/{topic}.test.ts` | upsert by date overwrites same-day entry; response shape validates |
 
 ## Cardinal-principle impact
 Which of the 6 cardinal principles this feature touches, and how it stays inside them:
 - One-tap entry — does this affect the daily screen? If yes, how do we preserve "one tap = done"?
 - Sub-10-second flow — added screens / interactions and their time cost
 - Brainfog-friendly — tap target size, screen depth, decisions required
-- Local-first — where the data lives
-- No telemetry — dependencies introduced
-- Export / delete still works — new data covered by export and full-wipe
+- No notifications / ads / analytics — dependencies introduced; surfacing of any nudges
+- User-owned data — new data lives in self-hosted Directus; no third-party telemetry
+- Export / delete still works — new data covered by CSV / JSON export and full-wipe
 
 ## Alternatives Considered
 For each major decision: chose, rejected (with reasons), when to revisit, migration path.
@@ -185,9 +185,9 @@ For each major decision: chose, rejected (with reasons), when to revisit, migrat
 Things deliberately deferred. For each: what it is, trigger signals, proposed approach.
 
 ## Privacy & permissions
-- Which OS-level permissions are requested (HealthKit types, calendar scope, location, notifications)
-- What data leaves the device, if any, and what the opt-in surface looks like
-- What the export / delete path looks like for new data this feature introduces
+- Which OAuth scopes / browser permissions are requested (Google Calendar `calendar.readonly` for v1.5, browser geolocation for v2 weather, browser notifications for v2)
+- What data goes to the Directus backend, what (if anything) stays client-only, and what the opt-in surface looks like
+- What the export / delete path looks like for new data this feature introduces (CSV + JSON; full Postgres dump available via Directus admin)
 
 ## v1.5 / v2 readiness
 - Schema additions: are nullable fields for future passive-data sources preserved?
@@ -224,7 +224,7 @@ Step files are the contract between `/plan-feature` and `/build-step`. They must
 # Step N: Name
 
 **Estimated time:** X hours
-**Test layer:** Domain | Storage | Integration | Component | Screen | Visual-baseline-only
+**Test layer:** Domain | API client | Validation | Integration | Component | Screen | Visual-baseline-only
 **Risk:** Low / Medium / High — why
 **Prerequisite:** Step N-1 complete (or: none)
 
@@ -235,8 +235,8 @@ Step files are the contract between `/plan-feature` and `/build-step`. They must
 - [ ] AC2: ...
 
 ## Technical constraints (applicable to this step)
-- [ ] Constraint that must hold (e.g. "score validation runs in < 1ms on a 5-year-old phone")
-- [ ] Constraint from a gate (e.g. "no telemetry deps added")
+- [ ] Constraint that must hold (e.g. "score validation runs synchronously in < 1ms")
+- [ ] Constraint from a gate (e.g. "no telemetry deps added", "no secrets in client bundle")
 
 ## Test plan
 Copy-pasteable test code. One `it` block per AC. Test file path is explicit.
@@ -307,10 +307,10 @@ Everything that was GREEN before must still be GREEN.
 Clean up while GREEN stays GREEN. State what was changed, or "none needed".
 
 ### N.6 Walkthrough — if the step changed the daily screen
-1. Open on target device / simulator
+1. Open the app in the target browser (Safari iOS as the primary daily-driver context; Chrome / Firefox for cross-check)
 2. Stopwatch the daily-entry flow — must stay ≤ 10s
-3. One-handed, low light, arm's length — any second-attempt tap is a fail
-4. Airplane mode, repeat
+3. One-handed, low light, arm's length on a phone — any second-attempt tap is a fail
+4. Network-loss check: DevTools Network → Offline (or disable Wi-Fi), repeat the flow. Verify the "no network, retry" state per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md) — daily entry is allowed to fail; the UX of that failure is not allowed to fail
 
 ### N.7 Checkpoint
 What's safe to commit at this point. State the commit message that will be used.
@@ -336,7 +336,7 @@ Walk every step and the README against each of the 6 cardinal principles from [C
 - [ ] **No friction on main flow**: no required fields, no dropdowns, no sliders, no modal dialogs on the daily screen.
 - [ ] **Brainfog-friendly**: tap targets are large enough for accidental-press tolerance; no screen requires more than one decision; copy is short and unambiguous; no animations or color flashes added.
 - [ ] **No notifications / ads / analytics / tracking**: no telemetry deps added; no notifications in v1; if v2 notifications, they meet the silent-and-conditional spec from technisch_document.md.
-- [ ] **Local-first**: new data lives on device by default; any sync is opt-in; opt-in surface is documented.
+- [ ] **User-owned data**: new data lives in the author's self-hosted Directus instance; no third-party storage / sync introduced; CSV / JSON export and full-delete still work for the new fields.
 
 **Output**: HIGH / MEDIUM / LOW findings with specific fixes. Fix all HIGH before proceeding.
 
@@ -345,62 +345,40 @@ Walk every step and the README against each of the 6 cardinal principles from [C
 - [ ] No analytics, tracking, ads, telemetry deps added (check `package.json` diffs).
 - [ ] No third-party SDKs that phone home. If a dep does this with a toggle, the toggle is disabled and documented.
 - [ ] Personal data does not enter the repo. Any sample / fixture data is anonymized.
-- [ ] OS-level permissions are requested **per type**, not as a bundle (HealthKit: per `HKQuantityType`; Google Calendar: only `calendar.readonly`).
+- [ ] OAuth / browser permissions are requested **per type**, with the narrowest scope (Google Calendar: only `calendar.readonly`; browser geolocation / notifications only when the feature actively needs them).
 - [ ] User can see in Settings which data sources / types are active and disable each one.
 - [ ] **Export still covers new data this feature introduces.** CSV export, JSON export, and direct Postgres access (via Directus admin or `pg_dump`) all include the new fields.
 - [ ] **Delete still wipes new data.** Full-wipe leaves no orphan rows / files / cached tokens / pending sync queues.
-- [ ] If cloud sync is touched: only aggregates, not raw HealthKit samples; opt-in per source.
+- [ ] Cloud is the source of truth (per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md)) — but the cloud is the author's own Directus instance, not a third party. If a feature would route data through any third-party service, stop and flag it.
 
 **Output**: same severity scheme. Fix all HIGH before proceeding.
 
 ### 5.3 Security gate
 
-Health data on a personal device is a security model with a different shape than a server-side web app — the threats are device compromise, leaky exports, injection from imported data, and supply-chain risk, not CSRF / XSS / SQL injection at an API. Reference frame: **OWASP MASVS** (Mobile Application Security Verification Standard), not the Web Top 10.
+The full checklist lives in [`.claude/security-checklist.md`](../security-checklist.md) — load it and walk it for any feature that touches auth, persistence, network calls, untrusted input, or new dependencies.
 
-**At rest**
+Frame: **OWASP ASVS** for the web surface + OWASP Top 10 (A01 Broken Access Control, A03 Injection, A05 Misconfiguration, A07 Auth Failures, A08 Data Integrity / CSRF, A09 Logging Failures). Threat model: single-user, self-hosted Directus, personal health data.
 
-- [ ] Postgres at-rest encryption is enabled (Fly.io default). Directus admin password and any service credentials managed via Fly secrets, never committed.
-- [ ] OAuth refresh tokens (v1.5+) stored server-side in Directus, not in browser `localStorage`. Browser session tokens via `httpOnly` cookies, not JS-accessible storage.
-- [ ] Directus instance is HTTPS-only, no HTTP fallback. CORS configured to allow only the frontend origin.
+**Always-applies** (every feature, no exception):
 
-**In transit**
+- [ ] No `console.log` of scores / notes / tags / user content in production. `process.env.NODE_ENV !== 'production'` gates any dev logging.
+- [ ] No secrets in the client bundle (`NEXT_PUBLIC_*` is public; service tokens stay server-side).
+- [ ] `npm audit` clean before merging. Any new dep audited per the supply-chain section of the checklist.
+- [ ] No `dangerouslySetInnerHTML` introduced without `@security` justification + DOMPurify.
 
-- [ ] All network calls use HTTPS. No HTTP fallback for any URL the app constructs or accepts.
-- [ ] For OAuth endpoints (Google Calendar v1.5, sync backend v2): standard TLS validation. Consider certificate pinning for the sync backend specifically when v2 lands.
+**Feature-specific — answer for this feature:**
 
-**Injection / untrusted input**
+- What **new attack surface** does this feature add? (new collection, new API route, new untrusted-input source, new dep, new permission) — for each, walk the relevant section of the checklist.
+- What **existing surface** does it touch? (auth flow, CSRF-protected mutation, user-facing text rendering) — if so, re-verify those checklist items don't regress.
 
-- [ ] SQL via parameterized queries only. No string-concatenation into SQL.
-- [ ] **CSV formula injection on export**: cells starting with `=`, `+`, `-`, `@`, or `\t` are escaped (prefix with `'`). Excel and Sheets will execute formula-looking cells otherwise — real risk when the user opens the export.
-- [ ] Import validation: malformed CSV / XLSX doesn't crash or write garbage. Out-of-range scores, dates outside `[2022-09-03, today]`, wrong column count → reject with a clear error, never partial-write.
-- [ ] Deep-link / URL-scheme handlers treat input as untrusted. Never parsed straight into SQL, never `eval`-style execution.
+**Special focus** for features that touch:
 
-**Permissions (least privilege)**
+- **Daily-entry / score / note / tag flow** → A03 (XSS via note rendering), A08 (CSRF on the upsert), text-field handling (soft length cap, CSV-export formula escape).
+- **Import / Export** → text-field handling (formula injection on export, row validation on import).
+- **OAuth (v1.5 calendar)** → A07 (token storage), A05 (CORS + CSP), least-privilege scope.
+- **New API route** → A01 (auth on every collection touch), A08 (Origin check on mutations), A09 (generic error responses).
 
-- [ ] Google Calendar: `calendar.readonly` only. No write scope, ever.
-- [ ] Browser geolocation: only requested if the feature actually needs it (v2 weather). Decline by default.
-- [ ] Browser notifications: not requested in v1 at all.
-- [ ] HealthKit / Garmin native integrations are not available in PWA. If pursued at v2, they require a separate native iOS app that queries the same Directus backend.
-
-**Mobile-specific**
-
-- [ ] App-switcher snapshot doesn't leak the daily entry. Blur or hide the active screen on `applicationWillResignActive` (iOS) / `onPause` (Android) for any screen showing notes or scores.
-- [ ] Clipboard interactions are explicit and user-initiated. No auto-copy of notes or tags.
-- [ ] Universal links / Android App Links: validate the path before acting; don't accept arbitrary routing from a deep link.
-
-**Build hygiene**
-
-- [ ] No source maps in release builds.
-- [ ] No `console.log` of scores, notes, tags, or any user content in production. Dev-only logging gated by `__DEV__`.
-- [ ] Debug / inspector / "reset DB" screens gated by `__DEV__`. Hidden from release builds.
-
-**Supply chain**
-
-- [ ] `npm audit` shows zero high / critical before merging.
-- [ ] New dependencies are checked: license (no GPL in MIT code), last-published date (no abandoned packages), maintainer reputation, transitive deps for telemetry or analytics.
-- [ ] Lockfile committed. No floating versions.
-
-**Output**: HIGH / MEDIUM / LOW findings. Fix all HIGH before proceeding.
+**Output**: HIGH / MEDIUM / LOW findings against the checklist. Fix all HIGH before proceeding.
 
 ### 5.4 v1.5 / v2 readiness gate
 
@@ -410,8 +388,8 @@ The brief is explicit: v1 architecture must enable v1.5 (projects, calendar) and
 - [ ] If `Project` / `ProjectEntry` / `ProjectFieldConfig` is touched: schema stays open enough for arbitrary `numeric_values` / `tag_set` configurations.
 - [ ] If `Tag` is touched: category supports `project:<id>` and `custom`.
 - [ ] If introducing a data source: follows the standard "fetch + aggregate + store per day" interface so future sources slot in the same way.
-- [ ] No assumption is baked in that limits us to "one Google account" or "one HealthKit type" — the data model survives multi-account / multi-type expansion.
-- [ ] If choosing storage / sync technology: choice is made against the v2 passive-data load, not v1's needs.
+- [ ] No assumption is baked in that limits us to "one Google account" or "one weather source" — the data model survives multi-account / multi-source expansion. HealthKit / Garmin paths are out of scope for the PWA (separate native iOS app per [ADR 0002](../../docs/decisions/0002-pwa-with-directus-backend.md)), but the data model should still survive their addition via the same Directus backend.
+- [ ] If choosing storage / sync technology in this feature: choice is made against the v2 passive-data load, not v1's needs.
 
 **Output**: same severity scheme.
 
@@ -434,7 +412,7 @@ Could a developer who didn't attend the planning session pick up this plan and e
 - [ ] Dependencies between steps are explicit ("Prerequisite: Step N complete").
 - [ ] Estimated time per step.
 - [ ] Risk level per step with explanation.
-- [ ] Dutch domain terms (`gevoelscore`, `blok 1`, `fysiek/mentaal/positief/activiteit`, `rustdag/licht/matig/zwaar`) are preserved as-is — don't translate them in the plan.
+- [ ] Dutch domain terms (`gevoelscore`, `blok 1`, `mentaal/fysiek/overall/activiteit/gebeurtenis`, `rustdag/licht/matig/zwaar`) are preserved as-is — don't translate them in the plan.
 
 ---
 

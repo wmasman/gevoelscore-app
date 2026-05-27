@@ -1,7 +1,7 @@
 # Step 1: Name
 
 **Estimated time:** X hours
-**Test layer:** Domain | Storage | Integration | Component | Screen | Visual-baseline-only
+**Test layer:** Domain | API client | Validation | Integration | Component | Screen | Visual-baseline-only
 **Risk:** Low / Medium / High — why
 **Prerequisite:** none (Step 1 is always first) — or: "Step N from another feature complete"
 
@@ -112,10 +112,10 @@ Clean up while GREEN stays GREEN. State what was changed, or "none needed".
 
 ### 1.6 Walkthrough — only if the step changed the daily screen
 
-1. Open the app on the target device / simulator (specify which).
+1. Open the app in Safari iOS (primary daily-driver context) and cross-check in Chrome / Firefox.
 2. Time the daily-entry flow with a stopwatch — must stay ≤ 10s on a good-day simulation.
-3. Brainfog walkthrough: one-handed, low light, arm's length. Any tap that needs a second attempt is a fail.
-4. Offline check: airplane mode, repeat.
+3. Brainfog walkthrough: one-handed, low light, arm's length on a phone. Any tap that needs a second attempt is a fail.
+4. Network-loss check: DevTools Network → Offline. Verify the "no network, retry" state per [ADR 0002](../../../docs/decisions/0002-pwa-with-directus-backend.md).
 
 ### 1.7 Checkpoint
 

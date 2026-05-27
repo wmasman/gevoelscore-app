@@ -5,9 +5,9 @@ This document defines every entity in the system: fields, types, IDs, relationsh
 Companion documents (to be written):
 
 - [identity.md](identity.md) — ID strategy, deletion strategy, multi-device sync implications, deeper rationale
-- [persistence.md](persistence.md) — SQLite schema, migrations, encryption, sync seam
+- [persistence.md](persistence.md) — Directus collection schemas, Postgres-at-rest defaults on Fly.io, the API-client → validation seam
 - [integrations.md](integrations.md) — plug interface for v1.5/v2 data sources
-- [dependencies.md](dependencies.md) — per-package audit against cardinal principles + local-first + no-telemetry
+- [dependencies.md](dependencies.md) — per-package audit against cardinal principles + no-telemetry rule
 - [overview.md](overview.md) — layer diagram and dependency direction
 
 ---
@@ -42,7 +42,7 @@ Per [ADR 0002](../decisions/0002-pwa-with-directus-backend.md), this is a Next.j
 | Hosting (frontend) | **Fly.io** | Matches existing TVO infrastructure pattern. Next.js standalone output. |
 | Hosting (backend) | **Fly.io** — Directus + PostgreSQL | Same. Separate Fly.io app from TVO Directus. |
 
-Every package on this list will be audited against the cardinal principles + no-telemetry rule in [dependencies.md](dependencies.md). Adding any package not on this list requires an ADR.
+Every package on this list will be audited against the cardinal principles + no-telemetry rule in [dependencies.md](dependencies.md). **Adding an architectural-tier package** — anything that crosses a layer (auth, storage, UI framework, test runner, API client, validation library) — **requires an ADR**. Utility libraries (date helpers, small TypeScript type helpers, icon sets) get a one-line entry in `dependencies.md` and are audited via the security-gate supply-chain section in [`.claude/security-checklist.md`](../../.claude/security-checklist.md) — no separate ADR required, but the supply-chain checks (`npm audit`, license, last-published, maintainer, transitive telemetry) are mandatory.
 
 ---
 
@@ -124,7 +124,7 @@ The cardinal entity. One row per local-date the user has logged.
 ```typescript
 type DayEntry = {
   date: string;                          // ISO 8601 'YYYY-MM-DD', primary key
-  score: 1 | 2 | 3 | 4 | 5 | 6;          // integer only — see "Score validation" below
+  score: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;  // integer only — see "Score validation" below
   note: string | null;                   // free text, no length limit; null = no note today
   tag_ids: string[];                     // refs to Tag.id; order is presentation, not semantic
   sub_scores: SubScores | null;          // v2; null in v1
@@ -141,7 +141,7 @@ type DayEntry = {
 };
 
 type SubScores = {
-  cognitive: 1 | 2 | 3 | 4 | 5 | 6 | null;   // same scale as overall score
+  cognitive: 1 | 2 | 3 | 4 | 5 | 6 | null;   // 1–6 per brief (overall score is 1–10; sub-scores stay 1–6 by design — finer granularity for v2 deep-dive)
   physical: 1 | 2 | 3 | 4 | 5 | 6 | null;
   mental: 1 | 2 | 3 | 4 | 5 | 6 | null;
 };
@@ -158,25 +158,27 @@ type DerivedIndicators = {
 
 - `date` matches `^\d{4}-\d{2}-\d{2}$` and is a real calendar date (not `2026-02-30`)
 - `date` is not in the future (>= 1 day past today rejected)
-- `score` is one of: `1, 2, 3, 4, 5, 6` (integers only)
+- `score` is one of: `1, 2, 3, 4, 5, 6, 7, 8, 9, 10` (integers only)
 - `score` outside this set, including `2.5` or any decimal, is rejected at the domain boundary
+- `sub_scores.cognitive | physical | mental` stay on the **1–6** scale per the brief (the overall score is 1–10; sub-scores are a finer-granularity v2 deep-dive and don't share the overall range)
 - `note` is either `null` or a non-empty string after trim (empty string after trim becomes `null`)
 - `tag_ids` contains no duplicates; references must resolve to existing tags at persist time
-- `sub_scores.*` each follow the same `score` validation when non-null
+- `sub_scores.*` each follow the **1–6 integer** rule (not the overall score's 1–10) when non-null
 - `sleep_hours` if non-null is `>= 0 && <= 24`
 - `created_at <= updated_at`
 - Reading a `DayEntry` from storage that violates any rule must throw at the boundary, not silently degrade
 
-**Score validation — integers only (no halves):** the brief proposed half-values ("eventueel met halve waarden, 4.5 toelaten") but the locked decision is **integer-only**. Rationale: forcing a single integer choice (1–6) makes the user commit to a number rather than averaging away ambiguity. Nuance lives in `note` and `tag_ids`, which are richer than a 0.5-step refinement of the score. This is a tightening of the brief's range, captured here rather than as a separate ADR because the data-model is its locking surface.
+**Score validation — integers only (no halves), range 1–10:** the brief proposed half-values ("eventueel met halve waarden, 4.5 toelaten") but the locked decision is **integer-only**. Rationale: forcing a single integer choice makes the user commit to a number rather than averaging away ambiguity. Nuance lives in `note` and `tag_ids`, which are richer than a 0.5-step refinement of the score. The range is **1–10** — matching the original Google Sheet's `1-10` column (the brief notes that 7–10 were unused in the 1.363-day history, but the range stays open in case recovery patterns shift). This shape (integer-only + range 1–10) is locked here rather than as a separate ADR because the data-model is its locking surface.
 
 **Tests to write:**
 
-- `accepts integer score 1, 2, 3, 4, 5, 6`
+- `accepts integer score 1, 2, 3, 4, 5, 6, 7, 8, 9, 10`
 - `rejects score 0`
-- `rejects score 7`
+- `rejects score 11`
 - `rejects score 4.5 (halves not allowed)`
 - `rejects score 3.1 (decimals not allowed)`
 - `rejects score below 1`
+- `rejects sub_score 7 (sub-scores stay 1–6 even though overall is 1–10)`
 - `rejects date '2026-02-30'`
 - `rejects future date beyond today`
 - `accepts today's date`
@@ -201,11 +203,12 @@ type Tag = {
 };
 
 type TagCategory =
-  | 'fysiek'
   | 'mentaal'
-  | 'positief'
-  | 'activiteit'
-  | 'interventie'
+  | 'fysiek'
+  | 'overall'                                              // whole-day gestalt: 'goede dag', 'rotdag', 'lekker snel'
+  | 'activiteit'                                           // what the user did: 'rustdag', 'wandeling', 'ademhalingsoefening'
+  | 'gebeurtenis'                                          // what happened to the user: 'verjaardag', 'afspraak_zorg'
+  | 'interventie'                                          // ongoing v1.5 interventions: 'citalopram', 'breinvoeding'
   | 'project'                                              // requires project_id
   | 'custom';
 ```
@@ -217,6 +220,8 @@ type TagCategory =
 - `category === 'project'` requires `project_id` non-null; all other categories require `project_id === null`
 - `usage_count >= 0`
 - Renaming a tag updates `label` only; `id` is stable
+
+**Why these 5 clusters (mentaal / fysiek / overall / activiteit / gebeurtenis):** the brief proposed 4 clusters with a separate `positief` group. The locked decision (per REQUIREMENTS.md and confirmed 2026-05-26) is to drop `positief` and treat valence as a value within each dimension — `helder` is mentaal-positive, `goede energie` is fysiek-positive, etc. This is more honest about what's being captured (you observe a state on a dimension; the valence is just a property of that observation). The new `overall` cluster catches whole-day gestalt markers that don't fit a body-system (`goede dag`, `rotdag`). The new `gebeurtenis` cluster separates what *happened* to the user from what the user *did* — useful for retrospective: "was it the activity load or the events that pushed today?"
 
 **Tests to write:**
 

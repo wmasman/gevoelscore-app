@@ -37,7 +37,7 @@ Suggestion, not a constraint, until code exists. Revisit in the prototyping phas
 
 ## Code conventions
 
-- **TypeScript strict.** No implicit `any`, no `Record<string, any>` for domain data. External data (HealthKit, Google Calendar, weather APIs, CSV import) validated at the boundary.
+- **TypeScript strict.** No implicit `any`, no `Record<string, any>` for domain data. External data (Directus API responses, Google Calendar v1.5+, weather v2, CSV import) validated at the boundary with Zod schemas in `src/lib/validation/`.
 - **Filenames**: kebab-case (`score-button.tsx`, `day-entry.ts`). Tests co-located in `__tests__/`.
 - **No telemetry dependencies.** Reject packages that phone home — crash reporters, analytics SDKs, A/B tools. If a package needs this disabled via config, disable it and document why.
 
@@ -45,7 +45,7 @@ Suggestion, not a constraint, until code exists. Revisit in the prototyping phas
 
 - **User-facing copy**: Dutch.
 - **Code, comments, commits, planning docs**: English.
-- **Domain terms stay Dutch** where the brief uses them: `gevoelscore`, `dagboek`, `blok 1`, `fysiek/mentaal/positief/activiteit`, `rustdag/licht/matig/zwaar`.
+- **Domain terms stay Dutch** where the brief / REQUIREMENTS use them: `gevoelscore`, `dagboek`, `blok 1`, `mentaal/fysiek/overall/activiteit/gebeurtenis` (the v1 tag clusters — supersedes the brief's original 4-cluster `fysiek/mentaal/positief/activiteit`; see [data-model.md](../docs/architecture/data-model.md) "Why these 5 clusters"), `rustdag/licht/matig/zwaar`.
 
 ## Repo hygiene
 
