@@ -2,20 +2,41 @@
   "name": "gevoelscore-app",
   "version": "0.0.0-pre-prototype",
   "private": true,
-  "description": "Personal Long COVID daily-tracking app — pre-prototype, docs + test-runner scaffold only",
+  "description": "Personal Long COVID daily-tracking app — Next.js 15 PWA + Directus backend",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.18.0"
   },
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'lint not configured yet — add ESLint when the first non-scaffold source file lands' && exit 0"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "vitest run && playwright test"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.0.0",
+    "@playwright/test": "^1.49.0",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20.11.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^4.0.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.7"
   }

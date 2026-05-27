@@ -44,6 +44,11 @@ workbox-*.js
 # Coverage / test
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
+
+# Next.js generated types (regenerated on dev/build)
+next-env.d.ts
 
 # Local Directus / Docker (when running locally)
 docker-compose.override.yml

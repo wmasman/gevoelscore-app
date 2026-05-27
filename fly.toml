@@ -1,0 +1,42 @@
+# Fly.io config for the gevoelscore-frontend Next.js app.
+# Commitments come from ADR 0003.
+
+app = "gevoelscore-frontend"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+  PORT = "3000"
+  HOSTNAME = "0.0.0.0"
+  NEXT_PUBLIC_DIRECTUS_URL = "https://gevoelscore-backend.fly.dev"
+  # Server-side calls go over Fly's internal network — faster, no TLS overhead.
+  DIRECTUS_URL = "http://gevoelscore-backend.internal:8055"
+  NEXT_PUBLIC_APP_URL = "https://gevoelscore-frontend.fly.dev"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[deploy]
+  strategy = "rolling"
+  max_unavailable = 1
+
+# No [metrics] section — telemetry is forbidden per the cardinal principles.
