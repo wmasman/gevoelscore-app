@@ -268,10 +268,13 @@ const collections = [
   // -----------------------------------------------------------
   // day_entries — THE cardinal entity (v1)
   // -----------------------------------------------------------
-  // Note on M2M deferral: tag_ids/project_entry_ids/calendar_event_ids are
-  // stored as JSON arrays of UUIDs in v1. Migrating to proper M2M junctions
-  // is a v1.5 task — the domain layer's tag_ids: string[] contract survives
-  // either representation, so this is a storage-layer-only future change.
+  // Tags are a proper Directus M2M relation via the `day_entries_tags`
+  // junction collection (created after this loop, see "M2M setup" below).
+  // The M2M alias field `day_entries.tags` is added in that same phase.
+  //
+  // Still-JSON in v1 (deferred until used): project_entry_ids,
+  // calendar_event_ids — these are empty in v1 and will likely become proper
+  // 1:N relations via a `day_entry_id` FK on the child collections in v1.5.
   // -----------------------------------------------------------
   {
     collection: 'day_entries',
@@ -306,16 +309,9 @@ const collections = [
         schema: { is_nullable: true },
         meta: { interface: 'input-multiline' },
       },
-      {
-        field: 'tag_ids',
-        type: 'json',
-        schema: { is_nullable: true },
-        meta: {
-          interface: 'input-code',
-          options: { language: 'json' },
-          note: 'v1: JSON array of Tag.id UUIDs. v1.5: migrate to proper M2M junction.',
-        },
-      },
+      // NOTE: `tags` is an M2M alias field, created in the M2M setup phase
+      // after this collection loop completes. It is NOT a real DB column on
+      // day_entries — the relation lives in the day_entries_tags junction.
       {
         field: 'sub_scores',
         type: 'json',
@@ -606,6 +602,130 @@ async function createOrSkip(spec) {
 
 for (const spec of collections) {
   await createOrSkip(spec);
+}
+
+// ----------------------------------------------------------------------------
+// M2M setup: day_entries × tags
+// ----------------------------------------------------------------------------
+// Junction collection + two relations (with CASCADE) + two alias fields.
+// Idempotent: skip if junction / relation / alias already exists.
+
+console.log('\n  ── M2M setup: day_entries × tags ──');
+
+async function relationExists(collection, field) {
+  try {
+    await directusRequest(`/relations/${collection}/${field}`);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function fieldExists(collection, field) {
+  try {
+    await directusRequest(`/fields/${collection}/${field}`);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Junction collection
+if (await collectionExists('day_entries_tags')) {
+  console.log('  ⏩ day_entries_tags junction already exists');
+} else {
+  console.log('  ➕ Creating day_entries_tags junction collection...');
+  await directusRequest('/collections', 'POST', {
+    collection: 'day_entries_tags',
+    schema: { name: 'day_entries_tags' },
+    meta: {
+      icon: 'link',
+      note: 'Junction for day_entries ↔ tags M2M. Cascading deletes on both sides.',
+      hidden: true,
+    },
+    fields: [
+      idField,
+      {
+        field: 'day_entries_id',
+        type: 'uuid',
+        schema: { is_nullable: false },
+        meta: { hidden: true, interface: 'select-dropdown-m2o' },
+      },
+      {
+        field: 'tags_id',
+        type: 'uuid',
+        schema: { is_nullable: false },
+        meta: { hidden: true, interface: 'select-dropdown-m2o' },
+      },
+      {
+        field: 'sort',
+        type: 'integer',
+        schema: { is_nullable: true },
+        meta: { hidden: true, interface: 'input' },
+      },
+    ],
+  });
+  console.log('  ✅');
+}
+
+// Relations (CASCADE on both sides)
+if (await relationExists('day_entries_tags', 'day_entries_id')) {
+  console.log('  ⏩ relation day_entries_tags.day_entries_id already exists');
+} else {
+  console.log('  ➕ Creating relation: day_entries_tags.day_entries_id → day_entries.id (CASCADE)');
+  await directusRequest('/relations', 'POST', {
+    collection: 'day_entries_tags',
+    field: 'day_entries_id',
+    related_collection: 'day_entries',
+    meta: { one_field: 'tags', junction_field: 'tags_id', sort_field: 'sort' },
+    schema: { on_delete: 'CASCADE', on_update: 'NO ACTION' },
+  });
+  console.log('  ✅');
+}
+
+if (await relationExists('day_entries_tags', 'tags_id')) {
+  console.log('  ⏩ relation day_entries_tags.tags_id already exists');
+} else {
+  console.log('  ➕ Creating relation: day_entries_tags.tags_id → tags.id (CASCADE)');
+  await directusRequest('/relations', 'POST', {
+    collection: 'day_entries_tags',
+    field: 'tags_id',
+    related_collection: 'tags',
+    meta: { one_field: 'day_entries', junction_field: 'day_entries_id', sort_field: 'sort' },
+    schema: { on_delete: 'CASCADE', on_update: 'NO ACTION' },
+  });
+  console.log('  ✅');
+}
+
+// Alias fields (Directus doesn't always auto-create these from relations)
+if (await fieldExists('day_entries', 'tags')) {
+  console.log('  ⏩ alias day_entries.tags already exists');
+} else {
+  console.log('  ➕ Creating alias field day_entries.tags');
+  await directusRequest('/fields/day_entries', 'POST', {
+    field: 'tags',
+    type: 'alias',
+    schema: null,
+    meta: {
+      interface: 'list-m2m',
+      special: ['m2m'],
+      options: { template: '{{tags_id.label}}' },
+    },
+  });
+  console.log('  ✅');
+}
+
+if (await fieldExists('tags', 'day_entries')) {
+  console.log('  ⏩ alias tags.day_entries already exists');
+} else {
+  console.log('  ➕ Creating alias field tags.day_entries');
+  await directusRequest('/fields/tags', 'POST', {
+    field: 'day_entries',
+    type: 'alias',
+    schema: null,
+    meta: { interface: 'list-m2m', special: ['m2m'] },
+  });
+  console.log('  ✅');
 }
 
 console.log('\n✅ Schema setup complete. Run verify-schema.mjs next.\n');

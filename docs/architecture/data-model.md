@@ -481,9 +481,9 @@ Schema-wide picture of v1 reality:
 
 | Directus collection | v1 populates? | Notes |
 |---|---|---|
-| `day_entries` | yes — `date`, `score`, `note`, M2M to `tags`, timestamps | other fields stay null |
-| `tags` | yes — full lifecycle (create, rename, archive, merge) | |
-| `day_entries_tags` (Directus-generated junction) | yes (managed by Directus M2M) | |
+| `day_entries` | yes — `date`, `score`, `note`, M2M to `tags`, timestamps | other fields stay null. **Status 2026-05-27**: 1,363 rows imported from the historical Google Sheet. |
+| `tags` | yes — full lifecycle (create, rename, archive, merge) | **Status 2026-05-27**: 83 tags seeded across 6 categories. `usage_count` recomputed by [`recompute-tag-usage.mjs`](../../directus/scripts/recompute-tag-usage.mjs). |
+| `day_entries_tags` (junction) | yes — proper Directus M2M with cascading deletes on both FKs | **Status 2026-05-27**: 1,338 junction rows. Set up by [`upgrade-m2m-tags.mjs`](../../directus/scripts/upgrade-m2m-tags.mjs) and now ships natively in [`setup-schema.mjs`](../../directus/scripts/setup-schema.mjs). |
 | `projects` | no — collection exists, never written | |
 | `project_entries` | no | |
 | `project_entries_tags` (Directus-generated junction) | no | |

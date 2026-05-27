@@ -81,6 +81,34 @@ Confirms that the PostgreSQL `data_type` of every critical field matches the Dir
 - After any schema change to verify nothing regressed
 - During incident response when "the wrong data type" is a suspect
 
+### [`directus/scripts/lib/tag-patterns.mjs`](../../directus/scripts/lib/tag-patterns.mjs)
+
+Canonical tag-pattern map: ~80 candidate tags across the 6 v1 clusters, each with one-or-more regex patterns. Source of truth for note → tag matching. Exports `matchTags(note)` and `flatTagList()`. Shared by `analyze-notes.mjs`, `seed-tags.mjs`, and `import-real-history.mjs` — change this file, downstream scripts pick it up.
+
+### [`directus/scripts/analyze-notes.mjs`](../../directus/scripts/analyze-notes.mjs)
+
+Reads `private/real-history.csv` and reports tag-pattern frequencies + project-candidate date ranges + sample of unmatched notes (PII — console only, never written to disk). Pure read; safe to run any time. Use `--show-unmatched` for the unmatched sample.
+
+### [`directus/scripts/seed-tags.mjs`](../../directus/scripts/seed-tags.mjs)
+
+Idempotent: creates every tag in `lib/tag-patterns.mjs` in Directus. Re-running skips existing labels. When you add a new pattern to the lib, re-run this to add the corresponding tag.
+
+### [`directus/scripts/seed-projects.mjs`](../../directus/scripts/seed-projects.mjs)
+
+Idempotent: creates the 5 Project entities (Citalopram, CPAP, Naproxen, Breinvoeding, HeartMath) with their inferred date ranges. Edit the in-script `PROJECTS` array to add more.
+
+### [`directus/scripts/import-real-history.mjs`](../../directus/scripts/import-real-history.mjs)
+
+Imports `private/real-history.csv` (the user's 1.363-day Google Sheet) into Directus. Handles Dutch date format, quoted multi-column CSV cells, duplicate dates, future-prefilled blanks, and **populates the `tags` M2M relation** via the matched tag patterns. Defaults to dry-run; pass `--commit` to write. Idempotent upsert-by-date.
+
+### [`directus/scripts/upgrade-m2m-tags.mjs`](../../directus/scripts/upgrade-m2m-tags.mjs)
+
+**One-time migration** (2026-05-27): converted `day_entries.tag_ids` from a JSON-array field to a proper Directus M2M relation. The end state is now baked into `setup-schema.mjs`, so a fresh wipe-and-rebootstrap doesn't need this script. Kept in the repo as historical / reference.
+
+### [`directus/scripts/recompute-tag-usage.mjs`](../../directus/scripts/recompute-tag-usage.mjs)
+
+Idempotent: counts junction rows per tag and updates `Tag.usage_count`. Directus doesn't auto-update the denormalized count. Run after any bulk import or significant tag-edit session.
+
 ### [`directus/scripts/import-sample-data.mjs`](../../directus/scripts/import-sample-data.mjs)
 
 Imports the anonymized 60-day sample at [`docs/sample-data.csv`](../sample-data.csv) into the live `day_entries` collection. **Idempotent**: upsert by date — re-running PATCHes existing rows, POSTs new ones.

@@ -112,12 +112,12 @@ for (const row of parsed) {
       );
       updated++;
     } else {
-      // POST new
+      // POST new — sample CSV is date+score only, no tags
       await directusRequest('/items/day_entries', 'POST', {
         date: row.date,
         score: row.score,
         note: null,
-        tag_ids: null,
+        tags: [],
         sub_scores: null,
         sleep_hours: null,
         special_event: null,

@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-27 (initial infra deployment + sample data imported)
+**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade)
 
 ---
 
@@ -57,9 +57,10 @@
 
 | Collection | Purpose | Status | v1 use |
 |-----------|---------|--------|--------|
-| `day_entries` | The cardinal entity — one row per local-date logged | ✅ created (60 sample rows imported 2026-05-27) | **YES** — daily entries |
-| `tags` | Personal/dynamic tag set (5 clusters + interventie/project/custom) | ✅ created | **YES** — tag chips |
-| `projects` | Active interventions/projects (Citalopram, Breinvoeding, etc.) | ✅ created | No — v1.5 |
+| `day_entries` | The cardinal entity — one row per local-date logged | ✅ **1,363 rows** (full historical sheet, 3-9-2022 → 27-5-2026) | **YES** — daily entries |
+| `tags` | Personal/dynamic tag set (5 clusters + interventie/project/custom) | ✅ **83 tags seeded**; usage_count recomputed | **YES** — tag chips |
+| `day_entries_tags` (junction) | M2M between day_entries × tags, cascading deletes | ✅ **1,338 junction rows** (auto-derived from note matching) | **YES** — via the `tags` alias field |
+| `projects` | Active interventions/projects (Citalopram, Breinvoeding, etc.) | ✅ **5 projects seeded** (Citalopram, CPAP, Naproxen, Breinvoeding, HeartMath) | Schema queryable; ProjectEntry M2M deferred to v1.5 |
 | `project_field_configs` | Per-project field definitions | ✅ created | No — v1.5 |
 | `project_entries` | Per-project per-day entries | ✅ created | No — v1.5 |
 | `calendar_events` | Google Calendar read-only sync | ✅ created | No — v1.5 |
