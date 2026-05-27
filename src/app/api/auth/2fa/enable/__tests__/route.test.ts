@@ -2,11 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   directusEnableTfa: vi.fn(),
-  sessionGet: vi.fn(),
+  getValidatedSession: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/directus-auth', () => ({
   directusEnableTfa: mocks.directusEnableTfa,
+}));
+
+vi.mock('@/lib/auth/get-validated-session', () => ({
+  getValidatedSession: mocks.getValidatedSession,
 }));
 
 vi.mock('@/lib/auth/stores', () => ({
@@ -14,7 +18,9 @@ vi.mock('@/lib/auth/stores', () => ({
   verifyRateLimiter: { check: vi.fn(), sweep: vi.fn(), size: vi.fn() },
   sessionStore: {
     create: vi.fn(),
-    get: mocks.sessionGet,
+    get: vi.fn(),
+    peek: vi.fn(),
+    update: vi.fn(),
     delete: vi.fn(),
     cleanupExpired: vi.fn(),
     size: vi.fn(),
@@ -47,8 +53,8 @@ function makeRequest(body: unknown, opts: { cookie?: string; origin?: string } =
 describe('POST /api/auth/2fa/enable', () => {
   beforeEach(() => {
     mocks.directusEnableTfa.mockReset();
-    mocks.sessionGet.mockReset();
-    mocks.sessionGet.mockReturnValue({
+    mocks.getValidatedSession.mockReset();
+    mocks.getValidatedSession.mockResolvedValue({
       accessToken: 'at-1',
       refreshToken: 'rt-1',
       expiresAt: Date.now() + 60_000,

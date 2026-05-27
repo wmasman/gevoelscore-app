@@ -3,9 +3,16 @@ import { redirect } from 'next/navigation';
 import { SESSION_COOKIE_NAME } from '@/lib/auth/session';
 import { SetupForm } from './setup-form';
 
-// Server component: ensures the user is authenticated before showing the
-// setup form. Middleware doesn't gate /login/* paths, so this page does
-// its own presence check. Server-side cookie reads work for httpOnly.
+// Server component: gates this page on cookie presence. Server-side cookie
+// reads work for httpOnly. We deliberately stop at presence; the actual
+// session-value validation happens on form submit via /api/auth/2fa/generate
+// which uses getValidatedSession (with transparent refresh-token rotation).
+//
+// Trade-off: a user with a stale cookie sees the password form, enters
+// their password, and only then gets "Sessie verlopen. Log opnieuw in"
+// from the route. Acceptable — wasted one password entry vs. immediate
+// redirect — and avoids needing a test-only session backdoor in the
+// Playwright e2e suite.
 
 export default async function TwoFactorSetupPage() {
   const cookieStore = await cookies();

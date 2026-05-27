@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   directusLogout: vi.fn(),
-  sessionGet: vi.fn(),
+  getValidatedSession: vi.fn(),
   sessionDelete: vi.fn(),
 }));
 
@@ -10,12 +10,18 @@ vi.mock('@/lib/auth/directus-auth', () => ({
   directusLogout: mocks.directusLogout,
 }));
 
+vi.mock('@/lib/auth/get-validated-session', () => ({
+  getValidatedSession: mocks.getValidatedSession,
+}));
+
 vi.mock('@/lib/auth/stores', () => ({
   loginRateLimiter: { check: vi.fn(), sweep: vi.fn(), size: vi.fn() },
   verifyRateLimiter: { check: vi.fn(), sweep: vi.fn(), size: vi.fn() },
   sessionStore: {
     create: vi.fn(),
-    get: mocks.sessionGet,
+    get: vi.fn(),
+    peek: vi.fn(),
+    update: vi.fn(),
     delete: mocks.sessionDelete,
     cleanupExpired: vi.fn(),
     size: vi.fn(),
@@ -44,13 +50,13 @@ function makeRequest(opts: { cookie?: string; origin?: string } = {}) {
 describe('POST /api/auth/logout', () => {
   beforeEach(() => {
     mocks.directusLogout.mockReset();
-    mocks.sessionGet.mockReset();
+    mocks.getValidatedSession.mockReset();
     mocks.sessionDelete.mockReset();
     mocks.directusLogout.mockResolvedValue({ ok: true, value: undefined });
   });
 
   it('AC13: with valid session cookie → calls Directus logout + clears session + 200', async () => {
-    mocks.sessionGet.mockReturnValue({
+    mocks.getValidatedSession.mockResolvedValue({
       accessToken: 'at',
       refreshToken: 'rt',
       expiresAt: Date.now() + 60_000,
@@ -76,7 +82,7 @@ describe('POST /api/auth/logout', () => {
   });
 
   it('idempotent: stale session cookie (no matching server state) → 200, no Directus call', async () => {
-    mocks.sessionGet.mockReturnValue(undefined);
+    mocks.getValidatedSession.mockResolvedValue(null);
     const res = await POST(makeRequest({ cookie: 'gs_session=stale' }));
     expect(res.status).toBe(200);
     expect(mocks.directusLogout).not.toHaveBeenCalled();

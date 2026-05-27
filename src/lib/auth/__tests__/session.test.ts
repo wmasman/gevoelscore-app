@@ -100,6 +100,72 @@ describe('session', () => {
     });
   });
 
+  describe('peek (no eviction)', () => {
+    it('returns the entry as-is for a live session', () => {
+      const store = createSessionStore();
+      const id = store.create({
+        accessToken: 'at-1',
+        refreshToken: 'rt-1',
+        expiresAt: Date.now() + 60_000,
+      });
+
+      expect(store.peek(id)?.accessToken).toBe('at-1');
+    });
+
+    it('returns the entry even when the access token is expired (does NOT evict)', () => {
+      let clock = 1_000_000;
+      const store = createSessionStore({ now: () => clock });
+      const id = store.create({
+        accessToken: 'at-1',
+        refreshToken: 'rt-1',
+        expiresAt: clock + 1_000,
+      });
+
+      clock += 2_000;
+      const peeked = store.peek(id);
+      expect(peeked?.accessToken).toBe('at-1');
+      expect(store.size()).toBe(1);
+    });
+
+    it('returns undefined for an unknown id', () => {
+      const store = createSessionStore();
+      expect(store.peek('nope')).toBeUndefined();
+    });
+  });
+
+  describe('update (replace in place)', () => {
+    it('replaces the entry data for a known id and returns true', () => {
+      const store = createSessionStore();
+      const id = store.create({
+        accessToken: 'at-1',
+        refreshToken: 'rt-1',
+        expiresAt: Date.now() + 60_000,
+      });
+
+      const result = store.update(id, {
+        accessToken: 'at-2',
+        refreshToken: 'rt-2',
+        expiresAt: Date.now() + 120_000,
+      });
+
+      expect(result).toBe(true);
+      expect(store.peek(id)?.accessToken).toBe('at-2');
+      expect(store.peek(id)?.refreshToken).toBe('rt-2');
+    });
+
+    it('returns false for an unknown id and does NOT create a new entry', () => {
+      const store = createSessionStore();
+      const result = store.update('unknown', {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        expiresAt: Date.now() + 60_000,
+      });
+
+      expect(result).toBe(false);
+      expect(store.size()).toBe(0);
+    });
+  });
+
   describe('buildSessionCookie', () => {
     it('produces a httpOnly Secure SameSite=Strict cookie with Max-Age', () => {
       const cookie = buildSessionCookie('abc-123', 3600);

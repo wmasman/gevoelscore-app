@@ -8,7 +8,7 @@
 import { NextResponse } from 'next/server';
 import { directusLoginWithOtp } from '@/lib/auth/directus-auth';
 import { validateOrigin } from '@/lib/auth/origin-check';
-import { buildSessionCookie } from '@/lib/auth/session';
+import { buildSessionCookie, SESSION_MAX_AGE_S } from '@/lib/auth/session';
 import { buildPendingOtpCookie, parsePendingOtpCookie } from '@/lib/auth/pending-otp';
 import {
   getClientIp,
@@ -16,8 +16,6 @@ import {
   sessionStore,
   verifyRateLimiter,
 } from '@/lib/auth/stores';
-
-const SESSION_MAX_AGE_S = 60 * 60;
 
 function allowedOrigins(): string[] {
   const origins: string[] = [];

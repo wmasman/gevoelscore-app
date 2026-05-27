@@ -5,9 +5,10 @@
 
 import { NextResponse } from 'next/server';
 import { directusGenerateTfaSecret } from '@/lib/auth/directus-auth';
+import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { parseSessionCookie } from '@/lib/auth/session';
-import { getClientIp, sessionStore } from '@/lib/auth/stores';
+import { getClientIp } from '@/lib/auth/stores';
 
 function allowedOrigins(): string[] {
   const origins: string[] = [];
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   void getClientIp(request);
 
   const sessionId = parseSessionCookie(request.headers.get('cookie'));
-  const session = sessionId ? sessionStore.get(sessionId) : undefined;
+  const session = sessionId ? await getValidatedSession(sessionId) : null;
   if (!session) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
   }

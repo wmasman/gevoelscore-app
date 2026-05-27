@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import { directusLogout } from '@/lib/auth/directus-auth';
+import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { buildSessionCookie, parseSessionCookie } from '@/lib/auth/session';
 import { sessionStore } from '@/lib/auth/stores';
@@ -31,9 +32,11 @@ export async function POST(request: Request) {
 
   const sessionId = parseSessionCookie(request.headers.get('cookie'));
   if (sessionId) {
-    const session = sessionStore.get(sessionId);
+    // getValidatedSession refreshes the token if needed so the subsequent
+    // directusLogout call uses a live refresh token. If the session is
+    // gone entirely (refresh failed), null is fine — logout is idempotent.
+    const session = await getValidatedSession(sessionId);
     if (session) {
-      // Best-effort — directusLogout itself is idempotent on its end.
       await directusLogout(session.refreshToken);
       sessionStore.delete(sessionId);
     }

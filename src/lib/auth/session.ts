@@ -10,6 +10,13 @@
 
 export const SESSION_COOKIE_NAME = 'gs_session';
 
+// Cookie Max-Age — single source of truth used by every route that emits the
+// gs_session cookie. 30 days. The cookie holds an opaque session id; tokens
+// underneath get rotated transparently via the refresh flow in
+// get-validated-session.ts, so this Max-Age only governs the cookie itself,
+// not the access-token lifetime.
+export const SESSION_MAX_AGE_S = 30 * 24 * 60 * 60;
+
 export type SessionData = {
   accessToken: string;
   refreshToken: string;
@@ -23,7 +30,16 @@ export type SessionStoreConfig = {
 
 export type SessionStore = {
   create: (data: SessionData) => string;
+  // Returns the session, evicting it if expired. Use when you want
+  // "give me a valid session or nothing" without refresh.
   get: (id: string) => SessionData | undefined;
+  // Returns the entry as-is, even if expired. No eviction. Use when the
+  // caller wants to decide what to do about expiry (e.g. refresh-token
+  // rotation in get-validated-session.ts).
+  peek: (id: string) => SessionData | undefined;
+  // Replaces the entry in place. Returns true on success, false if the id is
+  // unknown (no new entry is created — use create() for that).
+  update: (id: string, data: SessionData) => boolean;
   delete: (id: string) => void;
   cleanupExpired: () => void;
   size: () => number;
@@ -49,6 +65,16 @@ export function createSessionStore(config: SessionStoreConfig = {}): SessionStor
         return undefined;
       }
       return session;
+    },
+
+    peek(id) {
+      return sessions.get(id);
+    },
+
+    update(id, data) {
+      if (!sessions.has(id)) return false;
+      sessions.set(id, data);
+      return true;
     },
 
     delete(id) {

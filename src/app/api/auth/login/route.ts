@@ -10,7 +10,7 @@
 import { NextResponse } from 'next/server';
 import { directusLogin } from '@/lib/auth/directus-auth';
 import { validateOrigin } from '@/lib/auth/origin-check';
-import { buildSessionCookie } from '@/lib/auth/session';
+import { buildSessionCookie, SESSION_MAX_AGE_S } from '@/lib/auth/session';
 import { buildPendingOtpCookie } from '@/lib/auth/pending-otp';
 import {
   getClientIp,
@@ -21,7 +21,6 @@ import {
 
 const PENDING_OTP_TTL_MS = 5 * 60_000;
 const PENDING_OTP_COOKIE_TTL_S = 300;
-const SESSION_MAX_AGE_S = 60 * 60; // 1h, matches Directus access-token default
 
 function allowedOrigins(): string[] {
   const origins: string[] = [];
