@@ -38,5 +38,12 @@ export default defineConfig({
     stdout: 'pipe',
     stderr: 'pipe',
     timeout: 120_000,
+    env: {
+      // Force unreachable Directus URL so auth tests never accidentally talk to
+      // production. Happy-path tests that need real Directus belong to Step 7
+      // (live-stack Playwright) and override DIRECTUS_URL explicitly.
+      DIRECTUS_URL: 'http://127.0.0.1:65535',
+      NEXT_PUBLIC_APP_URL: BASE_URL,
+    },
   },
 });
