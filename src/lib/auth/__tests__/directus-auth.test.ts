@@ -29,6 +29,8 @@ vi.mock('@directus/sdk', () => {
     readMe: () => ({ __cmd: 'readMe' }),
     logout: (args: unknown) => ({ __cmd: 'logout', args }),
     refresh: (args: unknown) => ({ __cmd: 'refresh', args }),
+    generateTwoFactorSecret: (password: string) => ({ __cmd: 'generateTfa', password }),
+    enableTwoFactor: (secret: string, otp: string) => ({ __cmd: 'enableTfa', secret, otp }),
   };
 });
 
@@ -38,6 +40,8 @@ import {
   directusRefresh,
   directusLogout,
   directusGetMe,
+  directusGenerateTfaSecret,
+  directusEnableTfa,
 } from '../directus-auth';
 
 describe('directus-auth', () => {
@@ -183,6 +187,84 @@ describe('directus-auth', () => {
       });
 
       const result = await directusGetMe('at-bad');
+      expect(result).toEqual({ ok: false, error: 'invalid_token' });
+    });
+  });
+
+  describe('directusGenerateTfaSecret', () => {
+    it('returns secret + otpauthUrl on success', async () => {
+      mocks.request.mockResolvedValue({
+        secret: 'JBSWY3DPEHPK3PXP',
+        otpauth_url: 'otpauth://totp/Directus:a@b.com?secret=JBSWY3DPEHPK3PXP&issuer=Directus',
+      });
+
+      const result = await directusGenerateTfaSecret('at-1', 'mypassword');
+      expect(result).toEqual({
+        ok: true,
+        value: {
+          secret: 'JBSWY3DPEHPK3PXP',
+          otpauthUrl: 'otpauth://totp/Directus:a@b.com?secret=JBSWY3DPEHPK3PXP&issuer=Directus',
+        },
+      });
+      expect(mocks.setToken).toHaveBeenCalledWith('at-1');
+      expect(mocks.request).toHaveBeenCalledWith({ __cmd: 'generateTfa', password: 'mypassword' });
+    });
+
+    it('returns invalid_password when Directus rejects the password', async () => {
+      mocks.request.mockRejectedValue({
+        errors: [{ extensions: { code: 'INVALID_CREDENTIALS' } }],
+      });
+
+      const result = await directusGenerateTfaSecret('at-1', 'wrong');
+      expect(result).toEqual({ ok: false, error: 'invalid_password' });
+    });
+
+    it('returns invalid_token when access token is rejected', async () => {
+      mocks.request.mockRejectedValue({
+        errors: [{ extensions: { code: 'INVALID_TOKEN' } }],
+      });
+
+      const result = await directusGenerateTfaSecret('at-bad', 'pw');
+      expect(result).toEqual({ ok: false, error: 'invalid_token' });
+    });
+
+    it('returns network_error on fetch failure', async () => {
+      mocks.request.mockRejectedValue(new TypeError('fetch failed'));
+
+      const result = await directusGenerateTfaSecret('at-1', 'pw');
+      expect(result).toEqual({ ok: false, error: 'network_error' });
+    });
+  });
+
+  describe('directusEnableTfa', () => {
+    it('returns ok:true on success', async () => {
+      mocks.request.mockResolvedValue(undefined);
+
+      const result = await directusEnableTfa('at-1', 'secret-abc', '123456');
+      expect(result).toEqual({ ok: true, value: undefined });
+      expect(mocks.setToken).toHaveBeenCalledWith('at-1');
+      expect(mocks.request).toHaveBeenCalledWith({
+        __cmd: 'enableTfa',
+        secret: 'secret-abc',
+        otp: '123456',
+      });
+    });
+
+    it('returns invalid_otp when the code is wrong', async () => {
+      mocks.request.mockRejectedValue({
+        errors: [{ extensions: { code: 'INVALID_OTP' } }],
+      });
+
+      const result = await directusEnableTfa('at-1', 'secret-abc', '000000');
+      expect(result).toEqual({ ok: false, error: 'invalid_otp' });
+    });
+
+    it('returns invalid_token when access token is rejected', async () => {
+      mocks.request.mockRejectedValue({
+        errors: [{ extensions: { code: 'INVALID_TOKEN' } }],
+      });
+
+      const result = await directusEnableTfa('at-bad', 'secret-abc', '123456');
       expect(result).toEqual({ ok: false, error: 'invalid_token' });
     });
   });

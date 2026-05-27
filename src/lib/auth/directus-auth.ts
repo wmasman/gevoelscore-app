@@ -16,6 +16,8 @@ import {
   readMe,
   logout as sdkLogout,
   refresh as sdkRefresh,
+  generateTwoFactorSecret as sdkGenerateTfaSecret,
+  enableTwoFactor as sdkEnableTfa,
 } from '@directus/sdk';
 
 export type AuthTokens = {
@@ -34,6 +36,13 @@ export type LoginWithOtpError = 'invalid_otp' | 'invalid_credentials' | 'network
 export type RefreshError = 'invalid_refresh_token' | 'network_error' | 'directus_error';
 export type LogoutError = 'network_error' | 'directus_error';
 export type GetMeError = 'invalid_token' | 'network_error' | 'directus_error';
+export type GenerateTfaError = 'invalid_password' | 'invalid_token' | 'network_error' | 'directus_error';
+export type EnableTfaError = 'invalid_otp' | 'invalid_token' | 'network_error' | 'directus_error';
+
+export type TfaSecret = {
+  secret: string;
+  otpauthUrl: string;
+};
 
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
@@ -175,6 +184,54 @@ export async function directusGetMe(
   } catch (e) {
     if (isNetworkError(e)) return { ok: false, error: 'network_error' };
     const code = errorCode(e);
+    if (code === 'INVALID_TOKEN' || code === 'INVALID_CREDENTIALS') {
+      return { ok: false, error: 'invalid_token' };
+    }
+    return { ok: false, error: 'directus_error' };
+  }
+}
+
+export async function directusGenerateTfaSecret(
+  accessToken: string,
+  password: string,
+): Promise<Result<TfaSecret, GenerateTfaError>> {
+  try {
+    const client = createClient();
+    client.setToken(accessToken);
+    const raw = (await client.request(
+      sdkGenerateTfaSecret(password) as never,
+    )) as { secret?: string; otpauth_url?: string };
+    if (typeof raw.secret !== 'string' || typeof raw.otpauth_url !== 'string') {
+      return { ok: false, error: 'directus_error' };
+    }
+    return { ok: true, value: { secret: raw.secret, otpauthUrl: raw.otpauth_url } };
+  } catch (e) {
+    if (isNetworkError(e)) return { ok: false, error: 'network_error' };
+    const code = errorCode(e);
+    if (code === 'INVALID_PAYLOAD' || code === 'INVALID_CREDENTIALS') {
+      return { ok: false, error: 'invalid_password' };
+    }
+    if (code === 'INVALID_TOKEN') return { ok: false, error: 'invalid_token' };
+    return { ok: false, error: 'directus_error' };
+  }
+}
+
+export async function directusEnableTfa(
+  accessToken: string,
+  secret: string,
+  otp: string,
+): Promise<Result<void, EnableTfaError>> {
+  try {
+    const client = createClient();
+    client.setToken(accessToken);
+    await client.request(sdkEnableTfa(secret, otp) as never);
+    return { ok: true, value: undefined };
+  } catch (e) {
+    if (isNetworkError(e)) return { ok: false, error: 'network_error' };
+    const code = errorCode(e);
+    if (code === 'INVALID_OTP' || code === 'INVALID_PAYLOAD') {
+      return { ok: false, error: 'invalid_otp' };
+    }
     if (code === 'INVALID_TOKEN' || code === 'INVALID_CREDENTIALS') {
       return { ok: false, error: 'invalid_token' };
     }

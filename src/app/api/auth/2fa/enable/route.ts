@@ -1,0 +1,61 @@
+// POST /api/auth/2fa/enable
+//
+// Step 2 of 2FA setup: user has added the secret to their authenticator and
+// enters the 6-digit code. Server confirms with Directus, which activates
+// 2FA on the account.
+
+import { NextResponse } from 'next/server';
+import { directusEnableTfa } from '@/lib/auth/directus-auth';
+import { validateOrigin } from '@/lib/auth/origin-check';
+import { parseSessionCookie } from '@/lib/auth/session';
+import { sessionStore } from '@/lib/auth/stores';
+
+function allowedOrigins(): string[] {
+  const origins: string[] = [];
+  if (process.env.NEXT_PUBLIC_APP_URL) origins.push(process.env.NEXT_PUBLIC_APP_URL);
+  if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:3000');
+  return origins;
+}
+
+export async function POST(request: Request) {
+  if (
+    !validateOrigin(
+      request.headers.get('origin'),
+      request.headers.get('referer'),
+      allowedOrigins(),
+    )
+  ) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
+
+  const sessionId = parseSessionCookie(request.headers.get('cookie'));
+  const session = sessionId ? sessionStore.get(sessionId) : undefined;
+  if (!session) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+  }
+
+  let body: { secret?: unknown; otp?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+  }
+  const secret = typeof body.secret === 'string' ? body.secret : '';
+  const otp = typeof body.otp === 'string' ? body.otp.trim() : '';
+  if (!secret || !otp) {
+    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+  }
+
+  const result = await directusEnableTfa(session.accessToken, secret, otp);
+  if (!result.ok) {
+    if (result.error === 'invalid_otp') {
+      return NextResponse.json({ error: 'invalid_otp' }, { status: 401 });
+    }
+    if (result.error === 'invalid_token') {
+      return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+    }
+    return NextResponse.json({ error: 'server_error' }, { status: 502 });
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
+}
