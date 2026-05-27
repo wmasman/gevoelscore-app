@@ -20,7 +20,18 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:live": "playwright test --config=playwright.live-stack.config.ts",
-    "test:all": "vitest run && playwright test"
+    "test:all": "vitest run && playwright test",
+    "audit": "npm audit --audit-level=high",
+    "verify": "npm run lint && npm run typecheck && npm test",
+    "verify:full": "npm run verify && npm run audit && npm run test:e2e",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged",
+    "pre-push": "npm run verify"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mjs,js}": "eslint --max-warnings 0"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",
@@ -37,7 +48,11 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.1.0",
+    "eslint-plugin-no-secrets": "^2.3.3",
+    "eslint-plugin-security": "^4.0.0",
+    "lint-staged": "^16.4.0",
     "postcss": "^8.4.0",
+    "simple-git-hooks": "^2.13.1",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.4.0",
     "vitest": "^4.1.7"

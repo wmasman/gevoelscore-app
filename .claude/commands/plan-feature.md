@@ -414,6 +414,23 @@ Could a developer who didn't attend the planning session pick up this plan and e
 - [ ] Risk level per step with explanation.
 - [ ] Dutch domain terms (`gevoelscore`, `blok 1`, `mentaal/fysiek/overall/activiteit/gebeurtenis`, `rustdag/licht/matig/zwaar`) are preserved as-is — don't translate them in the plan.
 
+### 5.7 Standards-enforcement declaration
+
+For each step that adds or modifies code, the step file must declare which checklist sections it touches. This makes coverage auditable and prevents silent drift past the [`security-checklist`](../security-checklist.md) once `/build-step` is running.
+
+Add a small table to each step file under `## Technical constraints`:
+
+| Concern | Checklist sections | Applies? | Note |
+|---|---|---|---|
+| New route handler | A01, A03, A04, A07, A08 | Yes/No | If yes: origin check + rate limit + body validation + Result wrapping all required (see [build-step](build-step.md) Phase 5.2) |
+| New collection storing user data | GDPR Art 9, NEN 7510 §12.4 | Yes/No | If yes: audit-log INSERT + retention policy line in feature README |
+| New dependency | ADR or step rationale | Yes/No | If yes: name the ADR or include `<!-- dep-rationale: ... -->` near the import |
+| `dangerouslySetInnerHTML` usage | A03 | Yes/No | If yes: must include `// @security-reviewed: <reason>` and pass ESLint |
+| New env var with a secret | A02, A05 | Yes/No | If yes: Fly secret, not `NEXT_PUBLIC_*`; gitignored locally |
+| New telemetry / observability dep | Cardinal "no telemetry" | Yes/No | If yes: **stop**. Read ADR 0002 — this almost certainly should not ship |
+
+A "no on all rows" is a valid answer for a pure-refactor step — but the table being present is mandatory. Empty Standards-enforcement table = stop, fill it in, then continue.
+
 ---
 
 ## Phase 6: Handoff

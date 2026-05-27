@@ -175,21 +175,27 @@ After each change, re-run the test. GREEN stays GREEN — or you broke something
 
 ## Phase 5: Quality checks
 
-### 5.1 Type check
+### 5.1 The verify gate (single command)
 
 ```
-npm run typecheck
+npm run verify
 ```
 
-Zero errors. No `@ts-ignore`, no `@ts-expect-error` introduced. No `any`, `unknown` without narrowing, or `Record<string, any>` for domain data.
+Runs `lint` + `typecheck` + `test` in order. Must exit 0. This is the same command the pre-push hook runs — if it passes here it will pass at push time.
 
-### 5.2 Lint
+If it fails, **do not** silence the failure (`@ts-ignore`, blanket `eslint-disable`, `--max-warnings 1`). Fix the underlying issue — that's the whole point of the gate.
 
-```
-npm run lint
-```
+### 5.2 Route-handler self-audit (only for new files under `src/app/api/`)
 
-Zero errors. Warnings reviewed and either fixed or explicitly suppressed with reason.
+For each new route handler, verify the [security-checklist](../security-checklist.md) line items are wired:
+
+- [ ] Origin check (A08) at the top of the handler
+- [ ] Rate limiter check from `src/lib/auth/stores.ts` (A04) — or a written justification why this endpoint is unmetered
+- [ ] Body validation that narrows `unknown` to a typed shape — Zod when the shape is non-trivial, manual narrowing otherwise (A03)
+- [ ] Result-shaped wrappers when calling external services (`{ ok: true; value } | { ok: false; error }`) so callers can't forget to handle failures
+- [ ] `directus_auth_events` INSERT when the audit-log collection lands (Track A3 / I3) — for now: a `// TODO(I3): audit-log entry` comment is acceptable
+
+This is a static lint-style check against the file, done by reading it. ESLint catches some of these but not all.
 
 ### 5.3 Gates re-check (lightweight)
 
@@ -197,7 +203,7 @@ Walk the four gates from `/plan-feature` Phase 5 against the actual code, not th
 
 - [ ] **Cardinal-principle**: nothing this step added blocks one-tap / sub-10s flow / brainfog-friendly.
 - [ ] **Privacy**: new data fields are covered by CSV / JSON export and full-wipe; no third-party services touch user data.
-- [ ] **Security**: new network calls go through `src/lib/api/` with Zod validation; no secrets in the client bundle; no new telemetry deps; `npm audit` still clean.
+- [ ] **Security**: new network calls go through `src/lib/api/` with Zod validation; no secrets in the client bundle; no new telemetry deps; `npm run audit` still clean.
 - [ ] **v1.5/v2 readiness**: Directus collection additions are additive (no destructive migrations); nullable fields for future passive-data sources preserved.
 
 A "this looks fine, no new findings" is a valid result — but you have to look.
