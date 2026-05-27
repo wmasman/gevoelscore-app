@@ -1,32 +1,34 @@
-# Step 4: Score-tap UI (the cardinal moment)
+# Step 4: Score wheel UI (the cardinal moment)
 
-**Estimated time:** 2 hours
-**Test layer:** Vitest component (jsdom) for the tap logic + Playwright e2e for the full optimistic-update flow against the dev server.
-**Risk:** Medium. This is the cardinal-principle moment — the sub-10s flow lives or dies here. Behaviour bugs in the optimistic update path are user-visible immediately.
+**Estimated time:** 2.5 hours
+**Test layer:** Vitest component (jsdom + happy-dom-style scroll events) for the wheel state machine + Playwright e2e for the full optimistic-update flow against the dev server.
+**Risk:** Medium-High. Scroll wheels are notoriously fiddly on the web, and this is the cardinal-principle moment — the sub-10s flow lives or dies here. The wheel must work for touch (drag), mouse (wheel), and keyboard (arrows).
 **Prerequisite:** Steps 1–3 done.
 
-> Wires the score row from "rendered but disabled" (Step 2) to "tap a number, it saves." Optimistic update on the client; PUT against `/api/day-entries/[date]` server-side; reconcile on response. AC1–AC4, AC8–AC10 from the feature README.
+> Wires the wheel from "rendered but inert" (Step 2) to a real interaction. First *deliberate* interaction promotes a fresh-day wheel from idle `5` to "set" + fires the PUT. Subsequent changes debounce-save 500ms after the wheel settles on a new integer. Touch/mouse/keyboard all map to the same state machine.
 
 ---
 
 ## Acceptance criteria
 
-- [ ] AC1: Tapping any 1–10 button fires a PUT request to `/api/day-entries/[today]` with `{ score }`. The visual active state flips to the tapped number *before* the response lands.
-- [ ] AC2: On 200, the visual state is replaced by the server's authoritative `entry` (a no-op for the score itself; ensures `updated_at` and any backend-side fields are in sync).
-- [ ] AC3: On 4xx/5xx/network failure, the visual state reverts to the previous score and a small toast/banner shows "Niet opgeslagen — tik nogmaals om te proberen". Tapping the same number again retries.
-- [ ] AC4: While a request is in flight, the score row is *not* disabled — a follow-up tap is allowed and supersedes the previous request (Stale-While-Revalidate-style with request cancellation via `AbortController`).
-- [ ] AC5: The "tapped" button is focused + has a visible ring + a subtle scale animation (≤ 100ms). Keyboard users can tab through the row.
-- [ ] AC6: Stopwatch test: from "tap the score" to "saved indicator visible" ≤ 1s on a dev-mode local connection. The optimistic update means this is mostly perceived; the server round-trip can take up to ~300ms without breaking the UX.
-- [ ] AC7: Re-tapping the same score that's already active is a no-op visually + skips the network call (saves a wasted PUT).
-- [ ] AC8: Network failure under DevTools Network Throttle = Offline produces the AC3 error path. Verified in Playwright with `context.setOffline(true)`.
+- [ ] AC1: A *fresh* day (no entry exists) opens the wheel at `5` in **idle** state — no accent ring, no PUT fired on page load. The wheel value is visually de-emphasised (lower opacity on the centred number, no surrounding badge) to communicate "not yet saved".
+- [ ] AC2: First deliberate interaction on a fresh day — defined as any of: a touch-drag, a wheel-scroll event, an arrow-up/down keypress, or a tap on a visible non-centred value — **promotes the wheel to "set"** and immediately fires PUT `/api/day-entries/[today]` with the current centred value (which may still be `5` if the user just tapped `5`).
+- [ ] AC3: After promotion, subsequent changes debounce-save 500ms after the wheel settles on a different integer than the last-saved value. "Settles" = the scroll-snap has come to rest on a new value AND no new scroll event has fired in 500ms.
+- [ ] AC4: Re-positioning to the same integer that's already saved is a no-op (no PUT). Includes the "interactive but stable" case where the user wiggles past `7` to `8` and back to `7`.
+- [ ] AC5: Tap on a visible non-centred value (e.g. `7` is offset two slots above centre, user taps it) smoothly scrolls the wheel to that value and triggers the save (subject to AC4's no-op rule).
+- [ ] AC6: Arrow-up = centre moves to next-higher value (towards `10`); arrow-down = towards `1`. Page-up/page-down jump 3 values. Home = `1`, End = `10`.
+- [ ] AC7: Stopwatch test: from "open app on fresh day" to "saved indicator visible after one scroll" ≤ 2s. The optimistic update means the indicator flips before the response lands.
+- [ ] AC8: Network failure path (DevTools throttle = Offline) reverts the wheel to the last-saved value (or back to idle if it was the first save) and shows the same "Niet opgeslagen — probeer nogmaals" banner used in Step 5/6.
+- [ ] AC9: Two rapid changes (e.g. scroll past `4` to `5` to `6` to `7` in under 500ms) result in **one** PUT for the final settled value, not three.
+- [ ] AC10: The visible accent ring on the centred value appears the moment the wheel is "set", regardless of save success/failure. The save status (saving / saved / failed) is communicated by a small adjacent indicator, not by changing the ring itself.
 
 ## Technical constraints
 
-- Client component for the score row. Server component passes the initial `entry` (from Step 2) as a prop.
-- State machine: `{ status: 'idle' | 'saving' | 'error', score: number | null, lastError?: string }`. Three transitions only: `tap → saving`, `200 → idle`, `error → error`. A second tap during `saving` cancels the in-flight request and starts a new one.
-- No new state-management dep. Plain React `useState` + a `useRef<AbortController>` for the in-flight cancel. The state machine is small; introducing Zustand/Redux/Jotai would be premature.
-- `fetch` against same-origin `/api/day-entries/[date]` with `credentials: 'same-origin'` (cookie auto-sent). No client-side token handling.
-- The component lives at `src/components/score-row.tsx`. The `TodayShell` from Step 2 imports it and drops it where the disabled stub was.
+- **No new dependency.** The wheel is a CSS-scroll-snap column + an `IntersectionObserver` (to detect which value is centred) + a small state machine. Total LOC budget: ~120 across the component file + its test.
+- The wheel container has `scroll-snap-type: y mandatory; overflow-y: auto; height: 5 * 44px` (shows 5 items: the centred value + 2 each side). Each item has `scroll-snap-align: center; height: 44px`.
+- `IntersectionObserver` with `rootMargin: -44%` brackets the centre-line; the item that's `isIntersecting` is the current value.
+- Detect "settled" via the `scrollend` event (now broadly supported) — fallback: a 500ms `setTimeout` reset on every `scroll` event.
+- The state machine has three states: `idle` (fresh day, no save yet), `set` (saved at least once; subsequent changes auto-save), `error` (last save failed; UI revert + banner; next interaction tries to save again).
 
 ## Standards-enforcement
 
@@ -34,99 +36,175 @@
 |---|---|---|---|
 | New route handler | A01–A08 | No | Route is Step 3; this is the client |
 | New collection storing user data | GDPR Art 9, NEN 7510 §12.4 | No | Write flows through Step 3's logged route |
-| New dependency | ADR or step rationale | No | No new deps; if a state lib is added later, ADR required |
+| New dependency | ADR or step rationale | No | No new deps; the wheel is custom |
 | `dangerouslySetInnerHTML` usage | A03 | No | — |
 | New env var with a secret | A02, A05 | No | — |
 | New telemetry / observability dep | Cardinal "no telemetry" | No | — |
 
 ## Plan
 
-### 4.1 New component: `src/components/score-row.tsx`
+> **Reuse strategy.** This step also introduces the two shared primitives the rest of the daily-entry feature will lean on: `useDayEntryUpsert(date)` hook and `<SaveStatus />` component. See the README's "Component architecture" section. The wheel is the first caller of both — Steps 5 and 6 reuse them rather than duplicate.
+
+### 4.0 New shared hook: `src/hooks/use-day-entry-upsert.ts`
+
+```ts
+export function useDayEntryUpsert(date: string) {
+  const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastError, setLastError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const settleRef = useRef<number | null>(null);
+  const pendingRef = useRef<Partial<DayEntryPatch> | null>(null);
+
+  async function save(patch: Partial<DayEntryPatch>) {
+    // 1. merge into pendingRef
+    // 2. reset settle timer
+    // 3. fire after 500ms idle (or immediately if `flush: true` opt-in)
+    // 4. AbortController-cancel in-flight; new request wins
+    // 5. setStatus per response
+  }
+
+  return { save, status, lastError };
+}
+```
+
+The hook is the *only* place that talks to `/api/day-entries/[date]`. Components send `patch` shapes; the hook handles transport, debounce, abort, and status. Tested independently of any UI.
+
+### 4.1 New shared component: `src/components/save-status.tsx`
+
+```tsx
+type Props = { status: 'idle' | 'saving' | 'saved' | 'error'; error?: string | null };
+export function SaveStatus({ status, error }: Props) { /* renders per AC of README */ }
+```
+
+Pure render based on its props. No state. Tested via 4 snapshots (one per status).
+
+### 4.2 New component: `src/components/score-wheel.tsx`
 
 ```tsx
 'use client';
 import { useRef, useState } from 'react';
+import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
+import { SaveStatus } from '@/components/save-status';
 
 type Props = { date: string; initialScore: number | null };
 
-export function ScoreRow({ date, initialScore }: Props) {
-  const [score, setScore] = useState(initialScore);
-  const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
-  const abortRef = useRef<AbortController | null>(null);
+export function ScoreWheel({ date, initialScore }: Props) {
+  const wheelRef = useRef<HTMLDivElement>(null);
   const lastSavedRef = useRef<number | null>(initialScore);
+  const [centred, setCentred] = useState<number>(initialScore ?? 5);
+  const [phase, setPhase] = useState<'idle' | 'set'>(initialScore ? 'set' : 'idle');
+  const { save, status, lastError } = useDayEntryUpsert(date);
 
-  async function tap(n: number) {
-    if (n === score && status === 'idle') return; // AC7 — no-op for same score
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    setScore(n);
-    setStatus('saving');
-
-    try {
-      const res = await fetch(`/api/day-entries/${date}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ score: n }),
-        signal: controller.signal,
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      lastSavedRef.current = data.entry.score;
-      setStatus('idle');
-    } catch (e) {
-      if ((e as Error).name === 'AbortError') return; // superseded by next tap
-      setScore(lastSavedRef.current); // revert
-      setStatus('error');
-    }
-  }
-
-  return (/* 10 buttons + error banner */);
+  // IntersectionObserver tracks which value is centred
+  // First interaction in idle phase → promote to set + save({ score: centred })
+  // Settled change in set phase → save({ score: centred }) (hook debounces)
+  // Hook handles abort / status / revert
+  // ...
+  return (
+    <div>
+      <div ref={wheelRef} /* wheel column */ />
+      <SaveStatus status={status} error={lastError} />
+    </div>
+  );
 }
 ```
 
+Key behaviours:
+- On mount: pre-scroll to `initialScore ?? 5` using `wheelRef.current.scrollTop`.
+- `IntersectionObserver` updates `centred` on every snap.
+- Any scroll/keyboard/tap event in `idle` → promote to `set` and fire save with the new `centred` (don't wait for settle on first save — feels more responsive).
+- After `set`, save fires on `scrollend` (or 500ms after last scroll if `scrollend` unavailable) IF `centred !== lastSavedRef.current`.
+
 ### 4.2 Update `src/components/today-shell.tsx`
 
-Replace the disabled stub with `<ScoreRow date={date} initialScore={entry?.score ?? null} />`.
+Replace the static wheel placeholder from Step 2 with `<ScoreWheel date={date} initialScore={entry?.score ?? null} />`.
 
-### 4.3 Style budget
+### 4.3 The save call
 
-- Buttons: `w-12 h-12` minimum (≥ 48px = WCAG); tablet+ can grow.
-- Active: ring + bg shift; subtle so it doesn't shout.
-- Disabled state: removed (per AC4, taps remain allowed during saving).
-- Error banner: red bg, white text, role="alert", dismissible by next successful tap.
+The wheel doesn't implement save logic — it calls `save({ score: centred })` from `useDayEntryUpsert`. The hook handles:
+- AbortController-cancel of in-flight requests
+- 500ms settle debounce when called rapidly (the wheel can scroll past multiple values; only the final one saves)
+- Status transitions (`idle → saving → saved` / `→ error`)
+- Optimistic revert on failure (the wheel reads `lastSavedRef` to decide what to display on error)
+- The PUT body: just the patch from the caller — the route handler preserves unspecified fields per Step 3's upsert semantics
+
+### 4.4 Visual states
+
+- **Idle**: centred number ≤ 50% opacity, no ring. Above + below neighbours visible at lower opacity.
+- **Set + saved**: centred number 100% opacity, single 2px ring, small green check fade-in next to it for 800ms.
+- **Set + saving**: centred number 100% opacity, ring present, small spinner or "…" next to it.
+- **Set + error**: centred number reverts to lastSaved value, ring present, red banner above with retry hint.
+
+### 4.5 Keyboard
+
+`onKeyDown` on the wheel container:
+- `ArrowUp` / `ArrowDown` → `scrollBy({top: ±44, behavior: 'smooth'})`. The snap + IntersectionObserver handles the rest.
+- `Home` → `scrollTop = 0`. `End` → `scrollTop = scrollHeight`.
+- `PageUp` / `PageDown` → `scrollBy(±132)`.
+- Wheel container has `tabIndex={0}` so it can receive keyboard focus.
 
 ## Test plan
 
-### `src/components/__tests__/score-row.test.tsx` (new, jsdom, ~7 cases)
+### `src/hooks/__tests__/use-day-entry-upsert.test.ts` (new, jsdom, ~8 cases)
 
 | # | Case |
 |---|---|
-| 1 | Renders 10 buttons, initial score has the active class |
-| 2 | Tap on 7 calls fetch with `PUT /api/day-entries/2026-05-27` body `{score:7}` |
-| 3 | 200 response → status returns to idle; lastSaved updated |
-| 4 | 500 response → score reverts to previous; error banner visible |
-| 5 | Network reject (AbortError) → no revert, no error (superseded tap path) |
-| 6 | Tap on same active score → no fetch call (AC7) |
-| 7 | Two taps in quick succession: first request aborted, second wins |
+| 1 | `save` with a patch fires PUT to `/api/day-entries/[date]` with the patch body |
+| 2 | Rapid `save` calls (3 in 200ms) coalesce to one PUT with the merged final patch |
+| 3 | 200 response → status `saved`; lastError null |
+| 4 | 500 response → status `error`; lastError populated |
+| 5 | AbortError on superseded request → status unchanged |
+| 6 | Network failure (fetch reject) → status `error` |
+| 7 | After error, next `save` call clears the error and tries again |
+| 8 | Component unmount aborts any pending request |
 
-### `tests/e2e/daily-entry-score-tap.spec.ts` (new, ~3 cases)
+### `src/components/__tests__/save-status.test.tsx` (new, jsdom, 4 cases)
+
+One render-snapshot per status (`idle`, `saving`, `saved`, `error`).
+
+### `src/components/__tests__/score-wheel.test.tsx` (new, jsdom, ~10 cases)
 
 | # | Case |
 |---|---|
-| 1 | Authenticated user taps score 5; the button shows active; a row exists in the (mocked) API call |
-| 2 | Network offline (`context.setOffline(true)`) → tap shows error banner; score reverts |
-| 3 | Tap → tap-different → second tap wins, first is aborted |
+| 1 | Fresh day: renders centred at `5` in idle state (no ring) |
+| 2 | Existing entry: renders centred at saved score in set state (ring visible) |
+| 3 | First scroll on idle wheel → fires PUT with current `centred` value + state becomes set |
+| 4 | Settled scroll change after set → fires PUT with new value |
+| 5 | Scrolling past a value back to the saved one → no PUT (AC4) |
+| 6 | Tap on visible non-centred value → smooth scroll + save |
+| 7 | ArrowUp key → centred increments toward 10 + save |
+| 8 | 500 response → state reverts, error banner visible |
+| 9 | Rapid scrolls (3 events in 200ms) → debounce coalesces to 1 PUT |
+| 10 | AbortError on superseded request → no UI revert, no error |
+
+(jsdom doesn't natively fire `scrollend`. Test workaround: dispatch a `scroll` event then `vi.advanceTimersByTime(500)` to trigger the settle-timer fallback path.)
+
+### `tests/e2e/daily-entry-score-wheel.spec.ts` (new, ~4 cases)
+
+| # | Case |
+|---|---|
+| 1 | Fresh day: load `/`, wheel at `5` in idle (no ring); scroll/keyboard down to `4` → PUT lands; ring + saved indicator appear |
+| 2 | Existing entry: load `/`, wheel at saved score; scroll to a new value → PUT lands |
+| 3 | Offline (`context.setOffline(true)`) + scroll → error banner; wheel reverts |
+| 4 | Rapid scroll across 3 values → exactly 1 PUT in the network log |
 
 ## Done criteria
 
-- [ ] `ScoreRow` component shipped + 7 unit tests green
-- [ ] `TodayShell` integrates `ScoreRow`
-- [ ] Playwright e2e specs green (3 new)
-- [ ] Stopwatch walkthrough: ≤ 5s from app-open to saved indicator (record in Done section)
-- [ ] One-handed-low-light walkthrough: every score is reachable with a single thumb on iPhone 12 Safari
-- [ ] Brainfog walkthrough: deliberate 2s delay between "see the row" and "tap"; flow does not require re-render or extra tap
-- [ ] Vitest count delta: +7
-- [ ] Playwright dev specs +3
+- [ ] `useDayEntryUpsert` hook shipped, 8 unit tests green (the foundation Steps 5 + 6 build on)
+- [ ] `SaveStatus` component shipped, 4 render-snapshot tests green
+- [ ] `ScoreWheel` shipped, 10 unit tests green
+- [ ] `TodayShell` integrates `ScoreWheel` (replaces the Step 2 inert placeholder)
+- [ ] Playwright e2e: 4 new specs green
+- [ ] Stopwatch walkthrough (open → scroll → saved indicator) ≤ 2s on phone — recorded in Done section
+- [ ] One-handed thumb scroll works (vertical wheel is thumb-native)
+- [ ] Brainfog walkthrough: deliberate 2s pause before scrolling — the wheel doesn't time out or require a wake-up tap
+- [ ] Keyboard walkthrough: tab to wheel, arrow keys change value, save fires
+- [ ] Vitest count delta: +22 (8 hook + 4 SaveStatus + 10 wheel)
+- [ ] Playwright dev specs +4
 - [ ] `npm run verify` clean
+
+## Open questions to settle during implementation
+
+- **`scrollend` browser support**: as of mid-2026 Chrome/Edge/Firefox support it; Safari shipped in 17.2. If a tested-version of iOS Safari fails on `scrollend`, the 500ms-after-last-scroll fallback handles it. Document the fallback explicitly in the code.
+- **Wheel "overshoot" on heavy scroll**: a hard flick on iOS scrolls past several values before snapping. That's fine for the UX (user can see where they ended up) and the debounce ensures only one save. No special handling needed.
+- **Reduced-motion preference**: `prefers-reduced-motion: reduce` should disable the smooth-scroll animation on keyboard-driven changes (use `scrollTo({behavior: 'auto'})` instead of `'smooth'`). Trivial CSS+JS handling, included.

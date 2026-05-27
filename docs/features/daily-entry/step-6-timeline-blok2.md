@@ -16,9 +16,13 @@
 - [ ] AC3: x-axis: dates (day numbers or weekday letters; readable on phone). y-axis: 1–10. Single line through the score points.
 - [ ] AC4: Missing days render as a gap (a break in the line), not interpolated. Honest data.
 - [ ] AC5: Streak counter above the chart: "X dagen achter elkaar". Counts back from today (or yesterday if today is unlogged) until the first gap.
-- [ ] AC6: Tap a chart point → bottom sheet shows that day's full entry (score, note, tags). Tap outside / swipe down dismisses.
-- [ ] AC7: Performance: 30-day view renders ≤ 200ms on a mid-tier phone; 90-day ≤ 400ms. No client-side filtering of a larger payload — the server endpoint returns exactly the range requested.
-- [ ] AC8: Chart accommodates the historical dataset (1,363 days) — visually verified by switching to a custom 365-day range during dev (not exposed in UI; for the implementer's sanity check).
+- [ ] AC6: Tap any day on the chart (logged or missing) → opens an **editable** bottom sheet for that date. The sheet uses the same `<DayEntryEditor />` composite as the Today screen, passing the tapped date and that day's entry (or `null` for missing days).
+- [ ] AC7: Save semantics inside the sheet are identical to the Today screen — wheel saves on first interaction, note debounces, tag chips toggle. The hook fires PUT to `/api/day-entries/[that-date]`; Step 3's upsert handles new vs existing.
+- [ ] AC8: After a save in the sheet, the chart updates to reflect the new value (the timeline view re-reads the range or patches its local state).
+- [ ] AC9: Closing the sheet (swipe down, Escape, background tap) returns focus to the chart point that opened it.
+- [ ] AC10: A day whose `updated_at` is meaningfully later than `created_at` shows a subtle `bewerkt` marker in the sheet header. Honest record of edits.
+- [ ] AC11: Performance: 30-day view renders ≤ 200ms on a mid-tier phone; 90-day ≤ 400ms. No client-side filtering of a larger payload — the server endpoint returns exactly the range requested.
+- [ ] AC12: Chart accommodates the historical dataset (1,363 days) — visually verified by switching to a custom 365-day range during dev (not exposed in UI; for the implementer's sanity check).
 
 ## Technical constraints
 
@@ -78,7 +82,32 @@ Additionally fetches the last 30 days via Step 1's range endpoint and passes to 
 
 ### 6.6 New bottom sheet: `src/components/day-detail-sheet.tsx`
 
-When a chart point is tapped, opens with the day's score + note + tags. Reuses the empty-state copy from Step 5. Closes on background tap / Escape.
+A thin wrapper around `<DayEntryEditor />` — provides the sheet chrome (overlay, slide-in animation, close handlers, focus trap, `role="dialog"` + `aria-modal="true"`) and embeds the composite inside.
+
+```tsx
+type Props = { date: string; entry: DayEntry | null; allTags: Tag[]; onClose: () => void };
+
+export function DayDetailSheet({ date, entry, allTags, onClose }: Props) {
+  return (
+    <div role="dialog" aria-modal="true" aria-label={`Entry voor ${date}`}>
+      <header>
+        <h2>{formatDateDutch(date)}</h2>
+        {wasEdited(entry) && <span className="text-muted">bewerkt</span>}
+        <button onClick={onClose} aria-label="Sluit">×</button>
+      </header>
+      <DayEntryEditor date={date} initialEntry={entry} allTags={allTags} />
+    </div>
+  );
+}
+```
+
+Focus management:
+- On open: move focus to the close button (or to the wheel if the day has no entry yet — most likely next action).
+- On close: return focus to the chart point that opened it.
+- Trap focus within the sheet while open (`Tab` / `Shift+Tab` cycle).
+- `Escape` closes.
+
+The composite reuse means this step adds **only** the sheet chrome + the chart point click handler — not any new save logic. That's the payoff of declaring the architecture in the README.
 
 ## Test plan
 
@@ -112,13 +141,17 @@ When a chart point is tapped, opens with the day's score + note + tags. Reuses t
 | 3 | Tapping a point opens the bottom sheet |
 | 4 | Bottom sheet shows the day's note + tags |
 
-### `tests/e2e/daily-entry-timeline.spec.ts` (new, ~3 cases)
+### `tests/e2e/daily-entry-timeline.spec.ts` (new, ~5 cases)
 
 | # | Case |
 |---|---|
 | 1 | Swipe from Today → Timeline; streak counter visible |
 | 2 | Toggle 30 → 90 → second fetch lands; chart updates |
-| 3 | Tap a chart point → bottom sheet visible with the right day's content |
+| 3 | Tap a chart point → bottom sheet visible with that day's content + editable wheel |
+| 4 | Edit a score in the sheet → close → chart reflects the new value |
+| 5 | Tap a *missing* day → sheet opens with empty editor; scroll wheel + save → chart now has a point at that date |
+| 6 | A11y: keyboard `Tab` traps focus inside the sheet; `Escape` closes + returns focus to the chart point that opened it |
+| 7 | axe-core scan on timeline view + open sheet: no WCAG 2.2 AA violations |
 
 ### Visual baseline
 
@@ -129,10 +162,12 @@ When a chart point is tapped, opens with the day's score + note + tags. Reuses t
 
 - [ ] `currentStreak` helper shipped + 7 unit tests green
 - [ ] `score-chart.tsx` + `timeline-view.tsx` + `day-detail-sheet.tsx` shipped + 8 component tests green
-- [ ] Playwright e2e +3 green
+- [ ] Sheet reuses `<DayEntryEditor />` — no new save logic; verified by the absence of `fetch(` in sheet/timeline test mocks beyond the hook
+- [ ] Playwright e2e +7 green (3 timeline + 2 sheet edit + 1 a11y keyboard + 1 axe)
 - [ ] Vitest count delta: +15 (7 streak + 4 chart + 4 timeline)
 - [ ] Chart library decision recorded: defaulted to vanilla SVG. If `uPlot` or `Recharts` chosen, ADR at `docs/decisions/0005-chart-library.md` lands first.
 - [ ] Visual baseline screenshot captured
+- [ ] **A11y walkthrough**: focus trap works in sheet; Escape closes; focus returns to opener; axe-core green
 - [ ] Manual: stopwatch the "open app → swipe to timeline → see streak" flow ≤ 2s on phone
 - [ ] `npm run verify` clean
 

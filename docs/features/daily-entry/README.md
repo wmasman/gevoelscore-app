@@ -37,34 +37,110 @@ What's deliberately deferred (separate features later):
 
 ## Acceptance criteria
 
-**Blok 1 — Today (the daily tap):**
+**Blok 1 — Today (the daily wheel):**
 
-- [ ] AC1: Opening `/` shows today's entry if one exists for `YYYY-MM-DD` (browser's local date), or an empty score row if not.
-- [ ] AC2: Tapping a score 1–10 immediately upserts the day_entry for today. No "save" button. No confirmation dialog.
-- [ ] AC3: After tap, the UI reflects the saved state within 1s (optimistic update; reconciles with server response).
-- [ ] AC4: Tap-to-change works: tapping a different number updates the existing entry.
-- [ ] AC5: Note field is below the score. Free text, no length cap (matches data model). Saves on blur or after 1.5s of typing-pause (whichever first); never on every keystroke.
-- [ ] AC6: Tag chips are below the note. The 83 seeded tags are grouped by category (mentaal/fysiek/overall/activiteit/gebeurtenis/interventie/project/custom). Tapping a chip toggles its inclusion; updates are upserted immediately.
-- [ ] AC7: A score must be tapped *first* (in a fresh day with no entry). Note/tags edits to a non-existent day_entry create one with `score = null` is **not allowed** — the domain layer requires score 1–10. UI greys out note/tags until score is set.
-- [ ] AC8: Network failure on save shows a small, non-blocking error ("Niet opgeslagen — probeer nogmaals") with a retry tap. Cardinal: brainfog-friendly = the failure mode is visible and obviously recoverable.
-- [ ] AC9: The whole Blok 1 view fits on a phone screen without scrolling (touch targets ≥ 44px). Tested with one hand at arm's length in low light.
-- [ ] AC10: Total flow on a good-day simulation (open app → tap 7 → close): ≤ 5 seconds, stopwatch-verified.
+- [ ] AC1: Opening `/` shows today's entry if one exists (`YYYY-MM-DD`, Europe/Amsterdam local date). If exists → wheel is positioned at the saved score and treated as "set". If not → wheel sits at idle default `5`, **not yet saved**.
+- [ ] AC2: The score wheel is a vertical scroll-snap picker of values 1–10. Centred value = current selection. Scrolling, tapping a visible value, or arrow keys all change it.
+- [ ] AC3: First *deliberate* interaction (scroll / tap / keypress) on a fresh day promotes the wheel's current value from "idle 5" to "saved" — fires PUT to `/api/day-entries/[today]` with that score. Subsequent changes debounce-save 500ms after the wheel settles on a new integer.
+- [ ] AC4: Re-positioning to the same value that's already saved is a no-op (no wasted PUT).
+- [ ] AC5: Buttons / wheel values are visually neutral — no red/green colour scale. The centred value has a single accent ring; everything else is plain.
+- [ ] AC6: Note field is below the wheel. Free text, no length cap. Saves on blur or after 1.5s of typing-pause (whichever first); never on every keystroke. Note/tags edits are disabled until the wheel is promoted to "saved" on a fresh day.
+- [ ] AC7: Tag chips are below the note, in a stack of **8 collapsed category headers** (mentaal / fysiek / overall / activiteit / gebeurtenis / interventie / project / custom). Tap a header to expand its chips inline; tap again to collapse. Multiple categories can be open at once (don't punish exploration).
+- [ ] AC8: Tapping a chip toggles its inclusion in `tag_ids` and fires an immediate PUT with the updated array. Optimistic update + revert on error.
+- [ ] AC9: Network failure on any save shows a small, non-blocking error ("Niet opgeslagen — probeer nogmaals") near the affected control. State reverts to the last server-confirmed value.
+- [ ] AC10: The wheel + collapsed tag stack fit on a phone screen without scrolling (the wheel itself is the only scrollable element). Touch targets ≥ 44px. Tested one-handed, arm's length, low light.
+- [ ] AC11: Total flow on a good-day simulation (open app → scroll wheel to 7 → close): ≤ 5 seconds stopwatch-verified.
 
 **Blok 2 — Timeline:**
 
-- [ ] AC11: A swipe (or tap on a tab) reveals the timeline view. Default range: last 30 days.
-- [ ] AC12: The chart shows a single line, x-axis = date, y-axis = score (1–10). Missing days are visible as gaps (no interpolation that lies about data).
-- [ ] AC13: A toggle switches between 30-day and 90-day ranges. Loads from the server lazily — the 90-day view only fetches when first opened.
-- [ ] AC14: Streak counter shows consecutive days logged (ending today or yesterday if today not yet logged). Resets visibly on a gap.
-- [ ] AC15: Tapping a point on the chart shows that day's note + tags in a small bottom sheet. Tapping again or swiping down dismisses.
-- [ ] AC16: Timeline accommodates the 1,363 days already in the database without performance degradation. The 90-day query reads ≤ 90 rows; 30-day reads ≤ 30. No client-side filtering of larger payloads.
+- [ ] AC12: A swipe (or tap on a tab) reveals the timeline view. Default range: last 30 days.
+- [ ] AC13: The chart shows a single line, x-axis = date, y-axis = score (1–10). Missing days are visible as gaps (no interpolation that lies about data).
+- [ ] AC14: A toggle switches between 30-day and 90-day ranges. Loads from the server lazily — the 90-day view only fetches when first opened.
+- [ ] AC15: Streak counter shows consecutive days logged (ending today or yesterday if today not yet logged). Resets visibly on a gap.
+- [ ] AC16: Tapping any day (logged or missing) opens an **editable** bottom sheet for that date, with the same score wheel + note + tags components as Blok 1. Save semantics identical to Blok 1.
+- [ ] AC17: A day whose `updated_at` is meaningfully later than `created_at` (heuristic: > 1 day apart) gets a subtle `bewerkt` marker on its tooltip + bottom-sheet header. Self-awareness without judgment; not an audit log.
+- [ ] AC18: Timeline accommodates the 1,363 days already in the database without performance degradation. The 90-day query reads ≤ 90 rows; 30-day reads ≤ 30. No client-side filtering of larger payloads.
 
 **Auth + security:**
 
-- [ ] AC17: All `/api/day-entries` routes require a valid session cookie (via `getValidatedSession`). Middleware already gates `/api/*` since step 7 of auth-hardening (M2 fix).
-- [ ] AC18: Body validation on POST/PATCH uses domain-layer validators (`validateScore`, `validateNote`, `validateTagIds`, `validateDate`). Anything that doesn't pass returns 400 with a generic `invalid_request` — no field-by-field error leaks.
-- [ ] AC19: Origin check on every state-changing route. Rate limit by IP at the standard 5/5min (creating 5 entries per 5 minutes per IP is plenty for a single user; abuse is the threat model).
-- [ ] AC20: GET routes are not rate-limited (read traffic is the happy path; rate limiting reads on a single-user app is theatrical).
+- [ ] AC19: All `/api/day-entries` routes require a valid session cookie (via `getValidatedSession`). Middleware already gates `/api/*` since step 7 of auth-hardening (M2 fix).
+- [ ] AC20: Body validation on POST/PATCH uses domain-layer validators (`validateScore`, `validateNote`, `validateTagIds`, `validateDate`). Anything that doesn't pass returns 400 with a generic `invalid_request` — no field-by-field error leaks.
+- [ ] AC21: Origin check on every state-changing route. Rate limit by IP at the standard 5/5min (creating 5 entries per 5 minutes per IP is plenty for a single user; abuse is the threat model).
+- [ ] AC22: GET routes are not rate-limited (read traffic is the happy path; rate limiting reads on a single-user app is theatrical).
+
+## Component architecture (shared primitives)
+
+Three patterns recur across Steps 4–6. Naming them now prevents drift.
+
+### Shared hook: `useDayEntryUpsert(date)`
+
+Lives at [`src/hooks/use-day-entry-upsert.ts`](../../../src/hooks/use-day-entry-upsert.ts). Returns:
+
+```ts
+{
+  save: (patch: Partial<DayEntryPatch>) => Promise<void>;
+  status: 'idle' | 'saving' | 'saved' | 'error';
+  lastError: string | null;
+}
+```
+
+Encapsulates: AbortController-cancel of in-flight requests, optimistic-update revert on failure, 500ms settle debounce when called rapidly. Every component that mutates a day_entry calls this — wheel, note, each tag toggle. **Introduced in Step 4** (where it has its first caller); reused by Steps 5 and 6.
+
+### Shared component: `<SaveStatus />`
+
+Lives at [`src/components/save-status.tsx`](../../../src/components/save-status.tsx). Props: `status: 'idle' | 'saving' | 'saved' | 'error'; error?: string | null`. Renders:
+
+- `idle`: nothing
+- `saving`: small "…" indicator
+- `saved`: green check + brief fade (800ms)
+- `error`: red banner "Niet opgeslagen — probeer nogmaals" with retry handler from props
+
+One source of truth for the save-state visual language. Introduced in Step 4 alongside the hook.
+
+### Shared composite: `<DayEntryEditor />`
+
+Lives at [`src/components/day-entry-editor.tsx`](../../../src/components/day-entry-editor.tsx). Props: `date: string; initialEntry: DayEntry | null; allTags: Tag[]`. Renders the wheel + note + collapsed tag stack as a vertical unit.
+
+Used twice:
+- **Step 2 / Step 4 / Step 5**: as the main body of the Today screen.
+- **Step 6**: inside the timeline's bottom sheet (with `date` being the tapped day).
+
+Introduced in Step 5 (after wheel + note + tags all exist as parts).
+
+### What deliberately is NOT shared (yet)
+
+- **`<ScoreWheel />`, `<NoteField />`, `<TagPicker />`** stay as individual components inside `DayEntryEditor`. Splitting them lets each step test in isolation and lets future surfaces (settings? imports?) reuse a single piece if needed. No premature abstraction beyond that.
+- **No design-system / button primitive layer.** Tailwind utility classes are the design system for v1. A `<Button>` primitive lands when a third surface (settings, import UI) actually needs it.
+- **No theming / token layer.** Single user, no dark-mode toggle in v1.
+
+This three-tier shape (hook → status component → composite) is the smallest abstraction that closes the duplication the steps would otherwise carry. Verified against /build-step's "don't add abstractions for single-use code" rule: each shared piece has 3+ anticipated call sites in the same feature.
+
+## Accessibility target (project-wide standard)
+
+**Formal target: WCAG 2.2 Level AA.** Enforced by `eslint-plugin-jsx-a11y` (lint), `@axe-core/playwright` (e2e), and a manual keyboard + VoiceOver walkthrough per step.
+
+**Brainfog extensions** (above WCAG, specific to Long COVID cognitive symptoms):
+
+| Brainfog rule | WCAG floor | Project target |
+|---|---|---|
+| Touch targets | 24×24 (AA), 44×44 (AAA) | ≥ 48×48 |
+| Body text size | 16px implied | ≥ 17px @ default zoom, line-height ≥ 1.5 |
+| Animation duration | No specific rule | ≤ 200ms; respect `prefers-reduced-motion` |
+| Information density | No specific rule | Max 5 primary actions visible at once on the daily screen |
+| Time pressure | SC 2.2.1 (adjustable timers) | No timers at all on user-facing flows |
+
+**Specific WCAG 2.2 SCs needing explicit attention per step** (the rest fall out of jsx-a11y + axe):
+
+- 1.4.3 Contrast (Min) 4.5:1 — enforced via CSS tokens chosen in Step 0
+- 1.4.10 Reflow — usable at 320px width with no horizontal scroll
+- 2.1.1 Keyboard — wheel + tag picker + bottom sheet all keyboard-operable
+- 2.4.3 Focus Order — logical (wheel → note → tags; in sheet: same)
+- 2.4.7 Focus Visible — `:focus-visible` ring on every interactive element
+- 2.5.5 Target Size — ≥ 48 (above AA's 24×24)
+- 3.3.1 Error Identification — covered by `<SaveStatus />`
+- 4.1.2 Name, Role, Value — wheel needs `role="spinbutton"` + `aria-valuenow/min/max`; sheet needs `role="dialog"` + focus trap
+
+The policy lives in [`docs/architecture/frontend-conventions.md`](../../architecture/frontend-conventions.md) (created by Step 0).
 
 ## Technical constraints
 
@@ -77,12 +153,13 @@ What's deliberately deferred (separate features later):
 
 ## Steps
 
-1. **[Step 1 — `/api/day-entries` read API](step-1-day-entries-read-api.md)** — GET `/api/day-entries?from=X&to=Y` + GET `/api/day-entries/today`. Read-side first so the timeline can be hooked up to real historical data without any UI for writes yet.
-2. **[Step 2 — Today screen shell](step-2-today-screen-shell.md)** — UI shows today's existing entry (read-only) with the 1,363 days as context. No tap-to-save yet. Establishes the page layout + auth-gated server component.
-3. **[Step 3 — `/api/day-entries` write API](step-3-day-entries-write-api.md)** — POST + PATCH with upsert-by-date semantics. Origin check + rate limit + body validation per AC17–19.
-4. **[Step 4 — Score-tap UI](step-4-score-tap-ui.md)** — Wire the 1–10 tap row to the write API. Optimistic update. AC1–AC4, AC8–AC10.
-5. **[Step 5 — Note + tag chips UI](step-5-note-and-tags-ui.md)** — AC5–AC7. Tag picker uses the 83 seeded tags grouped by category.
-6. **[Step 6 — Timeline (Blok 2)](step-6-timeline-blok2.md)** — Chart + streak counter. AC11–AC16. Decision point on chart lib lives here.
+0. **[Step 0 — Frontend foundation](step-0-frontend-foundation.md)** — `cn()` + `copy.ts` + CSS tokens + `next/font` + viewport/theme-color meta + `eslint-plugin-jsx-a11y` + `@axe-core/playwright` + `error.tsx` / `not-found.tsx` / `loading.tsx` + `docs/architecture/frontend-conventions.md`. Prerequisite for every UI step. Steps 1 + 3 (pure backend) can run independently of this.
+1. **[Step 1 — `/api/day-entries` read API](step-1-day-entries-read-api.md)** — GET `/api/day-entries?from=X&to=Y` + GET `/api/day-entries/today`. Read-side first so the timeline can hook into real historical data without any UI for writes yet.
+2. **[Step 2 — Today screen shell](step-2-today-screen-shell.md)** — Auth-gated server component renders the wheel (in idle state) + collapsed-tag stack. Uses the Step 0 foundation. No save logic yet; establishes layout + data path.
+3. **[Step 3 — `/api/day-entries` write API](step-3-day-entries-write-api.md)** — PUT `/[date]` upsert (covers both today and any past date for timeline editing). Origin check + rate limit + body validation per AC19–21.
+4. **[Step 4 — Score wheel UI + shared hook/status](step-4-score-tap-ui.md)** — Wheel + introduces `useDayEntryUpsert(date)` + `<SaveStatus />` (the shared primitives Steps 5 + 6 reuse). AC1–AC5, AC9–AC11.
+5. **[Step 5 — Note + collapsed-category tag picker + composite](step-5-note-and-tags-ui.md)** — Note debounce + 8 collapsible category headers; lands `<DayEntryEditor />` composite. AC6–AC8.
+6. **[Step 6 — Timeline (Blok 2) with editable bottom sheet](step-6-timeline-blok2.md)** — Chart + streak + tap-any-day-to-edit bottom sheet reusing `<DayEntryEditor />` from Step 5. AC12–AC18. `bewerkt` marker for edited days. Chart-lib decision lives here.
 
 Each step follows the strict RED → GREEN → REFACTOR loop via `/build-step` with its own Done section. Each step file carries the standards-enforcement table per `/plan-feature` Phase 5.7.
 

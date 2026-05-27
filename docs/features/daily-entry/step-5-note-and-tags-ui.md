@@ -15,11 +15,12 @@
 - [ ] AC2: Typing in the note debounces saves at 1.5s. The save fires PUT `/api/day-entries/[date]` with `{ note: <value> }`. Other fields are preserved server-side via Step 3's upsert.
 - [ ] AC3: Blur-on-note (Tab away, click outside) flushes the debounce — saves immediately if there's a pending change. Avoids the "I closed the tab and lost the note" trap.
 - [ ] AC4: Empty/whitespace note → saved as `null` (matches domain `normalizeNote`). Reflects in the UI as the placeholder reappearing.
-- [ ] AC5: Tag chips appear below the note, grouped by category (mentaal, fysiek, overall, activiteit, gebeurtenis, interventie, project, custom). Section headers in Dutch. The category list is read from the locked enum in [`src/lib/domain/tag-category.ts`](../../../src/lib/domain/tag-category.ts).
-- [ ] AC6: Tap a chip → it toggles its inclusion in `tag_ids` and immediately PUTs the full new array. Optimistic update + revert-on-error like the score row (AC2–AC4 of Step 4).
-- [ ] AC7: Tag chips are reachable on mobile without horizontal scroll — flex-wrap. Touch target ≥ 36px (chips are smaller than score buttons; tradeoff: 83 chips need to fit).
-- [ ] AC8: An empty tag list shows a single grey "Geen tags" line; toggling any chip removes that placeholder.
-- [ ] AC9: Tags list is sourced from a new `GET /api/tags` endpoint (server-side cached, since the tag set rarely changes). Or: passed from the server component at page-load. **Choose during the step**: server-component prop is simpler if the page is dynamic; an endpoint is needed if tags are lazy-loaded. Default to server-component prop.
+- [ ] AC5: Below the note, 8 collapsible category headers in a vertical stack: mentaal, fysiek, overall, activiteit, gebeurtenis, interventie, project, custom. Headers are in Dutch. The category list is the locked enum from [`src/lib/domain/tag-category.ts`](../../../src/lib/domain/tag-category.ts).
+- [ ] AC6: Each header is a button. Tap → the category expands inline below the header, showing all chips in that category. Tap again → collapses. **Multiple categories can be expanded simultaneously** — exploration is not punished.
+- [ ] AC7: A category header shows a small count badge if any chips in that category are currently selected (e.g. "fysiek · 2"). Lets the user see selection state without expanding every category.
+- [ ] AC8: Tap a chip → toggles its inclusion in `tag_ids` and immediately PUTs the full new array. Optimistic update + revert-on-error matching the wheel's pattern from Step 4.
+- [ ] AC9: Chips within an expanded category wrap horizontally; touch target ≥ 36px. A short empty-state "(geen tags in deze categorie)" appears if the category is empty (shouldn't happen with the 83 seeded but defensive against future archived states).
+- [ ] AC10: Tags list is sourced from the server component at page-load (passed as a prop) — same approach as `entry` in Step 2. No new `/api/tags` endpoint in this step; if the timeline view (Step 6) needs the list too, the server component just passes it down the tree.
 
 ## Technical constraints
 
@@ -41,22 +42,59 @@
 
 ## Plan
 
+> **Reuse strategy.** Both new components call the `useDayEntryUpsert(date)` hook + render `<SaveStatus />`, both introduced in Step 4. This step also lands the **`<DayEntryEditor />` composite** — wheel + note + tag picker as a single vertical unit — which Step 6's timeline bottom sheet will reuse.
+
 ### 5.1 New components
 
-- `src/components/note-field.tsx` — textarea + debounce + blur-flush. Same optimistic-update + revert pattern as `ScoreRow`.
-- `src/components/tag-picker.tsx` — chips grouped by category. Same PUT pattern. Takes `allTags: Tag[]` + `selectedTagIds: string[]` as props.
+- `src/components/note-field.tsx` — textarea. Calls `useDayEntryUpsert(date).save({ note })` on debounced typing + on blur. Uses `<SaveStatus />` for its indicator. Pure UI; no transport logic — all that lives in the hook.
+- `src/components/tag-picker.tsx` — 8 category-header buttons in a vertical stack; each header has expanded/collapsed state. Tapping a chip calls `useDayEntryUpsert(date).save({ tag_ids: newArray })`. The component owns the expand/collapse UI state (per-category boolean Map) and the optimistic selection state; the hook owns the save.
 
-### 5.2 Wire from server component
+### 5.2 New composite: `src/components/day-entry-editor.tsx`
 
-`src/app/page.tsx` server component additionally fetches `allTags` (via new SDK wrapper or existing). Passes to `TodayShell` which threads to `TagPicker`. Cache via `unstable_cache` with a 1-hour TTL — tag list changes rarely.
+```tsx
+type Props = {
+  date: string;
+  initialEntry: DayEntry | null;
+  allTags: Tag[];
+};
 
-### 5.3 New SDK wrapper
+export function DayEntryEditor({ date, initialEntry, allTags }: Props) {
+  return (
+    <div>
+      <ScoreWheel date={date} initialScore={initialEntry?.score ?? null} />
+      <NoteField date={date} initialNote={initialEntry?.note ?? null} disabled={!initialEntry} />
+      <TagPicker
+        date={date}
+        allTags={allTags}
+        initialTagIds={initialEntry?.tag_ids ?? []}
+        disabled={!initialEntry}
+      />
+    </div>
+  );
+}
+```
 
-`src/lib/api/tags.ts` — `readAllTags(accessToken): Result<Tag[]>`. Mirrors `day-entries.ts` shape.
+Today screen uses it via `<DayEntryEditor date={today} initialEntry={entry} allTags={allTags} />`. Timeline's bottom sheet (Step 6) uses the same component with a different date.
 
-### 5.4 Decision pending: endpoint vs. prop for tags
+`disabled={!initialEntry}` propagates the "no score set yet → note/tags inactive" rule. Once the wheel saves (promotes the day from no-entry to has-entry), the parent server component re-fetches and `initialEntry` becomes non-null on next render — **but** that requires a server-component re-fetch. To avoid a full page round-trip, the wheel's first save also bubbles an `onFirstSave?: (entry: DayEntry) => void` event up; the editor catches it and updates its internal mirror of `initialEntry` so the note + tags can be edited immediately.
 
-Default plan: pass `allTags` from server component to client. If the timeline view in Step 6 wants the tag list too, we promote to a `/api/tags` endpoint (still cached). Documented as a decision point per AC9.
+### 5.3 Wire from server component
+
+`src/app/page.tsx` server component additionally fetches `allTags` (via new SDK wrapper). Passes to `<DayEntryEditor />` which threads to its children.
+
+### 5.4 New SDK wrapper
+
+`src/lib/api/tags.ts` — `readAllTags(accessToken): Result<Tag[]>`. Mirrors `day-entries.ts` shape. Cache via `unstable_cache` with a 1-hour TTL — tag list changes rarely.
+
+### 5.5 What the hook handles vs what each child handles
+
+| Concern | Owner |
+|---|---|
+| HTTP transport, abort, status, error | `useDayEntryUpsert` |
+| Debounce (500ms generic + 1.5s note-typing) | The component owning the input — calls `save()` when it's time. The hook's own settle-debounce coalesces if the component calls in bursts. |
+| Optimistic local state | The component (wheel's `centred`, note's `value`, tag picker's `selectedTagIds`) |
+| Revert on error | The component reads `status === 'error'` and restores from its last-saved snapshot |
+| Save-indicator visual | `<SaveStatus />` (children embed it; one source of truth) |
 
 ## Test plan
 
@@ -64,36 +102,50 @@ Default plan: pass `allTags` from server component to client. If the timeline vi
 
 | # | Case |
 |---|---|
-| 1 | Typing fires a save after 1.5s of pause |
-| 2 | Continued typing within 1.5s does not fire |
+| 1 | Typing calls `hook.save({note})` after 1.5s of pause |
+| 2 | Continued typing within 1.5s does not call save |
 | 3 | Blur flushes the pending debounce |
-| 4 | Empty/whitespace value is saved as null |
-| 5 | Disabled when `entry === null` (no score yet) |
+| 4 | Empty/whitespace value calls save with `{note: null}` |
+| 5 | Disabled when `disabled` prop is true |
 
-### `src/components/__tests__/tag-picker.test.tsx` (new, ~5 cases)
+### `src/components/__tests__/tag-picker.test.tsx` (new, ~7 cases)
 
 | # | Case |
 |---|---|
-| 1 | Renders all 8 category headers and the chips under each |
-| 2 | Tapping an unselected chip toggles it to selected + fires PUT with updated `tag_ids` |
-| 3 | Tapping a selected chip toggles it off |
-| 4 | Empty `selectedTagIds` shows "Geen tags" placeholder |
-| 5 | Server error reverts the toggle + shows the error banner |
+| 1 | Renders 8 category headers, all collapsed by default |
+| 2 | Tapping a header expands its chips inline; ARIA `aria-expanded` flips |
+| 3 | Multiple headers can be expanded simultaneously (test sequential taps) |
+| 4 | Tapping an unselected chip in an expanded category calls save with the new `tag_ids` array |
+| 5 | Tapping a selected chip toggles it off (save called with reduced array) |
+| 6 | Selection count badge appears on header when ≥1 chip in that category is selected |
+| 7 | Server error reverts the toggle + `<SaveStatus>` shows error |
 
-### `tests/e2e/daily-entry-note-and-tags.spec.ts` (new, ~3 cases)
+### `src/components/__tests__/day-entry-editor.test.tsx` (new, ~3 cases)
+
+| # | Case |
+|---|---|
+| 1 | Renders wheel + note + tag picker in order |
+| 2 | When `initialEntry === null`, note + tags are disabled |
+| 3 | Wheel's first-save callback flips internal `disabled` state so note + tags become editable without server re-fetch |
+
+### `tests/e2e/daily-entry-note-and-tags.spec.ts` (new, ~4 cases)
 
 | # | Case |
 |---|---|
 | 1 | Type a note + tab away → request lands |
-| 2 | Toggle a chip → request lands; toggle again → second request lands |
-| 3 | Race: tap score, immediately type note, immediately tap chip → all three land within 2s; final state is consistent |
+| 2 | Expand a category, tap a chip → request lands; tap another category header → first stays open, second expands |
+| 3 | Race: scroll wheel, immediately type note, immediately tap chip → all three land within 2s; final state is consistent |
+| 4 | axe-core scan on the today screen post-render: no WCAG 2.2 AA violations |
 
 ## Done criteria
 
-- [ ] `NoteField` + `TagPicker` shipped, 10 unit tests green
-- [ ] `readAllTags` SDK wrapper shipped (+ wrapper tests if it warrants them)
-- [ ] Server component fetches + passes tags
-- [ ] Playwright e2e +3 green
-- [ ] Vitest count delta: +12 (5 NoteField + 5 TagPicker + 2 SDK wrapper)
+- [ ] `NoteField` + `TagPicker` shipped, 12 unit tests green
+- [ ] `DayEntryEditor` composite shipped, 3 unit tests green
+- [ ] `readAllTags` SDK wrapper shipped (+ ~2 wrapper tests)
+- [ ] Server component fetches + passes tags down through `DayEntryEditor`
+- [ ] Playwright e2e +4 green (including the axe-core scan)
+- [ ] Vitest count delta: +17 (5 NoteField + 7 TagPicker + 3 Editor + 2 SDK wrapper)
 - [ ] `npm run verify` clean
-- [ ] Manual: walkthrough on phone — note + tags entry flow ≤ 30s for a "good day" 3-tag entry (still well under the brainfog tolerance ceiling)
+- [ ] **A11y walkthrough**: keyboard-only — tab through wheel → note → category headers → expanded chips → arrows expand/collapse; VoiceOver announces collapsed-state, count badges, and chip toggles correctly
+- [ ] **Brainfog walkthrough**: tag picker stays usable when 3 categories are expanded at once; no visual overload
+- [ ] Phone walkthrough: 3-tag good-day entry in ≤ 30s including pause-to-think time
