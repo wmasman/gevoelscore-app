@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-27 (initial infra deployment)
+**Last updated**: 2026-05-27 (initial infra deployment + sample data imported)
 
 ---
 
@@ -57,7 +57,7 @@
 
 | Collection | Purpose | Status | v1 use |
 |-----------|---------|--------|--------|
-| `day_entries` | The cardinal entity — one row per local-date logged | ✅ created | **YES** — daily entries |
+| `day_entries` | The cardinal entity — one row per local-date logged | ✅ created (60 sample rows imported 2026-05-27) | **YES** — daily entries |
 | `tags` | Personal/dynamic tag set (5 clusters + interventie/project/custom) | ✅ created | **YES** — tag chips |
 | `projects` | Active interventions/projects (Citalopram, Breinvoeding, etc.) | ✅ created | No — v1.5 |
 | `project_field_configs` | Per-project field definitions | ✅ created | No — v1.5 |

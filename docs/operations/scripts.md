@@ -81,6 +81,17 @@ Confirms that the PostgreSQL `data_type` of every critical field matches the Dir
 - After any schema change to verify nothing regressed
 - During incident response when "the wrong data type" is a suspect
 
+### [`directus/scripts/import-sample-data.mjs`](../../directus/scripts/import-sample-data.mjs)
+
+Imports the anonymized 60-day sample at [`docs/sample-data.csv`](../sample-data.csv) into the live `day_entries` collection. **Idempotent**: upsert by date — re-running PATCHes existing rows, POSTs new ones.
+
+Uses a deliberately minimal inline CSV parser (sample is 2-column, simple quoted). The canonical 3-column parser at [`src/lib/import/csv-day-entries.ts`](../../src/lib/import/csv-day-entries.ts) is reserved for the user-facing import flow that ships with the daily-entry feature (will run inside Next.js where TS is native).
+
+**When to run**:
+- After initial Directus setup, to validate the full stack (CSV → domain validation → REST → Neon) end-to-end before any UI work.
+- After [wipe-and-rebootstrap](runbooks/wipe-and-rebootstrap.md), to re-seed.
+- Whenever you want a known-state test dataset for screen development.
+
 ### [`directus/scripts/setup-permissions.mjs`](../../directus/scripts/setup-permissions.mjs)
 
 Creates (idempotently) the chain:
