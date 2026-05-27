@@ -128,7 +128,7 @@ After landing: `curl -I https://gevoelscore-frontend.fly.dev/login`. Capture in 
 - [x] No regressions in any existing Vitest spec (369/369 green)
 - [x] `npm run lint` + `npm run typecheck` clean
 - [x] Local `curl -I http://localhost:3000/login` confirmed all 5 headers + no `X-Powered-By` (see evidence below)
-- [ ] Live `curl -I https://gevoelscore-frontend.fly.dev/login` after Fly deploy — pending the A1 deploy step
+- [x] Live `curl -I https://gevoelscore-frontend.fly.dev/login` after Fly deploy: all 5 headers present, no `X-Powered-By`
 - [x] Audit doc `M1` line marked `[Resolved 2026-05-27]`
 
 ### Evidence — local prod build curl
