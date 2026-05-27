@@ -2,12 +2,12 @@
 
 A personal Long COVID tracking app: one tap to log a daily "feeling score" (gevoelscore), optional note and tags, and a timeline view to spot patterns over time.
 
-**Status** (2026-05-27): domain layer + live backend + Next.js bootstrap + auth route handlers shipped. Login feature 4 of 7 steps done. Frontend not yet deployed to Fly (slot exists, no machines). See [docs/architecture/current-state.md](docs/architecture/current-state.md) for the full snapshot.
+**Status** (2026-05-27): domain layer + Directus backend + Next.js frontend with the full login feature all **deployed to Fly**. End-to-end smoke-tested. Daily-entry feature is next. See [docs/architecture/current-state.md](docs/architecture/current-state.md) for the full snapshot.
 
 ## Architecture at a glance
 
 ```
-Browser PWA (Next.js 15, App Router, Tailwind v4) ← shipped: src/app/, not yet deployed
+Browser PWA (Next.js 15, App Router, Tailwind v4) ← deployed: gevoelscore-frontend.fly.dev
   ↕ HTTPS, httpOnly cookie auth (gs_session)
 Directus 11.17.2 on Fly.io                        ← deployed: gevoelscore-backend.fly.dev
   ↕ TLS via Neon pooler

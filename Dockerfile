@@ -6,7 +6,10 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=optional
+# Tailwind v4 uses lightningcss, which ships its native binary as an
+# optionalDependency (one per platform). Must NOT use --omit=optional or
+# the alpine/linux-x64-musl binary is skipped and the build fails.
+RUN npm ci
 
 # ---- builder ---------------------------------------------------------------
 FROM node:20-alpine AS builder

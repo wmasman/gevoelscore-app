@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade + tag provenance + JSON-array flattening + tag hierarchy + Postgres views + Next.js bootstrap + auth route handlers)
+**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade + tag provenance + JSON-array flattening + tag hierarchy + Postgres views + Next.js bootstrap + login feature 8/8 + **first frontend deploy to Fly**)
 
 ---
 
@@ -13,7 +13,7 @@
 | App | Region | Status | URL | Resources |
 |-----|--------|--------|-----|-----------|
 | `gevoelscore-backend` | `ams` | ✅ deployed, running | https://gevoelscore-backend.fly.dev | 1 GB RAM, 1 shared CPU, Directus 11.17.2 |
-| `gevoelscore-frontend` | `ams` | ⏳ app slot only, no deploy | https://gevoelscore-frontend.fly.dev | Next.js 15.5 + Tailwind v4. [Dockerfile](../../Dockerfile) (standalone build) + [fly.toml](../../fly.toml) shipped. Awaiting first `fly deploy`. |
+| `gevoelscore-frontend` | `ams` | ✅ deployed, running (1 machine) | https://gevoelscore-frontend.fly.dev | Next.js 15.5 + Tailwind v4 + login feature. Image ~65 MB (standalone build). Scaled to 1 machine (matches in-memory session/rate-limit assumption per ADR 0003). |
 
 **Backend secrets** (set via `fly secrets`, never committed):
 
@@ -186,6 +186,15 @@ In the order they should be tackled:
 7. **Implement recent-missed-days, calendar, timeline, settings** in order
 
 ---
+
+## First-deploy notes (2026-05-27)
+
+Two issues caught by the first `fly deploy` of the frontend, both fixed in commit history:
+
+1. **Tailwind v4 needs optional native deps.** The Dockerfile's deps stage originally ran `npm ci --omit=optional`. Tailwind v4 uses `lightningcss`, which ships its native binary as an optionalDependency per platform (`lightningcss-linux-x64-musl` for our Alpine target). Omitting optionals made the build fail with `Cannot find module '../lightningcss.linux-x64-musl.node'`. Fix: drop `--omit=optional`. The Dockerfile comment now flags this.
+2. **Fly auto-creates 2 machines for HA.** With `min_machines_running = 1` Fly creates a SECOND machine alongside for zero-downtime deploys. Our session and rate-limit stores are in-memory per machine, so a session created on machine A would be invisible to machine B. Fix: `fly scale count 1 --app gevoelscore-frontend` after first deploy. Trade-off: brief downtime during future deploys (~30s while the new machine starts); acceptable for a single-user app where the operator IS the user.
+
+If/when scaling beyond 1 machine is needed, the in-memory stores must move to a shared backend (Redis, or a `sessions` collection in Directus). The API surface in `src/lib/auth/{session,rate-limit,pending-otp}.ts` is designed for that swap — same exports, different implementation.
 
 ## Maintenance reminders
 
