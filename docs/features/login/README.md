@@ -2,7 +2,7 @@
 
 **Feature:** Email + password login with mandatory TOTP 2FA. Establishes an `httpOnly` session cookie that all subsequent Directus calls use.
 **Version:** v1
-**Status:** In progress — Step 1 (Next.js bootstrap) done 2026-05-27. Prereq 3 (frontend-app Directus user) still pending, blocks Step 7 only.
+**Status:** ✅ Shipped 2026-05-27 — all 8 steps done. Frontend-app Directus user created, 4/4 live-stack Playwright specs green against `gevoelscore-backend.fly.dev`.
 **Parent doc:** [REQUIREMENTS.md "Auth"](../../REQUIREMENTS.md), [security-checklist](../../../.claude/security-checklist.md), [ADR 0002](../../decisions/0002-pwa-with-directus-backend.md), [ADR 0003](../../decisions/0003-directus-fly-infra-setup.md)
 
 ---
@@ -182,8 +182,8 @@ The original plan bundled "server-side auth library" into a single Step 2. Durin
 4. **Step 4**: [Login + verify + logout route handlers](step-4-auth-route-handlers.md) — `src/app/api/auth/{login, login/verify, logout}/route.ts`, plus `pending-otp.ts` for stashing creds between login and verify, plus `stores.ts` barrel for module-singletons. Vitest unit tests + Playwright API specs. ~10 ACs covered (AC1–AC3, AC5–AC8, AC10, AC11, AC13). Commit `dbf59e5`. **Done 2026-05-27.**
 5. **Step 5**: `/login` and `/login/verify` UI pages — forms that POST to the Step 4 routes. Component-level tests + Playwright e2e for form behavior. Covers AC4 (autofocus, autofill, large primary button), AC9 (mobile TOTP input). **Next up.**
 6. **Step 6**: Middleware (`middleware.ts`) — protects every page except `/login*`. Covers AC14.
-7. **Step 7**: `/login/2fa-setup` UI + `/api/auth/2fa-enable` Route Handler. Covers AC15–AC18.
-8. **Step 8**: Playwright e2e against the live stack — un-skips the rate-limit integration specs, adds happy-path 200 + cookie tests. Needs Prereq 3 (frontend-app Directus user).
+7. **Step 7**: [/login/2fa-setup UI + 2FA route handlers](step-7-2fa-setup.md) — `directusGenerateTfaSecret` + `directusEnableTfa` SDK wrappers, two-phase setup UI (password → secret reveal + OTP input). Commit `f86ade3`. **Done 2026-05-27.**
+8. **Step 8**: [Live-stack Playwright](step-8-live-stack-playwright.md) — production build (`next start`) + real `gevoelscore-backend.fly.dev`. Unskipped the 2 rate-limit specs; validated AC1/AC2/AC3/AC5/AC8 against real Directus envelopes. Commit hash in git log. **Done 2026-05-27.**
 
 Each step file follows the TDD template and records its own RED/GREEN evidence in a `Done` section.
 
