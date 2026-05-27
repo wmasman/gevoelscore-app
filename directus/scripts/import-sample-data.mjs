@@ -121,8 +121,6 @@ for (const row of parsed) {
         sub_scores: null,
         sleep_hours: null,
         special_event: null,
-        project_entry_ids: null,
-        calendar_event_ids: null,
         garmin: null,
         health: null,
         weather: null,

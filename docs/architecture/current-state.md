@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade)
+**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade + tag provenance + JSON-array flattening + tag hierarchy + Postgres views)
 
 ---
 
@@ -58,19 +58,20 @@
 | Collection | Purpose | Status | v1 use |
 |-----------|---------|--------|--------|
 | `day_entries` | The cardinal entity — one row per local-date logged | ✅ **1,363 rows** (full historical sheet, 3-9-2022 → 27-5-2026) | **YES** — daily entries |
-| `tags` | Personal/dynamic tag set (5 clusters + interventie/project/custom) | ✅ **83 tags seeded**; usage_count recomputed | **YES** — tag chips |
-| `day_entries_tags` (junction) | M2M between day_entries × tags, cascading deletes | ✅ **1,338 junction rows** (auto-derived from note matching) | **YES** — via the `tags` alias field |
-| `projects` | Active interventions/projects (Citalopram, Breinvoeding, etc.) | ✅ **5 projects seeded** (Citalopram, CPAP, Naproxen, Breinvoeding, HeartMath) | Schema queryable; ProjectEntry M2M deferred to v1.5 |
+| `tags` | Personal/dynamic tag set (6 clusters + interventie/project/custom). Supports `parent_id` self-FK for intra-cluster hierarchy. | ✅ **83 tags seeded**, all `parent_id = null`; usage_count recomputed | **YES** — tag chips |
+| `day_entries_tags` (junction) | M2M between day_entries × tags, cascading deletes, with provenance (`source`, `confidence`, `confirmed_at`) | ✅ **1,338 junction rows**, all `source='note_pattern', confidence=1.0` (auto-inferred from note regex) | **YES** — via the `tags` alias field |
+| `projects` | Active interventions/projects (Citalopram, Breinvoeding, etc.) | ✅ **5 projects seeded** (Citalopram, CPAP, Naproxen, Breinvoeding, HeartMath) | Schema queryable; ProjectEntry M2M live |
 | `project_field_configs` | Per-project field definitions | ✅ created | No — v1.5 |
-| `project_entries` | Per-project per-day entries | ✅ created | No — v1.5 |
+| `project_entries` | Per-project per-day entries | ✅ created (no rows) | No — v1.5 |
+| `project_entries_tags` (junction) | M2M between project_entries × tags, cascading deletes, with same provenance columns as `day_entries_tags` | ✅ created (no rows) | No — v1.5 |
 | `calendar_events` | Google Calendar read-only sync | ✅ created | No — v1.5 |
 | `garmin_daily` | Garmin aggregate per day | ✅ placeholder | No — v2 (separate native iOS app) |
 | `health_daily` | Apple Health aggregate per day | ✅ placeholder | No — v2 |
 | `weather_daily` | Weather per location per day | ✅ placeholder | No — v2 |
 
-**Schema verification**: all 21 critical PostgreSQL type checks pass — see [`directus/scripts/verify-schema.mjs`](../../directus/scripts/verify-schema.mjs). No silent VARCHAR-where-INTEGER bugs.
+**Schema verification**: all 29 critical PostgreSQL type checks pass — see [`directus/scripts/verify-schema.mjs`](../../directus/scripts/verify-schema.mjs). No silent VARCHAR-where-INTEGER bugs.
 
-**M2M deferral**: `day_entries.tag_ids`, `day_entries.project_entry_ids`, `day_entries.calendar_event_ids` are JSON arrays of UUIDs in v1. Migrating to proper M2M junctions is v1.5 work; the domain layer's `tag_ids: string[]` contract survives either representation.
+**M2M shape (no longer deferred)**: both `day_entries × tags` and `project_entries × tags` are proper Directus M2M junctions with cascading deletes on both FKs and provenance columns (`source`, `confidence`, `confirmed_at`). The pre-M2M JSON-array fields (`day_entries.tag_ids`, `day_entries.project_entry_ids`, `day_entries.calendar_event_ids`, `project_entries.tag_ids`) have been removed. Cross-collection joins now happen by `date` — see [`directus/scripts/views/`](../../directus/scripts/views/) for the canonical query views (`daily_observations`, `day_tags_flat`, `tag_correlations`).
 
 ### Auth
 
@@ -106,13 +107,28 @@ directus/
 ├── Dockerfile           — FROM directus/directus:11.17.2
 ├── fly.toml             — Fly app config for gevoelscore-backend
 ├── .dockerignore
-├── .env.example         — Env var template for the scripts (DIRECTUS_TOKEN, DIRECTUS_URL)
+├── .env.example         — Env var template (DIRECTUS_TOKEN, DIRECTUS_URL)
 └── scripts/
     ├── lib/
-    │   └── directus-request.mjs  — Shared auth + fetch helper
-    ├── setup-schema.mjs          — Creates the 9 collections (idempotent, one-POST rule)
-    ├── verify-schema.mjs         — Confirms PostgreSQL types match expectations
-    └── setup-permissions.mjs     — Creates role + policy + 24 permissions (idempotent)
+    │   ├── directus-request.mjs       — Shared auth + fetch helper
+    │   └── tag-patterns.mjs           — Canonical regex → tag mapping for semantic enrichment
+    ├── setup-schema.mjs               — Creates all collections + M2Ms (idempotent, one-POST rule)
+    ├── verify-schema.mjs              — Confirms PostgreSQL types match expectations
+    ├── setup-permissions.mjs          — Role + policy + permissions (idempotent)
+    ├── seed-tags.mjs                  — Inserts the 83 tags from tag-patterns.mjs
+    ├── seed-projects.mjs              — Inserts the 5 v1 Project entities
+    ├── analyze-notes.mjs              — Read-only frequency/pattern analysis of historical CSV
+    ├── import-real-history.mjs        — Imports private/real-history.csv (PII), source='note_pattern'
+    ├── import-sample-data.mjs         — Imports docs/sample-data.csv (60-row anonymised set)
+    ├── recompute-tag-usage.mjs        — Refreshes Tag.usage_count from junction rows
+    ├── upgrade-m2m-tags.mjs           — Historical: JSON tag_ids → M2M (already applied)
+    ├── add-tag-provenance.mjs         — Historical: adds source/confidence/confirmed_at to junction
+    ├── flatten-day-entry-json-arrays.mjs — Historical: drops JSON-array FKs + adds project_entries × tags M2M
+    ├── add-tag-hierarchy.mjs          — Historical: adds tags.parent_id self-FK
+    └── views/
+        ├── 01-daily-observations.sql  — Wide cross-source join by date (LEFT JOINs)
+        ├── 02-day-tags-flat.sql       — Denormalised day × tag rows with provenance
+        └── 03-tag-correlations.sql    — Per-tag avg_score, stddev, date range, confirmed counts
 ```
 
 ### Code (`src/`)
@@ -140,6 +156,9 @@ directus/
 
 In the order they should be tackled:
 
+0. **Apply the Postgres views** (one-time, deferred until a consumer exists)
+   - Paste each `directus/scripts/views/*.sql` file into the Neon Console SQL editor, OR run with `psql $env:DB_CONNECTION_STRING -f <file>` if psql is installed.
+   - Optional: register them as read-only collections in the Directus admin UI so they show up in the data studio.
 1. **Create the frontend-app Directus user** (5 min in admin UI)
    - Settings → Access Control → Users → Create
    - Assign role `gevoelscore-frontend-api`

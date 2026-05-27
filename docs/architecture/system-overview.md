@@ -76,6 +76,18 @@ Total expected: well under 200ms warm, ~1.2s cold-start. Cardinal sub-10s budget
 
 ---
 
+## Reading the database (the query surface)
+
+Three layers, pick the lowest one that answers the question:
+
+1. **Directus REST API / SDK** for entity-with-relations reads from the application (user auth applies).
+2. **Postgres views** (`daily_observations`, `day_tags_flat`, `tag_correlations`) for cross-source aggregation. Read-only, bypass Directus.
+3. **Raw SQL** for one-off analysis via Neon Console.
+
+The join key across all daily-grain entities is `date` — there are no id-arrays linking `day_entries` to child collections. See [queries-and-views.md](queries-and-views.md) for the full guide and [ADR 0004](../decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md) for the rationale.
+
+---
+
 ## Trust boundaries
 
 | Boundary | What crosses | What's enforced |
@@ -94,7 +106,8 @@ Total expected: well under 200ms warm, ~1.2s cold-start. Cardinal sub-10s budget
 |-----------|--------|-------|
 | Directus backend | ✅ Deployed | gevoelscore-backend.fly.dev — 11.17.2, healthy |
 | Neon Postgres | ✅ Live | Free tier; scales to zero when idle |
-| Directus schema (9 collections) | ✅ Created | All PostgreSQL types verified (21/21) |
+| Directus schema (9 user collections + 2 M2M junctions) | ✅ Created | All PostgreSQL types verified (29/29). M2M junctions carry provenance (source, confidence, confirmed_at) per [ADR 0004](../decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md). |
+| Postgres views (`daily_observations`, `day_tags_flat`, `tag_correlations`) | ✅ Applied via Neon Console | Read-only query surface; see [queries-and-views.md](queries-and-views.md) |
 | Role + policy + permissions | ✅ Configured | gevoelscore-frontend-api role, 24 permissions |
 | Frontend-app Directus user | ⏳ Manual step | You create via admin UI when wiring up frontend |
 | Next.js frontend code | ❌ Not started | Feature plan exists ([docs/features/login/](../features/login/)) |

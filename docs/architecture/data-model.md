@@ -126,18 +126,33 @@ type DayEntry = {
   date: string;                          // ISO 8601 'YYYY-MM-DD', primary key
   score: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;  // integer only — see "Score validation" below
   note: string | null;                   // free text, no length limit; null = no note today
-  tag_ids: string[];                     // refs to Tag.id; order is presentation, not semantic
+  tag_ids: string[];                     // refs to Tag.id; resolved via day_entries_tags M2M junction (with provenance)
   sub_scores: SubScores | null;          // v2; null in v1
   sleep_hours: number | null;            // v2 bonus field; null in v1
   special_event: string | null;          // v1.5 manual "iets speciaals" field; null in v1
-  project_entry_ids: string[];           // refs to ProjectEntry.id; empty in v1
-  calendar_event_ids: string[];          // refs to CalendarEvent.id; empty in v1
   garmin: GarminDaily | null;            // v2; null in v1
   health: HealthDaily | null;            // v2; null in v1
   weather: WeatherDaily | null;          // v2; null in v1
   derived: DerivedIndicators | null;     // v2; null in v1
   created_at: string;                    // ISO 8601 UTC
   updated_at: string;                    // ISO 8601 UTC
+};
+
+// ProjectEntry and CalendarEvent are NOT linked from day_entries by an id-array.
+// They have their own `date` column and are joined by date when needed. See
+// `daily_observations` view in directus/scripts/views/.
+
+type DayEntryTag = {
+  // Junction row metadata for day_entries × tags. Domain code rarely touches this
+  // directly — it's surfaced via the `tag_ids` list on DayEntry — but it captures
+  // *where this tag came from* so user-chosen tags can be distinguished from
+  // auto-inferred ones.
+  day_entry_id: string;
+  tag_id: string;
+  source: 'user' | 'note_pattern' | 'csv_import' | 'inferred' | null;
+  confidence: number | null;             // 0..1; null for source='user'
+  confirmed_at: string | null;           // ISO 8601 UTC; set when user accepts an inferred tag
+  sort: number | null;                   // display order
 };
 
 type SubScores = {
@@ -195,9 +210,10 @@ type DerivedIndicators = {
 type Tag = {
   id: string;                                              // UUID v7
   label: string;                                           // trimmed, non-empty
-  category: TagCategory;
+  category: TagCategory;                                   // cluster — locked enum, type-safe
+  parent_id: string | null;                                // optional self-FK for intra-cluster hierarchy
   project_id: string | null;                               // FK to Project.id, only when category === 'project'
-  usage_count: number;                                     // denormalized; recomputed by trigger or recalc job
+  usage_count: number;                                     // denormalized; recomputed by recalc job
   archived_at: string | null;                              // ISO 8601 UTC; null = active
   created_at: string;
 };
@@ -212,6 +228,10 @@ type TagCategory =
   | 'project'                                              // requires project_id
   | 'custom';
 ```
+
+**Hierarchy via `parent_id`:** intra-cluster only. `migraine.parent_id = hoofdpijn.id`, both with `category='fysiek'`. Top-level tags have `parent_id = null`. `ON DELETE SET NULL` — children become orphans (not deleted) if the parent is removed. Cross-category parents are not enforced at the DB layer; convention is to keep parent and child in the same `category`.
+
+**Why not a separate `tag_categories` table:** the 6 cluster choices (`mentaal | fysiek | overall | activiteit | gebeurtenis | interventie`, plus the two specials `project | custom`) are locked by UX — they shape the chip rows on the daily screen and are deliberately not user-creatable. Per-category metadata (color, icon, sort order) lives in `src/lib/domain/tag-category-meta.ts` (to be created when the UI lands), not in the database — changing a color is a deploy, not a data event.
 
 **Validation rules:**
 
@@ -235,6 +255,9 @@ type TagCategory =
 - `forbids project_id when category is not 'project'`
 - `rename preserves id`
 - `archive sets archived_at, does not delete`
+- `accepts parent_id pointing to another tag in the same category`
+- `accepts parent_id null (top-level tag)`
+- `forbids parent_id === self.id (no self-parent cycle)`
 
 ### `Project` (v1.5)
 
@@ -282,7 +305,7 @@ type ProjectEntry = {
   date: string;                                            // 'YYYY-MM-DD', the day this entry belongs to
   project_id: string;                                      // FK to Project.id
   note: string | null;
-  tag_ids: string[];                                       // tags scoped to this project entry
+  tag_ids: string[];                                       // tags scoped to this entry; resolved via project_entries_tags M2M (same shape and provenance as DayEntryTag)
   numeric_values: Record<string, number>;                  // keyed by ProjectFieldConfig.key
   created_at: string;
   updated_at: string;
@@ -481,12 +504,12 @@ Schema-wide picture of v1 reality:
 
 | Directus collection | v1 populates? | Notes |
 |---|---|---|
-| `day_entries` | yes — `date`, `score`, `note`, M2M to `tags`, timestamps | other fields stay null. **Status 2026-05-27**: 1,363 rows imported from the historical Google Sheet. |
-| `tags` | yes — full lifecycle (create, rename, archive, merge) | **Status 2026-05-27**: 83 tags seeded across 6 categories. `usage_count` recomputed by [`recompute-tag-usage.mjs`](../../directus/scripts/recompute-tag-usage.mjs). |
-| `day_entries_tags` (junction) | yes — proper Directus M2M with cascading deletes on both FKs | **Status 2026-05-27**: 1,338 junction rows. Set up by [`upgrade-m2m-tags.mjs`](../../directus/scripts/upgrade-m2m-tags.mjs) and now ships natively in [`setup-schema.mjs`](../../directus/scripts/setup-schema.mjs). |
-| `projects` | no — collection exists, never written | |
+| `day_entries` | yes — `date`, `score`, `note`, M2M to `tags`, timestamps | other fields stay null. **Status 2026-05-27**: 1,363 rows imported from the historical Google Sheet. JSON-array foreign-key fields (`project_entry_ids`, `calendar_event_ids`) were removed — child collections join by `date`. |
+| `tags` | yes — full lifecycle (create, rename, archive, merge); supports `parent_id` self-FK for intra-cluster hierarchy | **Status 2026-05-27**: 83 tags seeded across 6 categories, all with `parent_id = null` (hierarchy unused so far). `usage_count` recomputed by [`recompute-tag-usage.mjs`](../../directus/scripts/recompute-tag-usage.mjs). |
+| `day_entries_tags` (junction) | yes — proper Directus M2M with cascading deletes on both FKs + provenance (`source`, `confidence`, `confirmed_at`) | **Status 2026-05-27**: 1,338 junction rows, all backfilled with `source='note_pattern', confidence=1.0`. |
+| `projects` | no — collection exists, never written in v1 | |
 | `project_entries` | no | |
-| `project_entries_tags` (Directus-generated junction) | no | |
+| `project_entries_tags` (junction) | no — schema-ready with the same provenance columns as `day_entries_tags` | |
 | `project_field_configs` | no | |
 | `calendar_events` | no | |
 | `garmin_daily` | no | |

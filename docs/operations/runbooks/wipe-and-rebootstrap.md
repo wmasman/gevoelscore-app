@@ -79,18 +79,35 @@ The new admin user has the password from the Fly `ADMIN_PASSWORD` secret. Log in
 ```powershell
 $env:DIRECTUS_TOKEN = "<new static token>"
 
-node directus/scripts/setup-schema.mjs       # creates the 9 collections
-node directus/scripts/verify-schema.mjs      # confirms 21/21 PG types
+node directus/scripts/setup-schema.mjs       # creates the 9 collections + 2 M2M junctions (with provenance + tag hierarchy)
+node directus/scripts/verify-schema.mjs      # confirms 29/29 PG types
 node directus/scripts/setup-permissions.mjs  # creates role + policy + 24 permissions
 ```
 
+The one-time historical migrations (`upgrade-m2m-tags.mjs`, `add-tag-provenance.mjs`, `flatten-day-entry-json-arrays.mjs`, `add-tag-hierarchy.mjs`) are **NOT** re-run on a fresh wipe — their end state is baked into `setup-schema.mjs`.
+
 If everything passes, you're back to a clean v1 schema state.
 
-### 6. Re-import historical data
+### 6. Re-apply the Postgres views
 
-Once `setup-seed-tags.mjs` and `import-historical-csv.mjs` exist ([scripts.md "Future scripts"](../scripts.md#future-scripts-to-add-when-needed)), this is also automatable. For now, manual (or via a future feature plan).
+Paste each file from [`directus/scripts/views/`](../../../directus/scripts/views/) into the Neon Console SQL editor, or `psql -f` if available. All three views use `CREATE OR REPLACE` — re-applying is safe.
 
-### 7. Verify backend health
+### 7. Re-seed reference data
+
+```powershell
+node directus/scripts/seed-tags.mjs           # 83 tags from lib/tag-patterns.mjs
+node directus/scripts/seed-projects.mjs       # the 5 v1 projects
+```
+
+### 8. Re-import historical data
+
+```powershell
+# Requires private/real-history.csv (gitignored — restore from your local copy)
+node directus/scripts/import-real-history.mjs --commit
+node directus/scripts/recompute-tag-usage.mjs
+```
+
+### 9. Verify backend health
 
 ```powershell
 curl https://gevoelscore-backend.fly.dev/server/info

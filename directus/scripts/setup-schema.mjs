@@ -173,6 +173,21 @@ const collections = [
         },
       },
       {
+        field: 'parent_id',
+        type: 'uuid',
+        schema: {
+          is_nullable: true,
+          foreign_key_table: 'tags',
+          foreign_key_column: 'id',
+        },
+        meta: {
+          interface: 'select-dropdown-m2o',
+          special: ['m2o'],
+          options: { template: '{{label}} ({{category}})' },
+          note: 'Optional parent tag for intra-cluster hierarchy. ON DELETE SET NULL.',
+        },
+      },
+      {
         field: 'project_id',
         type: 'uuid',
         schema: {
@@ -269,12 +284,12 @@ const collections = [
   // day_entries — THE cardinal entity (v1)
   // -----------------------------------------------------------
   // Tags are a proper Directus M2M relation via the `day_entries_tags`
-  // junction collection (created after this loop, see "M2M setup" below).
-  // The M2M alias field `day_entries.tags` is added in that same phase.
+  // junction collection (created after this loop). The M2M alias field
+  // `day_entries.tags` is added in that same phase.
   //
-  // Still-JSON in v1 (deferred until used): project_entry_ids,
-  // calendar_event_ids — these are empty in v1 and will likely become proper
-  // 1:N relations via a `day_entry_id` FK on the child collections in v1.5.
+  // Cross-source joins (project_entries, calendar_events, garmin_daily,
+  // health_daily, weather_daily) are done by `date` — none of them need
+  // an id-array on day_entries. See views in directus/scripts/views/.
   // -----------------------------------------------------------
   {
     collection: 'day_entries',
@@ -333,26 +348,6 @@ const collections = [
         type: 'string',
         schema: { is_nullable: true, max_length: 500 },
         meta: { interface: 'input', note: 'v1.5: handmatige "iets speciaals". Null in v1.' },
-      },
-      {
-        field: 'project_entry_ids',
-        type: 'json',
-        schema: { is_nullable: true },
-        meta: {
-          interface: 'input-code',
-          options: { language: 'json' },
-          note: 'v1.5: JSON array of ProjectEntry.id UUIDs. Empty in v1.',
-        },
-      },
-      {
-        field: 'calendar_event_ids',
-        type: 'json',
-        schema: { is_nullable: true },
-        meta: {
-          interface: 'input-code',
-          options: { language: 'json' },
-          note: 'v1.5: JSON array of CalendarEvent.id UUIDs. Empty in v1.',
-        },
       },
       {
         field: 'garmin',
@@ -414,12 +409,9 @@ const collections = [
         schema: { is_nullable: true },
         meta: { interface: 'input-multiline' },
       },
-      {
-        field: 'tag_ids',
-        type: 'json',
-        schema: { is_nullable: true },
-        meta: { interface: 'input-code', options: { language: 'json' } },
-      },
+      // Tags are a proper Directus M2M via the project_entries_tags junction
+      // collection (set up after this loop). The alias field
+      // `project_entries.tags` is added in that same phase.
       {
         field: 'numeric_values',
         type: 'json',
@@ -630,6 +622,40 @@ async function fieldExists(collection, field) {
   }
 }
 
+// Provenance columns shared by both tag-junctions (day_entries_tags and
+// project_entries_tags) — keep them in one constant so they stay in sync.
+const provenanceFields = [
+  {
+    field: 'source',
+    type: 'string',
+    schema: { is_nullable: true, max_length: 20 },
+    meta: {
+      interface: 'select-dropdown',
+      options: {
+        choices: [
+          { text: 'User chose', value: 'user' },
+          { text: 'Note pattern match', value: 'note_pattern' },
+          { text: 'CSV import', value: 'csv_import' },
+          { text: 'Inferred', value: 'inferred' },
+        ],
+      },
+      note: 'Where this junction row came from. null = legacy.',
+    },
+  },
+  {
+    field: 'confidence',
+    type: 'float',
+    schema: { is_nullable: true },
+    meta: { interface: 'input', note: '0..1. null when source=user.' },
+  },
+  {
+    field: 'confirmed_at',
+    type: 'timestamp',
+    schema: { is_nullable: true },
+    meta: { interface: 'datetime' },
+  },
+];
+
 // Junction collection
 if (await collectionExists('day_entries_tags')) {
   console.log('  ⏩ day_entries_tags junction already exists');
@@ -663,6 +689,7 @@ if (await collectionExists('day_entries_tags')) {
         schema: { is_nullable: true },
         meta: { hidden: true, interface: 'input' },
       },
+      ...provenanceFields,
     ],
   });
   console.log('  ✅');
@@ -721,6 +748,131 @@ if (await fieldExists('tags', 'day_entries')) {
   console.log('  ➕ Creating alias field tags.day_entries');
   await directusRequest('/fields/tags', 'POST', {
     field: 'day_entries',
+    type: 'alias',
+    schema: null,
+    meta: { interface: 'list-m2m', special: ['m2m'] },
+  });
+  console.log('  ✅');
+}
+
+// ----------------------------------------------------------------------------
+// Self-relation: tags.parent_id → tags.id (SET NULL on delete)
+// ----------------------------------------------------------------------------
+
+console.log('\n  ── Self-relation: tags.parent_id ──');
+
+if (await relationExists('tags', 'parent_id')) {
+  console.log('  ⏩ relation tags.parent_id already exists');
+} else {
+  console.log('  ➕ Creating relation tags.parent_id → tags.id (SET NULL)');
+  await directusRequest('/relations', 'POST', {
+    collection: 'tags',
+    field: 'parent_id',
+    related_collection: 'tags',
+    meta: { sort_field: null },
+    schema: { on_delete: 'SET NULL', on_update: 'NO ACTION' },
+  });
+  console.log('  ✅');
+}
+
+// ----------------------------------------------------------------------------
+// M2M setup: project_entries × tags
+// ----------------------------------------------------------------------------
+// Same shape as day_entries_tags — junction with provenance + 2 CASCADE
+// relations + 2 alias fields. project_entries is empty in v1, so this is
+// schema-ready for v1.5 work.
+
+console.log('\n  ── M2M setup: project_entries × tags ──');
+
+if (await collectionExists('project_entries_tags')) {
+  console.log('  ⏩ project_entries_tags junction already exists');
+} else {
+  console.log('  ➕ Creating project_entries_tags junction collection...');
+  await directusRequest('/collections', 'POST', {
+    collection: 'project_entries_tags',
+    schema: { name: 'project_entries_tags' },
+    meta: {
+      icon: 'link',
+      note: 'Junction for project_entries ↔ tags M2M. Cascading deletes on both sides.',
+      hidden: true,
+    },
+    fields: [
+      idField,
+      {
+        field: 'project_entries_id',
+        type: 'uuid',
+        schema: { is_nullable: false },
+        meta: { hidden: true, interface: 'select-dropdown-m2o' },
+      },
+      {
+        field: 'tags_id',
+        type: 'uuid',
+        schema: { is_nullable: false },
+        meta: { hidden: true, interface: 'select-dropdown-m2o' },
+      },
+      {
+        field: 'sort',
+        type: 'integer',
+        schema: { is_nullable: true },
+        meta: { hidden: true, interface: 'input' },
+      },
+      ...provenanceFields,
+    ],
+  });
+  console.log('  ✅');
+}
+
+if (await relationExists('project_entries_tags', 'project_entries_id')) {
+  console.log('  ⏩ relation project_entries_tags.project_entries_id already exists');
+} else {
+  console.log('  ➕ relation project_entries_tags.project_entries_id → project_entries.id (CASCADE)');
+  await directusRequest('/relations', 'POST', {
+    collection: 'project_entries_tags',
+    field: 'project_entries_id',
+    related_collection: 'project_entries',
+    meta: { one_field: 'tags', junction_field: 'tags_id', sort_field: 'sort' },
+    schema: { on_delete: 'CASCADE', on_update: 'NO ACTION' },
+  });
+  console.log('  ✅');
+}
+
+if (await relationExists('project_entries_tags', 'tags_id')) {
+  console.log('  ⏩ relation project_entries_tags.tags_id already exists');
+} else {
+  console.log('  ➕ relation project_entries_tags.tags_id → tags.id (CASCADE)');
+  await directusRequest('/relations', 'POST', {
+    collection: 'project_entries_tags',
+    field: 'tags_id',
+    related_collection: 'tags',
+    meta: { one_field: 'project_entries', junction_field: 'project_entries_id', sort_field: 'sort' },
+    schema: { on_delete: 'CASCADE', on_update: 'NO ACTION' },
+  });
+  console.log('  ✅');
+}
+
+if (await fieldExists('project_entries', 'tags')) {
+  console.log('  ⏩ alias project_entries.tags already exists');
+} else {
+  console.log('  ➕ Creating alias field project_entries.tags');
+  await directusRequest('/fields/project_entries', 'POST', {
+    field: 'tags',
+    type: 'alias',
+    schema: null,
+    meta: {
+      interface: 'list-m2m',
+      special: ['m2m'],
+      options: { template: '{{tags_id.label}}' },
+    },
+  });
+  console.log('  ✅');
+}
+
+if (await fieldExists('tags', 'project_entries')) {
+  console.log('  ⏩ alias tags.project_entries already exists');
+} else {
+  console.log('  ➕ Creating alias field tags.project_entries');
+  await directusRequest('/fields/tags', 'POST', {
+    field: 'project_entries',
     type: 'alias',
     schema: null,
     meta: { interface: 'list-m2m', special: ['m2m'] },

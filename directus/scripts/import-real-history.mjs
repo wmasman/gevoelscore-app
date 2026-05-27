@@ -254,10 +254,16 @@ for (const row of valid) {
     const existing = await directusRequest(
       `/items/day_entries?filter[date][_eq]=${row.date}&fields=id&limit=1`,
     );
-    // M2M payload: `tags: [{tags_id: <uuid>}, ...]` REPLACES the full relation
-    // set on PATCH — Directus deletes existing junction rows for this day_entry
-    // and re-creates them. Idempotent upsert semantics for tag assignment.
-    const tagsPayload = row.tagIds.map((id) => ({ tags_id: id }));
+    // M2M payload: `tags: [{tags_id: <uuid>, source, confidence}, ...]`
+    // REPLACES the full relation set on PATCH — Directus deletes existing
+    // junction rows for this day_entry and re-creates them. Idempotent upsert
+    // semantics. Source='note_pattern' marks these as auto-inferred from the
+    // regex library — distinguishes them from user-chosen tags later.
+    const tagsPayload = row.tagIds.map((id) => ({
+      tags_id: id,
+      source: 'note_pattern',
+      confidence: 1.0,
+    }));
 
     if (existing.data && existing.data.length > 0) {
       await directusRequest(`/items/day_entries/${existing.data[0].id}`, 'PATCH', {
@@ -275,8 +281,6 @@ for (const row of valid) {
         sub_scores: null,
         sleep_hours: null,
         special_event: null,
-        project_entry_ids: null,
-        calendar_event_ids: null,
         garmin: null,
         health: null,
         weather: null,

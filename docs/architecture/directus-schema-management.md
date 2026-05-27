@@ -72,6 +72,64 @@ await fetch(`${URL}/collections`, {
 
 **Mitigation**: every script calls a `verifyFieldType()` helper after creation that confirms the actual PostgreSQL `data_type` matches expectations. Mismatch → loud failure.
 
+### Lesson 4: M2M with provenance is the canonical junction shape
+
+Locked 2026-05-27 by [ADR 0004](../decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md). Every M2M junction in this project carries provenance columns so we can distinguish user-chosen rows from auto-inferred rows.
+
+**The canonical junction shape:**
+
+```javascript
+{
+  collection: 'day_entries_tags',        // or project_entries_tags, etc.
+  schema: { name: 'day_entries_tags' },
+  meta: { icon: 'link', hidden: true, note: 'Junction for A ↔ B M2M. Cascading deletes on both sides.' },
+  fields: [
+    idField,                                                    // uuid PK
+    { field: 'day_entries_id', type: 'uuid', schema: { is_nullable: false } },
+    { field: 'tags_id',        type: 'uuid', schema: { is_nullable: false } },
+    { field: 'sort',           type: 'integer', schema: { is_nullable: true } },
+    // Provenance — same shape across every junction
+    { field: 'source',        type: 'string', schema: { is_nullable: true, max_length: 20 } },
+    { field: 'confidence',    type: 'float',  schema: { is_nullable: true } },
+    { field: 'confirmed_at',  type: 'timestamp', schema: { is_nullable: true } },
+  ],
+}
+```
+
+Both FK relations use `CASCADE` on delete (and the standard `NO ACTION` on update). Two alias fields go on the parent collections (`day_entries.tags` with `interface: 'list-m2m'` and `tags.day_entries` reciprocal).
+
+**Provenance values** (see [ADR 0004](../decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md) for the full semantics):
+
+- `'user'` — user explicitly chose this. `confidence` is `null` (full confidence by definition).
+- `'note_pattern'` — regex from `lib/tag-patterns.mjs` matched the note. `confidence` typically `1.0` for hard matches; weighted lower for fuzzy ones.
+- `'csv_import'` — sourced from an external CSV row (e.g. a re-import).
+- `'inferred'` — broader inference (future: ML, time-of-day heuristics).
+
+**The rule for new M2M tables**: copy this shape verbatim. Don't omit the provenance columns even if v1 doesn't write to them — the cost is three `NULL` columns per row, and future you (or future inference logic) will need them.
+
+### Lesson 5: Cross-collection joins go by natural key, not by id-array
+
+Same ADR. When two collections both carry the same natural key (e.g. `date`), join them by that key. Do not add a JSON array of ids to one collection to "link" it to the other.
+
+**Wrong** (the anti-pattern this project removed in 2026-05-27):
+
+```javascript
+// day_entries has a JSON array pointing at child collections
+{ field: 'project_entry_ids',  type: 'json', schema: { is_nullable: true } },
+{ field: 'calendar_event_ids', type: 'json', schema: { is_nullable: true } },
+```
+
+This forces every read to dereference UUIDs the application has to keep in sync, and the JSON column has no referential integrity. The same anti-pattern was previously used for `day_entries.tag_ids` and removed when M2M shipped.
+
+**Right** — both collections already have `date`. Join on it.
+
+```sql
+SELECT * FROM day_entries d
+LEFT JOIN project_entries pe ON pe.date = d.date;
+```
+
+When the natural-key approach doesn't fit (no shared key, or the relationship isn't 1:N by date), use a proper FK on the child collection, or an M2M junction with provenance per Lesson 4. Don't reach for a JSON array.
+
 ---
 
 ## Script conventions (mirroring `programmeerprobeer/directus/scripts/`)
@@ -101,6 +159,8 @@ Tempting alternative: define the schema in TypeScript (Zod, Prisma, Drizzle), ge
 
 ## File layout
 
+For the up-to-date inventory of every script and what it does, see [docs/operations/scripts.md](../operations/scripts.md). The high-level layout:
+
 ```
 gevoelscore-app/
   directus/
@@ -108,17 +168,18 @@ gevoelscore-app/
     fly.toml                         — Fly app config (deployed)
     .dockerignore
     scripts/
-      setup-schema.mjs               — Creates the 7 v1 + 3 v2-placeholder collections, idempotent
-      setup-permissions.mjs          — Creates role + permissions, idempotent
-      verify-schema.mjs              — Sanity-checks every collection's PostgreSQL types match expectations
-      lib/
-        directus-request.mjs         — Shared fetch wrapper (auth, error handling)
-        verify-field-type.mjs        — Post-create PostgreSQL type guard
+      lib/                           — Shared modules (auth, tag-patterns)
+      setup-*.mjs                    — Idempotent re-runnable schema + permissions
+      verify-schema.mjs              — Sanity-checks PostgreSQL types match expectations
+      seed-*.mjs / import-*.mjs      — Data-loading scripts
+      <feature>-*.mjs                — One-time migrations (kept as historical reference)
+      views/                         — Postgres views (apply via psql or Neon Console)
   src/lib/domain/                    — Application validators (separate, already shipped)
   docs/architecture/
     directus-setup.md                — Provisioning runbook
     directus-schema-management.md    — This document
     data-model.md                    — The single source of truth for what fields exist
+    queries-and-views.md             — How to read the database (REST, views, raw SQL)
 ```
 
 ---
@@ -158,4 +219,6 @@ node directus/scripts/import-historical-data.mjs   # (not yet written; comes wit
 - [SCHEMA_BOOTSTRAP_SOLUTION.md (programmeerprobeer)](../../../programmeerprobeer/directus/SCHEMA_BOOTSTRAP_SOLUTION.md) — the cautionary tale about `schema apply` and the bootstrap loop. Read this if anything goes weird.
 - [directus-v11-bootstrap-guide.md (programmeerprobeer)](../../../programmeerprobeer/directus/docs/directus-v11-bootstrap-guide.md) — quick reference for the bootstrap commands.
 - [data-model.md](data-model.md) — the gevoelscore-specific source of truth for what collections we need.
+- [queries-and-views.md](queries-and-views.md) — the read-side surface: views, join principles, when to bypass Directus.
+- [ADR 0004](../decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md) — design choices behind the M2M-with-provenance pattern and date-joined cross-source queries (Lessons 4 + 5).
 - [Directus API docs](https://directus.io/docs/api) — official.

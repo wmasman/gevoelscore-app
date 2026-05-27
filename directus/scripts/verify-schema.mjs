@@ -11,16 +11,27 @@ const expectations = [
   ['day_entries', 'date', 'date', 'date', { is_unique: true, is_nullable: false }],
   ['day_entries', 'score', 'integer', 'integer', { is_nullable: false }],
   ['day_entries', 'note', 'text', 'text', { is_nullable: true }],
-  ['day_entries', 'tag_ids', 'json', 'json', { is_nullable: true }],
   ['day_entries', 'sub_scores', 'json', 'json', { is_nullable: true }],
   ['day_entries', 'sleep_hours', 'float', 'real', { is_nullable: true }],
   ['day_entries', 'created_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
 
   ['tags', 'label', 'string', 'character varying', { is_nullable: false }],
   ['tags', 'category', 'string', 'character varying', { is_nullable: false }],
+  ['tags', 'parent_id', 'uuid', 'uuid', { is_nullable: true }],
   ['tags', 'project_id', 'uuid', 'uuid', { is_nullable: true }],
   ['tags', 'usage_count', 'integer', 'integer', { is_nullable: false }],
   ['tags', 'archived_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+
+  // M2M junctions
+  ['day_entries_tags', 'day_entries_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['day_entries_tags', 'tags_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['day_entries_tags', 'source', 'string', 'character varying', { is_nullable: true }],
+  ['day_entries_tags', 'confidence', 'float', 'real', { is_nullable: true }],
+  ['day_entries_tags', 'confirmed_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+
+  ['project_entries_tags', 'project_entries_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['project_entries_tags', 'tags_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['project_entries_tags', 'source', 'string', 'character varying', { is_nullable: true }],
 
   ['projects', 'name', 'string', 'character varying', { is_nullable: false }],
   ['projects', 'type', 'string', 'character varying', { is_nullable: false }],

@@ -73,7 +73,7 @@ Creates the 9 user collections (`day_entries`, `tags`, `projects`, `project_entr
 
 Confirms that the PostgreSQL `data_type` of every critical field matches the Directus `type` you asked for. Catches silent translation bugs.
 
-21 fields checked across the 9 collections. Exits 0 if all match, 1 if any mismatch.
+29 fields checked across the 9 user collections plus the 2 M2M junctions (including provenance columns and the `tags.parent_id` self-FK). Exits 0 if all match, 1 if any mismatch.
 
 **When to run**:
 
@@ -104,6 +104,36 @@ Imports `private/real-history.csv` (the user's 1.363-day Google Sheet) into Dire
 ### [`directus/scripts/upgrade-m2m-tags.mjs`](../../directus/scripts/upgrade-m2m-tags.mjs)
 
 **One-time migration** (2026-05-27): converted `day_entries.tag_ids` from a JSON-array field to a proper Directus M2M relation. The end state is now baked into `setup-schema.mjs`, so a fresh wipe-and-rebootstrap doesn't need this script. Kept in the repo as historical / reference.
+
+### [`directus/scripts/add-tag-provenance.mjs`](../../directus/scripts/add-tag-provenance.mjs)
+
+**One-time migration** (2026-05-27): adds `source` / `confidence` / `confirmed_at` columns to the `day_entries_tags` junction so we can distinguish user-chosen tags from regex-inferred ones. Backfills the existing 1,338 rows with `source='note_pattern', confidence=1.0` (since they all came from `import-real-history.mjs`). End state is baked into `setup-schema.mjs`. Kept as historical / reference.
+
+### [`directus/scripts/flatten-day-entry-json-arrays.mjs`](../../directus/scripts/flatten-day-entry-json-arrays.mjs)
+
+**One-time migration** (2026-05-27): drops the remaining JSON-array foreign-key fields (`day_entries.project_entry_ids`, `day_entries.calendar_event_ids`, `project_entries.tag_ids`) and upgrades `project_entries × tags` to a proper M2M junction. Has a pre-flight safety: refuses to drop a field that has non-empty data anywhere — safe to re-run on later instances where these fields might be populated. End state is baked into `setup-schema.mjs`. Kept as historical / reference.
+
+### [`directus/scripts/add-tag-hierarchy.mjs`](../../directus/scripts/add-tag-hierarchy.mjs)
+
+**One-time migration** (2026-05-27): adds the self-FK `tags.parent_id` so tags can form an intra-cluster hierarchy (e.g. `migraine.parent_id = hoofdpijn.id`, both in `fysiek`). `ON DELETE SET NULL` — children survive parent deletion. End state baked into `setup-schema.mjs`. Kept as historical / reference.
+
+### [`directus/scripts/views/*.sql`](../../directus/scripts/views/)
+
+Postgres views for cross-source querying. Three views:
+
+- `daily_observations` — wide LEFT JOIN of day_entries × garmin_daily × health_daily × weather_daily by `date`. Most useful for v2.
+- `day_tags_flat` — denormalised `(day, tag)` rows with provenance (`source`, `confidence`) for filtering.
+- `tag_correlations` — pre-aggregated per-tag stats: `day_count`, `avg_score`, `stddev`, date range, `confirmed_day_count`.
+
+All views use `CREATE OR REPLACE`, so re-applying after edits is idempotent. Apply with:
+
+```powershell
+psql $env:DB_CONNECTION_STRING -f directus/scripts/views/01-daily-observations.sql
+psql $env:DB_CONNECTION_STRING -f directus/scripts/views/02-day-tags-flat.sql
+psql $env:DB_CONNECTION_STRING -f directus/scripts/views/03-tag-correlations.sql
+```
+
+Or paste each file into the Neon SQL Editor in the Neon console. (Views live in Postgres directly; Directus is not involved unless you later register them as read-only collections in the admin UI.)
 
 ### [`directus/scripts/recompute-tag-usage.mjs`](../../directus/scripts/recompute-tag-usage.mjs)
 
