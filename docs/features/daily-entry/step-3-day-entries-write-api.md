@@ -114,11 +114,39 @@ Standard pipeline:
 
 ## Done criteria
 
-- [ ] `upsertDayEntry` + `syncDayEntryTags` shipped; 6 wrapper tests green
-- [ ] Route handler shipped; 9 unit tests green
-- [ ] `dayEntryWriteRateLimiter` exported from `stores.ts`
-- [ ] Live-stack spec extended; write + cleanup works against live Directus
-- [ ] `// TODO(I3): audit-log entry` comment at the success path
-- [ ] Vitest count delta: +15
-- [ ] `npm run verify` clean
-- [ ] Manual: a curl-based PUT against the deployed app for the user's own UID lands successfully (will become Step 4's UI smoke test)
+- [x] `upsertDayEntry` shipped with M2M tag sync inlined (no separate `syncDayEntryTags` export — see side-quest #1); 6 wrapper tests green
+- [x] Route handler shipped at `src/app/api/day-entries/[date]/route.ts`; 10 unit tests green (planned 9; added one for the `score + note + tag_ids` full-patch happy path)
+- [x] `dayEntryWriteRateLimiter` exported from `stores.ts` (5/5min by IP, same factory as the login family)
+- [x] Live-stack spec extended (+2 cases: write fixture row at 2099-12-31, update fixture in place). Skip-when-no-token; runs against live Directus when `PLAYWRIGHT_TEST_FRONTEND_TOKEN` is set.
+- [x] `// TODO(I3): audit-log entry` comment at the success path of the route handler
+- [x] Vitest count delta: +16 (planned +15; the route-handler full-patch test put us over)
+- [x] `npm run verify` clean: 432/432 Vitest, lint + typecheck both clean
+- [x] Existing Playwright e2e 30/30 — no regressions from Step 3
+- [ ] Manual: curl-based PUT against the deployed app — deferred to the Step 3 deploy moment (Step 3 alone has no UI; sensible to deploy when Step 4 lands so the manual test exercises real UX)
+
+### Side-quests caught during implementation
+
+1. **`syncDayEntryTags` inlined.** Originally planned as a separate exported function. While implementing, I extracted it into a helper that took a `ClientWithRequest` shim type — which stripped the SDK's `<DirectusSchema>` generic and broke type inference on `readItems('day_entries_tags', ...)` (the SDK collapses unknown collection names to `never`). Fix: inline the sync logic into `upsertDayEntry` so it shares the typed SDK client. Net: one fewer export, one fewer type, ~20 fewer LOC. The diff-and-sync algorithm is the same.
+
+2. **Filter operators stay `as never`.** Same SDK typing gap from Step 1: `_in` / `_gte` / `_lte` on string-typed fields are typed `never`. Cast narrowly + comment.
+
+3. **Test mock-call order matters.** My first take on the M2M sync test set up 6 sequential mock returns in the wrong order — I had assumed sync would read junction-rows BEFORE updating the day_entry score, but the impl does score-update first (no functional reason; just code flow). Two ways to reconcile: reorder the impl or reorder the mocks. Picked the latter — mocks now match the impl's natural sequence (read existing → update score → read junction → delete → create → re-read).
+
+4. **`directusRowAt` test helper needed widened `note` type.** Defaulting to `note: null` made the literal type narrow; when one test wanted `note: 'existing'` the spread didn't widen. Fix: `null as string | null` at the helper's return.
+
+### Evidence — verify pipeline
+
+```
+> npm run verify
+✓ ESLint clean
+✓ tsc --noEmit clean
+✓ Test Files  32 passed (32)
+  Tests  432 passed (432)
+```
+
+### Evidence — full Playwright suite
+
+```
+30 passed (chromium e2e) — no regression from Step 3
++ api project + live-stack day-entries.spec.ts (skip-if-no-token)
+```

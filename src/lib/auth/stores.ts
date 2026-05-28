@@ -20,6 +20,14 @@ export const verifyRateLimiter = createRateLimiter({ limit: 5, windowMs: FIVE_MI
 export const tfaGenerateRateLimiter = createRateLimiter({ limit: 5, windowMs: FIVE_MIN_MS });
 export const tfaEnableRateLimiter = createRateLimiter({ limit: 5, windowMs: FIVE_MIN_MS });
 
+// Writes to /api/day-entries/[date] — guards a stolen-session attacker from
+// dumping arbitrary scores. 5/5min per IP matches the login family; a
+// single user organically writes 1–10 times per day.
+export const dayEntryWriteRateLimiter = createRateLimiter({
+  limit: 5,
+  windowMs: FIVE_MIN_MS,
+});
+
 export const sessionStore = createSessionStore();
 
 // @sensitive-store: do not pass to console.log, JSON.stringify, or any logger.

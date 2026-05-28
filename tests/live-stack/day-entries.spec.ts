@@ -11,7 +11,11 @@
 // runnable on machines without credentials.
 
 import { test, expect } from '@playwright/test';
-import { readDayEntriesInRange, readDayEntryByDate } from '@/lib/api/day-entries';
+import {
+  readDayEntriesInRange,
+  readDayEntryByDate,
+  upsertDayEntry,
+} from '@/lib/api/day-entries';
 import { todayInAmsterdam } from '@/lib/domain/date';
 
 const TOKEN = process.env.PLAYWRIGHT_TEST_FRONTEND_TOKEN;
@@ -65,5 +69,46 @@ test.describe('day-entries read API against live Directus', () => {
     // expansion isn't working.
     const taggedRows = result.value.filter((e) => e.tag_ids.length > 0);
     expect(taggedRows.length).toBeGreaterThan(0);
+  });
+
+  // Fixture date in the far future — clearly a test row, gets overwritten by
+  // every test run (upsert semantics), so no row-count pollution across
+  // runs. validateDate rejects future dates at the route boundary, but the
+  // SDK wrapper accepts any date string — that's the layer we're testing.
+  const FIXTURE_DATE = '2099-12-31';
+
+  test('upsertDayEntry writes a fixture row, then readDayEntryByDate confirms it', async () => {
+    // Write first — sets score 3 + a test note + no tags.
+    const writeResult = await upsertDayEntry(TOKEN!, FIXTURE_DATE, {
+      score: 3,
+      note: 'live-stack-test',
+      tag_ids: [],
+    });
+    expect(writeResult.ok).toBe(true);
+    if (!writeResult.ok) return;
+    expect(writeResult.value.date).toBe(FIXTURE_DATE);
+    expect(writeResult.value.score).toBe(3);
+    expect(writeResult.value.note).toBe('live-stack-test');
+
+    // Read it back.
+    const readResult = await readDayEntryByDate(TOKEN!, FIXTURE_DATE);
+    expect(readResult.ok).toBe(true);
+    if (!readResult.ok) return;
+    expect(readResult.value).not.toBeNull();
+    expect(readResult.value!.score).toBe(3);
+    expect(readResult.value!.note).toBe('live-stack-test');
+  });
+
+  test('upsertDayEntry updates the fixture row in place (no row duplication)', async () => {
+    // Update the same fixture date to score 8 — verifies the upsert
+    // branch hits update, not create.
+    const result = await upsertDayEntry(TOKEN!, FIXTURE_DATE, {
+      score: 8,
+      note: 'live-stack-test-updated',
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.score).toBe(8);
+    expect(result.value.note).toBe('live-stack-test-updated');
   });
 });
