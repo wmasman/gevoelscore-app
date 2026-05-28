@@ -260,13 +260,45 @@ Focused on the gesture isolation that unit tests can't simulate properly.
 
 ## Done criteria
 
-- [ ] `BottomSheet` component shipped at `src/components/lab/bottom-sheet.tsx` (single file, no separate stylesheet — Tailwind utilities via `cn()`)
-- [ ] 10 unit tests green
-- [ ] 3 e2e tests green
-- [ ] Vitest count delta: +10
-- [ ] Playwright count delta: +3
-- [ ] `npm run verify` clean
+- [x] `BottomSheet` component shipped at [`src/components/lab/bottom-sheet.tsx`](../../../src/components/lab/bottom-sheet.tsx) (single file, no separate stylesheet — Tailwind utilities via `cn()`)
+- [x] 11 unit tests green (1 over plan: the "drag down >100px" + "drag down <100px" pair split AC4 into two it-blocks, which is the natural shape for that two-branch behaviour)
+- [ ] 3 e2e tests green — **deferred to a post-Step-2 batch.** The unit tests fully cover the contract jsdom can simulate (open/close, role/aria, backdrop/Escape, drag dismissal, gesture isolation, tint, focus restore, scroll lock, viewport resize). The remaining e2e cases (real touch gesture isolation, axe-core scan) gain more signal once Step 2's ScoreCircle lands and the sheet has interactive content. Tracked at the head of Step 2.
+- [x] Vitest count delta: +11 (559 → 570)
+- [ ] Playwright count delta: 0 this step; +3 after Step 2 batches the e2e
+- [x] `npm run verify` clean (lint + typecheck + 570/570)
 - [ ] **Mobile validation deferred to post-deploy** per the spec doc's strategy. Specifically: that the visualViewport keyboard offset works in iOS PWA standalone mode and that pointer-capture on the handle persists when the user's finger crosses outside the handle during a fast drag.
+
+## Done
+
+- [x] AC1 (component signature): unit test "given open is true, when rendered, then a dialog with aria-modal + aria-label is present" GREEN
+- [x] AC2 (open transitions + focus + scroll lock): two it-blocks GREEN — "given the sheet opens with a previously-focused element..." and "given the sheet opens, when locked, then body has position:fixed"
+- [x] AC3 (close transitions + focus restore + scroll restore): same two it-blocks as AC2 cover the round-trip
+- [x] AC4 (handle-only drag-to-dismiss): three it-blocks GREEN — handle drag >100px dismisses, handle drag <100px does NOT dismiss, body drag does NOT dismiss
+- [x] AC5 (backdrop click + Escape close): two it-blocks GREEN
+- [x] AC6 (tint variants): "given tint=past, when rendered, then the sheet has the bg-surface-muted class" GREEN
+- [x] AC7 (role=dialog, aria-modal, portal): covered by the open-true case; portal target verified by reading `document.body` in the backdrop selector
+- [x] AC8 (iOS keyboard anchor): "given the visual viewport shrinks, when resize fires, then the sheet bottom is offset" GREEN
+- [x] AC9 (rounded corners, shadow, max-width): static Tailwind classes; visual verification deferred to the mobile walkthrough
+- [x] AC10 (prefers-reduced-motion): inherited from `globals.css` global default — no per-component code needed
+- [x] AC11 (clean unmount after close): "given open is false initially, when rendered, then no dialog is in the DOM" GREEN; the post-close-transition unmount is driven by the `setTimeout(() => setShouldRender(false), 250)` effect
+- [x] RED captured: `npm test -- bottom-sheet.test` → 10 failed / 1 passed against the `return null` stub on 2026-05-29
+- [x] GREEN captured: `npm run verify` → 53 files / 570 tests on 2026-05-29
+- [x] Type check: `npm run typecheck` clean
+- [x] Lint: `npm run lint` clean
+- [x] No new HIGH cardinal-principle / privacy / security findings (presentational primitive, no new deps, no new data path)
+- [x] Walkthrough: N/A — sheet has no interactive content yet; visual walkthrough lands after Step 2
+
+### Evidence
+
+- Run id: `npm run verify` 2026-05-29 00:59, duration 7.25s
+- Bundle impact: 0 KB (no new deps; component is ~160 LOC including comments)
+- Resolved Open Q4 (focus fallback): the handle is now `aria-hidden="true"` with no tab-stop. `useFocusTrap`'s container-fallback (`focusables[0] ?? container`) plus `tabIndex={-1}` on the dialog div handles the no-focusables case correctly. First attempt put `tabIndex={0}` on the handle, which broke the test that expected focus to land on a child button; reverted.
+
+### Side-quests caught during implementation
+
+- **jsdom `window.scrollTo` warning leakage.** `useBodyScrollLock`'s cleanup calls `window.scrollTo(0, savedScrollY)`. jsdom prints "Not implemented" warnings every time. Added a `window.scrollTo = vi.fn()` to the test's `beforeEach` so the verify gate output stays clean. Worth doing project-wide via a setup file if more hooks land that call browser-only Window methods.
+- **Handle keyboard semantics.** Step plan Open Q4 suggested making the handle keyboard-focusable as a fallback. After implementation: making it focusable conflicts with the focus-trap's first-focusable selection. Better posture: the handle is pointer-only (aria-hidden), and the dialog div carries `tabIndex={-1}` so the container fallback in `useFocusTrap` works for sheets with no focusable children. Updated Open Q4 implicitly by closing it this way; raising for review at Step 2 if there's a real keyboard-driven dismiss use case.
+- **Pointer-capture stubs in jsdom.** jsdom doesn't implement `setPointerCapture` / `releasePointerCapture` / `hasPointerCapture`. Stubbed once in the test's `beforeEach` so the drag handlers don't throw. Should be lifted to a vitest setup file if Step 2's ScoreCircle (which also uses pointer capture) wants the same affordance.
 
 ## Open questions to settle during implementation
 
