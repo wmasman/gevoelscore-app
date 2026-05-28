@@ -18,9 +18,17 @@ test.describe('Home page (authenticated)', () => {
     ]);
   });
 
-  test('renders the app name', async ({ page }) => {
+  test('renders the today screen with a Dutch date heading', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Gevoelscore', level: 1 })).toBeVisible();
+    // Step 2: home is now the Today screen. h1 reads as a Dutch
+    // weekday-day-month-year (e.g. "woensdag 27 mei 2026"). Match the
+    // weekday suffix to avoid hard-coding any specific day.
+    await expect(
+      page.getByRole('heading', {
+        name: /^(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag) /i,
+        level: 1,
+      }),
+    ).toBeVisible();
   });
 
   test('sets the Dutch language attribute', async ({ page }) => {

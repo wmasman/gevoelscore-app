@@ -62,3 +62,17 @@ export function todayInAmsterdam(): string {
     day: '2-digit',
   }).format(new Date());
 }
+
+// Formats a YYYY-MM-DD string as "woensdag 27 mei 2026" in Dutch.
+// Caller is responsible for the date being valid (use validateDate first
+// at API boundaries). Used by the Today screen heading and the timeline
+// bottom-sheet header.
+export function formatDateDutch(date: string): string {
+  return new Intl.DateTimeFormat('nl-NL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Amsterdam',
+  }).format(new Date(`${date}T12:00:00Z`));
+}

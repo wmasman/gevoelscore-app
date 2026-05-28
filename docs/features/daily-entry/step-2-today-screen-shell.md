@@ -122,10 +122,34 @@ Tailwind utility classes only. No new tokens. Font sizes from Tailwind's default
 
 ## Done criteria
 
-- [ ] `src/app/page.tsx` renders the shell with real data
-- [ ] `todayInAmsterdam` helper exists and is tested
-- [ ] `TodayShell` renders the wheel column (CSS scroll-snap, pre-positioned) + 8 category-header buttons + note placeholder
-- [ ] Vitest count delta: +7 (2 date + 5 shell)
-- [ ] Playwright e2e +2
-- [ ] `npm run verify` clean
-- [ ] Visual walkthrough recorded (one-line in Done section): "on iPhone 12 Safari, the layout fits without scrolling; the wheel sits centred at the correct value; tapping a category header gives visible feedback even though the expand action is inert"
+- [x] `src/app/page.tsx` renders the shell with real data; presence-only auth check per the documented trade-off (matches `/login/2fa-setup` pattern). Stale-cookie users see the shell with `entry=null`; Step 4's first save triggers the 401 + /login redirect via the standard error handler.
+- [x] `todayInAmsterdam` helper exists and is tested (added in Step 1 — was originally planned for Step 2.2)
+- [x] `formatDateDutch` helper added to `src/lib/domain/date.ts` (3 unit tests)
+- [x] `TodayShell` renders the wheel column (CSS scroll-snap, pre-positioned), 8 category-header buttons (inert per Step 5 plan), and note placeholder. ARIA: `role="listbox"` + `role="option"` for the wheel (proper WAI-ARIA pattern for picker); `aria-expanded={false}` on each category header.
+- [x] Vitest count delta: +8 (3 date + 5 shell)
+- [x] Playwright dev specs: +2 today-shell + 3 updated home-spec heading assertions; full chromium suite 30/30 plus 2 deferred (rate-limit live-stack); api project clean.
+- [x] `npm run verify` clean: 416/416 Vitest, lint + typecheck both clean
+- [ ] Visual walkthrough on phone (deferred — pending real session for the wheel to be useful)
+
+### Side-quests caught during implementation
+
+1. **JSX in tests needed the React plugin.** `@vitejs/plugin-react` added to `vitest.config.ts`; per-file `// @vitest-environment jsdom` opts component tests into jsdom while leaving the 400+ pure-logic tests in the (faster) Node environment. Also installed `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`.
+
+2. **Testing Library auto-cleanup doesn't fire with `globals: false`.** Each test's `render()` accumulated in the DOM, breaking subsequent `getByRole` queries with "found multiple elements". Fix: explicit `afterEach(cleanup)` at the top of the component-test describe block. Pattern carries forward to Steps 4+.
+
+3. **CSP from audit-hardening Step 4 (M1) blocked dev-mode HMR.** This was the big one. The strict `script-src 'self' 'unsafe-inline'` ships to prod correctly (verified by live curl). But in dev mode, Next.js + webpack's hot-reload pipeline uses `eval()` to apply updates. With strict CSP, every page silently failed to hydrate — client-side JS never ran. 12 pre-existing e2e tests had been failing dormantly since the CSP shipped on 2026-05-27; nobody noticed because we'd run targeted specs (axe baseline, middleware) rather than the full chromium suite. **Fix:** dev-mode adds `'unsafe-eval'` to `script-src`; production CSP unchanged. See `next.config.ts` comment + `docs/features/auth-hardening/step-4-security-headers.md` follow-up note.
+
+4. **Next/font/google introduced cold-load latency in dev mode.** Initial plan included `Inter` via `next/font`. Local testing showed 30s+ timeouts on subsequent Playwright runs — Inter was downloaded on each cold page request. Reverted to system-ui (already declared in `globals.css`); custom font deferred until a privacy + perf path is clearer.
+
+5. **`role="group"` collided with the wheel's accessible name.** Original wheel used `role="group" aria-label="Score"`. Testing Library's `getByRole('group', { name: /score/i })` matched multiple elements (the wheel + the section that wrapped it after labelling). **Fix:** `role="listbox"` + `role="option"` — proper WAI-ARIA picker pattern, semantically richer, no collisions.
+
+6. **`<ul role="list">` is redundant.** ESLint `jsx-a11y/no-redundant-roles` caught it. `<ul>` already has implicit role `list`. Dropped the explicit role; net: cleaner JSX.
+
+### Evidence — full Playwright suite
+
+```
+50 passed, 2 skipped (deferred rate-limit live-stack)
+  18 api (auth handler unhappy paths)
+  30 chromium e2e (login + verify + 2fa-setup + middleware + home + a11y baseline + today-shell)
+  2 skipped (rate-limit specs that run via npm run test:live)
+```

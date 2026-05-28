@@ -22,7 +22,13 @@ test.describe('middleware: protected-route gating (AC14)', () => {
 
     await page.goto('/');
     expect(page.url()).toBe('http://localhost:3000/');
-    await expect(page.getByRole('heading', { name: 'Gevoelscore', level: 1 })).toBeVisible();
+    // Step 2: home is now the Today screen; h1 reads the Dutch date.
+    await expect(
+      page.getByRole('heading', {
+        name: /^(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag) /i,
+        level: 1,
+      }),
+    ).toBeVisible();
   });
 
   test('GET /login without cookie does NOT redirect (avoids loop)', async ({ page }) => {

@@ -154,6 +154,16 @@ No `X-Powered-By` line in output → `poweredByHeader: false` working.
   ok 5 — X-Content-Type-Options is nosniff
 ```
 
+### Follow-up — CSP-dev-mode gotcha (discovered 2026-05-28)
+
+The strict `script-src 'self' 'unsafe-inline'` shipped to production correctly (verified by live curl). But in **dev mode**, Next.js + webpack's hot-module-reload pipeline uses `eval()` to apply updates. With strict CSP, every dev-mode page silently failed to hydrate — client-side JS never ran. 12 pre-existing e2e tests had been failing dormantly since this step shipped on 2026-05-27.
+
+Why it went unnoticed: the verify pipeline ran `npm test` (Vitest) + targeted Playwright specs (axe baseline, middleware) — never the full chromium suite. The failing tests were specifically the ones that depend on client-side hydration (form submits, state updates, navigation).
+
+**Fix (daily-entry Step 2 commit):** `next.config.ts` now conditionally adds `'unsafe-eval'` to `script-src` when `NODE_ENV !== 'production'`. Production CSP unchanged. Verified post-fix: full chromium e2e 30/30 green.
+
+**Lesson:** the verify gate should include the full Playwright suite, not just the specs touched by the current step. Updated in `npm run verify:full` to capture this; `npm run verify` (pre-push) stays fast at lint+typecheck+vitest, but a separate `verify:e2e` step is implicit per build-step Phase 5.1.
+
 ## What this step does NOT do
 
 - Does not configure CSP reporting (`report-uri` / `report-to`). The app has no log-collection endpoint and adding one would introduce telemetry — explicit no per ADR 0002.

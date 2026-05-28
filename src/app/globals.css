@@ -43,13 +43,14 @@ body {
 body {
   background: var(--color-bg);
   color: var(--color-fg);
-  /* Body text ≥ 17px, line-height ≥ 1.5 — brainfog target above WCAG floor. */
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Body text >= 17px, line-height >= 1.5 — brainfog target above WCAG floor. */
   font-size: 17px;
   line-height: 1.5;
 }
 
 /* Reduced-motion default: any component that wants motion must opt out
-   deliberately. Brainfog target: animations ≤ 200ms anyway. */
+   deliberately. Brainfog target: animations <= 200ms anyway. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

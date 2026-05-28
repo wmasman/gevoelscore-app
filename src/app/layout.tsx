@@ -1,16 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import { copy } from '@/copy';
 import './globals.css';
 
-// Self-hosted via Next's font system — no runtime calls to Google Fonts at
-// page load (so no third-party privacy leak). `display: swap` minimises FOUT
-// while keeping body text readable from first paint.
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-sans',
-});
+// Font: system-ui stack (defined in globals.css). next/font/google was
+// considered but the cold-load delay in dev mode added latency on top
+// of the existing dev-server compile; system-ui is high-legibility and
+// zero-cost. Revisit if a custom self-hosted font becomes a priority.
 
 export const metadata: Metadata = {
   title: {
@@ -36,8 +31,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="nl" className={inter.variable}>
-      <body className="font-sans">{children}</body>
+    <html lang="nl">
+      <body>{children}</body>
     </html>
   );
 }

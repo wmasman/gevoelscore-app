@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { todayInAmsterdam, validateDate } from '../date';
+import { formatDateDutch, todayInAmsterdam, validateDate } from '../date';
 
 describe('date', () => {
   describe('validateDate — with today pinned to 2026-05-26', () => {
@@ -132,6 +132,20 @@ describe('date', () => {
       // 2026-01-01 00:30 CET = 2025-12-31 23:30 UTC → so Amsterdam date precedes UTC by a day at the end.
       vi.setSystemTime(new Date('2025-12-31T23:30:00Z'));
       expect(todayInAmsterdam()).toBe('2026-01-01');
+    });
+  });
+
+  describe('formatDateDutch', () => {
+    it('formats a midweek day', () => {
+      expect(formatDateDutch('2026-05-27')).toBe('woensdag 27 mei 2026');
+    });
+
+    it('formats a weekend day', () => {
+      expect(formatDateDutch('2026-05-30')).toBe('zaterdag 30 mei 2026');
+    });
+
+    it('formats a January day', () => {
+      expect(formatDateDutch('2026-01-15')).toBe('donderdag 15 januari 2026');
     });
   });
 });
