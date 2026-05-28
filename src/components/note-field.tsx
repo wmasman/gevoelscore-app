@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useReportSaveStatus } from '@/components/save-status-context';
 import { copy } from '@/copy';
 import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
+import { MAX_NOTE_LENGTH } from '@/lib/domain/note';
 
 const TYPING_SETTLE_MS = 1500;
 
@@ -78,6 +79,11 @@ export function NoteField({ date, initialNote, disabled }: Props) {
         disabled={disabled}
         placeholder={copy.daily.note.placeholder}
         rows={3}
+        // Soft client-side cap mirroring the server-side normalizeNote
+        // boundary. Browsers refuse paste/type past this; the route
+        // handler still rejects an oversized note as a defense-in-depth
+        // backstop if the client is bypassed.
+        maxLength={MAX_NOTE_LENGTH}
         className="rounded-md border border-border bg-bg p-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
       />
     </label>

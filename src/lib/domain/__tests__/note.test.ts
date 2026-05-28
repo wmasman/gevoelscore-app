@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeNote } from '../note';
+import { MAX_NOTE_LENGTH, normalizeNote } from '../note';
 
 describe('note', () => {
   describe('normalizeNote — accepts null', () => {
@@ -52,6 +52,29 @@ describe('note', () => {
       const result = normalizeNote(input);
 
       expect(result).toEqual({ ok: false, error: 'wrong_type' });
+    });
+  });
+
+  describe('normalizeNote — enforces max length', () => {
+    it('accepts a note exactly at the cap', () => {
+      const atCap = 'a'.repeat(MAX_NOTE_LENGTH);
+      const result = normalizeNote(atCap);
+
+      expect(result).toEqual({ ok: true, value: atCap });
+    });
+
+    it('rejects a note one character over the cap', () => {
+      const overCap = 'a'.repeat(MAX_NOTE_LENGTH + 1);
+      const result = normalizeNote(overCap);
+
+      expect(result).toEqual({ ok: false, error: 'too_long' });
+    });
+
+    it('rejects far-oversized notes (1 MB)', () => {
+      const huge = 'x'.repeat(1_000_000);
+      const result = normalizeNote(huge);
+
+      expect(result).toEqual({ ok: false, error: 'too_long' });
     });
   });
 });
