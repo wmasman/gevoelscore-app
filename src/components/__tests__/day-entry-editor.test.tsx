@@ -59,20 +59,14 @@ const FILLED_ENTRY: DayEntry = {
 };
 
 function renderEditor(props: Partial<React.ComponentProps<typeof DayEntryEditor>> = {}) {
-  const scoreSave = vi.fn().mockResolvedValue(undefined);
-  return {
-    scoreSave,
-    ...render(
-      <DayEntryEditor
-        date="2026-05-28"
-        initialEntry={null}
-        allTags={ALL_TAGS}
-        scoreSave={scoreSave}
-        scoreStatus="idle"
-        {...props}
-      />,
-    ),
-  };
+  return render(
+    <DayEntryEditor
+      date="2026-05-28"
+      initialEntry={null}
+      allTags={ALL_TAGS}
+      {...props}
+    />,
+  );
 }
 
 describe('<DayEntryEditor />', () => {

@@ -30,19 +30,13 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { copy } from '@/copy';
-import type { SaveStatus } from '@/hooks/use-day-entry-upsert';
+import { useReportSaveStatus } from '@/components/save-status-context';
+import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
 import type { Score } from '@/lib/domain/score';
-import type { DayEntryPatch } from '@/lib/api/day-entries';
-
-// Re-declared locally so this file doesn't need the value import of the
-// hook. Must stay in sync with use-day-entry-upsert.ts's save() signature.
-type SaveOptions = { flush?: boolean };
-type SaveFn = (patch: Partial<DayEntryPatch>, opts?: SaveOptions) => Promise<void>;
 
 type Props = {
+  date: string;
   initialScore: number | null;
-  save: SaveFn;
-  status: SaveStatus;
   // Fires when the row transitions from idle → set (first deliberate save).
   // The composite uses this to enable the note + tag picker immediately,
   // sidestepping a server-component re-fetch.
@@ -57,11 +51,17 @@ const MAX_SCORE = 10;
 // math on scroll positioning; the visual width matches.
 const BUTTON_PX = 48;
 
-export function ScoreRow({ initialScore, save, status, onFirstSet }: Props) {
+export function ScoreRow({ date, initialScore, onFirstSet }: Props) {
   const [centred, setCentred] = useState<number>(initialScore ?? DEFAULT_IDLE_SCORE);
   const [phase, setPhase] = useState<'idle' | 'set'>(initialScore !== null ? 'set' : 'idle');
   const lastSavedRef = useRef<number | null>(initialScore);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const { save, status, lastError } = useDayEntryUpsert(date);
+
+  // Broadcast our save status to the SaveStatusProvider so the page
+  // header can render a single merged indicator. No-op outside a provider
+  // (useReportSaveStatus tolerates the absent context for isolated tests).
+  useReportSaveStatus('score', status, lastError);
 
   // Revert optimistic state when the hook reports an error.
   useEffect(() => {
@@ -114,8 +114,7 @@ export function ScoreRow({ initialScore, save, status, onFirstSet }: Props) {
       setPhase('set');
       onFirstSet?.();
     }
-    const patch: Partial<DayEntryPatch> = { score: clamped as Score };
-    void save(patch, { flush: wasIdle });
+    void save({ score: clamped as Score }, { flush: wasIdle });
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>): void {

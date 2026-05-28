@@ -5,15 +5,20 @@
 // overlay, dialog role + aria-modal, focus trap, close button, ESC to
 // close, and focus restoration to the trigger element.
 //
-// The composite reuse from Step 5 means this file adds chrome only — no
-// new save logic, no new HTTP wiring. The wheel's hook is owned here (the
-// sheet behaves like a mini-TodayShell for the tapped date).
+// The sheet has its own <SaveStatusProvider> instance (scoped to the
+// tapped date) so its merged status is independent of the page-level
+// Today provider. The single status glyph lives in the sheet's own
+// header; the actionable error banner renders below the editor on
+// `status === 'error'`.
 
 import { useEffect, useRef } from 'react';
 import { DayEntryEditor } from '@/components/day-entry-editor';
 import { SaveStatus } from '@/components/save-status';
+import {
+  SaveStatusProvider,
+  useMergedSaveStatus,
+} from '@/components/save-status-context';
 import { copy } from '@/copy';
-import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { formatDateDutch } from '@/lib/domain/date';
 import type { Tag } from '@/lib/domain/tag';
@@ -38,21 +43,29 @@ function wasEdited(entry: DayEntry | null): boolean {
   return updated - created > EDITED_THRESHOLD_MS;
 }
 
-export function DayDetailSheet({ date, entry, allTags, onClose, onSaved }: Props) {
+export function DayDetailSheet(props: Props) {
+  return (
+    <SaveStatusProvider>
+      <SheetInner {...props} />
+    </SaveStatusProvider>
+  );
+}
+
+function SheetInner({ date, entry, allTags, onClose, onSaved }: Props) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const previouslyFocusedRef = useRef<Element | null>(null);
-  const { save, status, lastError } = useDayEntryUpsert(date);
+  const merged = useMergedSaveStatus();
 
   // Fire onSaved exactly once per successful save so the timeline can
   // re-fetch the visible range.
-  const prevStatus = useRef(status);
+  const prevStatus = useRef(merged.status);
   useEffect(() => {
-    if (prevStatus.current !== 'saved' && status === 'saved' && onSaved) {
+    if (prevStatus.current !== 'saved' && merged.status === 'saved' && onSaved) {
       onSaved();
     }
-    prevStatus.current = status;
-  }, [status, onSaved]);
+    prevStatus.current = merged.status;
+  }, [merged.status, onSaved]);
 
   // Open behaviour: remember whoever was focused, move focus into the
   // sheet (close button), and restore on unmount. ESC + focus-trap is
@@ -117,7 +130,7 @@ export function DayDetailSheet({ date, entry, allTags, onClose, onSaved }: Props
             {wasEdited(entry) && (
               <span className="text-sm text-fg-muted">{copy.timeline.edited}</span>
             )}
-            <SaveStatus status={status} error={lastError} variant="glyph" />
+            <SaveStatus status={merged.status} error={merged.error} variant="glyph" />
             <button
               ref={closeBtnRef}
               type="button"
@@ -129,15 +142,9 @@ export function DayDetailSheet({ date, entry, allTags, onClose, onSaved }: Props
             </button>
           </div>
         </header>
-        <DayEntryEditor
-          date={date}
-          initialEntry={entry}
-          allTags={allTags}
-          scoreSave={save}
-          scoreStatus={status}
-        />
-        {status === 'error' && (
-          <SaveStatus status={status} error={lastError} variant="banner" />
+        <DayEntryEditor date={date} initialEntry={entry} allTags={allTags} />
+        {merged.status === 'error' && (
+          <SaveStatus status="error" error={merged.error} variant="banner" />
         )}
       </div>
     </div>

@@ -223,7 +223,13 @@ describe('<TagCategoryList />', () => {
     expect(screen.getByRole('button', { name: /extra opties.*\(2\)/i })).toBeInTheDocument();
   });
 
-  it('server error reverts toggle + <SaveStatus /> shows error', () => {
+  it('renders cleanly under error status (banner is parent\'s concern post-2026-05-28 audit L2)', () => {
+    // After L2: TagCategoryList no longer renders its own <SaveStatus />.
+    // Error state is broadcast via useReportSaveStatus → the parent
+    // (TodayShell or DayDetailSheet) renders the banner. This unit test
+    // verifies the component still mounts cleanly with status='error';
+    // the banner rendering is covered by today-shell.test.tsx + the e2e
+    // specs that drive a 500 response.
     hookMocks.status = 'error';
     hookMocks.lastError = 'server_error';
     render(
@@ -235,8 +241,7 @@ describe('<TagCategoryList />', () => {
       />,
     );
 
-    // Per the conventions doc, prefer text-based selection over getByRole('alert')
-    // since Next 15 injects a hidden announcer with the same role.
-    expect(screen.getByText(/niet opgeslagen/i)).toBeVisible();
+    expect(screen.getByRole('heading', { level: 2, name: /tags/i })).toBeInTheDocument();
+    expect(screen.queryByText(/niet opgeslagen/i)).toBeNull();
   });
 });

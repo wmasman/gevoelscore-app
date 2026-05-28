@@ -13,7 +13,7 @@
 // than tap-bursts on the wheel.
 
 import { useEffect, useRef, useState } from 'react';
-import { SaveStatus } from '@/components/save-status';
+import { useReportSaveStatus } from '@/components/save-status-context';
 import { copy } from '@/copy';
 import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
 
@@ -30,6 +30,7 @@ export function NoteField({ date, initialNote, disabled }: Props) {
   const lastSavedRef = useRef<string | null>(initialNote);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { save, status, lastError } = useDayEntryUpsert(date);
+  useReportSaveStatus('note', status, lastError);
 
   useEffect(() => {
     return () => {
@@ -68,20 +69,17 @@ export function NoteField({ date, initialNote, disabled }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className="flex flex-col gap-1 text-sm font-medium text-fg-muted">
-        {copy.daily.note.label}
-        <textarea
-          value={value}
-          onChange={onChange}
-          onBlur={flush}
-          disabled={disabled}
-          placeholder={copy.daily.note.placeholder}
-          rows={3}
-          className="rounded-md border border-border bg-bg p-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
-        />
-      </label>
-      <SaveStatus status={status} error={lastError} />
-    </div>
+    <label className="flex flex-col gap-1 text-sm font-medium text-fg-muted">
+      {copy.daily.note.label}
+      <textarea
+        value={value}
+        onChange={onChange}
+        onBlur={flush}
+        disabled={disabled}
+        placeholder={copy.daily.note.placeholder}
+        rows={3}
+        className="rounded-md border border-border bg-bg p-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+      />
+    </label>
   );
 }

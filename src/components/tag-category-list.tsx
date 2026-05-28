@@ -12,7 +12,7 @@
 // chip-display state are independent.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SaveStatus } from '@/components/save-status';
+import { useReportSaveStatus } from '@/components/save-status-context';
 import { copy } from '@/copy';
 import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
 import type { Tag } from '@/lib/domain/tag';
@@ -44,6 +44,7 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
   const [extraOpen, setExtraOpen] = useState<boolean>(false);
   const lastSavedRef = useRef<Set<string>>(new Set(initialTagIds));
   const { save, status, lastError } = useDayEntryUpsert(date);
+  useReportSaveStatus('tags', status, lastError);
 
   const byCategory = useMemo(() => {
     const map = new Map<TagCategory, Tag[]>();
@@ -175,8 +176,6 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
           {EXTRA_CATEGORIES.map(renderCategory)}
         </ul>
       )}
-
-      <SaveStatus status={status} error={lastError} />
     </section>
   );
 }
