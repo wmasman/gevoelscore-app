@@ -233,7 +233,9 @@ transition-timing-function: cubic-bezier(0.0, 0.0, 0.2, 1);
 transition-timing-function: cubic-bezier(0.4, 0.0, 1, 1);
 ```
 
-**Forbidden:** bounce, elastic, overshoot, spring-with-rebound easing. No celebratory motion. No pulse, no shimmer, no marquee. Loading skeletons use opacity fade (no shimmer animation).
+**Forbidden as decoration:** bounce, elastic, overshoot, spring-with-rebound easing. No celebratory motion. No ambient pulses, no shimmer, no marquee. Loading skeletons use opacity fade (no shimmer animation). No repeating pulses on idle elements (streak number, score, anything passive).
+
+**Allowed as communication** (see `docs/design/brief.md#motion-as-communication`): one-shot acknowledgments tied to meaningful moments. Examples: today-card tint-pulse on completion of a day's entry; score-number scale-pulse on integer-cross during drag (visual substitute for haptic tick on platforms without Web Vibration); sheet content morphing between input steps as one continuous transformation. The test: does this motion tell the user something they need to know? If yes, it can exist (within the 200ms cap for transitions; one-shot completion acknowledgments may run slightly longer if they aid spatial parsing). If no, it's decoration and forbidden.
 
 ### Common motions
 
@@ -609,6 +611,7 @@ No timers on any user-facing flow. No auto-dismiss countdowns. The only time-bou
 - Past tense over imperative for system states (`Bewaard`, not `Opgeslagen!`).
 - Terminal periods on standalone strings (`Bewaard.`, `Geen invoer.`).
 - One word beats three.
+- **No em-dash (`—`) in user-facing strings.** Prefer comma, period, or colon. `Niet opgeslagen. Probeer nogmaals.` (period), not `Niet opgeslagen — probeer nogmaals` (em-dash). Standalone `—` as an empty-state glyph is fine; the rule is about punctuation in sentences.
 
 ### Common actions
 

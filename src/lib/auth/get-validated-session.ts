@@ -30,7 +30,7 @@ export async function getValidatedSession(
   const refresh = deps.refresh ?? directusRefresh;
   const now = deps.now ?? Date.now;
 
-  const session = store.peek(sessionId);
+  const session = await store.peek(sessionId);
   if (!session) return null;
 
   if (session.expiresAt > now()) return session;
@@ -38,7 +38,7 @@ export async function getValidatedSession(
   // Access token expired — attempt refresh.
   const result = await refresh(session.refreshToken);
   if (!result.ok) {
-    store.delete(sessionId);
+    await store.delete(sessionId);
     return null;
   }
 
@@ -47,6 +47,6 @@ export async function getValidatedSession(
     refreshToken: result.value.refreshToken,
     expiresAt: now() + result.value.expiresInMs,
   };
-  store.update(sessionId, refreshed);
+  await store.update(sessionId, refreshed);
   return refreshed;
 }

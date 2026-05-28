@@ -62,6 +62,54 @@ Single typeface family, varied via weight + size only. Numerical scores rendered
 
 ---
 
+## Spatial principle: thumb-first for input
+
+> **Thumb-first voor invoer. Reading-surfaces mogen vrij.**
+>
+> The interface comes to the thumb, not the other way around.
+
+**Applies to:** input surfaces — score popout, note popout, tags popout, edit-past-day popouts, settings forms. The user is holding the phone one-handed, often in bed, often on a 4-out-of-6 day. The interface arrives where the thumb already rests; the user does not navigate to the interface.
+
+**Does NOT apply to:** reading surfaces — day overview, timeline, calendar, login. Those follow regular layout conventions; the eye scans, the thumb travels.
+
+**Implications:**
+- Input controls live in the bottom ~45-55% of the viewport (the thumb-natural zone).
+- Progression through inputs (score → note → tags) morphs in place within one zone, not as discrete sheets opening and closing.
+- Voice input (when added) lives in the same thumb zone as text, not a separate modal.
+- Drag handles, close buttons, dates and labels at the top of an input sheet are for visual orientation only — never for taps the user must perform to progress.
+- Past-day edit popouts inherit this layout, distinguished from today only by surface tint (cooler `surface-muted` background), not by added labels — see [Allowed nuances](#allowed-nuances).
+
+**Source:** locked 2026-05-28 after exploring an alternative quick-entry UX. Captured in memory under [[design-principle-thumb-first-input]]. This is a **spatial** rule layered on top of the aesthetic rules in Identity; it does not replace them.
+
+**Tension to watch:** the in-flight Step 4b score row (horizontal, upper-middle of the Today shell) is not thumb-first. That tension is deferred; if this principle stays, the score row's location will need to be revisited.
+
+---
+
+## Motion as communication
+
+Motion is a communication channel, not decoration. Use it to mark meaningful moments — completion of input, change of state, arrival of new content, spatial acknowledgment ("your input is now here"). Do not use it for ambient ornament — idle glow, repeating pulses, loading shimmer, celebratory flourish.
+
+**The test:** does this motion tell the user something they need to know? If yes, it can exist (within the 200ms cap for most transitions; one-shot completion acknowledgments may run slightly longer if they aid spatial parsing). If no, it's decoration and forbidden.
+
+**Allowed examples** (each carries meaning):
+- Panel slides up or down on summon and dismiss
+- Today-card receives a one-shot tint-pulse on completion of a day's entry — spatial signal that your input now lives there
+- Score number scale-pulses subtly on integer-cross during drag — visual replacement for the absent haptic tick
+- Sheet content morphs between input steps (score → notitie → tags) as one continuous transformation, not three discrete open/close cycles
+
+**Forbidden examples** (decoration without message):
+- Loading skeleton shimmer
+- Ambient glow on the streak number, the score, or any other passive element
+- Confetti, sparkle, celebration flourishes
+- Bounce, elastic, overshoot, or spring-with-rebound easing on any transition
+- Repeating pulses on the same element (the one-shot acknowledgment above is the only kind allowed)
+
+**Source:** locked 2026-05-28 in conversation about the end-of-flow moment. User's framing: *"we moeten met de gebruiker kunnen communiceren op verschillende manieren"* — communication channels matter, motion is one of them, as long as it carries intent.
+
+This is a refinement of the original "no pulse" rule, which was too absolute. The principle (no decoration) holds; the specific prohibition needed nuance.
+
+---
+
 ## Component personality
 
 | Element | Direction |
@@ -103,7 +151,7 @@ These are *allowed* even within the restrained direction. Each was an explicit c
 | **Emoji as score / mood language** (face emojis on the score row, mood-emoji headers, decorative emoji in chrome copy) | Incompatible with humanist-sans + restrained + reflective. Emoji in user-typed notes is the user's choice; emoji as UI element is forbidden. |
 | **Coaching / encouraging copy from the app** ("Goed bezig!", "Mooie streak!", "Vergeet je dag niet!") | Patronizing on a bad day. The app does not perform emotional labor that wasn't asked for. |
 | **Mascots, illustration characters, decorative artwork** | No friendly bird, no plant-that-grows-with-streak, no hand-drawn anything. The app's identity is type + color + space, not pictures. |
-| **Celebration animations** | No confetti, no pulses, no bounces on save / streak / milestone. The [frontend brainfog rules](../architecture/frontend-conventions.md#brainfog-extensions-above-wcag) cap animation at 200ms; the brief additionally bans celebration as a cultural pattern. |
+| **Celebration animations** | No confetti, no bouncing, no flashing. Pulses are forbidden as decoration; one-shot completion acknowledgments (e.g. today-card tint-pulse after the last tag is saved) are allowed — see [Motion as communication](#motion-as-communication). The 200ms cap from [frontend brainfog rules](../architecture/frontend-conventions.md#brainfog-extensions-above-wcag) still applies to most transitions. |
 | **Color-coded score scale** (red→amber→green) | The score is a self-rating; color-coding feels like the app rendering judgment before the user has finished thinking. The accent fills the *selected* button only. |
 | **Unsolicited notifications** (default-on reminders, marketing/news, "we miss you" re-engagement) | Reminders are allowed *only* as an explicit user opt-in (see Allowed nuances). Anything that pushes without prior user consent — or that exists to drive engagement rather than serve the logging — is forbidden. |
 
@@ -135,9 +183,10 @@ Examples are non-exhaustive but anchor the tone. When in doubt, pick the option 
 ### General principles
 - No exclamation marks anywhere in chrome copy.
 - No second-person questions. (`Vandaag`, not `Hoe was je dag?`)
-- Past tense over imperative for system states. (`Bewaard`, not `Opslaan` for confirmations — though `Opslaan` is fine as a button label if needed; v1 auto-saves so this should be rare.)
-- Terminal periods on standalone strings (`Bewaard.`, `Geen invoer.`) — they read as journal entries, not buttons.
+- Past tense over imperative for system states. (`Bewaard`, not `Opslaan` for confirmations; `Opslaan` is fine as a button label if needed, though v1 auto-saves so this should be rare.)
+- Terminal periods on standalone strings (`Bewaard.`, `Geen invoer.`); they read as journal entries, not buttons.
 - One word is almost always better than three. Brainfog floor.
+- **No em-dash (`—`) in user-facing strings.** Prefer a comma (tightly related clauses), a period (split into two short sentences), or a colon (second clause explains the first). Example rewrites: `Niet opgeslagen — probeer nogmaals` → `Niet opgeslagen. Probeer nogmaals.` / `Eén tik per dag — geen oordeel, wel inzicht.` → `Eén tik per dag. Geen oordeel, wel inzicht.` / Email subject `Gevoelscore — interesse` → `Gevoelscore: interesse`. Standalone `—` as an empty-state glyph (e.g. `streak > 0 ? n : '—'`) is fine; the rule is about punctuation in sentences. This rule does NOT apply to source-code comments or this doc's prose.
 
 All Dutch strings live in [`src/copy.ts`](../architecture/frontend-conventions.md#copy-discipline) per [frontend-conventions](../architecture/frontend-conventions.md). When the inline JSX literal would be `"Bewaard."`, it's `copy.daily.saved` — wired through the structured copy module.
 

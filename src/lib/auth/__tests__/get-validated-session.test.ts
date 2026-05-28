@@ -7,13 +7,13 @@ describe('getValidatedSession', () => {
   function makeStore(initial: Record<string, SessionData> = {}) {
     const entries = new Map<string, SessionData>(Object.entries(initial));
     return {
-      peek: vi.fn((id: string) => entries.get(id)),
-      update: vi.fn((id: string, data: SessionData) => {
+      peek: vi.fn(async (id: string) => entries.get(id)),
+      update: vi.fn(async (id: string, data: SessionData) => {
         if (!entries.has(id)) return false;
         entries.set(id, data);
         return true;
       }),
-      delete: vi.fn((id: string) => {
+      delete: vi.fn(async (id: string) => {
         entries.delete(id);
       }),
       _entries: entries,

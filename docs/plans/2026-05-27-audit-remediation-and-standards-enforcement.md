@@ -58,8 +58,11 @@ New folder: `docs/features/compliance-baseline/` with 3 step files.
 | 11 | `directus_auth_events` collection + INSERTs from route handlers (timestamp, event, outcome, hashed IP, session id) | I3, NEN 7510 §12.4 |
 | 12 | `docs/privacy/article-9-basis.md` — lawful basis, data minimisation, retention, pointer to v1 export + delete | GDPR Art 9 gap |
 | 13 | At-rest encryption confirmation for Neon (verify + document in [`current-state.md`](../architecture/current-state.md) "Cloud resources") | GDPR Art 32 / NEN 7510 §5.10 |
+| 14 | Scope down the runtime Directus token used by `frontend_sessions`. Create a dedicated Directus user with a role + policy restricted to CRUD on `frontend_sessions` only, generate a static token for that user, swap it into the `DIRECTUS_TOKEN` Fly secret on `gevoelscore-frontend`. Removes admin-blast-radius exposure introduced by [ADR 0005](../decisions/0005-frontend-session-persistence.md). | Principle of least privilege; ADR 0005 follow-up #1 |
 
 Step 11 is the largest: needs a Directus schema script in `directus/scripts/` (per `MEMORY.md` "Directus schema approach" — idempotent REST API scripts, no `schema apply`). The INSERTs add one line per route handler; the hashing keeps PII out of the table.
+
+Step 14 is contained: setup-permissions-style idempotent script + one secret rotation + one rolling restart. Sequence after step 11 so the audit-events policy and the session-store policy can share a service-user pattern.
 
 ### A4 — Resolution log
 

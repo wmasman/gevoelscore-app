@@ -28,6 +28,29 @@
 
 ---
 
+## Post-deploy addendum — 2026-05-28 PM session
+
+A **separate** bug surfaced during real-usage soak the same afternoon: the timeline appeared empty on the user's iOS PWA even though Directus held 30 days of data. Investigation found a server-side incident, not a feature bug; recording it here for trail-continuity since users encountered it on the daily-entry feature surface.
+
+### L2.5 — Session-restart silently rendered an empty timeline (closed by [ADR 0005](../decisions/0005-frontend-session-persistence.md))
+
+**Severity at discovery**: would have been **Medium** (silent data loss appearance on every deploy) but was caught + fixed inside the same day with no user-visible regression beyond the initial confusion.
+
+**Root cause (two layers):**
+
+1. `src/app/page.tsx` redirected to `/login` only when the session cookie was *absent*. When the cookie was present but `getValidatedSession()` returned `null` (because the in-memory `sessionStore` had no matching entry), the page silently rendered the shell with `entry = null`, `allTags = []`, `timelineEntries = []`. Indistinguishable from a brand-new user's first paint.
+2. The in-memory `sessionStore` was a module-singleton `Map`. Every Fly machine restart (three in one day on the 28th — two deploys plus the secrets-set rolling restart) wiped it. The user's cookie kept pointing into nothing.
+
+**Fix:**
+
+1. *Surface*: `page.tsx` now redirects on both `sessionId === null` and `session === null`. Test: [`src/app/__tests__/page.test.ts`](../../src/app/__tests__/page.test.ts).
+2. *Root*: sessions persist in a new Directus collection `frontend_sessions`. Setup script: [`directus/scripts/setup-frontend-sessions.mjs`](../../directus/scripts/setup-frontend-sessions.mjs). Implementation: [`src/lib/auth/directus-session-store.ts`](../../src/lib/auth/directus-session-store.ts). Architecture rationale: [ADR 0005](../decisions/0005-frontend-session-persistence.md).
+3. *Testing strategy*: new "Process-state tests" section in [.claude/testing.md](../../.claude/testing.md) captures the class-of-bug pattern so future module-singleton state grows with a "what if the process restarted" test from the start.
+
+**Follow-up tracked (not blocking):** the runtime Directus token wired into the Fly secret for `gevoelscore-frontend` is the full admin static token. Scope-down to a `frontend_sessions`-only service user is tracked as Track A3 step 14 in [docs/plans/2026-05-27-audit-remediation-and-standards-enforcement.md](../plans/2026-05-27-audit-remediation-and-standards-enforcement.md#a3--priority-3-compliance--observability-this-quarter).
+
+---
+
 ## 1. Security audit
 
 ### 1.1 Standards coverage

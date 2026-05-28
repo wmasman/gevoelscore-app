@@ -9,18 +9,18 @@ import type { DayEntry } from '@/lib/domain/day-entry';
 import { todayInAmsterdam } from '@/lib/domain/date';
 import type { Tag } from '@/lib/domain/tag';
 
-// Home / Today screen. Server component: presence-only auth check (full
-// session validation happens on actual API calls from the wheel/note/tags
-// in Step 4+). Matches the trade-off documented in
-// docs/features/auth-hardening/step-1-bind-tfa-secret.md — stricter
-// page-level checks break placeholder-cookie e2e fixtures, and the API
-// routes already do strict validation when it matters.
+// Home / Today screen. Server component. Two redirects guard the render:
+//   1. no session cookie → /login
+//   2. cookie present but `getValidatedSession` returns null → /login
+//      (most often: Fly machine restart wiped the in-memory store, so the
+//      browser holds an id the server no longer knows about)
 //
-// On a stale cookie: render the shell empty. The first save attempt will
-// fail 401 and the standard error handler returns the user to /login.
+// The earlier "render empty on stale cookie" behaviour silently hid a
+// destroyed-session state — the user saw a fresh-install-looking screen
+// with no nudge to re-authenticate. See investigation 2026-05-28.
 //
-// Step 6 added the 30-day timeline fetch in parallel with today's entry +
-// allTags. Three reads, fired concurrently.
+// Three reads (today's entry, all tags, 30-day timeline) fire concurrently
+// once we have a validated session.
 
 const TIMELINE_DAYS = 30;
 
@@ -40,22 +40,29 @@ export default async function HomePage() {
     redirect('/login');
   }
 
-  const today = todayInAmsterdam();
   const session = await getValidatedSession(sessionId);
+  if (session === null) {
+    // Cookie present but the server-side store has no matching record (or
+    // a refresh attempt failed). Common after a Fly machine restart, which
+    // wipes the in-memory store. The user has to re-authenticate — the
+    // alternative (rendering the shell with empty data) silently hides the
+    // problem and looks identical to a brand-new user's first paint.
+    redirect('/login');
+  }
+
+  const today = todayInAmsterdam();
   let entry: DayEntry | null = null;
   let allTags: Tag[] = [];
   let timelineEntries: DayEntry[] = [];
-  if (session !== null) {
-    const from = shiftDate(today, -(TIMELINE_DAYS - 1));
-    const [entryResult, tagsResult, rangeResult] = await Promise.all([
-      readDayEntryByDate(session.accessToken, today),
-      readAllTags(session.accessToken),
-      readDayEntriesInRange(session.accessToken, from, today),
-    ]);
-    if (entryResult.ok) entry = entryResult.value;
-    if (tagsResult.ok) allTags = tagsResult.value;
-    if (rangeResult.ok) timelineEntries = rangeResult.value;
-  }
+  const from = shiftDate(today, -(TIMELINE_DAYS - 1));
+  const [entryResult, tagsResult, rangeResult] = await Promise.all([
+    readDayEntryByDate(session.accessToken, today),
+    readAllTags(session.accessToken),
+    readDayEntriesInRange(session.accessToken, from, today),
+  ]);
+  if (entryResult.ok) entry = entryResult.value;
+  if (tagsResult.ok) allTags = tagsResult.value;
+  if (rangeResult.ok) timelineEntries = rangeResult.value;
 
   return (
     <TodayShell

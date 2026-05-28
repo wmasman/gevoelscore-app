@@ -1,13 +1,21 @@
 // Module-level singletons for the auth stores. Route Handlers import from
-// here so they all share the same in-memory state across requests within a
-// single Node process.
+// here so they all share state across requests within a single Node process.
 //
-// Single-process Fly machine per ADR 0003 makes this safe. If horizontally
-// scaled later, swap each store's implementation (Redis / Directus collection)
-// while keeping these exports stable.
+// sessionStore is Directus-backed when `DIRECTUS_TOKEN` is configured (prod
+// and any dev environment that wants to test the real path); it falls back
+// to an in-memory Map otherwise — useful for tests and minimal local setups.
+// The fallback keeps the contract identical: a swap-in implementation, no
+// caller change.
+//
+// The other stores (pending-otp, pending-tfa, rate-limiter) remain in-memory
+// for now. Pending stores are short-lived (5-min TTL) so a restart-induced
+// wipe is barely user-visible; rate-limiters reset on restart but the cost
+// is "an attacker gets a fresh window after each deploy", not "all users
+// get logged out".
 
+import { createDirectusSessionStore } from './directus-session-store';
 import { createRateLimiter } from './rate-limit';
-import { createSessionStore } from './session';
+import { createSessionStore, type SessionStore } from './session';
 import { createPendingOtpStore } from './pending-otp';
 import { createPendingTfaStore } from './pending-tfa';
 
@@ -30,7 +38,23 @@ export const dayEntryWriteRateLimiter = createRateLimiter({
   windowMs: FIVE_MIN_MS,
 });
 
-export const sessionStore = createSessionStore();
+function buildSessionStore(): SessionStore {
+  const adminToken = process.env.DIRECTUS_TOKEN;
+  const directusUrl =
+    process.env.DIRECTUS_URL ??
+    process.env.NEXT_PUBLIC_DIRECTUS_URL ??
+    null;
+  if (!adminToken || !directusUrl) {
+    // No service token configured. Fall back to the in-memory store.
+    // The page-level redirect (page.tsx) still guards the UX failure mode;
+    // the only regression vs. Directus storage is "sessions don't survive
+    // a process restart", which is fine for tests and minimal-config dev.
+    return createSessionStore();
+  }
+  return createDirectusSessionStore({ directusUrl, adminToken });
+}
+
+export const sessionStore = buildSessionStore();
 
 // @sensitive-store: do not pass to console.log, JSON.stringify, or any logger.
 // Contains the user's plaintext password between /login and /login/verify so

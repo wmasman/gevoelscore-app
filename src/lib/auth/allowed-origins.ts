@@ -12,7 +12,14 @@
 export function allowedOrigins(): string[] {
   const origins: string[] = [];
   if (process.env.NEXT_PUBLIC_APP_URL) origins.push(process.env.NEXT_PUBLIC_APP_URL);
-  if (process.env.NODE_ENV !== 'production') origins.push('http://localhost:3000');
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push(
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:3003',
+    );
+  }
   if (process.env.NODE_ENV === 'production' && origins.length === 0) {
     throw new Error(
       'allowedOrigins: NEXT_PUBLIC_APP_URL must be set in production (CSRF defense relies on it).',

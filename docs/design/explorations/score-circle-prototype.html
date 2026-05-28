@@ -1,0 +1,536 @@
+<!doctype html>
+<!--
+  Score-circle gesture prototype
+  =================================================================
+  Self-contained HTML page (no React, no npm install) that validates
+  the riskiest piece of the quick-entry-popout exploration:
+
+    1. Horizontal drag on the circle, with snap-to-integer and per-
+       integer scale-pulse on the centred number
+    2. Gesture isolation: drag inside the circle MUST NOT trigger the
+       sheet's drag-to-dismiss. The sheet only dismisses when the user
+       drags the small handle bar at the top of the sheet.
+
+  Test plan:
+    A. Tap "Open sheet". Sheet rises from the bottom.
+    B. Drag horizontally on the circle. The number should change
+       per integer, smoothly. Release commits the value (logged to
+       console).
+    C. Try to drag the circle SLIGHTLY down-and-right. The sheet
+       must NOT dismiss. Only horizontal change of value.
+    D. Drag the handle bar at the top of the sheet DOWN. The sheet
+       SHOULD dismiss past ~100px.
+    E. Tap the dimmed backdrop. Sheet dismisses immediately.
+
+  To run on a laptop:
+      cd docs/design/explorations
+      npx serve -l 8000 .
+      # then visit http://localhost:8000/score-circle-prototype.html
+
+  To test on the iPhone PWA (same WiFi network):
+      # 1. Find the laptop's LAN IP (ipconfig on Windows, ifconfig on macOS)
+      # 2. Run the server with --listen 0.0.0.0:
+      npx serve -l tcp://0.0.0.0:8000 .
+      # 3. On the phone: visit http://<laptop-ip>:8000/score-circle-prototype.html
+      # 4. Optionally Add to Home Screen to test in standalone PWA mode.
+
+  Linked spec: docs/design/explorations/quick-entry-popout.md
+  Linked principle: docs/design/brief.md#spatial-principle-thumb-first-for-input
+
+  Status: exploration, throw-away. Not on the v1 roadmap.
+  Delete this file freely when the exploration is decided.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#faf6f1" />
+    <title>Score-circle gesture prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Design tokens mirrored from src/app/globals.css */
+      :root {
+        --color-bg: #faf6f1;
+        --color-surface: #fffcf8;
+        --color-surface-muted: #f2ede5;
+        --color-fg: #2b2520;
+        --color-fg-muted: #6b5f54;
+        --color-fg-subtle: #9c8f82;
+        --color-accent: #b5694a;
+        --color-accent-hover: #9d5839;
+        --color-accent-soft: #f5e8df;
+        --color-border: #e8dfd2;
+        --color-border-strong: #d5c8b5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        background: var(--color-bg);
+        color: var(--color-fg);
+        font-family:
+          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 17px;
+        line-height: 1.5;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overscroll-behavior: none;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .page {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 24px 20px 80px 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.01em;
+      }
+
+      .header p {
+        color: var(--color-fg-muted);
+        font-size: 15px;
+        margin: 4px 0;
+      }
+
+      .header .test-list {
+        color: var(--color-fg-muted);
+        font-size: 14px;
+        margin: 16px 0 0 0;
+        padding-left: 20px;
+      }
+
+      .header .test-list li {
+        margin: 4px 0;
+      }
+
+      .world {
+        margin-top: 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .world-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 1px 2px rgba(43, 37, 32, 0.04);
+      }
+
+      .world-card p {
+        margin: 0;
+        color: var(--color-fg-muted);
+        font-size: 15px;
+      }
+
+      .open-btn {
+        margin-top: 24px;
+        background: var(--color-accent);
+        color: var(--color-surface);
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 17px;
+        font-weight: 500;
+        min-height: 48px;
+        width: 100%;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(43, 37, 32, 0.04);
+        transition: background 150ms ease-out;
+      }
+
+      .open-btn:hover {
+        background: var(--color-accent-hover);
+      }
+
+      .open-btn:active {
+        transform: scale(0.98);
+      }
+
+      /* Backdrop behind the sheet */
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(43, 37, 32, 0.4);
+        z-index: 10;
+        opacity: 1;
+        transition: opacity 200ms ease-out;
+      }
+
+      .backdrop.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* The sheet */
+      .sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: 480px;
+        margin: 0 auto;
+        background: var(--color-surface);
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        box-shadow: 0 -8px 24px rgba(43, 37, 32, 0.08);
+        z-index: 20;
+        transform: translateY(0);
+        transition: transform 250ms ease-out;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+
+      .sheet.hidden {
+        transform: translateY(100%);
+      }
+
+      /* The drag-handle — ONLY area that initiates sheet-dismiss */
+      .sheet-handle {
+        width: 100%;
+        padding: 12px 0 8px 0;
+        display: flex;
+        justify-content: center;
+        cursor: grab;
+        /* Allow vertical pan here for the dismiss gesture. */
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .sheet-handle:active {
+        cursor: grabbing;
+      }
+
+      .sheet-handle-bar {
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--color-fg-subtle);
+        pointer-events: none;
+      }
+
+      .sheet-body {
+        padding: 16px 24px 40px 24px;
+      }
+
+      .sheet-date {
+        text-align: center;
+        font-size: 13px;
+        color: var(--color-fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 40px;
+      }
+
+      /* The score circle — this is where the action is */
+      .score-circle-wrap {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 24px;
+      }
+
+      .score-circle {
+        width: 280px;
+        height: 280px;
+        max-width: 80vw;
+        max-height: 80vw;
+        border-radius: 50%;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(43, 37, 32, 0.06);
+        /* Critical: no browser-default gestures inside the circle. */
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        cursor: grab;
+      }
+
+      .score-circle:active {
+        cursor: grabbing;
+      }
+
+      .score-number {
+        font-size: 96px;
+        font-weight: 600;
+        color: var(--color-accent);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        transition: transform 80ms ease-out;
+        pointer-events: none;
+      }
+
+      .score-number.pulsing {
+        transform: scale(1.05);
+      }
+
+      .score-hint {
+        text-align: center;
+        color: var(--color-fg-subtle);
+        font-size: 14px;
+        margin: 0;
+      }
+
+      /* Reduced motion respects user preference */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <h1>Score-circle gesture prototype</h1>
+        <p>
+          Tap <strong>"Open sheet"</strong> below. Drag horizontally on the
+          circle.
+        </p>
+        <ol class="test-list">
+          <li>Drag right: number goes up. Drag left: number goes down.</li>
+          <li>
+            Snap to integer on release. Per integer crossed: scale-pulse.
+          </li>
+          <li>
+            Try to drag the circle slightly down-and-right. The sheet must
+            <em>not</em> dismiss.
+          </li>
+          <li>
+            Drag the small handle bar at the top of the sheet downwards. The
+            sheet <em>should</em> dismiss past ~100px.
+          </li>
+          <li>Tap the dimmed backdrop: sheet dismisses immediately.</li>
+        </ol>
+      </div>
+
+      <div class="world">
+        <div class="world-card">
+          <p>
+            This represents the day-overview behind the sheet. Would
+            normally show the today-card with score, note, and tags.
+          </p>
+        </div>
+        <div class="world-card">
+          <p>A second card to give the sheet something to dim against.</p>
+        </div>
+        <button class="open-btn" id="openBtn" type="button">Open sheet</button>
+      </div>
+    </div>
+
+    <div class="backdrop hidden" id="backdrop" aria-hidden="true"></div>
+
+    <div class="sheet hidden" id="sheet" role="dialog" aria-label="Score">
+      <div class="sheet-handle" id="sheetHandle" aria-hidden="true">
+        <div class="sheet-handle-bar"></div>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-date" id="sheetDate">Donderdag 28 mei</div>
+        <div class="score-circle-wrap">
+          <div
+            class="score-circle"
+            id="scoreCircle"
+            role="slider"
+            aria-label="Score"
+            aria-valuemin="1"
+            aria-valuemax="10"
+            aria-valuenow="5"
+            tabindex="0"
+          >
+            <span class="score-number" id="scoreNumber">5</span>
+          </div>
+        </div>
+        <p class="score-hint">Sleep om te kiezen.</p>
+      </div>
+    </div>
+
+    <script>
+      // ============================================================
+      // SCORE CIRCLE — horizontal drag, snap-to-integer, scale-pulse
+      // ============================================================
+      const PIXELS_PER_INTEGER = 20;
+      const PULSE_MS = 80;
+      const MIN_VALUE = 1;
+      const MAX_VALUE = 10;
+
+      const circle = document.getElementById('scoreCircle');
+      const numberEl = document.getElementById('scoreNumber');
+
+      let currentValue = 5;
+      let dragStartValue = 5;
+      let dragStartX = 0;
+      let isDragging = false;
+      let pulseTimeout = null;
+
+      function setValue(newValue) {
+        const clamped = Math.max(MIN_VALUE, Math.min(MAX_VALUE, newValue));
+        if (clamped !== currentValue) {
+          currentValue = clamped;
+          numberEl.textContent = String(clamped);
+          circle.setAttribute('aria-valuenow', String(clamped));
+
+          // Scale-pulse (visual substitute for haptic tick)
+          numberEl.classList.add('pulsing');
+          clearTimeout(pulseTimeout);
+          pulseTimeout = setTimeout(() => {
+            numberEl.classList.remove('pulsing');
+          }, PULSE_MS);
+        }
+      }
+
+      circle.addEventListener('pointerdown', (event) => {
+        isDragging = true;
+        dragStartValue = currentValue;
+        dragStartX = event.clientX;
+        circle.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+
+      circle.addEventListener('pointermove', (event) => {
+        if (!isDragging) return;
+        const deltaX = event.clientX - dragStartX;
+        const newValue =
+          dragStartValue + Math.round(deltaX / PIXELS_PER_INTEGER);
+        setValue(newValue);
+      });
+
+      function endDrag(event) {
+        if (!isDragging) return;
+        isDragging = false;
+        if (circle.hasPointerCapture(event.pointerId)) {
+          circle.releasePointerCapture(event.pointerId);
+        }
+        console.log('[score-circle] committed:', currentValue);
+      }
+
+      circle.addEventListener('pointerup', endDrag);
+      circle.addEventListener('pointercancel', endDrag);
+
+      // Keyboard accessibility
+      circle.addEventListener('keydown', (event) => {
+        switch (event.key) {
+          case 'ArrowRight':
+          case 'ArrowUp':
+            event.preventDefault();
+            setValue(currentValue + 1);
+            console.log('[score-circle] committed:', currentValue);
+            break;
+          case 'ArrowLeft':
+          case 'ArrowDown':
+            event.preventDefault();
+            setValue(currentValue - 1);
+            console.log('[score-circle] committed:', currentValue);
+            break;
+          case 'Home':
+            event.preventDefault();
+            setValue(MIN_VALUE);
+            console.log('[score-circle] committed:', currentValue);
+            break;
+          case 'End':
+            event.preventDefault();
+            setValue(MAX_VALUE);
+            console.log('[score-circle] committed:', currentValue);
+            break;
+        }
+      });
+
+      // ============================================================
+      // SHEET — open / close + handle-only drag-to-dismiss
+      // The sheet body does NOT accept drag-to-dismiss. Only the
+      // small handle at the top does. This is the architectural fix
+      // that keeps the circle's drag isolated.
+      // ============================================================
+      const sheet = document.getElementById('sheet');
+      const backdrop = document.getElementById('backdrop');
+      const openBtn = document.getElementById('openBtn');
+      const sheetHandle = document.getElementById('sheetHandle');
+
+      function openSheet() {
+        sheet.classList.remove('hidden');
+        backdrop.classList.remove('hidden');
+      }
+
+      function closeSheet() {
+        sheet.classList.add('hidden');
+        backdrop.classList.add('hidden');
+      }
+
+      openBtn.addEventListener('click', openSheet);
+      backdrop.addEventListener('click', closeSheet);
+
+      // Handle drag-to-dismiss
+      let handleDragStartY = 0;
+      let handleDragging = false;
+      const DISMISS_THRESHOLD_PX = 100;
+
+      sheetHandle.addEventListener('pointerdown', (event) => {
+        handleDragging = true;
+        handleDragStartY = event.clientY;
+        sheetHandle.setPointerCapture(event.pointerId);
+        sheet.style.transition = 'none';
+      });
+
+      sheetHandle.addEventListener('pointermove', (event) => {
+        if (!handleDragging) return;
+        const deltaY = Math.max(0, event.clientY - handleDragStartY);
+        sheet.style.transform = 'translateY(' + deltaY + 'px)';
+      });
+
+      function endHandleDrag(event) {
+        if (!handleDragging) return;
+        handleDragging = false;
+        if (sheetHandle.hasPointerCapture(event.pointerId)) {
+          sheetHandle.releasePointerCapture(event.pointerId);
+        }
+        sheet.style.transition = '';
+        const deltaY = event.clientY - handleDragStartY;
+        if (deltaY > DISMISS_THRESHOLD_PX) {
+          sheet.style.transform = '';
+          closeSheet();
+        } else {
+          sheet.style.transform = '';
+        }
+      }
+
+      sheetHandle.addEventListener('pointerup', endHandleDrag);
+      sheetHandle.addEventListener('pointercancel', endHandleDrag);
+
+      // Escape key closes the sheet
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !sheet.classList.contains('hidden')) {
+          closeSheet();
+        }
+      });
+    </script>
+  </body>
+</html>

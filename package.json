@@ -31,7 +31,7 @@
     "pre-push": "npm run verify"
   },
   "lint-staged": {
-    "*.{ts,tsx,mjs,js}": "eslint --max-warnings 0"
+    "*.{ts,tsx,mjs,js}": "eslint --max-warnings 0 --no-warn-ignored"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.3",

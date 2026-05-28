@@ -16,12 +16,14 @@
 import { useMemo, useState } from 'react';
 import { DayDetailSheet } from '@/components/day-detail-sheet';
 import { ScoreChart } from '@/components/score-chart';
+import { ScoreHeatmap } from '@/components/score-heatmap';
 import { copy } from '@/copy';
 import { currentStreak } from '@/lib/domain/streak';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import type { Tag } from '@/lib/domain/tag';
 
 type Range = 30 | 90;
+type View = 'chart' | 'heatmap';
 
 type Props = {
   today: string;
@@ -40,6 +42,7 @@ function shiftDate(date: string, days: number): string {
 
 export function TimelineView({ today, initialEntries, allTags }: Props) {
   const [range, setRange] = useState<Range>(30);
+  const [view, setView] = useState<View>('chart');
   const [entries, setEntries] = useState<DayEntry[]>(initialEntries);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
@@ -127,16 +130,62 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
         </div>
       </header>
 
-      <p className="text-base text-fg-muted">
-        {streak > 0 ? copy.timeline.streak(streak) : '—'}
-      </p>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-base text-fg-muted">
+          {streak > 0 ? copy.timeline.streak(streak) : ''}
+        </p>
+        <div
+          role="radiogroup"
+          aria-label="Weergave"
+          className="flex items-center gap-1 text-sm"
+        >
+          <button
+            type="button"
+            role="radio"
+            aria-checked={view === 'chart'}
+            onClick={() => setView('chart')}
+            className={
+              view === 'chart'
+                ? 'rounded-md bg-accent-soft px-3 py-1 font-medium text-fg ring-1 ring-accent'
+                : 'rounded-md px-3 py-1 text-fg-muted hover:bg-surface-muted'
+            }
+          >
+            {copy.timeline.viewChart}
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={view === 'heatmap'}
+            onClick={() => setView('heatmap')}
+            className={
+              view === 'heatmap'
+                ? 'rounded-md bg-accent-soft px-3 py-1 font-medium text-fg ring-1 ring-accent'
+                : 'rounded-md px-3 py-1 text-fg-muted hover:bg-surface-muted'
+            }
+          >
+            {copy.timeline.viewHeatmap}
+          </button>
+        </div>
+      </div>
 
-      <ScoreChart
-        entries={entries}
-        from={fromForRange[range]}
-        to={today}
-        onPointTap={(date) => setSelectedDate(date)}
-      />
+      {view === 'chart' ? (
+        <>
+          <ScoreChart
+            entries={entries}
+            from={fromForRange[range]}
+            to={today}
+            onPointTap={(date) => setSelectedDate(date)}
+          />
+          <p className="text-xs text-fg-subtle">{copy.timeline.maSubtitle}</p>
+        </>
+      ) : (
+        <ScoreHeatmap
+          entries={entries}
+          from={fromForRange[range]}
+          to={today}
+          onCellTap={(date) => setSelectedDate(date)}
+        />
+      )}
 
       {selectedDate !== null && (
         <DayDetailSheet

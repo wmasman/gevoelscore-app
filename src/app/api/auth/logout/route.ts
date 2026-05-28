@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const session = await getValidatedSession(sessionId);
     if (session) {
       await directusLogout(session.refreshToken);
-      sessionStore.delete(sessionId);
+      await sessionStore.delete(sessionId);
     }
   }
 

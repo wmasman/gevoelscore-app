@@ -17,7 +17,33 @@ describe('copy', () => {
   });
 
   it('top-level structure is stable (snapshot lock)', () => {
-    expect(Object.keys(copy).sort()).toEqual(['app', 'daily', 'errors', 'timeline']);
+    expect(Object.keys(copy).sort()).toEqual([
+      'app',
+      'daily',
+      'errors',
+      'over',
+      'timeline',
+    ]);
     expect(Object.keys(copy.daily).sort()).toEqual(['note', 'score', 'tags']);
+    expect(Object.keys(copy.over).sort()).toEqual([
+      'cta',
+      'email',
+      'principles',
+      'profile',
+      'stat',
+      'story',
+      'subtitle',
+      'title',
+    ]);
+  });
+
+  it('exposes the public landing-page surface in Dutch', () => {
+    expect(copy.over.title).toBe('Gevoelscore');
+    expect(copy.over.email.address).toBe('Willem@brightpath-studio.nl');
+    expect(copy.over.cta.heading).toMatch(/20 mensen/);
+    expect(copy.over.principles.items).toHaveLength(4);
+    expect(copy.over.profile.items).toHaveLength(4);
+    expect(copy.over.stat.number).toBe('1.363');
+    expect(copy.over.story.heading).toMatch(/waarom/i);
   });
 });

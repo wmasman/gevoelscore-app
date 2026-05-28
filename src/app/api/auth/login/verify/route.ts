@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   }
 
   // Success: create session, clear pending state + cookie
-  const sessionId = sessionStore.create({
+  const sessionId = await sessionStore.create({
     accessToken: result.value.accessToken,
     refreshToken: result.value.refreshToken,
     expiresAt: Date.now() + result.value.expiresInMs,

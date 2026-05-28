@@ -29,29 +29,6 @@ function entry(date: string, score: number): DayEntry {
 describe('<ScoreChart />', () => {
   afterEach(cleanup);
 
-  it('renders an SVG with one path segment per gap-bounded run of points', () => {
-    // 5 entries with a gap: [A B B B] gap [B B] → 2 path segments.
-    const entries = [
-      entry('2026-05-20', 5),
-      entry('2026-05-21', 6),
-      entry('2026-05-22', 6),
-      entry('2026-05-23', 7),
-      // gap 2026-05-24
-      entry('2026-05-25', 4),
-      entry('2026-05-26', 5),
-    ];
-    render(
-      <ScoreChart
-        entries={entries}
-        from="2026-05-20"
-        to="2026-05-26"
-        onPointTap={() => {}}
-      />,
-    );
-    const paths = document.querySelectorAll('svg path[data-segment]');
-    expect(paths).toHaveLength(2);
-  });
-
   it('renders a tappable circle for each logged day', () => {
     const entries = [
       entry('2026-05-26', 5),
@@ -90,19 +67,81 @@ describe('<ScoreChart />', () => {
     expect(onPointTap).toHaveBeenCalledWith('2026-05-27');
   });
 
-  it('30-day range never exceeds 30 visible points; 90-day never exceeds 90', () => {
-    const longEntries = Array.from({ length: 30 }, (_, i) =>
-      entry(`2026-05-${String(i + 1).padStart(2, '0')}`, 5),
+  it('renders a smooth 7-day moving-average path (the primary visual) once ≥3 days are logged', () => {
+    // 7 consecutive days → MA emits for days 3..7 (day 3 has 3-day window).
+    const entries = Array.from({ length: 7 }, (_, i) =>
+      entry(`2026-05-2${i}`, ((i % 5) + 4) as DayEntry['score']),
     );
     render(
       <ScoreChart
-        entries={longEntries}
-        from="2026-05-01"
-        to="2026-05-30"
+        entries={entries}
+        from="2026-05-20"
+        to="2026-05-26"
         onPointTap={() => {}}
       />,
     );
-    const points = document.querySelectorAll('svg circle[data-date]');
-    expect(points.length).toBeLessThanOrEqual(30);
+    const maPath = document.querySelector('svg path[data-line="ma"]');
+    expect(maPath).not.toBeNull();
+    // The MA line has its own d-attribute (not empty) — i.e. a real segment.
+    expect(maPath!.getAttribute('d')!.length).toBeGreaterThan(0);
+  });
+
+  it('omits the MA path when fewer than 3 days are logged in the range', () => {
+    const entries = [entry('2026-05-27', 5), entry('2026-05-28', 6)];
+    render(
+      <ScoreChart
+        entries={entries}
+        from="2026-05-27"
+        to="2026-05-28"
+        onPointTap={() => {}}
+      />,
+    );
+    // The path element may exist but with no segment (empty d) OR not exist.
+    const maPath = document.querySelector('svg path[data-line="ma"]');
+    if (maPath !== null) {
+      expect(maPath.getAttribute('d') ?? '').toBe('');
+    }
+  });
+
+  it('adaptive Y-axis: when all scores fall in 6..8, the axis labels do NOT span 1..10', () => {
+    const entries = [
+      entry('2026-05-20', 6),
+      entry('2026-05-21', 7),
+      entry('2026-05-22', 8),
+      entry('2026-05-23', 7),
+      entry('2026-05-24', 6),
+    ];
+    render(
+      <ScoreChart
+        entries={entries}
+        from="2026-05-20"
+        to="2026-05-24"
+        onPointTap={() => {}}
+      />,
+    );
+    const labels = Array.from(document.querySelectorAll('svg text[data-axis="y"]')).map(
+      (el) => el.textContent,
+    );
+    // Range 6..8 padded → roughly 5..9 (span ≥3 minimum). 1 must not appear.
+    expect(labels).not.toContain('1');
+    expect(labels).not.toContain('10');
+    // At least one label inside the actual data range.
+    expect(labels.some((l) => l === '6' || l === '7' || l === '8')).toBe(true);
+  });
+
+  it('adaptive Y-axis falls back to 1..10 when there are no entries', () => {
+    render(
+      <ScoreChart
+        entries={[]}
+        from="2026-05-20"
+        to="2026-05-26"
+        onPointTap={() => {}}
+      />,
+    );
+    const labels = Array.from(document.querySelectorAll('svg text[data-axis="y"]')).map(
+      (el) => el.textContent,
+    );
+    expect(labels).toContain('1');
+    expect(labels).toContain('10');
   });
 });

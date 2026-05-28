@@ -8,10 +8,10 @@ import {
 
 describe('session', () => {
   describe('createSessionStore', () => {
-    it('creates a session and returns an opaque session id', () => {
+    it('creates a session and returns an opaque session id', async () => {
       const store = createSessionStore();
 
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: Date.now() + 60_000,
@@ -21,77 +21,77 @@ describe('session', () => {
       expect(id.length).toBeGreaterThan(20);
     });
 
-    it('returns the session by id', () => {
+    it('returns the session by id', async () => {
       const store = createSessionStore();
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: Date.now() + 60_000,
       });
 
-      const session = store.get(id);
+      const session = await store.get(id);
       expect(session?.accessToken).toBe('at-1');
       expect(session?.refreshToken).toBe('rt-1');
     });
 
-    it('returns undefined for an unknown id', () => {
+    it('returns undefined for an unknown id', async () => {
       const store = createSessionStore();
-      expect(store.get('does-not-exist')).toBeUndefined();
+      expect(await store.get('does-not-exist')).toBeUndefined();
     });
 
-    it('returns undefined for an expired session and removes it', () => {
+    it('returns undefined for an expired session and removes it', async () => {
       let now = 1_000_000;
       const store = createSessionStore({ now: () => now });
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: now + 1_000,
       });
 
       now += 2_000;
-      expect(store.get(id)).toBeUndefined();
-      expect(store.size()).toBe(0);
+      expect(await store.get(id)).toBeUndefined();
+      expect(await store.size()).toBe(0);
     });
 
-    it('delete removes the session', () => {
+    it('delete removes the session', async () => {
       const store = createSessionStore();
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: Date.now() + 60_000,
       });
 
-      store.delete(id);
-      expect(store.get(id)).toBeUndefined();
+      await store.delete(id);
+      expect(await store.get(id)).toBeUndefined();
     });
 
-    it('cleanupExpired removes only expired sessions', () => {
+    it('cleanupExpired removes only expired sessions', async () => {
       const now = 1_000_000;
       const store = createSessionStore({ now: () => now });
 
-      const liveId = store.create({
+      const liveId = await store.create({
         accessToken: 'live',
         refreshToken: 'rt-live',
         expiresAt: now + 60_000,
       });
-      store.create({
+      await store.create({
         accessToken: 'expired',
         refreshToken: 'rt-expired',
         expiresAt: now - 1,
       });
 
-      store.cleanupExpired();
-      expect(store.size()).toBe(1);
-      expect(store.get(liveId)).toBeDefined();
+      await store.cleanupExpired();
+      expect(await store.size()).toBe(1);
+      expect(await store.get(liveId)).toBeDefined();
     });
 
-    it('uses an injected idGenerator when provided (deterministic tests)', () => {
+    it('uses an injected idGenerator when provided (deterministic tests)', async () => {
       let counter = 0;
       const store = createSessionStore({
         idGenerator: () => `id-${++counter}`,
       });
 
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at',
         refreshToken: 'rt',
         expiresAt: Date.now() + 60_000,
@@ -101,68 +101,68 @@ describe('session', () => {
   });
 
   describe('peek (no eviction)', () => {
-    it('returns the entry as-is for a live session', () => {
+    it('returns the entry as-is for a live session', async () => {
       const store = createSessionStore();
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: Date.now() + 60_000,
       });
 
-      expect(store.peek(id)?.accessToken).toBe('at-1');
+      expect((await store.peek(id))?.accessToken).toBe('at-1');
     });
 
-    it('returns the entry even when the access token is expired (does NOT evict)', () => {
+    it('returns the entry even when the access token is expired (does NOT evict)', async () => {
       let clock = 1_000_000;
       const store = createSessionStore({ now: () => clock });
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: clock + 1_000,
       });
 
       clock += 2_000;
-      const peeked = store.peek(id);
+      const peeked = await store.peek(id);
       expect(peeked?.accessToken).toBe('at-1');
-      expect(store.size()).toBe(1);
+      expect(await store.size()).toBe(1);
     });
 
-    it('returns undefined for an unknown id', () => {
+    it('returns undefined for an unknown id', async () => {
       const store = createSessionStore();
-      expect(store.peek('nope')).toBeUndefined();
+      expect(await store.peek('nope')).toBeUndefined();
     });
   });
 
   describe('update (replace in place)', () => {
-    it('replaces the entry data for a known id and returns true', () => {
+    it('replaces the entry data for a known id and returns true', async () => {
       const store = createSessionStore();
-      const id = store.create({
+      const id = await store.create({
         accessToken: 'at-1',
         refreshToken: 'rt-1',
         expiresAt: Date.now() + 60_000,
       });
 
-      const result = store.update(id, {
+      const result = await store.update(id, {
         accessToken: 'at-2',
         refreshToken: 'rt-2',
         expiresAt: Date.now() + 120_000,
       });
 
       expect(result).toBe(true);
-      expect(store.peek(id)?.accessToken).toBe('at-2');
-      expect(store.peek(id)?.refreshToken).toBe('rt-2');
+      expect((await store.peek(id))?.accessToken).toBe('at-2');
+      expect((await store.peek(id))?.refreshToken).toBe('rt-2');
     });
 
-    it('returns false for an unknown id and does NOT create a new entry', () => {
+    it('returns false for an unknown id and does NOT create a new entry', async () => {
       const store = createSessionStore();
-      const result = store.update('unknown', {
+      const result = await store.update('unknown', {
         accessToken: 'at',
         refreshToken: 'rt',
         expiresAt: Date.now() + 60_000,
       });
 
       expect(result).toBe(false);
-      expect(store.size()).toBe(0);
+      expect(await store.size()).toBe(0);
     });
   });
 

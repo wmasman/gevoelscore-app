@@ -1,0 +1,1247 @@
+<!doctype html>
+<!--
+  Quick-entry flow prototype (full flow)
+  =================================================================
+  Builds on score-circle-prototype.html. Adds the rest of the flow:
+  note step, tags step, morph between steps, back/forward buttons in
+  the thumb zone, end-of-flow tint-pulse on the today-card, past-day
+  editing with surface-muted tint, and iOS keyboard handling.
+
+  Validates the COMBINATIONS that the single-piece prototypes can't:
+    1. Crossfade morph between steps inside a fixed-height middle region
+    2. Back/forward in the thumb zone, reachable one-handed
+    3. iOS keyboard pushing the panel up without breaking layout
+    4. End-of-flow card-pulse as spatial signal of "input is now here"
+    5. Past-day vs today distinction via surface tint only
+    6. Auto-advance from score (after release) into note step
+
+  Test plan on iPhone PWA:
+    A. Page loads — today is empty, panel auto-appears on score step.
+       Drag to set value. Release. ~500ms pause. Morph to note step.
+    B. Note step: textarea visible. Tap to focus. iOS keyboard rises.
+       Panel should stay visible above the keyboard. Forward + back
+       buttons should remain reachable.
+    C. Forward to tags step. Tap a category header to toggle. Tap
+       "Klaar".
+    D. Panel slides down. Today-card receives a brief tint-pulse to
+       confirm spatial location of the new entry.
+    E. Now today is complete. Tap the SCORE region of today-card →
+       panel reopens on score step with the saved value.
+    F. Tap a past-day card → panel opens with SURFACE-MUTED tint
+       (cooler than today's tint), confirming the past-vs-today cue.
+    G. Drag the handle at the top of the sheet down at any step →
+       panel dismisses. Partial input is preserved (visible on reopen).
+
+  To run:
+      cd docs/design/explorations
+      npx serve -l tcp://0.0.0.0:8000 .
+
+  On iPhone (same WiFi):
+      http://<laptop-ip>:8000/quick-entry-flow-prototype.html
+      Add to Home Screen for standalone PWA mode.
+
+  Linked spec: docs/design/explorations/quick-entry-popout.md
+  Status: throwaway exploration. Delete freely when decision is made.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#faf6f1" />
+    <title>Quick-entry flow prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ============================================================
+         Design tokens — mirrored from src/app/globals.css
+         ============================================================ */
+      :root {
+        --color-bg: #faf6f1;
+        --color-surface: #fffcf8;
+        --color-surface-muted: #f2ede5;
+        --color-fg: #2b2520;
+        --color-fg-muted: #6b5f54;
+        --color-fg-subtle: #9c8f82;
+        --color-accent: #b5694a;
+        --color-accent-hover: #9d5839;
+        --color-accent-soft: #f5e8df;
+        --color-border: #e8dfd2;
+        --color-border-strong: #d5c8b5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        background: var(--color-bg);
+        color: var(--color-fg);
+        font-family:
+          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 17px;
+        line-height: 1.5;
+        min-height: 100vh;
+        min-height: 100dvh;
+        overscroll-behavior: none;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ============================================================
+         Day overview (the "world" beneath the sheet)
+         ============================================================ */
+      .page {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 32px 20px 80px 20px;
+      }
+
+      .page-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+
+      .page-header .date {
+        color: var(--color-fg-muted);
+        font-size: 15px;
+        margin: 4px 0 0 0;
+      }
+
+      .section-heading {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 32px 0 12px 0;
+      }
+
+      /* Today-card with three tappable regions */
+      .today-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        margin-top: 24px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(43, 37, 32, 0.06);
+        transition: background 200ms ease-out;
+      }
+
+      .today-card.pulsing {
+        background: var(--color-accent-soft);
+      }
+
+      .today-region {
+        padding: 16px 20px;
+        cursor: pointer;
+        position: relative;
+        transition: background 100ms ease-out;
+      }
+
+      .today-region + .today-region {
+        border-top: 1px solid var(--color-border);
+      }
+
+      .today-region:hover {
+        background: rgba(245, 232, 223, 0.3);
+      }
+
+      .today-region:active {
+        background: rgba(245, 232, 223, 0.6);
+      }
+
+      .today-region .region-label {
+        font-size: 13px;
+        color: var(--color-fg-muted);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .today-region .region-content {
+        font-size: 17px;
+        color: var(--color-fg);
+      }
+
+      .today-region .region-content.empty {
+        color: var(--color-fg-subtle);
+        font-style: italic;
+      }
+
+      .today-region.score-region .region-content {
+        font-size: 48px;
+        font-weight: 600;
+        color: var(--color-accent);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .today-region.score-region .region-content.empty {
+        font-size: 17px;
+        font-weight: 400;
+        font-style: italic;
+      }
+
+      .today-region .tags-display {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .today-region .tag-chip {
+        padding: 4px 10px;
+        background: var(--color-accent-soft);
+        color: var(--color-accent-hover);
+        border: 1px solid var(--color-accent);
+        border-radius: 9999px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      /* Past-day cards */
+      .past-day-card {
+        background: var(--color-surface-muted);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        cursor: pointer;
+        transition: background 100ms ease-out;
+      }
+
+      .past-day-card:hover {
+        background: var(--color-border);
+      }
+
+      .past-day-card .past-day-text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .past-day-card .past-day-date {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--color-fg);
+      }
+
+      .past-day-card .past-day-note {
+        font-size: 14px;
+        color: var(--color-fg-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-top: 2px;
+      }
+
+      .past-day-card .past-day-score {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--color-accent);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ============================================================
+         Backdrop + sheet
+         ============================================================ */
+      .backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(43, 37, 32, 0.4);
+        z-index: 10;
+        opacity: 1;
+        transition: opacity 200ms ease-out;
+      }
+
+      .backdrop.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: 480px;
+        margin: 0 auto;
+        background: var(--color-surface);
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        box-shadow: 0 -8px 24px rgba(43, 37, 32, 0.08);
+        z-index: 20;
+        transform: translateY(0);
+        transition:
+          transform 250ms ease-out,
+          background 200ms ease-out;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+
+      .sheet.hidden {
+        transform: translateY(100%);
+      }
+
+      /* Past-day tint */
+      .sheet.past-day {
+        background: var(--color-surface-muted);
+      }
+
+      /* Handle — the only place that initiates sheet-dismiss */
+      .sheet-handle {
+        width: 100%;
+        padding: 12px 0 8px 0;
+        display: flex;
+        justify-content: center;
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .sheet-handle:active {
+        cursor: grabbing;
+      }
+
+      .sheet-handle-bar {
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--color-fg-subtle);
+        pointer-events: none;
+      }
+
+      /* Header inside the sheet — orientation only, not action */
+      .sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 20px 16px 20px;
+      }
+
+      .sheet-header-date {
+        font-size: 13px;
+        color: var(--color-fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .sheet-close {
+        background: none;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        color: var(--color-fg-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: inherit;
+      }
+
+      /* Middle region — fixed height, steps stack inside */
+      .sheet-middle {
+        position: relative;
+        height: 380px;
+        padding: 0 24px;
+      }
+
+      .step {
+        position: absolute;
+        inset: 0 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 150ms ease-out;
+      }
+
+      .step.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Score step */
+      .step-score {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .score-circle {
+        width: 280px;
+        height: 280px;
+        max-width: 80vw;
+        max-height: 80vw;
+        border-radius: 50%;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(43, 37, 32, 0.06);
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
+        cursor: grab;
+      }
+
+      .sheet.past-day .score-circle {
+        background: var(--color-surface);
+      }
+
+      .score-circle:active {
+        cursor: grabbing;
+      }
+
+      .score-number {
+        font-size: 96px;
+        font-weight: 600;
+        color: var(--color-accent);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        transition: transform 80ms ease-out;
+        pointer-events: none;
+      }
+
+      .score-number.pulsing {
+        transform: scale(1.05);
+      }
+
+      .score-hint {
+        text-align: center;
+        color: var(--color-fg-subtle);
+        font-size: 14px;
+        margin: 20px 0 0 0;
+      }
+
+      /* Note step */
+      .step-note {
+        display: flex;
+        flex-direction: column;
+        padding-top: 16px;
+      }
+
+      .note-label {
+        font-size: 13px;
+        color: var(--color-fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+
+      .note-textarea {
+        flex: 1;
+        background: var(--color-surface-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-family: inherit;
+        font-size: 17px;
+        line-height: 1.5;
+        color: var(--color-fg);
+        resize: none;
+        outline: none;
+        transition: border-color 150ms ease-out;
+      }
+
+      .note-textarea:focus {
+        border-color: var(--color-accent);
+      }
+
+      .note-textarea::placeholder {
+        color: var(--color-fg-subtle);
+        font-style: italic;
+      }
+
+      /* Tags step */
+      .step-tags {
+        padding-top: 8px;
+        overflow-y: auto;
+      }
+
+      .tags-label {
+        font-size: 13px;
+        color: var(--color-fg-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 12px;
+      }
+
+      .category-header {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        font-family: inherit;
+        font-size: 17px;
+        color: var(--color-fg);
+        cursor: pointer;
+        text-align: left;
+        text-transform: capitalize;
+      }
+
+      .category-header:hover {
+        border-color: var(--color-border-strong);
+      }
+
+      .category-header .selection-count {
+        font-size: 14px;
+        color: var(--color-accent);
+        font-weight: 500;
+      }
+
+      .category-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0 4px 12px 4px;
+      }
+
+      .category-chips.collapsed {
+        display: none;
+      }
+
+      .chip {
+        padding: 6px 14px;
+        background: transparent;
+        color: var(--color-fg-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 9999px;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 100ms ease-out;
+      }
+
+      .chip:hover {
+        border-color: var(--color-border-strong);
+      }
+
+      .chip.selected {
+        background: var(--color-accent-soft);
+        color: var(--color-accent-hover);
+        border-color: var(--color-accent);
+        font-weight: 600;
+      }
+
+      .extra-toggle {
+        background: none;
+        border: none;
+        color: var(--color-fg-muted);
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 8px;
+        cursor: pointer;
+        margin-top: 4px;
+      }
+
+      /* ============================================================
+         Sheet footer — back + forward buttons in thumb zone
+         ============================================================ */
+      .sheet-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 24px 24px 24px;
+      }
+
+      .back-btn {
+        background: transparent;
+        border: 1px solid var(--color-border);
+        color: var(--color-fg-muted);
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        min-height: 48px;
+        transition: all 150ms ease-out;
+      }
+
+      .back-btn:hover {
+        border-color: var(--color-border-strong);
+        color: var(--color-fg);
+      }
+
+      .back-btn.hidden {
+        visibility: hidden;
+      }
+
+      .forward-btn {
+        background: var(--color-accent);
+        color: var(--color-surface);
+        border: none;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 17px;
+        font-weight: 500;
+        cursor: pointer;
+        min-height: 48px;
+        flex: 1;
+        max-width: 240px;
+        box-shadow: 0 1px 2px rgba(43, 37, 32, 0.04);
+        transition: background 150ms ease-out;
+      }
+
+      .forward-btn:hover {
+        background: var(--color-accent-hover);
+      }
+
+      .forward-btn:active {
+        transform: scale(0.98);
+      }
+
+      .forward-btn.hidden {
+        visibility: hidden;
+      }
+
+      /* ============================================================
+         Reduced motion
+         ============================================================ */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============================================================
+         Page (day overview)
+         ============================================================ -->
+    <div class="page">
+      <div class="page-header">
+        <h1>Vandaag</h1>
+        <p class="date">donderdag 28 mei</p>
+      </div>
+
+      <div class="today-card" id="todayCard">
+        <div
+          class="today-region score-region"
+          data-region="score"
+          id="todayScoreRegion"
+        >
+          <div class="region-label">Gevoelscore</div>
+          <div class="region-content empty" id="todayScoreContent">
+            nog niet ingevuld
+          </div>
+        </div>
+        <div
+          class="today-region note-region"
+          data-region="note"
+          id="todayNoteRegion"
+        >
+          <div class="region-label">Notitie</div>
+          <div class="region-content empty" id="todayNoteContent">
+            nog geen notitie
+          </div>
+        </div>
+        <div
+          class="today-region tags-region"
+          data-region="tags"
+          id="todayTagsRegion"
+        >
+          <div class="region-label">Tags</div>
+          <div class="region-content empty" id="todayTagsContent">
+            nog geen tags
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Vorige dagen</h2>
+
+      <div class="past-day-card" data-past-date="woensdag 27 mei">
+        <div class="past-day-text">
+          <div class="past-day-date">woensdag 27 mei</div>
+          <div class="past-day-note">
+            Goede focus in de middag. Wandeling gemaakt.
+          </div>
+        </div>
+        <div class="past-day-score">6</div>
+      </div>
+
+      <div class="past-day-card" data-past-date="dinsdag 26 mei">
+        <div class="past-day-text">
+          <div class="past-day-date">dinsdag 26 mei</div>
+          <div class="past-day-note">Heerlijk geslapen, veel energie.</div>
+        </div>
+        <div class="past-day-score">8</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         Backdrop + sheet
+         ============================================================ -->
+    <div class="backdrop hidden" id="backdrop" aria-hidden="true"></div>
+
+    <div class="sheet hidden" id="sheet" role="dialog" aria-label="Invoer">
+      <div class="sheet-handle" id="sheetHandle" aria-hidden="true">
+        <div class="sheet-handle-bar"></div>
+      </div>
+
+      <div class="sheet-header">
+        <div class="sheet-header-date" id="sheetHeaderDate">
+          Donderdag 28 mei
+        </div>
+        <button class="sheet-close" id="sheetCloseBtn" type="button">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          >
+            <path d="M5 5L15 15M15 5L5 15" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="sheet-middle">
+        <!-- Score step -->
+        <div class="step step-score active" id="stepScore">
+          <div
+            class="score-circle"
+            id="scoreCircle"
+            role="slider"
+            aria-label="Score"
+            aria-valuemin="1"
+            aria-valuemax="10"
+            aria-valuenow="5"
+            tabindex="0"
+          >
+            <span class="score-number" id="scoreNumber">5</span>
+          </div>
+          <p class="score-hint">Sleep om te kiezen.</p>
+        </div>
+
+        <!-- Note step -->
+        <div class="step step-note" id="stepNote">
+          <div class="note-label">Notitie</div>
+          <textarea
+            class="note-textarea"
+            id="noteTextarea"
+            placeholder="Schrijf hier je notitie…"
+            rows="8"
+          ></textarea>
+        </div>
+
+        <!-- Tags step -->
+        <div class="step step-tags" id="stepTags">
+          <div class="tags-label">Tags</div>
+
+          <button
+            class="category-header"
+            type="button"
+            data-category="mentaal"
+          >
+            <span>Mentaal</span>
+            <span class="selection-count"></span>
+          </button>
+          <div class="category-chips collapsed" data-chips-for="mentaal">
+            <button class="chip" type="button" data-tag="brainfog">
+              brainfog
+            </button>
+            <button class="chip" type="button" data-tag="helder">helder</button>
+            <button class="chip" type="button" data-tag="stress">stress</button>
+            <button class="chip" type="button" data-tag="kalm">kalm</button>
+          </div>
+
+          <button class="category-header" type="button" data-category="fysiek">
+            <span>Fysiek</span>
+            <span class="selection-count"></span>
+          </button>
+          <div class="category-chips collapsed" data-chips-for="fysiek">
+            <button class="chip" type="button" data-tag="moe">moe</button>
+            <button class="chip" type="button" data-tag="hoofdpijn">
+              hoofdpijn
+            </button>
+            <button class="chip" type="button" data-tag="goede energie">
+              goede energie
+            </button>
+            <button class="chip" type="button" data-tag="zware benen">
+              zware benen
+            </button>
+          </div>
+
+          <button class="category-header" type="button" data-category="overall">
+            <span>Overall</span>
+            <span class="selection-count"></span>
+          </button>
+          <div class="category-chips collapsed" data-chips-for="overall">
+            <button class="chip" type="button" data-tag="goede dag">
+              goede dag
+            </button>
+            <button class="chip" type="button" data-tag="off">off</button>
+            <button class="chip" type="button" data-tag="lekker snel">
+              lekker snel
+            </button>
+          </div>
+
+          <button
+            class="category-header"
+            type="button"
+            data-category="activiteit"
+          >
+            <span>Activiteit</span>
+            <span class="selection-count"></span>
+          </button>
+          <div class="category-chips collapsed" data-chips-for="activiteit">
+            <button class="chip" type="button" data-tag="rustdag">
+              rustdag
+            </button>
+            <button class="chip" type="button" data-tag="kantoor">
+              kantoor
+            </button>
+            <button class="chip" type="button" data-tag="wandeling">
+              wandeling
+            </button>
+            <button class="chip" type="button" data-tag="sport">sport</button>
+          </div>
+
+          <button class="extra-toggle" type="button" id="extraToggleBtn">
+            Extra opties (Interventie, Project, etc) ⌄
+          </button>
+        </div>
+      </div>
+
+      <div class="sheet-footer">
+        <button class="back-btn hidden" id="backBtn" type="button">
+          ← Terug
+        </button>
+        <button class="forward-btn" id="forwardBtn" type="button">
+          Volgende
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // ============================================================
+      // STATE
+      // ============================================================
+      const STEPS = ['score', 'note', 'tags'];
+      let currentStep = 'score';
+      let editingPast = false; // true when sheet is in past-day mode
+
+      // Persistent state (within session) — what's been entered
+      let scoreValue = 5;
+      let scoreCommitted = false; // false until user releases the gesture
+      let noteValue = '';
+      let selectedTags = new Set();
+
+      // ============================================================
+      // ELEMENTS
+      // ============================================================
+      const sheet = document.getElementById('sheet');
+      const backdrop = document.getElementById('backdrop');
+      const sheetHandle = document.getElementById('sheetHandle');
+      const sheetCloseBtn = document.getElementById('sheetCloseBtn');
+
+      const stepScore = document.getElementById('stepScore');
+      const stepNote = document.getElementById('stepNote');
+      const stepTags = document.getElementById('stepTags');
+
+      const scoreCircle = document.getElementById('scoreCircle');
+      const scoreNumber = document.getElementById('scoreNumber');
+      const noteTextarea = document.getElementById('noteTextarea');
+
+      const backBtn = document.getElementById('backBtn');
+      const forwardBtn = document.getElementById('forwardBtn');
+
+      const todayCard = document.getElementById('todayCard');
+      const todayScoreContent = document.getElementById('todayScoreContent');
+      const todayNoteContent = document.getElementById('todayNoteContent');
+      const todayTagsContent = document.getElementById('todayTagsContent');
+
+      // ============================================================
+      // STEP MORPHING
+      // ============================================================
+      function setStep(newStep) {
+        currentStep = newStep;
+
+        // Crossfade: deactivate all, activate the target
+        for (const s of STEPS) {
+          const el = document.getElementById(
+            'step' + s.charAt(0).toUpperCase() + s.slice(1)
+          );
+          if (s === newStep) el.classList.add('active');
+          else el.classList.remove('active');
+        }
+
+        // Back button: visible from note onwards
+        if (newStep === 'score') backBtn.classList.add('hidden');
+        else backBtn.classList.remove('hidden');
+
+        // Forward button: text + behaviour changes per step
+        if (newStep === 'score') {
+          // Score auto-advances — no forward button needed visible
+          forwardBtn.classList.add('hidden');
+        } else if (newStep === 'note') {
+          forwardBtn.classList.remove('hidden');
+          forwardBtn.textContent = 'Volgende: tags';
+        } else if (newStep === 'tags') {
+          forwardBtn.classList.remove('hidden');
+          forwardBtn.textContent = 'Klaar ✓';
+        }
+
+        // Focus management
+        if (newStep === 'note') {
+          // Slight delay so the morph completes before keyboard rises
+          setTimeout(() => noteTextarea.focus(), 200);
+        } else {
+          noteTextarea.blur();
+        }
+      }
+
+      // ============================================================
+      // SCORE CIRCLE (reused from score-circle-prototype.html)
+      // ============================================================
+      const PIXELS_PER_INTEGER = 20;
+      const PULSE_MS = 80;
+      const MIN_VALUE = 1;
+      const MAX_VALUE = 10;
+      const AUTO_ADVANCE_DELAY_MS = 500;
+
+      let dragStartValue = 5;
+      let dragStartX = 0;
+      let isDragging = false;
+      let pulseTimeout = null;
+      let autoAdvanceTimeout = null;
+
+      function setScoreValue(newValue) {
+        const clamped = Math.max(MIN_VALUE, Math.min(MAX_VALUE, newValue));
+        if (clamped !== scoreValue) {
+          scoreValue = clamped;
+          scoreNumber.textContent = String(clamped);
+          scoreCircle.setAttribute('aria-valuenow', String(clamped));
+          scoreNumber.classList.add('pulsing');
+          clearTimeout(pulseTimeout);
+          pulseTimeout = setTimeout(() => {
+            scoreNumber.classList.remove('pulsing');
+          }, PULSE_MS);
+        }
+      }
+
+      scoreCircle.addEventListener('pointerdown', (event) => {
+        isDragging = true;
+        dragStartValue = scoreValue;
+        dragStartX = event.clientX;
+        scoreCircle.setPointerCapture(event.pointerId);
+        clearTimeout(autoAdvanceTimeout); // cancel any pending auto-advance
+        event.preventDefault();
+      });
+
+      scoreCircle.addEventListener('pointermove', (event) => {
+        if (!isDragging) return;
+        const deltaX = event.clientX - dragStartX;
+        const newValue =
+          dragStartValue + Math.round(deltaX / PIXELS_PER_INTEGER);
+        setScoreValue(newValue);
+      });
+
+      function endDrag(event) {
+        if (!isDragging) return;
+        isDragging = false;
+        if (scoreCircle.hasPointerCapture(event.pointerId)) {
+          scoreCircle.releasePointerCapture(event.pointerId);
+        }
+        scoreCommitted = true;
+        console.log('[score] committed:', scoreValue);
+
+        // Auto-advance to note step after a brief pause (only when on score step)
+        if (currentStep === 'score') {
+          autoAdvanceTimeout = setTimeout(() => {
+            setStep('note');
+          }, AUTO_ADVANCE_DELAY_MS);
+        }
+      }
+
+      scoreCircle.addEventListener('pointerup', endDrag);
+      scoreCircle.addEventListener('pointercancel', endDrag);
+
+      scoreCircle.addEventListener('keydown', (event) => {
+        let handled = true;
+        switch (event.key) {
+          case 'ArrowRight':
+          case 'ArrowUp':
+            setScoreValue(scoreValue + 1);
+            break;
+          case 'ArrowLeft':
+          case 'ArrowDown':
+            setScoreValue(scoreValue - 1);
+            break;
+          case 'Home':
+            setScoreValue(MIN_VALUE);
+            break;
+          case 'End':
+            setScoreValue(MAX_VALUE);
+            break;
+          default:
+            handled = false;
+        }
+        if (handled) {
+          event.preventDefault();
+          scoreCommitted = true;
+        }
+      });
+
+      // ============================================================
+      // NOTE TEXTAREA
+      // ============================================================
+      noteTextarea.addEventListener('input', (event) => {
+        noteValue = event.target.value;
+      });
+
+      // ============================================================
+      // TAGS STEP — category headers + chip selection
+      // ============================================================
+      document.querySelectorAll('.category-header').forEach((header) => {
+        header.addEventListener('click', () => {
+          const category = header.dataset.category;
+          const chips = document.querySelector(
+            '[data-chips-for="' + category + '"]'
+          );
+          chips.classList.toggle('collapsed');
+        });
+      });
+
+      document.querySelectorAll('.chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const tag = chip.dataset.tag;
+          if (selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+            chip.classList.remove('selected');
+          } else {
+            selectedTags.add(tag);
+            chip.classList.add('selected');
+          }
+          updateCategorySelectionCounts();
+        });
+      });
+
+      function updateCategorySelectionCounts() {
+        document
+          .querySelectorAll('.category-header')
+          .forEach((header) => {
+            const category = header.dataset.category;
+            const chips = document.querySelectorAll(
+              '[data-chips-for="' + category + '"] .chip.selected'
+            );
+            const label = header.querySelector('.selection-count');
+            label.textContent = chips.length > 0 ? '· ' + chips.length : '';
+          });
+      }
+
+      document
+        .getElementById('extraToggleBtn')
+        .addEventListener('click', () => {
+          alert(
+            'Extra opties zou hier de overige 4 categorieën onthullen (gebeurtenis, interventie, project, custom).'
+          );
+        });
+
+      // ============================================================
+      // FORWARD / BACK BUTTONS
+      // ============================================================
+      forwardBtn.addEventListener('click', () => {
+        if (currentStep === 'note') setStep('tags');
+        else if (currentStep === 'tags') completeFlow();
+      });
+
+      backBtn.addEventListener('click', () => {
+        if (currentStep === 'note') setStep('score');
+        else if (currentStep === 'tags') setStep('note');
+      });
+
+      // ============================================================
+      // END OF FLOW — close sheet, pulse today-card
+      // ============================================================
+      function completeFlow() {
+        // Write the entered values to the today-card display
+        updateTodayCardDisplay();
+
+        // Close the sheet
+        closeSheet();
+
+        // Pulse the today-card after the sheet has slid most of the way
+        setTimeout(() => {
+          todayCard.classList.add('pulsing');
+          setTimeout(() => todayCard.classList.remove('pulsing'), 400);
+        }, 200);
+      }
+
+      function updateTodayCardDisplay() {
+        if (scoreCommitted) {
+          todayScoreContent.textContent = String(scoreValue);
+          todayScoreContent.classList.remove('empty');
+        }
+        if (noteValue.trim().length > 0) {
+          todayNoteContent.textContent = noteValue.trim();
+          todayNoteContent.classList.remove('empty');
+        }
+        if (selectedTags.size > 0) {
+          const html = Array.from(selectedTags)
+            .map((tag) => '<span class="tag-chip">' + tag + '</span>')
+            .join('');
+          todayTagsContent.innerHTML =
+            '<div class="tags-display">' + html + '</div>';
+          todayTagsContent.classList.remove('empty');
+        }
+      }
+
+      // ============================================================
+      // SHEET OPEN / CLOSE
+      // ============================================================
+      function openSheet(startStep, opts) {
+        opts = opts || {};
+        editingPast = !!opts.past;
+        sheet.classList.toggle('past-day', editingPast);
+        if (opts.dateLabel) {
+          document.getElementById('sheetHeaderDate').textContent = opts.dateLabel;
+        } else {
+          document.getElementById('sheetHeaderDate').textContent =
+            'Donderdag 28 mei';
+        }
+        sheet.classList.remove('hidden');
+        backdrop.classList.remove('hidden');
+        setStep(startStep || 'score');
+      }
+
+      function closeSheet() {
+        sheet.classList.add('hidden');
+        backdrop.classList.add('hidden');
+        noteTextarea.blur();
+      }
+
+      backdrop.addEventListener('click', closeSheet);
+      sheetCloseBtn.addEventListener('click', closeSheet);
+
+      // Today-card region taps re-open at that specific step
+      document
+        .getElementById('todayScoreRegion')
+        .addEventListener('click', () => openSheet('score'));
+      document
+        .getElementById('todayNoteRegion')
+        .addEventListener('click', () => openSheet('note'));
+      document
+        .getElementById('todayTagsRegion')
+        .addEventListener('click', () => openSheet('tags'));
+
+      // Past-day card taps — open with surface-muted tint
+      document.querySelectorAll('.past-day-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          openSheet('score', {
+            past: true,
+            dateLabel: card.dataset.pastDate,
+          });
+        });
+      });
+
+      // ============================================================
+      // HANDLE DRAG-TO-DISMISS
+      // ============================================================
+      let handleDragStartY = 0;
+      let handleDragging = false;
+      const DISMISS_THRESHOLD_PX = 100;
+
+      sheetHandle.addEventListener('pointerdown', (event) => {
+        handleDragging = true;
+        handleDragStartY = event.clientY;
+        sheetHandle.setPointerCapture(event.pointerId);
+        sheet.style.transition = 'none';
+      });
+
+      sheetHandle.addEventListener('pointermove', (event) => {
+        if (!handleDragging) return;
+        const deltaY = Math.max(0, event.clientY - handleDragStartY);
+        sheet.style.transform = 'translateY(' + deltaY + 'px)';
+      });
+
+      function endHandleDrag(event) {
+        if (!handleDragging) return;
+        handleDragging = false;
+        if (sheetHandle.hasPointerCapture(event.pointerId)) {
+          sheetHandle.releasePointerCapture(event.pointerId);
+        }
+        sheet.style.transition = '';
+        const deltaY = event.clientY - handleDragStartY;
+        if (deltaY > DISMISS_THRESHOLD_PX) {
+          sheet.style.transform = '';
+          closeSheet();
+        } else {
+          sheet.style.transform = '';
+        }
+      }
+
+      sheetHandle.addEventListener('pointerup', endHandleDrag);
+      sheetHandle.addEventListener('pointercancel', endHandleDrag);
+
+      // ============================================================
+      // KEYBOARD: Escape closes
+      // ============================================================
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !sheet.classList.contains('hidden')) {
+          closeSheet();
+        }
+      });
+
+      // ============================================================
+      // iOS KEYBOARD HANDLING — visualViewport API
+      // When the soft keyboard rises, anchor the sheet to the visible
+      // viewport bottom so it stays above the keyboard.
+      // ============================================================
+      if (window.visualViewport) {
+        const adjustSheetForKeyboard = () => {
+          const offset =
+            window.innerHeight - window.visualViewport.height;
+          sheet.style.bottom = offset + 'px';
+        };
+        window.visualViewport.addEventListener(
+          'resize',
+          adjustSheetForKeyboard
+        );
+        window.visualViewport.addEventListener(
+          'scroll',
+          adjustSheetForKeyboard
+        );
+      }
+
+      // ============================================================
+      // AUTO-APPEAR on empty today
+      // ============================================================
+      // Wait one frame so the initial render isn't jumpy
+      requestAnimationFrame(() => {
+        if (todayScoreContent.classList.contains('empty')) {
+          openSheet('score');
+        }
+      });
+    </script>
+  </body>
+</html>

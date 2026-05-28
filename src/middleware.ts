@@ -28,9 +28,10 @@ export function middleware(request: NextRequest) {
 export const config = {
   // Run on every path EXCEPT the unauth surfaces:
   //   /login, /login/*           — login + verify UI (would loop otherwise)
+  //   /over, /over/*             — public landing / backer-recruitment page
   //   /api/auth/*                — auth endpoints handle their own auth flow
   //   /api/health                — Fly.io health check, no auth
   //   /_next/static, /_next/image — static assets
   //   /favicon.ico               — root favicon
-  matcher: ['/((?!api/auth|api/health|_next/static|_next/image|favicon\\.ico|login).*)'],
+  matcher: ['/((?!api/auth|api/health|_next/static|_next/image|favicon\\.ico|login|over).*)'],
 };

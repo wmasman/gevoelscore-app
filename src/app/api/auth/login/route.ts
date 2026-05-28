@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
   }
 
-  const sessionId = sessionStore.create({
+  const sessionId = await sessionStore.create({
     accessToken: result.value.accessToken,
     refreshToken: result.value.refreshToken,
     expiresAt: Date.now() + result.value.expiresInMs,

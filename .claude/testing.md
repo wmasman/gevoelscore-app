@@ -175,3 +175,61 @@ The runner is configured in `vitest.config.ts`. The TS config is `tsconfig.json`
 - **Skipped tests left in the suite.** `it.skip` is a TODO that the suite stops reminding you about. Delete or fix.
 - **Tests that depend on the current date / time / timezone without mocking.** Tomorrow's CI run will fail. Mock the clock.
 - **Tests that touch real network / real Directus production / real Google.** Stub the transport at the integration boundary, or run against an ephemeral local Directus instance.
+
+---
+
+## Process-state tests (added after 2026-05-28 session-restart incident)
+
+A class of bugs is invisible to component, route-handler, and even Playwright tests because they manifest only at **process boundaries** — what happens when state held in a module-singleton (a `Map`, a counter, a cache) disappears on restart while the *client* still believes that state exists.
+
+### The 2026-05-28 incident in one paragraph
+
+The home page redirected to `/login` only when the session cookie was *absent*. When the cookie was *present but the in-memory session store had no matching record* — exactly what happens on every Fly deploy or machine restart — the page rendered the shell with empty data and no signal. The user saw a calendar with no entries and reached for a state-management library. The bug was server-side: a missing branch in `page.tsx` plus a server-restart-volatile session store. No existing test exercised the "cookie + empty store" path.
+
+### The pattern to test for
+
+Whenever a feature relies on a module-singleton (or any other process-local state) that a *client cookie / token / id* points into, write a test that simulates the process being recycled:
+
+1. **Set up** state A (e.g. create a session, get the id back).
+2. **Simulate restart**: build a brand-new store instance with the same backing storage, OR clear the module-singleton and re-import. Module state should now be fresh.
+3. **Send the original client identifier** (cookie value, id, token) back in.
+4. **Assert**: either the state is reconstructed from durable storage (good — the persistence layer works), or the caller gets a deterministic "you have to re-authenticate" signal (acceptable — but the signal must be tested).
+
+The third option — *silent fall-through to an empty/default state* — is the bug pattern. Add an explicit assertion that the empty case redirects, errors, or otherwise signals.
+
+### Concrete recipes
+
+**Recipe 1 — server-component branch coverage (page-level guards)**
+
+Mock `next/headers`, `next/navigation`, and the relevant store / loader functions. Exercise each of these three cases as separate `it` blocks:
+
+- cookie absent → redirect
+- cookie present + store/loader returns null → redirect (this is the new branch)
+- cookie + valid state → render
+
+See `src/app/__tests__/page.test.ts` for the canonical example.
+
+**Recipe 2 — store implementation contract (cross-instance read)**
+
+In the store's unit-test file, include a test like:
+
+```ts
+it('a brand-new store instance backed by the same store reads sessions created by an earlier instance', async () => {
+  const a = build();
+  const id = await a.create({ ... });
+  // simulates: process restart, in-memory caches gone, durable storage intact
+  const b = build();
+  expect(await b.peek(id)).toEqual(expected);
+});
+```
+
+See `src/lib/auth/__tests__/directus-session-store.test.ts` for the canonical example.
+
+**Recipe 3 — Playwright "two pages, server restart in the middle" (deferred until v1.5)**
+
+The Vitest recipes above pin the contract at the boundary. A full integration test would: log in via the real frontend, kill the dev server, restart it, reload the same browser tab, assert the session still works. Cheap and worth doing once Playwright fixtures for "restart the dev server" exist — currently the cost of building that fixture exceeds the marginal value over recipes 1 and 2.
+
+### When this section applies
+
+Any time you reach for a `new Map()`, a `let counter = 0`, or a `let cache: T | null = null` at module scope, the question to ask is: *if the process were to restart right now, and the caller sent in their old identifier, what would my code do?* If the answer involves "silently render empty / silently return zero / silently treat as a fresh start", add a test from this section before shipping.
+
