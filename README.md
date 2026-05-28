@@ -2,7 +2,7 @@
 
 A personal Long COVID tracking app: one tap to log a daily "feeling score" (gevoelscore), optional note and tags, and a timeline view to spot patterns over time.
 
-**Status** (2026-05-27): domain layer + Directus backend + Next.js frontend with the full login feature all **deployed to Fly**. End-to-end smoke-tested. Daily-entry feature is next. See [docs/architecture/current-state.md](docs/architecture/current-state.md) for the full snapshot.
+**Status** (2026-05-28): domain layer + Directus backend + Next.js frontend with login + daily-entry feature (score row, note, tag picker, 30/90-day timeline with editable bottom sheet) all built, 495 vitest + 44 chromium e2e green. Login + Directus backend already deployed to Fly; the daily-entry build sits on `main` awaiting the next frontend push. See [docs/architecture/current-state.md](docs/architecture/current-state.md) for the full snapshot.
 
 ## Architecture at a glance
 

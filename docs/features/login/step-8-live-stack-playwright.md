@@ -33,7 +33,7 @@ Visit `https://gevoelscore-backend.fly.dev/admin` and log in with the admin acco
 
 - Settings → Access Control → Users → **+ Create User**
 - First name: e.g. `Gevoelscore Frontend` (anything)
-- Email: pick an inbox you control (e.g. `wmasman+gevoelscore@gmail.com` if your provider supports plus-addressing)
+- Email: pick an inbox you control (plus-addressing like `you+gevoelscore@example.com` works if your provider supports it; keeps the test user distinct from your admin account)
 - Password: strong random; **store in your password manager**
 - Role: `gevoelscore-frontend-api`
 - Status: Active

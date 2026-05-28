@@ -2,7 +2,7 @@
 
 **Feature:** The cardinal v1 product — one tap to log today's gevoelscore, optional note + tags, and a timeline that shows the patterns underneath. The audit-hardened auth layer is in place; this is what the auth was protecting.
 **Version:** v1
-**Status:** Planning 2026-05-27. Domain layer + Directus schema + 1,363 days of historical data already shipped.
+**Status:** **Built 2026-05-28** — Steps 0 through 6 (incl. 4b redesign) all committed on `main`. 495 vitest + 44 chromium e2e green. Awaiting frontend deploy to Fly. Manual walkthroughs (phone stopwatch, brainfog, a11y) deferred until after deploy so they run against the production build, not the dev server.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md), [app_brief_gevoelscore.md](../../app_brief_gevoelscore.md), [data-model.md](../../architecture/data-model.md), [queries-and-views.md](../../architecture/queries-and-views.md), [security-checklist](../../../.claude/security-checklist.md)
 
 ---

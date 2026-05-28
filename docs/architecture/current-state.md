@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-27 (initial infra + real-history import + tags + projects + M2M upgrade + tag provenance + JSON-array flattening + tag hierarchy + Postgres views + Next.js bootstrap + login feature 8/8 + **first frontend deploy to Fly**)
+**Last updated**: 2026-05-28 (daily-entry feature Steps 0–6 built + audit hardening 10/10 closed + design brief locked + warm-earth tokens + Step 4b row redesign + Step 5 4+4 tag picker + Step 6 timeline with bottom sheet). Frontend code on `main` is **37 commits ahead of the deployed image at `gevoelscore-frontend.fly.dev`** — next `fly deploy` ships the daily-entry feature.
 
 ---
 
@@ -27,7 +27,7 @@
 | `CORS_ENABLED` | `true`. |
 | `CORS_ORIGIN` | `https://gevoelscore-frontend.fly.dev` — exact match, no wildcards. |
 | `CORS_CREDENTIALS` | `true` — required for `httpOnly` cookie auth from the frontend. |
-| `ADMIN_EMAIL` | `wmasman@gmail.com` — the bootstrap admin user. |
+| `ADMIN_EMAIL` | The bootstrap admin user's email (stored in 1Password). |
 | `ADMIN_PASSWORD` | ⚠️ **Should be unset.** Set during bootstrap, used only for the first admin login. Remove via `fly secrets unset ADMIN_PASSWORD --app gevoelscore-backend` once you've changed it in the Directus admin UI. |
 
 **Volumes:**
@@ -75,11 +75,13 @@
 
 ### Auth
 
-| ID | Type | Name | Purpose |
-|----|------|------|---------|
-| `16f6f68b-e683-4dc9-8afc-e80695c4259d` | User | wmasman@gmail.com | Admin recovery user. 2FA enabled. |
-| `fdf942a5-b552-4c48-a04b-7d20f560ff4c` | Role | `gevoelscore-frontend-api` | What the Next.js frontend's Directus user will be assigned. No user assigned yet — that's a manual admin-UI step when wiring up the frontend. |
-| `2ba264ec-12e6-49c4-929a-6babe3a441e2` | Policy | `gevoelscore-frontend-policy` | Linked to the role above. Holds the 24 permission entries (6 collections × CRUD). |
+| Type | Name | Purpose |
+|------|------|---------|
+| User | `<admin>` | Admin recovery user. 2FA enabled. Email + UUID stored in 1Password under "gevoelscore — Directus admin". |
+| Role | `gevoelscore-frontend-api` | What the Next.js frontend's Directus user is assigned. |
+| Policy | `gevoelscore-frontend-policy` | Linked to the role above. Holds the 24 permission entries (6 collections × CRUD). |
+
+> Directus internal UUIDs are deliberately omitted from this public document. Look them up via the admin UI (Settings → Access Control) or `directus_users` / `directus_roles` / `directus_policies` table when needed.
 
 ### Permissions on `gevoelscore-frontend-policy`
 
@@ -157,12 +159,29 @@ directus/
 | `src/app/api/auth/login/route.ts` | 10 + Playwright | ✅ shipped — login step 4 |
 | `src/app/api/auth/login/verify/route.ts` | 7 + Playwright | ✅ shipped — login step 4 |
 | `src/app/api/auth/logout/route.ts` | 4 + Playwright | ✅ shipped — login step 4 |
+| `src/lib/domain/streak.ts` | 7 | ✅ shipped — daily-entry step 6 |
+| `src/lib/api/day-entries.ts` (SDK wrapper) | 11 | ✅ shipped — daily-entry steps 1+3 |
+| `src/lib/api/tags.ts` (SDK wrapper) | 2 | ✅ shipped — daily-entry step 5 |
+| `src/hooks/use-day-entry-upsert.ts` | 11 | ✅ shipped — daily-entry step 4 |
+| `src/app/api/day-entries/today/route.ts` | Playwright API | ✅ shipped — daily-entry step 1 |
+| `src/app/api/day-entries/route.ts` (range) | Playwright API | ✅ shipped — daily-entry step 1 |
+| `src/app/api/day-entries/[date]/route.ts` (PUT upsert) | Playwright API | ✅ shipped — daily-entry step 3 |
+| `src/components/score-row.tsx` (was score-wheel) | 13 | ✅ shipped — daily-entry steps 4 + 4b |
+| `src/components/save-status.tsx` | 7 | ✅ shipped — daily-entry steps 4 + 4b |
+| `src/components/note-field.tsx` | 5 | ✅ shipped — daily-entry step 5 |
+| `src/components/tag-category-list.tsx` | 9 | ✅ shipped — daily-entry step 5 |
+| `src/components/day-entry-editor.tsx` | 3 | ✅ shipped — daily-entry step 5 |
+| `src/components/today-shell.tsx` | 5 | ✅ shipped — daily-entry steps 2 + 4b + 6 |
+| `src/components/score-chart.tsx` | 4 | ✅ shipped — daily-entry step 6 |
+| `src/components/timeline-view.tsx` | 4 | ✅ shipped — daily-entry step 6 |
+| `src/components/day-detail-sheet.tsx` | (covered by timeline-view tests) | ✅ shipped — daily-entry step 6 |
 
-**Test suite**:
-- **Vitest**: 323/323 passing (domain + auth library + route handlers)
-- **Playwright**: 17 passing / 2 skipped (rate-limit integration deferred to Step 7 — dev mode resets module state; Vitest covers it directly)
+**Test suite** (as of 2026-05-28):
+- **Vitest**: 495/495 passing (domain + auth library + route handlers + daily-entry components/hooks/SDK)
+- **Playwright (chromium)**: 44/45 passing (the 1 failure is in the parallel `/over` public-landing-page work, out of daily-entry scope)
+- **Live-stack Playwright**: unchanged from login step 8 — not yet extended for daily-entry routes
 - **TypeScript**: `tsc --noEmit` clean
-- **ESLint**: clean (flat config, `next/core-web-vitals` + `next/typescript`)
+- **ESLint**: clean (flat config + jsx-a11y + security + no-secrets)
 - **`npm audit`**: 2 moderate findings in `postcss` bundled inside Next.js (not actionable — awaits upstream Next patch)
 
 ---
@@ -171,19 +190,24 @@ directus/
 
 In the order they should be tackled:
 
-1. **Login feature steps 5-7** ([docs/features/login/](../features/login/)) — `/login` + `/login/verify` + `/login/2fa-setup` UI pages, the `middleware.ts` for protected-route gating, then Playwright e2e against the live stack.
-2. **Create the frontend-app Directus user** (manual admin UI step — needed before step 7 of login can run live)
-   - Settings → Access Control → Users → Create
-   - Assign role `gevoelscore-frontend-api`
-   - Set a password (random, store in password manager)
-   - Enable 2FA
-3. **First `fly deploy` of the frontend** — Dockerfile + fly.toml are ready; needs the frontend Directus user wired and a sanity check the e2e suite passes against staging.
-4. **Apply the Postgres views** (one-time, deferred until a consumer exists)
+1. **Deploy the daily-entry frontend** — `main` is 37 commits ahead of the deployed image. `flyctl deploy` from the repo root rebuilds the standalone Next.js image and rolls out. Backend is unchanged; no Directus schema migration needed.
+2. **Manual walkthroughs** post-deploy (cardinal-principle gates):
+   - Phone stopwatch: open → tap a 7 → close ≤ 5s on a good-day simulation
+   - Brainfog simulation: 2-second hesitation between intention and action — flow must tolerate
+   - One-handed thumb reach across the horizontal score row
+   - Keyboard-only flow through row → note → tag headers → expand → chip toggle
+   - VoiceOver / TalkBack announces score changes, tag toggles, save status correctly
+3. **Apply the Postgres views** (one-time, deferred until a consumer exists)
    - Paste each `directus/scripts/views/*.sql` file into the Neon Console SQL editor, OR run with `psql $env:DB_CONNECTION_STRING -f <file>` if psql is installed.
    - Optional: register them as read-only collections in the Directus admin UI so they show up in the data studio.
-5. **Implement daily-entry screen** (the cardinal-principle UI work) — needs login feature done first
-6. **Wire the CSV import to Directus** (parser is done; needs upsert glue)
-7. **Implement recent-missed-days, calendar, timeline, settings** in order
+4. **Track A3 compliance** ([docs/plans/2026-05-27-audit-remediation-and-standards-enforcement.md](../plans/2026-05-27-audit-remediation-and-standards-enforcement.md))
+   - `directus_auth_events` collection for NEN 7510 §12.4 audit trail (route handlers carry `TODO(I3)` markers at the insertion points)
+   - GDPR Art 9 special-category data declaration (health data)
+   - Neon at-rest encryption verification record
+5. **Track B4** — wire `npm run verify` to GitHub Actions CI (needs `git push origin main` first; currently no `.github/workflows/`)
+6. **Wire the CSV import UI to Directus** (parser shipped; admin UI form is the gap)
+7. **CSV / JSON export endpoint** + delete-all (cardinal "user-owned data" requirement; separate feature)
+8. **Recent-missed-days, calendar grid, settings** screens (per [REQUIREMENTS.md](../REQUIREMENTS.md#v1-screens))
 
 ---
 

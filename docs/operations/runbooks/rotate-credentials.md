@@ -25,7 +25,7 @@ The token used by `directus/scripts/*.mjs`.
 
 ## Admin user password
 
-The password for logging into the Directus admin UI as `wmasman@gmail.com`.
+The password for logging into the Directus admin UI as the bootstrap admin user (email stored in 1Password under "gevoelscore — Directus admin").
 
 1. Log into Directus admin UI
 2. User Profile → **Password** → set new password
@@ -45,10 +45,13 @@ If you lost your authenticator app:
 **Option A: you still have a working static token.** Use the API to clear `tfa_secret`:
 
 ```powershell
+# Replace <admin-user-uuid> with the bootstrap admin's UUID (look up via
+# Directus admin UI → Settings → Access Control → Users, or via the
+# directus_users table).
 curl -X PATCH -H "Authorization: Bearer <static token>" `
   -H "Content-Type: application/json" `
   -d '{"tfa_secret":null}' `
-  https://gevoelscore-backend.fly.dev/users/16f6f68b-e683-4dc9-8afc-e80695c4259d
+  https://gevoelscore-backend.fly.dev/users/<admin-user-uuid>
 ```
 
 Then log into admin UI, re-pair 2FA in your profile.
@@ -56,7 +59,8 @@ Then log into admin UI, re-pair 2FA in your profile.
 **Option B: no static token either.** Open the Neon SQL editor (console.neon.tech → gevoelscore-db → SQL Editor) and run:
 
 ```sql
-UPDATE directus_users SET tfa_secret = NULL WHERE email = 'wmasman@gmail.com';
+-- Replace <admin-email> with the bootstrap admin's email (from 1Password).
+UPDATE directus_users SET tfa_secret = NULL WHERE email = '<admin-email>';
 ```
 
 Then log in with password, re-pair 2FA.
