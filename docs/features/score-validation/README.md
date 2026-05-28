@@ -60,7 +60,7 @@ AC1 will use `it.each` over `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` to keep the ten va
 | One-tap entry | Enables it | Validation result drives whether the tap "took" — fast enough to be invisible to the user |
 | Sub-10-second flow | Enables it | Synchronous, no I/O, sub-millisecond — adds zero to the budget |
 | Brainfog-friendly | Enables it | Discriminated error type means the UI can show "only whole numbers 1–10" instead of "invalid", which helps on a 4-out-of-6 day |
-| No notifications / ads / analytics | N/A | No UI, no network, no logging |
+| No unsolicited notifications / ads / analytics | N/A | No UI, no network, no logging |
 | User-owned data | Enables it | Rejects bad input at the domain boundary before it reaches Directus |
 | Export / delete still works | N/A | No persisted data introduced |
 

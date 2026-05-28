@@ -19,7 +19,7 @@ Before opening a PR or issue, read [README.md](README.md) and [docs/REQUIREMENTS
 - AI / chat features inside the app
 - Symptom encyclopedia or medical-advice content
 - Analytics, tracking, ad code
-- Notifications beyond the one configurable end-of-day reminder
+- Unsolicited notifications (default-on reminders, re-engagement push, marketing). Opt-in reminders are allowed — currently scoped to the v2 end-of-day score reminder.
 
 ## Code style
 

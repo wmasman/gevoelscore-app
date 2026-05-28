@@ -67,7 +67,7 @@ Walk each of the 6 cardinal principles. State the impact and how the design stay
 | One-tap entry | e.g. "adds a chip-row below score" | "score still saves on first tap; chip-row is below and optional" |
 | Sub-10-second flow | e.g. "adds ~1s if tags are used" | "tags only render if user has tagged before; defaults to collapsed for new users" |
 | Brainfog-friendly | | |
-| No notifications / ads / analytics | | |
+| No unsolicited notifications / ads / analytics | | |
 | User-owned data | | (new data stays in author's Directus; covered by CSV / JSON export and full-delete) |
 | Export / delete still works | | |
 

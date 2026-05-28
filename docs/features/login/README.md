@@ -89,7 +89,7 @@ Server-side logic is unit-tested with `@directus/sdk` mocked at the module bound
 | One-tap entry | Login is the gate — happens before any daily-entry tap. Out-of-flow but slow login still kills the experience. | ≤ 5s budget for login + 2FA; autofill enabled; auto-submit on 6 digits |
 | Sub-10-second flow | Independent budget — login doesn't count against the daily ≤ 10s | Each screen ≤ 2.5s |
 | Brainfog-friendly | TOTP input is the friction point on a brainfog day | Large touch targets; numeric keyboard; auto-submit; no retry counter shown |
-| No notifications / ads / analytics | N/A | No telemetry deps; no PostHog |
+| No unsolicited notifications / ads / analytics | N/A | No telemetry deps; no PostHog |
 | User-owned data | Auth goes to the author's own Directus | Cookie scoped to the frontend origin |
 | Export / delete still works | Logout doesn't touch user data; just kills the session | |
 

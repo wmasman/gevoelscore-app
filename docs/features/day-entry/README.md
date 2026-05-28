@@ -103,7 +103,7 @@ Each line becomes one or more `it` blocks. Sub-divided by step.
 | One-tap entry | Enables it | All validators run synchronously, sub-ms |
 | Sub-10-second flow | Enables it | No I/O, no async; pure type-narrowing |
 | Brainfog-friendly | Enables it | Specific error codes mean the UI can show specific feedback |
-| No notifications / ads / analytics | N/A | Pure logic |
+| No unsolicited notifications / ads / analytics | N/A | Pure logic |
 | User-owned data | Enables it | Bad data rejected at the boundary before reaching Directus |
 | Export / delete still works | N/A | No persisted state introduced |
 

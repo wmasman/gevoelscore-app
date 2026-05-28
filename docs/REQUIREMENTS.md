@@ -12,7 +12,7 @@ These are hard constraints. A v1 that violates them is a failure regardless of f
 2. **Sub-10-second goal**: open app, log score, optionally type a note, close. ≤ 10 seconds on a good day.
 3. **No friction in the main flow**: dropdowns, sliders, required tags or multi-step forms on the daily screen are forbidden.
 4. **Low cognitive load**: usable on a "4-out-of-6 day" with brainfog. No flashing colors, no unnecessary animations, no sound.
-5. **No notifications, ads, analytics, or tracking** (the optional end-of-day reminder is v2 and silent).
+5. **No unsolicited notifications, ads, analytics, or tracking.** Reminders exist only as explicit user opt-in — the canonical example is the v2 end-of-day score reminder: off-by-default, silent, at most once per day, observational copy, never engagement-framed. Spec lives in [technisch_document.md](technisch_document.md#end-of-day-reminder) and the design tone is locked in [design/brief.md](design/brief.md#allowed-nuances).
 6. **User-owned data**: data lives on infrastructure the author controls (self-hosted Directus + Postgres). No third-party telemetry, no data sold or shared. Full export and full delete are first-class features. _(Note: this principle changed from the original "local-first" framing when the architecture pivoted to cloud-backed — see [ADR 0002](decisions/0002-pwa-with-directus-backend.md).)_
 
 ---

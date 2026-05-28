@@ -177,7 +177,7 @@ Each step follows the strict RED → GREEN → REFACTOR loop via `/build-step` w
 | One-tap entry | This *is* the principle — score tap saves the day | No "save" button; no confirmation modal; one HTTP call |
 | Sub-10-second flow | The thing that gets measured | Stopwatch at end of every step's walkthrough |
 | Brainfog-friendly | Daily reality | ≥ 44px targets; high contrast; legible default font size; visible error state |
-| No notifications / ads / analytics | Enforced | ESLint `no-restricted-imports` blocks Sentry/PostHog/Vercel Analytics |
+| No unsolicited notifications / ads / analytics | Enforced | ESLint `no-restricted-imports` blocks Sentry/PostHog/Vercel Analytics |
 | User-owned data | Directus on Fly + Neon | No third-party endpoints in the network panel |
 | Export / delete still works | Deferred but unblocked | Schema unchanged; export endpoint can be added without touching this feature |
 

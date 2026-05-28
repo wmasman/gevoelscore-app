@@ -174,7 +174,7 @@ Which of the 6 cardinal principles this feature touches, and how it stays inside
 - One-tap entry — does this affect the daily screen? If yes, how do we preserve "one tap = done"?
 - Sub-10-second flow — added screens / interactions and their time cost
 - Brainfog-friendly — tap target size, screen depth, decisions required
-- No notifications / ads / analytics — dependencies introduced; surfacing of any nudges
+- No unsolicited notifications / ads / analytics — dependencies introduced; any user-opt-in reminder this adds meets the opt-in-reminder constraints in [design/brief.md](../../docs/design/brief.md#allowed-nuances)
 - User-owned data — new data lives in self-hosted Directus; no third-party telemetry
 - Export / delete still works — new data covered by CSV / JSON export and full-wipe
 
@@ -335,7 +335,7 @@ Walk every step and the README against each of the 6 cardinal principles from [C
 - [ ] **Sub-10-second flow**: total time-on-screen for a typical daily entry stays under 10s with this feature merged. Estimated time cost per added interaction is documented.
 - [ ] **No friction on main flow**: no required fields, no dropdowns, no sliders, no modal dialogs on the daily screen.
 - [ ] **Brainfog-friendly**: tap targets are large enough for accidental-press tolerance; no screen requires more than one decision; copy is short and unambiguous; no animations or color flashes added.
-- [ ] **No notifications / ads / analytics / tracking**: no telemetry deps added; no notifications in v1; if v2 notifications, they meet the silent-and-conditional spec from technisch_document.md.
+- [ ] **No unsolicited notifications / ads / analytics / tracking**: no telemetry deps added; no notifications in v1; any reminder added (v2+) is opt-in via Settings and meets both the silent-and-conditional spec from [technisch_document.md](../../docs/technisch_document.md#end-of-day-reminder) and the opt-in-reminder constraints in [design/brief.md](../../docs/design/brief.md#allowed-nuances).
 - [ ] **User-owned data**: new data lives in the author's self-hosted Directus instance; no third-party storage / sync introduced; CSV / JSON export and full-delete still work for the new fields.
 
 **Output**: HIGH / MEDIUM / LOW findings with specific fixes. Fix all HIGH before proceeding.
