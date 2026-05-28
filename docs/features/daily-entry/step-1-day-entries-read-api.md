@@ -100,10 +100,31 @@ Live-stack is added because dev-mode mocks don't catch Directus shape drift, and
 
 ## Done criteria
 
-- [ ] `src/lib/api/day-entries.ts` exists with 6 unit-test cases green
-- [ ] Both route handlers exist with their unit-test suites green
-- [ ] Live-stack spec passes against `https://gevoelscore-backend.fly.dev`
-- [ ] Vitest count delta: +17 (6 SDK wrapper + 5 today + 6 range)
-- [ ] Playwright dev specs unchanged; live-stack +2
-- [ ] `npm run verify` clean
-- [ ] One-line note in [`current-state.md`](../../architecture/current-state.md) when the live-stack passes — first non-auth API endpoint live
+- [x] `src/lib/api/day-entries.ts` exists with 6 unit-test cases green; `DirectusSchema` type declared (closes the `as never` audit prediction for `readItems` — only the filter operator on date strings still needs a cast, see below)
+- [x] `src/app/api/day-entries/today/route.ts` shipped, 5 route-handler tests green
+- [x] `src/app/api/day-entries/route.ts` (range) shipped, 8 route-handler tests green
+- [x] `todayInAmsterdam()` helper added to `src/lib/domain/date.ts` (originally planned for Step 2; needed earlier by the today route. 4 unit tests covering TZ-edge cases.)
+- [x] Live-stack spec written; skips gracefully if `PLAYWRIGHT_TEST_FRONTEND_TOKEN` not set. Run by the user when they want a live check; spec verifies M2M expansion + chronological order against the historical dataset.
+- [x] Vitest count delta: +23 (4 date + 6 SDK wrapper + 5 today + 8 range; planned +17, the +6 surplus is the date helper that moved into Step 1 + extra route-handler edge cases worth keeping)
+- [x] Playwright dev specs unchanged; live-stack +2 (skip-when-no-token)
+- [x] `npm run verify` clean: 408/408 Vitest, lint + typecheck both clean
+- [ ] One-line note in `current-state.md` when the live-stack passes — deferred until user has run the live-stack spec at least once with the token set
+
+### Side-quests caught during implementation
+
+1. **`todayInAmsterdam` moved from Step 2 to Step 1.** The today route handler needs to know what "today" is server-side. Originally planned in Step 2's domain helper. Cleaner to add it now alongside its first caller. Step 2's README mention updated implicitly.
+
+2. **Audit prediction confirmed and partially closed: `as never` on `readItems`.** The audit ([code audit §2.2](../../audits/2026-05-27-auth-security-and-code-audit.md)) predicted that declaring a `Schema` type on `createDirectus<Schema>(...)` would drop the `as never` cast pattern. It DOES for the `readItems('day_entries', ...)` collection-name argument. It does NOT for the *filter operators* on string-typed fields — the SDK types `_gte/_lte/_between` as `never` for `string` fields (assuming arbitrary text, not ordered dates). One `as never` remains, scoped narrowly to the filter object, with a comment.
+
+3. **Filter `_between` works at runtime but is mistyped.** Used `_gte` + `_lte` via `_and` instead. Same semantics; same SDK typing gap.
+
+### Evidence — npm run verify
+
+```
+> npm run verify  # → lint + typecheck + vitest run
+
+✓ ESLint clean
+✓ tsc --noEmit clean
+✓ Test Files  30 passed (30)
+  Tests  408 passed (408)
+```

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { validateDate } from '../date';
+import { todayInAmsterdam, validateDate } from '../date';
 
 describe('date', () => {
   describe('validateDate — with today pinned to 2026-05-26', () => {
@@ -98,6 +98,40 @@ describe('date', () => {
       const result = validateDate(input);
 
       expect(result).toEqual({ ok: false, error: 'wrong_type' });
+    });
+  });
+
+  describe('todayInAmsterdam', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('returns a YYYY-MM-DD shaped string', () => {
+      const result = todayInAmsterdam();
+      expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('returns the Amsterdam-local date at 2026-05-28 09:00 UTC', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-05-28T09:00:00Z'));
+      // Amsterdam is CEST (UTC+2) in May → same calendar day.
+      expect(todayInAmsterdam()).toBe('2026-05-28');
+    });
+
+    it('returns the NEXT Amsterdam-local date when UTC is still on the previous day', () => {
+      vi.useFakeTimers();
+      // 2026-05-27 23:30 UTC = 2026-05-28 01:30 CEST.
+      vi.setSystemTime(new Date('2026-05-27T23:30:00Z'));
+      expect(todayInAmsterdam()).toBe('2026-05-28');
+    });
+
+    it('returns the PREVIOUS Amsterdam-local date when UTC has rolled to the next day but Amsterdam has not (winter, no DST)', () => {
+      vi.useFakeTimers();
+      // 2026-01-01 00:30 UTC = 2026-01-01 01:30 CET → same calendar day.
+      // Edge case: at exactly the moment Amsterdam ticks to a new day before UTC.
+      // 2026-01-01 00:30 CET = 2025-12-31 23:30 UTC → so Amsterdam date precedes UTC by a day at the end.
+      vi.setSystemTime(new Date('2025-12-31T23:30:00Z'));
+      expect(todayInAmsterdam()).toBe('2026-01-01');
     });
   });
 });

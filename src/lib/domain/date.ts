@@ -47,3 +47,18 @@ function todayLocalString(): string {
   const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+// Returns the current YYYY-MM-DD in Europe/Amsterdam. The user is in
+// Amsterdam — codifying the timezone here means server clock changes (Fly
+// is UTC) don't shift what "today" means. Used by the /api/day-entries/today
+// route handler and the daily-entry UI.
+//
+// 'sv-SE' locale produces YYYY-MM-DD natively, avoiding manual zero-padding.
+export function todayInAmsterdam(): string {
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Amsterdam',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
