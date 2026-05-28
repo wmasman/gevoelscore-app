@@ -6,6 +6,9 @@ import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import type { Tag } from '@/lib/domain/tag';
 
+// NoteField + TagCategoryList still call useDayEntryUpsert internally
+// (per Step 4b 4b.4 — only the *score* hook was hoisted to TodayShell).
+// We mock it so their hook instances are inert in this test.
 const hookMocks = vi.hoisted(() => ({
   save: vi.fn(),
 }));
@@ -55,63 +58,60 @@ const FILLED_ENTRY: DayEntry = {
   updated_at: '2026-05-28T08:00:00.000Z',
 };
 
+function renderEditor(props: Partial<React.ComponentProps<typeof DayEntryEditor>> = {}) {
+  const scoreSave = vi.fn().mockResolvedValue(undefined);
+  return {
+    scoreSave,
+    ...render(
+      <DayEntryEditor
+        date="2026-05-28"
+        initialEntry={null}
+        allTags={ALL_TAGS}
+        scoreSave={scoreSave}
+        scoreStatus="idle"
+        {...props}
+      />,
+    ),
+  };
+}
+
 describe('<DayEntryEditor />', () => {
   beforeEach(() => {
+    Element.prototype.scrollTo = vi.fn() as unknown as Element['scrollTo'];
     hookMocks.save.mockReset();
     hookMocks.save.mockResolvedValue(undefined);
   });
 
   afterEach(cleanup);
 
-  it('renders wheel + note + tag picker in order', () => {
-    render(
-      <DayEntryEditor
-        date="2026-05-28"
-        initialEntry={FILLED_ENTRY}
-        allTags={ALL_TAGS}
-      />,
-    );
+  it('renders row + note + tag picker in order', () => {
+    renderEditor({ initialEntry: FILLED_ENTRY });
 
-    const wheel = screen.getByRole('listbox', { name: /score/i });
+    const row = screen.getByRole('listbox', { name: /score/i });
     const textarea = screen.getByRole('textbox', { name: /notitie/i });
     const tagsHeading = screen.getByRole('heading', { level: 2, name: /tags/i });
 
-    // DOM order check: wheel before textarea before tags section.
-    const wheelIdx = Array.from(document.body.querySelectorAll('*')).indexOf(wheel);
+    // DOM order check: row before textarea before tags section.
+    const rowIdx = Array.from(document.body.querySelectorAll('*')).indexOf(row);
     const textareaIdx = Array.from(document.body.querySelectorAll('*')).indexOf(textarea);
     const tagsIdx = Array.from(document.body.querySelectorAll('*')).indexOf(tagsHeading);
-    expect(wheelIdx).toBeLessThan(textareaIdx);
+    expect(rowIdx).toBeLessThan(textareaIdx);
     expect(textareaIdx).toBeLessThan(tagsIdx);
   });
 
   it('when initialEntry === null, note + tag headers are disabled', () => {
-    render(
-      <DayEntryEditor
-        date="2026-05-28"
-        initialEntry={null}
-        allTags={ALL_TAGS}
-      />,
-    );
+    renderEditor({ initialEntry: null });
 
     expect(screen.getByRole('textbox', { name: /notitie/i })).toBeDisabled();
-    // Every category header is a button; check the mentaal one is disabled.
     expect(screen.getByRole('button', { name: /mentaal/i })).toBeDisabled();
   });
 
-  it('the wheel\'s first save enables note + tags without server re-fetch', async () => {
+  it('the row\'s first save enables note + tags without server re-fetch', async () => {
     const user = userEvent.setup();
-    render(
-      <DayEntryEditor
-        date="2026-05-28"
-        initialEntry={null}
-        allTags={ALL_TAGS}
-      />,
-    );
+    renderEditor({ initialEntry: null });
 
-    // Initially disabled.
     expect(screen.getByRole('textbox', { name: /notitie/i })).toBeDisabled();
 
-    // Tap a score on the wheel → the composite should flip to editable.
     await user.click(screen.getByRole('option', { name: '7' }));
 
     expect(screen.getByRole('textbox', { name: /notitie/i })).not.toBeDisabled();

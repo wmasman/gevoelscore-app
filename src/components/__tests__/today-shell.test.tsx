@@ -5,8 +5,8 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { TodayShell } from '../today-shell';
 import type { DayEntry } from '@/lib/domain/day-entry';
 
-// The wheel embedded in TodayShell uses useDayEntryUpsert → fetch. We
-// don't exercise interactions here (score-wheel.test.tsx covers that);
+// The row embedded in TodayShell uses useDayEntryUpsert → fetch. We
+// don't exercise interactions here (score-row.test.tsx covers that);
 // just stub fetch so the render path is clean.
 
 function sampleEntry(score: number): DayEntry {
@@ -48,18 +48,30 @@ describe('<TodayShell />', () => {
     );
   });
 
-  it('composes the ScoreWheel — passes initialScore from entry', () => {
+  it('composes the ScoreRow — passes initialScore from entry', () => {
     render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} allTags={[]} />);
-    const wheel = screen.getByRole('listbox', { name: /score/i });
-    expect(wheel).toHaveAttribute('data-phase', 'set');
-    const selected = within(wheel).getByRole('option', { selected: true });
+    const row = screen.getByRole('listbox', { name: /score/i });
+    expect(row).toHaveAttribute('data-phase', 'set');
+    const selected = within(row).getByRole('option', { selected: true });
     expect(selected).toHaveTextContent('7');
   });
 
-  it('composes the ScoreWheel — null entry yields idle phase', () => {
+  it('composes the ScoreRow — null entry yields idle phase', () => {
     render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
-    const wheel = screen.getByRole('listbox', { name: /score/i });
-    expect(wheel).toHaveAttribute('data-phase', 'idle');
+    const row = screen.getByRole('listbox', { name: /score/i });
+    expect(row).toHaveAttribute('data-phase', 'idle');
+  });
+
+  it('renders an H1 date and a SaveStatus slot side-by-side in the header (Step 4b AC5)', () => {
+    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
+    const heading = screen.getByRole('heading', { level: 1 });
+    // The H1 lives inside a flex header container. The SaveStatus slot is
+    // a sibling — in idle state SaveStatus renders nothing, so we assert
+    // the header structure rather than the indicator's presence.
+    const header = heading.closest('header');
+    expect(header).not.toBeNull();
+    expect(header).toHaveClass(/flex/);
+    expect(header).toHaveClass(/justify-between/);
   });
 
   it('renders the 4 primary category-header buttons + an "Extra opties" toggle', () => {
