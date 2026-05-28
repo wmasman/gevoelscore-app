@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { TodayShell } from '../today-shell';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { TAG_CATEGORIES } from '@/lib/domain/tag-category';
+
+// The wheel embedded in TodayShell uses useDayEntryUpsert → fetch. We
+// don't exercise interactions here (score-wheel.test.tsx covers that);
+// just stub fetch so the render path is clean.
 
 function sampleEntry(score: number): DayEntry {
   return {
@@ -27,7 +31,16 @@ function sampleEntry(score: number): DayEntry {
 }
 
 describe('<TodayShell />', () => {
-  afterEach(cleanup);
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) }),
+    );
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    cleanup();
+  });
 
   it('renders the date heading in Dutch', () => {
     render(<TodayShell date="2026-05-27" entry={null} />);
@@ -36,40 +49,18 @@ describe('<TodayShell />', () => {
     );
   });
 
-  it('renders a 10-item wheel column (1..10)', () => {
-    render(<TodayShell date="2026-05-28" entry={null} />);
-    const wheel = screen.getByRole('listbox', { name: /score/i });
-    const items = within(wheel).getAllByRole('option');
-    expect(items).toHaveLength(10);
-    expect(items.map((el) => el.textContent)).toEqual([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-    ]);
-  });
-
-  it('marks the centred value as "set" when an entry exists for that day', () => {
+  it('composes the ScoreWheel — passes initialScore from entry', () => {
     render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} />);
     const wheel = screen.getByRole('listbox', { name: /score/i });
-    const set = within(wheel).getByRole('option', { selected: true });
-    expect(set).toHaveTextContent('7');
+    expect(wheel).toHaveAttribute('data-phase', 'set');
+    const selected = within(wheel).getByRole('option', { selected: true });
+    expect(selected).toHaveTextContent('7');
   });
 
-  it('marks the wheel as idle (no aria-selected) when no entry exists; centred value defaults to 5', () => {
+  it('composes the ScoreWheel — null entry yields idle phase', () => {
     render(<TodayShell date="2026-05-28" entry={null} />);
     const wheel = screen.getByRole('listbox', { name: /score/i });
-    // No item should be aria-selected in idle.
-    const selected = within(wheel).queryAllByRole('option', { selected: true });
-    expect(selected).toHaveLength(0);
-    // Centre is 5 — exposed via data-default-score for Step 4's scroll-into-view.
-    expect(wheel).toHaveAttribute('data-default-score', '5');
+    expect(wheel).toHaveAttribute('data-phase', 'idle');
   });
 
   it('renders the 8 collapsed category-header buttons in the locked enum order', () => {

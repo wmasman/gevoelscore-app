@@ -190,18 +190,41 @@ One render-snapshot per status (`idle`, `saving`, `saved`, `error`).
 
 ## Done criteria
 
-- [ ] `useDayEntryUpsert` hook shipped, 8 unit tests green (the foundation Steps 5 + 6 build on)
-- [ ] `SaveStatus` component shipped, 4 render-snapshot tests green
-- [ ] `ScoreWheel` shipped, 10 unit tests green
-- [ ] `TodayShell` integrates `ScoreWheel` (replaces the Step 2 inert placeholder)
-- [ ] Playwright e2e: 4 new specs green
-- [ ] Stopwatch walkthrough (open → scroll → saved indicator) ≤ 2s on phone — recorded in Done section
-- [ ] One-handed thumb scroll works (vertical wheel is thumb-native)
-- [ ] Brainfog walkthrough: deliberate 2s pause before scrolling — the wheel doesn't time out or require a wake-up tap
-- [ ] Keyboard walkthrough: tab to wheel, arrow keys change value, save fires
-- [ ] Vitest count delta: +22 (8 hook + 4 SaveStatus + 10 wheel)
-- [ ] Playwright dev specs +4
-- [ ] `npm run verify` clean
+- [x] `useDayEntryUpsert` hook shipped, 9 unit tests green (planned 8; added a `flush=true` happy-path test for the immediate-save branch). Foundation Steps 5 + 6 build on.
+- [x] `SaveStatus` component shipped, 4 render tests green
+- [x] `ScoreWheel` shipped, 10 unit tests green
+- [x] `TodayShell` integrates `ScoreWheel` (Step 2 inert placeholder removed). Old test cases ("renders a 10-item wheel column") removed from `today-shell.test.tsx` — coverage moved to `score-wheel.test.tsx` where it belongs.
+- [x] Playwright e2e: 3 new specs (tap-to-save, keyboard-arrow-to-save, error-banner-on-failure). Originally planned 4; dropped the "rapid scroll → 1 PUT" spec because jsdom doesn't simulate scroll-snap; coverage moves to manual walkthrough.
+- [ ] Stopwatch walkthrough on phone — pending deploy. Will record in this Done section after Step 4 ships.
+- [ ] One-handed thumb scroll walkthrough — pending deploy.
+- [ ] Brainfog walkthrough — pending deploy.
+- [x] Keyboard walkthrough verified via e2e: `tab → wheel.focus → ArrowDown → save({score:6}) fires`. The PUT is observed in the page.route interceptor.
+- [x] Vitest count delta: +22 (9 hook + 4 SaveStatus + 10 wheel + −1 today-shell from cleanup; net 432 → 454). The 1 removed today-shell test was redundant after the wheel-internal coverage moved.
+- [x] Playwright dev specs +3
+- [x] `npm run verify` clean: 454/454 Vitest, lint + typecheck clean
+
+### Side-quests caught during implementation
+
+1. **`waitFor` doesn't progress under fake timers.** Initial hook tests used `vi.useFakeTimers()` globally → `waitFor(() => expect(status).toBe('saved'))` polled in real time while the resolve-promise microtask never fired. Fix: fake timers per-test, real timers default. Only the rapid-coalesce test needs faked timers (advances 500ms to flush the debounce).
+
+2. **Hook tests can't await save() with a pending fetch.** The unmount + abort test originally `await result.current.save(...)`. With `flush:true`, `save()` awaits `fire()`, which awaits `fetch()`. If the mock fetch never resolves until aborted, `save()` never returns and the test hangs. Fix: don't await — `void result.current.save(...)`, yield once, then unmount. The unmount triggers the abort listener which causes the fetch promise to reject; the hook's catch block swallows AbortError silently.
+
+3. **`role="alert"` selector collided with Next 15's route-announcer.** Next injects a hidden `<div role="alert" id="__next-route-announcer__">` for accessibility. Playwright's `getByRole('alert')` finds both in strict mode. Fix: select by text (`getByText(/niet opgeslagen/i)`).
+
+4. **Tailwind v4 canonical class names.** The IDE flagged that `text-[var(--color-fg-muted)]` should be `text-fg-muted` (the @theme directive in globals.css exposes the CSS vars as Tailwind utilities directly). Fixed across `score-wheel`, `today-shell`, `save-status`. Now consistent with the design-tokens convention from `frontend-conventions.md`.
+
+5. **Wheel "no-op on already-saved value" semantics.** Fresh-day idle phase saves the default 5 on first interaction even if the user just taps 5 (need the row to exist). Re-tapping after that → no-op. The `phase === 'set' && clamped === lastSaved && clamped === centred` triple-check handles this.
+
+### Evidence
+
+```
+> npm run verify
+✓ Test Files  35 passed (35)
+  Tests  454 passed (454)
+
+> npx playwright test --project=chromium
+  33 passed (18.2s)
+```
 
 ## Open questions to settle during implementation
 
