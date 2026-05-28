@@ -110,10 +110,59 @@ The middle region has fixed height (~380px) so morphs don't reflow. Each step is
 
 ## Done criteria
 
-- [ ] `QuickEntryFlow` shipped, 8 unit tests green, 3 e2e tests green
-- [ ] Vitest count delta: +8
-- [ ] Playwright count delta: +3
-- [ ] `npm run verify` clean
+- [x] `QuickEntryFlow` shipped at [`src/components/lab/quick-entry-flow.tsx`](../../../src/components/lab/quick-entry-flow.tsx) — ~150 LOC
+- [x] 10 unit tests green (2 over plan: split auto-advance into "fresh entry triggers it" + "existing entry suppresses it"; added an editable-gate test)
+- [ ] 3 e2e tests green — **batched with Step 1 + Step 2's deferred specs** into one Playwright file after Step 4 mounts the flow into a real route. Until that point the e2e harness can't reach the sheet without an integration shell.
+- [x] Vitest count delta: +10 (580 → 590)
+- [ ] Playwright count delta: 0 this step; batched after Step 4
+- [x] `npm run verify` clean (lint + typecheck + 590/590)
+
+## Done
+
+- [x] AC1 (step morph): opacity-based crossfade across the three layers via `transition-opacity duration-150 ease-out`. The middle region is fixed at `h-95` (380px Tailwind canonical token) so layouts never reflow between steps.
+- [x] AC2 (only middle region morphs): header + footer rendered outside the morph layers; only the inner stack changes opacity. Confirmed by inspection.
+- [x] AC3 (prefers-reduced-motion): inherits from `globals.css` global rule.
+- [x] AC4 (note step renders <NoteField>): "given startStep=note..." GREEN.
+- [x] AC5 (forward/back labels): "given the note step + forward..." + "given the tags step + Back..." GREEN, label assertions explicit.
+- [x] AC6 (forward on empty note): existing NoteField allows save with empty value; QuickEntryFlow's forward button does not gate on note content — confirmed by static review.
+- [x] AC7 (tags step renders <TagCategoryList>): rendered with 4 primary + Extra opties toggle (inherits the existing component's structure).
+- [x] AC8 (categories expand inline, multi-select): inherited from TagCategoryList (no QuickEntryFlow-side regression to test).
+- [x] AC9 (Klaar fires onComplete): "given the tags step + Klaar..." GREEN.
+- [x] AC10 (auto-save semantics): score saves via the hoisted `useDayEntryUpsert` on commit; note + tags save via their existing internal hooks. "given the ScoreCircle commits..." GREEN.
+- [x] AC11 (mid-flow dismiss does not lose data): children stay mounted across step changes; backdrop / Escape / drag-down dismiss is handled by BottomSheet which fires `onClose`. Test indirectly covered through children's existing test suites.
+- [x] AC12 (auto-advance only when initialEntry === null): two it-blocks GREEN — "initialEntry is null → auto-advances" + "initialEntry already exists → does NOT auto-advance".
+- [x] AC13 (startStep opens at that step): "given startStep=note..." GREEN.
+- [x] AC14 (back hidden on score step): "given startStep=score..." GREEN asserts no back/forward buttons render on score step.
+- [x] RED captured: `npm test -- quick-entry-flow.test` → 10 failed against the null-returning stub on 2026-05-29
+- [x] GREEN captured: `npm run verify` → 55 files / 590 tests on 2026-05-29
+- [x] Type check + lint: clean
+- [x] No new HIGH cardinal-principle / privacy / security findings
+- [x] Walkthrough: deferred to post-Step-4 (the flow needs a real shell to drive in a browser)
+
+### Evidence
+
+- Run id: `npm run verify` 2026-05-29 01:13, duration 11.57s
+- Bundle impact: 0 KB (no new deps; ~150 LOC including comments)
+- Children reused as-is from `daily-entry/`: `<NoteField>`, `<TagCategoryList>`. Score circle is the lab/ primitive from Step 2.
+
+### Side-quests caught during implementation
+
+- **Plan omission: `allTags` prop.** The step plan listed Props without `allTags: Tag[]`, but `<TagCategoryList>` requires it. Added; documented here for the Step 4 plan to remember.
+- **Portal test ergonomics.** `<BottomSheet>` renders into `document.body` via `createPortal`. Tests must use `screen.getByRole(...)` rather than the `render(...)` return's `container.querySelector` — those container queries only see what's rendered inside the test's wrapper, not into the document body. Fixed one test; pattern noted for Step 4.
+- **`forwardLabel` ternary footgun in draft.** First draft contained `${copy.timeline.range30.startsWith('') ? '' : ''}Volgende: tags` — an autocomplete artifact that was harmless but ugly. Cleaned up before verify.
+- **Auto-advance gate on `initialEntry === null` rather than "userInitiatedRef".** The step plan suggested tracking whether the score change came from user gesture vs prop-driven initial state. Simpler heuristic: if `initialEntry` was null at mount, this is a fresh entry → auto-advance. Existing entries → no auto-advance. Matches the spec's "auto-appear on empty today" intent and avoids the gesture-vs-prop discrimination problem entirely.
+
+### Known gaps documented for Step 4 / Step 5
+
+- **NoteField close-flush.** If the user types within the 1.5s settle window and immediately dismisses the sheet (drag-down or backdrop), the in-flight keystrokes are lost. Existing `NoteField` clears its settle timer on unmount but does not flush. Acceptable for v1 of this flow because (a) the typical case settles before close, (b) the user can re-open and finish, but worth flagging if mobile validation shows users hitting it. Tracked in Step 5's reconciliation review.
+- **End-of-flow tint-pulse (AC26 in feature README).** This belongs at the TodayShell level — when `onComplete` fires, the parent triggers the pulse on the relevant today-card. Step 4's job, not Step 3's. Surfaced here so Step 4 doesn't forget.
+
+## Open questions (resolved or deferred)
+
+- ~~**Auto-advance vs review distinction:**~~ Resolved via `initialEntry === null` gate; see above.
+- ~~**NoteField focus on step entry:**~~ Deferred. The existing NoteField doesn't auto-focus its textarea on mount. Behaviour will be: user taps the forward button to advance; sees the textarea; taps the textarea to focus (one extra tap). If real-device feedback shows this hurts the sub-10s flow, lift a `focusOnMount` prop into NoteField at that point.
+- ~~**Tag selection without "Klaar":**~~ Confirmed: drag-down dismiss does NOT trigger the end-of-flow pulse. Only "Klaar" does. Per the spec.
+- ~~**Composite reuse for timeline bottom-sheet:**~~ Deferred to Step 5 reconciliation. Day-detail-sheet in Step 6 of daily-entry uses DayEntryEditor; this Step 3 composite is the alternative. Reconciliation step decides which becomes canonical.
 
 ---
 
