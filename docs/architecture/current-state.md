@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-28 (daily-entry feature Steps 0–6 built + audit hardening 10/10 closed + design brief locked + warm-earth tokens + Step 4b row redesign + Step 5 4+4 tag picker + Step 6 timeline with bottom sheet). Frontend code on `main` is **37 commits ahead of the deployed image at `gevoelscore-frontend.fly.dev`** — next `fly deploy` ships the daily-entry feature.
+**Last updated**: 2026-05-28 (daily-entry feature Steps 0–6 + 4b **deployed to Fly** at commit `58a3667`; live at https://gevoelscore-frontend.fly.dev; first real entry persisted end-to-end and verified via `scripts/verify-todays-entry.mjs`). App installed as iOS PWA by the single user — feature is in real-usage soak.
 
 ---
 
@@ -13,7 +13,7 @@
 | App | Region | Status | URL | Resources |
 |-----|--------|--------|-----|-----------|
 | `gevoelscore-backend` | `ams` | ✅ deployed, running | https://gevoelscore-backend.fly.dev | 1 GB RAM, 1 shared CPU, Directus 11.17.2 |
-| `gevoelscore-frontend` | `ams` | ✅ deployed, running (1 machine) | https://gevoelscore-frontend.fly.dev | Next.js 15.5 + Tailwind v4 + login feature. Image ~65 MB (standalone build). Scaled to 1 machine (matches in-memory session/rate-limit assumption per ADR 0003). |
+| `gevoelscore-frontend` | `ams` | ✅ deployed, running (1 machine) | https://gevoelscore-frontend.fly.dev | Next.js 15.5 + Tailwind v4 + login + daily-entry (score row, note, tag picker, timeline w/ bottom sheet). Warm-earth design tokens. Image ~65 MB (standalone build). Scaled to 1 machine (matches in-memory session/rate-limit assumption per ADR 0003). |
 
 **Backend secrets** (set via `fly secrets`, never committed):
 
@@ -176,8 +176,8 @@ directus/
 | `src/components/timeline-view.tsx` | 4 | ✅ shipped — daily-entry step 6 |
 | `src/components/day-detail-sheet.tsx` | (covered by timeline-view tests) | ✅ shipped — daily-entry step 6 |
 
-**Test suite** (as of 2026-05-28):
-- **Vitest**: 495/495 passing (domain + auth library + route handlers + daily-entry components/hooks/SDK)
+**Test suite** (as of 2026-05-28, after the partial-PUT fix):
+- **Vitest**: 500/500 passing (domain + auth library + route handlers + daily-entry components/hooks/SDK; +5 for the partial-update SDK + route coverage added after the deploy-time bug)
 - **Playwright (chromium)**: 44/45 passing (the 1 failure is in the parallel `/over` public-landing-page work, out of daily-entry scope)
 - **Live-stack Playwright**: unchanged from login step 8 — not yet extended for daily-entry routes
 - **TypeScript**: `tsc --noEmit` clean
@@ -190,8 +190,8 @@ directus/
 
 In the order they should be tackled:
 
-1. **Deploy the daily-entry frontend** — `main` is 37 commits ahead of the deployed image. `flyctl deploy` from the repo root rebuilds the standalone Next.js image and rolls out. Backend is unchanged; no Directus schema migration needed.
-2. **Manual walkthroughs** post-deploy (cardinal-principle gates):
+1. **Real-usage soak** (in progress since 2026-05-28). User installed the PWA on iOS via Add-to-Home-Screen and is logging real entries. No fixes scheduled until friction is reported. See `private/MEMORY.md` → "Soak-test mode" memory.
+2. **Manual walkthroughs** (cardinal-principle gates — deferred during soak):
    - Phone stopwatch: open → tap a 7 → close ≤ 5s on a good-day simulation
    - Brainfog simulation: 2-second hesitation between intention and action — flow must tolerate
    - One-handed thumb reach across the horizontal score row
