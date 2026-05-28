@@ -1,6 +1,6 @@
 # gevoelscore-app — context for Claude
 
-Personal Long COVID daily-tracking app. One tap to log a "gevoelscore", optional note + tags, timeline to spot patterns. Pre-prototype: docs only, no source code yet.
+Personal Long COVID daily-tracking app. One tap to log a "gevoelscore", optional note + tags, timeline to spot patterns. Auth feature shipped (login + 2FA + 10 audit findings closed); daily-entry feature in planning (see [docs/features/daily-entry/](docs/features/daily-entry/)).
 
 **Stack** (per [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md)): Next.js 15 PWA frontend, Directus backend on Fly.io, PostgreSQL managed by Directus. Online-first; offline support is a v1.5+ feature, not a v1 requirement.
 
@@ -15,6 +15,7 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 - [.claude/conventions.md](.claude/conventions.md) — file structure, code/copy conventions, repo hygiene
 - [.claude/testing.md](.claude/testing.md) — **TDD doctrine** (the loop, mandatory test layers, RED-first rule, anti-patterns)
 - [.claude/security-checklist.md](.claude/security-checklist.md) — **Security checklist** (OWASP ASVS-aligned, curated for single-user Next.js PWA + Directus)
+- [docs/architecture/frontend-conventions.md](docs/architecture/frontend-conventions.md) — **Frontend conventions** (server-component default, copy discipline, design tokens, WCAG 2.2 AA + Brainfog extensions, focus management)
 
 ## Key rules
 
@@ -58,4 +59,4 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 - **Before suggesting a dependency, framework, or pattern**: check it survives all 6 cardinal principles and the no-telemetry rule (per [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md), "local-first" is no longer the architectural framing — data lives in self-hosted Directus, exports and full delete remain first-class). If it doesn't, propose an alternative.
 - **When the brief and a clean architecture disagree**: the brief wins. The user has 1.363 days of evidence about what works for daily logging.
 - **UX calls (sub-10-second flow, brainfog-friendly)**: ask. They aren't testable in unit tests.
-- **No source code yet**: don't fabricate paths or imports as if code exists. Update this section when the first prototype starts.
+- **Verify gate is `npm run verify`** (lint + typecheck + Vitest). The pre-push hook runs it. Don't ship without it green.

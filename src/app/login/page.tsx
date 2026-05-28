@@ -69,6 +69,7 @@ export default function LoginPage() {
           name="email"
           type="email"
           autoComplete="email"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- single-input login page; brainfog sub-10s target. Discussed in frontend-conventions.md.
           autoFocus
           required
           value={email}

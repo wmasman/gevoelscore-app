@@ -92,6 +92,7 @@ export function VerifyForm() {
           pattern="[0-9]*"
           maxLength={6}
           autoComplete="one-time-code"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- single-input OTP page; user came here to type 6 digits. Discussed in frontend-conventions.md.
           autoFocus
           value={otp}
           onChange={handleChange}

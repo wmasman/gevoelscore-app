@@ -105,6 +105,7 @@ export function SetupForm() {
             name="password"
             type="password"
             autoComplete="current-password"
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- single-input phase of the 2FA setup wizard; brainfog sub-10s target. See frontend-conventions.md.
             autoFocus
             required
             value={password}
@@ -169,6 +170,7 @@ export function SetupForm() {
             pattern="[0-9]*"
             maxLength={6}
             autoComplete="one-time-code"
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- single-input phase of the 2FA setup wizard; user came here to type 6 digits. See frontend-conventions.md.
             autoFocus
             value={otp}
             onChange={handleOtpChange}

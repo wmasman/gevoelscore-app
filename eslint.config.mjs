@@ -7,12 +7,13 @@ const compat = new FlatCompat({
 });
 
 // Project-specific guardrails for the next.js + directus stack. Layered on
-// top of next/core-web-vitals + next/typescript and the security plugins'
-// recommended sets. Custom rules below encode the items from
-// .claude/security-checklist.md + .claude/conventions.md that can be checked
-// statically.
+// top of next/core-web-vitals + next/typescript, the security plugins'
+// recommended sets, and jsx-a11y for the WCAG 2.2 AA target documented in
+// docs/architecture/frontend-conventions.md. Custom rules below encode the
+// items from .claude/security-checklist.md + .claude/conventions.md that
+// can be checked statically.
 const config = [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  ...compat.extends('next/core-web-vitals', 'next/typescript', 'plugin:jsx-a11y/recommended'),
   security.configs.recommended,
   {
     // Two rules in the security plugin are heuristic and noisy for this
