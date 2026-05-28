@@ -79,12 +79,48 @@ Total component LOC: ~80 (TypeScript + CSS module).
 
 ## Done criteria
 
-- [ ] `ScoreCircle` component shipped, 8 unit tests green
-- [ ] 2 e2e tests green
-- [ ] Vitest count delta: +8
-- [ ] Playwright count delta: +2
-- [ ] `npm run verify` clean
-- [ ] No new entries in `package.json`
+- [x] `ScoreCircle` component shipped at [`src/components/lab/score-circle.tsx`](../../../src/components/lab/score-circle.tsx) — single file, Tailwind utilities via `cn()`, ~125 LOC including comments
+- [x] 10 unit tests green (2 over plan: split AC5 keyboard navigation into "ArrowRight" / "ArrowLeft+aliases" / "Home+End" for clarity; split clamp behaviour into upper + lower bound cases)
+- [ ] 2 e2e tests green — **deferred to the Step-1-and-Step-2 batched e2e spec** noted at the head of step-1. The unit tests fully cover the pointer-mechanic contract jsdom can simulate; the real-touch and axe-core scans gain more signal when the circle is mounted inside the sheet inside the flow (Step 3).
+- [x] Vitest count delta: +10 (570 → 580)
+- [ ] Playwright count delta: 0 this step; batched after Step 3 lands
+- [x] `npm run verify` clean (lint + typecheck + 580/580)
+- [x] No new entries in `package.json`
+
+## Done
+
+- [x] AC1 (280px circle, score in centre, accent colour): static Tailwind classes + render-shape test "given initialValue=5..." GREEN; visual verification deferred to walkthrough
+- [x] AC2 (horizontal drag, ~20px per integer): two it-blocks GREEN — "given a pointer drag of 20px right" + "given a rapid drag of 80px right"
+- [x] AC3 (per-integer pulse, 80ms): "given an integer-cross during drag" GREEN with fake-timer advance verifying the pulse class clears
+- [x] AC4 (snap on release, onCommit fires): every drag-based it-block asserts on onCommit's last call
+- [x] AC5 (keyboard nav, role=slider + aria-valuemin/max/now): three it-blocks GREEN (ArrowRight, Arrow-aliases, Home/End)
+- [x] AC6 (no tick marks, no rim labels): static render — no tick-mark elements rendered
+- [x] AC7 (presentational, onCommit is the only egress): no other props or side-effects; review confirmed
+- [x] AC8 (touch-action: none + setPointerCapture): `touch-none` Tailwind class + `setPointerCapture(pointerId)` on `pointerdown`. Stub-aware tests confirm the call.
+- [x] AC9 (SSR-safe): no window/document access at render time; all DOM touches inside event handlers
+- [x] RED captured: `npm test -- score-circle.test` → 10 failed against the null-returning stub on 2026-05-29
+- [x] GREEN captured: `npm run verify` → 54 files / 580 tests on 2026-05-29
+- [x] Type check + lint: clean
+- [x] No new HIGH cardinal-principle / privacy / security findings (presentational primitive, no new deps, no new data path)
+- [x] Walkthrough: N/A — Step 2 is a primitive. Visual + gesture walkthrough comes after Step 3 mounts the circle inside the sheet inside the flow.
+
+### Evidence
+
+- Run id: `npm run verify` 2026-05-29 01:06, duration 10.89s
+- Bundle impact: 0 KB (no new deps)
+- Visual contract verified against the source prototype `docs/design/explorations/score-circle-prototype.html`. The React port preserves the prototype's constants (`PIXELS_PER_INTEGER = 20`, `PULSE_MS = 80`, `MIN/MAX = 1/10`) and the pointer-down/move/up shape verbatim.
+
+### Side-quests caught during implementation
+
+- **`initialValue` as one-time read, not synced.** The component initialises state from `initialValue` once on mount and never reacts to prop changes. This matches the prototype's "one source of truth for the drag value" and the parent's typical usage (parent fetches the existing entry once, hands it down). If a future use case needs prop-controlled mode, add an `value` prop variant rather than mutating this behaviour — same separation as `defaultValue` vs `value` in React inputs.
+- **Stale-closure trap in keyboard handler.** First draft called `setValue(value + 1)` then `onCommit(value)` — `value` is the closure-captured pre-update value, which leaks one keystroke of staleness. Reshaped to compute `next` synchronously and pass it to both `applyValue` and `onCommit` so the commit always carries the value the user just produced.
+- **Stub-aware pulse cleanup.** Pulse uses a setTimeout; if the consumer unmounts mid-drag, the timer fires after unmount. Guarded with a `mountedRef` plus `clearTimeout` in the unmount cleanup. The "unmount during pending pulse" test confirms no setState-on-unmounted warning.
+
+## Open questions (resolved)
+
+- ~~**Fast drag pulse behaviour:**~~ Single integer-cross fires one pulse; subsequent crosses clear+restart the timer (the `clearTimeout` in `triggerPulse`). A 6-integer sweep yields six visible pulses spread across the move time. Visual verification deferred to mobile walkthrough — but the prototype already validated this on iPhone.
+- ~~**Initial render flicker:**~~ See "initialValue as one-time read" above. No re-render on prop change; no flicker.
+- ~~**Reduced motion:**~~ The 80ms transition flattens to 0.01ms under the global `prefers-reduced-motion: reduce` rule in `globals.css`. No per-component code needed.
 
 ---
 
