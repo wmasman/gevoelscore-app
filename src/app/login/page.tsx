@@ -75,7 +75,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={submitting}
-          className="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none disabled:opacity-60"
+          className="w-full rounded-md border border-border bg-surface px-3 py-3 text-base text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
         />
       </div>
 
@@ -92,20 +92,23 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
-          className="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none disabled:opacity-60"
+          className="w-full rounded-md border border-border bg-surface px-3 py-3 text-base text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
         />
       </div>
 
       {errorMessage !== null && (
-        <p role="alert" className="text-sm text-red-600">
+        <div
+          role="alert"
+          className="rounded-md border border-border-strong bg-surface-muted px-3 py-2 text-sm text-fg"
+        >
           {errorMessage}
-        </p>
+        </div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded bg-blue-600 px-4 py-3 text-base font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+        className="w-full rounded-md bg-accent-hover px-4 py-3 text-base font-semibold text-bg hover:bg-accent-active focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
       >
         {submitting ? 'Even geduld…' : 'Aanmelden'}
       </button>

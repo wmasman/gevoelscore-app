@@ -102,13 +102,63 @@ describe('PUT /api/day-entries/[date]', () => {
     });
   });
 
-  it('400 on missing score', async () => {
+  it('partial body without score is forwarded to upsertDayEntry (note-only update)', async () => {
+    // Score-less PUTs are valid for existing rows — NoteField + TagCategoryList
+    // need this. The SDK wrapper enforces 'missing_score_for_create' if the
+    // row doesn't exist yet; this test stubs a successful update.
+    mocks.upsertDayEntry.mockResolvedValueOnce({
+      ok: true,
+      value: {
+        date: '2026-05-28',
+        score: 5,
+        note: 'no score field in body',
+        tag_ids: [],
+        sub_scores: null,
+        sleep_hours: null,
+        special_event: null,
+        project_entry_ids: [],
+        calendar_event_ids: [],
+        garmin: null,
+        health: null,
+        weather: null,
+        derived: null,
+        created_at: '2026-05-28T08:00:00.000Z',
+        updated_at: '2026-05-28T08:00:00.000Z',
+      },
+    });
     const res = await PUT(
-      makeRequest('2026-05-28', { note: 'no score' }, { cookie: 'gs_session=s-id' }),
+      makeRequest(
+        '2026-05-28',
+        { note: 'no score field in body' },
+        { cookie: 'gs_session=s-id' },
+      ),
+      ctx('2026-05-28'),
+    );
+    expect(res.status).toBe(200);
+    expect(mocks.upsertDayEntry).toHaveBeenCalledWith('at-1', '2026-05-28', {
+      note: 'no score field in body',
+    });
+  });
+
+  it('400 on empty patch (no score, no note, no tag_ids)', async () => {
+    const res = await PUT(
+      makeRequest('2026-05-28', {}, { cookie: 'gs_session=s-id' }),
       ctx('2026-05-28'),
     );
     expect(res.status).toBe(400);
     expect(mocks.upsertDayEntry).not.toHaveBeenCalled();
+  });
+
+  it('400 when SDK reports missing_score_for_create', async () => {
+    mocks.upsertDayEntry.mockResolvedValueOnce({
+      ok: false,
+      error: 'missing_score_for_create',
+    });
+    const res = await PUT(
+      makeRequest('2026-05-28', { note: 'fresh day, no score' }, { cookie: 'gs_session=s-id' }),
+      ctx('2026-05-28'),
+    );
+    expect(res.status).toBe(400);
   });
 
   it('400 on out-of-range score', async () => {

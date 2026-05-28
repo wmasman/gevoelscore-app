@@ -15,7 +15,7 @@ import { parseSessionCookie } from '@/lib/auth/session';
 import { dayEntryWriteRateLimiter, getClientIp } from '@/lib/auth/stores';
 import { validateDate } from '@/lib/domain/date';
 import { normalizeNote } from '@/lib/domain/note';
-import { validateScore } from '@/lib/domain/score';
+import { validateScore, type Score } from '@/lib/domain/score';
 import { validateTagIds } from '@/lib/domain/tag-ids';
 
 export async function PUT(
@@ -63,17 +63,21 @@ export async function PUT(
     return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
   }
 
-  const scoreResult = validateScore(body.score);
-  if (!scoreResult.ok) {
-    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
-  }
+  // Build the patch from whichever fields the caller supplied. PUT is
+  // upsert-by-date with partial-update semantics: NoteField sends
+  // `{ note: ... }`, TagCategoryList sends `{ tag_ids: [...] }`, the
+  // wheel sends `{ score: N }`. The empty patch is invalid (nothing to
+  // do). Score is REQUIRED only when the row doesn't exist yet — the
+  // SDK wrapper signals that via 'missing_score_for_create'.
+  const patch: { score?: Score; note?: string | null; tag_ids?: string[] } = {};
 
-  // Build the patch incrementally — only include keys the caller supplied.
-  // upsertDayEntry treats omitted `note` as "preserve" and omitted
-  // `tag_ids` as "leave M2M alone".
-  const patch: { score: typeof scoreResult.value; note?: string | null; tag_ids?: string[] } = {
-    score: scoreResult.value,
-  };
+  if ('score' in body) {
+    const scoreResult = validateScore(body.score);
+    if (!scoreResult.ok) {
+      return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+    }
+    patch.score = scoreResult.value;
+  }
 
   if ('note' in body) {
     const noteResult = normalizeNote(body.note);
@@ -91,12 +95,19 @@ export async function PUT(
     patch.tag_ids = tagIdsResult.value;
   }
 
+  if (Object.keys(patch).length === 0) {
+    return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+  }
+
   // TODO(I3): audit-log entry — { timestamp, event: 'day_entry_upsert',
   // outcome, ip-hashed, date } per NEN 7510 §12.4 once the
   // directus_auth_events collection lands in Track A3.
 
   const result = await upsertDayEntry(session.accessToken, dateResult.value, patch);
   if (!result.ok) {
+    if (result.error === 'missing_score_for_create') {
+      return NextResponse.json({ error: 'invalid_request' }, { status: 400 });
+    }
     return NextResponse.json({ error: 'server_error' }, { status: 502 });
   }
 

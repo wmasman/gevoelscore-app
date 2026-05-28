@@ -21,7 +21,10 @@ import {
 } from '@directus/sdk';
 import type { DayEntry } from '@/lib/domain/day-entry';
 
-export type DayEntriesError = 'network_error' | 'directus_error';
+export type DayEntriesError =
+  | 'network_error'
+  | 'directus_error'
+  | 'missing_score_for_create';
 export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
 function directusUrl(): string {
@@ -130,7 +133,11 @@ export async function readDayEntryByDate(
 }
 
 export type DayEntryPatch = {
-  score: DayEntry['score'];
+  // Score is optional on update (NoteField + TagCategoryList save without
+  // re-stating the score) but REQUIRED on create — see upsertDayEntry's
+  // 'missing_score_for_create' branch. Route handlers should map that
+  // error to 400 invalid_request.
+  score?: DayEntry['score'];
   note?: string | null;
   tag_ids?: string[];
 };
@@ -171,21 +178,31 @@ export async function upsertDayEntry(
     let currentTagIds: string[];
 
     if (existingRows.length === 0) {
-      // 2a) Create new row.
+      // 2a) Create new row. Score is the only required column on
+      // creation — without it the row is meaningless and the schema
+      // rejects it. Note/tags can land on subsequent partial PUTs.
+      if (patch.score === undefined) {
+        return { ok: false, error: 'missing_score_for_create' };
+      }
       const created = (await client.request(
         createItem('day_entries', { date, score: patch.score, note: patch.note ?? null }),
       )) as { id: string };
       dayEntryId = created.id;
       currentTagIds = [];
     } else {
-      // 2b) Update existing row. Only include fields the patch supplied
-      //     (omitting `note` preserves the existing value; explicit null
-      //     clears it).
+      // 2b) Update existing row. Build the payload from whichever fields
+      //     the patch actually carries — omit `score` if undefined,
+      //     omit `note` if not in patch, etc. If the patch only touches
+      //     M2M tags (handled at step 3) the update call is skipped
+      //     entirely.
       dayEntryId = existingRows[0]!.id;
       currentTagIds = (existingRows[0]!.tags ?? []).map((t) => t.tags_id);
-      const updatePayload: { score: number; note?: string | null } = { score: patch.score };
+      const updatePayload: { score?: number; note?: string | null } = {};
+      if (patch.score !== undefined) updatePayload.score = patch.score;
       if ('note' in patch) updatePayload.note = patch.note ?? null;
-      await client.request(updateItem('day_entries', dayEntryId, updatePayload));
+      if (Object.keys(updatePayload).length > 0) {
+        await client.request(updateItem('day_entries', dayEntryId, updatePayload));
+      }
     }
 
     // 3) M2M tag sync — only when patch.tag_ids supplied. Diff against

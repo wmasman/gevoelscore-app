@@ -76,7 +76,7 @@ export function VerifyForm() {
       className="space-y-4"
     >
       <h1 className="text-2xl font-semibold text-center">Verificatiecode</h1>
-      <p className="text-sm text-gray-600 text-center">
+      <p className="text-sm text-fg-muted text-center">
         Voer de 6-cijferige code uit je authenticator-app in.
       </p>
 
@@ -97,17 +97,20 @@ export function VerifyForm() {
           value={otp}
           onChange={handleChange}
           disabled={submitting}
-          className="w-full rounded border border-gray-300 px-3 py-3 text-2xl tracking-widest text-center font-mono focus:border-blue-500 focus:outline-none disabled:opacity-60"
+          className="w-full rounded-md border border-border bg-surface px-3 py-3 text-2xl tracking-widest text-center font-mono text-fg focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
         />
       </div>
 
       {errorMessage !== null && (
-        <p role="alert" className="text-sm text-red-600">
+        <div
+          role="alert"
+          className="rounded-md border border-border-strong bg-surface-muted px-3 py-2 text-sm text-fg"
+        >
           {errorMessage}
-        </p>
+        </div>
       )}
 
-      {submitting && <p className="text-sm text-gray-500 text-center">Controleren…</p>}
+      {submitting && <p className="text-sm text-fg-muted text-center">Controleren…</p>}
     </form>
   );
 }

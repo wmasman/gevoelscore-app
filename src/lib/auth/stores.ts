@@ -21,10 +21,12 @@ export const tfaGenerateRateLimiter = createRateLimiter({ limit: 5, windowMs: FI
 export const tfaEnableRateLimiter = createRateLimiter({ limit: 5, windowMs: FIVE_MIN_MS });
 
 // Writes to /api/day-entries/[date] — guards a stolen-session attacker from
-// dumping arbitrary scores. 5/5min per IP matches the login family; a
-// single user organically writes 1–10 times per day.
+// dumping arbitrary scores. Tighter limits (e.g. 5/5min) trip on normal
+// use: one editing session can easily fire score + note + multiple tag
+// toggles in 10s. 60/5min (12/min) catches abuse while leaving normal
+// bursts unblocked.
 export const dayEntryWriteRateLimiter = createRateLimiter({
-  limit: 5,
+  limit: 60,
   windowMs: FIVE_MIN_MS,
 });
 

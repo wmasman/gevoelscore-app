@@ -296,5 +296,57 @@ describe('day-entries SDK wrapper', () => {
 
       expect(result).toEqual({ ok: false, error: 'network_error' });
     });
+
+    it('partial update without score on an existing row is allowed (note only)', async () => {
+      // 1) Read existing returns a row.
+      mocks.request.mockResolvedValueOnce([{ id: 'row-x', tags: [] }]);
+      // 2) updateItem on the day_entry (no score field).
+      mocks.request.mockResolvedValueOnce({ id: 'row-x' });
+      // 3) Re-read.
+      const after = { ...directusRowAt('2026-05-28', 5), note: 'rustige avond' };
+      mocks.request.mockResolvedValueOnce([after]);
+
+      const result = await upsertDayEntry('access-token', '2026-05-28', {
+        note: 'rustige avond',
+      });
+
+      expect(result.ok).toBe(true);
+      const updateCall = mocks.request.mock.calls[1]![0] as {
+        __cmd: string;
+        data: Record<string, unknown>;
+      };
+      expect(updateCall.__cmd).toBe('updateItem');
+      expect('score' in updateCall.data).toBe(false);
+      expect(updateCall.data.note).toBe('rustige avond');
+    });
+
+    it('partial update without score on an existing row is allowed (tag_ids only)', async () => {
+      mocks.request.mockResolvedValueOnce([{ id: 'row-x', tags: [] }]);
+      // No updateItem call because patch has no day_entry fields, only tags.
+      // SDK then proceeds to junction inserts.
+      mocks.request.mockResolvedValueOnce([{ id: 'jct-A' }]); // createItems for tag-A
+      const after = directusRowAt('2026-05-28', 5, ['tag-A']);
+      mocks.request.mockResolvedValueOnce([after]);
+
+      const result = await upsertDayEntry('access-token', '2026-05-28', {
+        tag_ids: ['tag-A'],
+      });
+
+      expect(result.ok).toBe(true);
+      // Verify no updateItem was issued (only readItems + createItems + readItems).
+      const cmds = mocks.request.mock.calls.map((c) => (c[0] as { __cmd: string }).__cmd);
+      expect(cmds).not.toContain('updateItem');
+    });
+
+    it('create without score returns missing_score_for_create', async () => {
+      // Read existing → no rows.
+      mocks.request.mockResolvedValueOnce([]);
+
+      const result = await upsertDayEntry('access-token', '2026-05-28', {
+        note: 'a note for a non-existent day',
+      });
+
+      expect(result).toEqual({ ok: false, error: 'missing_score_for_create' });
+    });
   });
 });

@@ -92,7 +92,7 @@ export function SetupForm() {
     return (
       <form onSubmit={handlePasswordSubmit} className="space-y-4">
         <h1 className="text-2xl font-semibold text-center">2FA instellen</h1>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-sm text-fg-muted text-center">
           Bevestig je wachtwoord om een TOTP-code te genereren.
         </p>
 
@@ -111,20 +111,23 @@ export function SetupForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
-            className="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-blue-500 focus:outline-none disabled:opacity-60"
+            className="w-full rounded-md border border-border bg-surface px-3 py-3 text-base text-fg focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
           />
         </div>
 
         {errorMessage !== null && (
-          <p role="alert" className="text-sm text-red-600">
+          <div
+            role="alert"
+            className="rounded-md border border-border-strong bg-surface-muted px-3 py-2 text-sm text-fg"
+          >
             {errorMessage}
-          </p>
+          </div>
         )}
 
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded bg-blue-600 px-4 py-3 text-base font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+          className="w-full rounded-md bg-accent-hover px-4 py-3 text-base font-semibold text-bg hover:bg-accent-active focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
         >
           {submitting ? 'Even geduld…' : 'Genereer TOTP'}
         </button>
@@ -142,18 +145,18 @@ export function SetupForm() {
         className="space-y-4"
       >
         <h1 className="text-2xl font-semibold text-center">2FA bevestigen</h1>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-sm text-fg-muted text-center">
           Voeg deze sleutel toe aan je authenticator-app (1Password, Google Authenticator, …) en
           voer vervolgens de 6-cijferige code in.
         </p>
 
-        <div className="rounded border border-gray-300 bg-gray-50 p-3 text-sm break-all font-mono">
+        <div className="rounded-md border border-border bg-surface-muted p-3 text-sm break-all font-mono text-fg">
           <div className="mb-2">
-            <span className="text-xs text-gray-500 uppercase">Sleutel</span>
+            <span className="text-xs text-fg-subtle uppercase">Sleutel</span>
             <div data-testid="tfa-secret">{secret}</div>
           </div>
           <div>
-            <span className="text-xs text-gray-500 uppercase">otpauth URL</span>
+            <span className="text-xs text-fg-subtle uppercase">otpauth URL</span>
             <div data-testid="tfa-otpauth-url">{otpauthUrl}</div>
           </div>
         </div>
@@ -175,17 +178,20 @@ export function SetupForm() {
             value={otp}
             onChange={handleOtpChange}
             disabled={submitting}
-            className="w-full rounded border border-gray-300 px-3 py-3 text-2xl tracking-widest text-center font-mono focus:border-blue-500 focus:outline-none disabled:opacity-60"
+            className="w-full rounded-md border border-border bg-surface px-3 py-3 text-2xl tracking-widest text-center font-mono text-fg focus:border-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
           />
         </div>
 
         {errorMessage !== null && (
-          <p role="alert" className="text-sm text-red-600">
+          <div
+            role="alert"
+            className="rounded-md border border-border-strong bg-surface-muted px-3 py-2 text-sm text-fg"
+          >
             {errorMessage}
-          </p>
+          </div>
         )}
 
-        {submitting && <p className="text-sm text-gray-500 text-center">Controleren…</p>}
+        {submitting && <p className="text-sm text-fg-muted text-center">Controleren…</p>}
       </form>
     );
   }
@@ -194,7 +200,7 @@ export function SetupForm() {
   return (
     <div className="space-y-4 text-center">
       <h1 className="text-2xl font-semibold">2FA actief</h1>
-      <p className="text-sm text-gray-600">Je wordt teruggebracht naar de app.</p>
+      <p className="text-sm text-fg-muted">Je wordt teruggebracht naar de app.</p>
     </div>
   );
 }
