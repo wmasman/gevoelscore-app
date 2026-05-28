@@ -1,17 +1,37 @@
 @import "tailwindcss";
 
-/* Design tokens. Contrast verified against WCAG 2.2 AA (4.5:1 for text,
-   3:1 for non-text UI components). Tailwind v4 picks these up via the
-   @theme directive below. */
+/* Design tokens. Source of truth: docs/design/brief.md (strategic) and
+   .superdesign/design-system.md (operational). Contrast verified against
+   WCAG 2.2 AA (4.5:1 for text, 3:1 for non-text UI). Tailwind v4 picks
+   these up via the @theme directive below.
+
+   Palette family: warm-earth (clay/terracotta/ochre) accent on warm-whites.
+   No semantic error/success colors — state is communicated through copy,
+   position, and text weight, per the brief. */
 :root {
-  --color-bg: #fdfcfa;
-  --color-fg: #1a1a1a;
-  --color-fg-muted: #4a4a4a;
-  --color-accent: #1f6feb;
-  --color-accent-soft: #1f6feb1a;
-  --color-error: #b42318;
-  --color-success: #067647;
-  --color-border: #e6e4e0;
+  /* Background & surfaces — warm off-whites */
+  --color-bg: #faf6f1;
+  --color-surface: #fffcf8;
+  --color-surface-muted: #f2ede5;
+
+  /* Text — warm dark, never pure black */
+  --color-fg: #2b2520;
+  --color-fg-muted: #6b5f54;
+  --color-fg-subtle: #9c8f82;
+
+  /* Accent — Clay family. Single brand color across the whole app. */
+  --color-accent: #b5694a;
+  --color-accent-hover: #9d5839;
+  --color-accent-active: #834828;
+  --color-accent-soft: #f5e8df;
+
+  /* Borders & dividers — subtle warm */
+  --color-border: #e8dfd2;
+  --color-border-strong: #d5c8b5;
+
+  /* The one allowed non-accent color: empty-day marker in calendar /
+     recent-missed views. Forbidden anywhere else. */
+  --color-empty-day: #e8a35c;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
@@ -26,13 +46,18 @@
 
 @theme {
   --color-bg: var(--color-bg);
+  --color-surface: var(--color-surface);
+  --color-surface-muted: var(--color-surface-muted);
   --color-fg: var(--color-fg);
   --color-fg-muted: var(--color-fg-muted);
+  --color-fg-subtle: var(--color-fg-subtle);
   --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-active: var(--color-accent-active);
   --color-accent-soft: var(--color-accent-soft);
-  --color-error: var(--color-error);
-  --color-success: var(--color-success);
   --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-empty-day: var(--color-empty-day);
 }
 
 html,
@@ -43,7 +68,7 @@ body {
 body {
   background: var(--color-bg);
   color: var(--color-fg);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   /* Body text >= 17px, line-height >= 1.5 — brainfog target above WCAG floor. */
   font-size: 17px;
   line-height: 1.5;

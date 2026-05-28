@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import { copy } from '@/copy';
 import './globals.css';
 
-// Font: system-ui stack (defined in globals.css). next/font/google was
-// considered but the cold-load delay in dev mode added latency on top
-// of the existing dev-server compile; system-ui is high-legibility and
-// zero-cost. Revisit if a custom self-hosted font becomes a priority.
+// Font: Inter via next/font/google. Self-hosted (no Google Fonts CDN at
+// runtime), subset to Latin, weights matched to the design-system scale
+// (400/500/600). Picked over system-ui for cross-device consistency —
+// without it, iOS renders SF Pro and Android/Windows render Roboto/Segoe.
+// See docs/design/brief.md and .superdesign/design-system.md.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  weight: ['400', '500', '600'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +30,7 @@ export const viewport: Viewport = {
   // viewport-fit=cover lets us paint to the edge on notched phones.
   viewportFit: 'cover',
   // Matches --color-bg in globals.css; keeps the browser chrome blended.
-  themeColor: '#fdfcfa',
+  themeColor: '#faf6f1',
 };
 
 export default function RootLayout({
@@ -31,7 +39,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="nl">
+    <html lang="nl" className={inter.variable}>
       <body>{children}</body>
     </html>
   );
