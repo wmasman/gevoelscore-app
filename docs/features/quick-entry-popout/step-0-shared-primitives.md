@@ -274,13 +274,48 @@ No barrel file (`src/hooks/index.ts`) — the existing convention is per-hook im
 
 ## Done criteria
 
-- [ ] `useFocusTrap` shipped, 6 unit tests green
-- [ ] `useBodyScrollLock` shipped, 5 unit tests green
-- [ ] `useVisualViewport` shipped, 4 unit tests green
-- [ ] `useStepMorph` shipped, 5 unit tests green
-- [ ] Vitest count delta: +20 (4 hooks + 1 SSR-safety test each + minor)
-- [ ] `npm run verify` clean
-- [ ] No new entries in `package.json`
+- [x] `useFocusTrap` shipped, 6 unit tests green ([src/hooks/use-focus-trap.ts](../../../src/hooks/use-focus-trap.ts))
+- [x] `useBodyScrollLock` shipped, 5 unit tests green ([src/hooks/use-body-scroll-lock.ts](../../../src/hooks/use-body-scroll-lock.ts))
+- [x] `useVisualViewport` shipped, 4 unit tests green ([src/hooks/use-visual-viewport.ts](../../../src/hooks/use-visual-viewport.ts))
+- [x] `useStepMorph` shipped, 5 unit tests green ([src/hooks/use-step-morph.ts](../../../src/hooks/use-step-morph.ts))
+- [x] Vitest count delta: +20 exactly (539 → 559)
+- [x] `npm run verify` clean (lint + typecheck + 559/559)
+- [x] No new entries in `package.json`
+
+## Done
+
+- [x] AC1–AC5 (useFocusTrap): all six it-blocks GREEN — see `src/hooks/__tests__/use-focus-trap.test.tsx`
+- [x] AC6–AC9 (useBodyScrollLock): all five it-blocks GREEN — see `src/hooks/__tests__/use-body-scroll-lock.test.tsx`
+- [x] AC10–AC13 (useVisualViewport): all four it-blocks GREEN — see `src/hooks/__tests__/use-visual-viewport.test.tsx`
+- [x] AC14–AC17 (useStepMorph): all five it-blocks GREEN — see `src/hooks/__tests__/use-step-morph.test.tsx`
+- [x] RED captured (per hook):
+  - `npm test -- use-focus-trap.test` → 4 failed / 2 passed (no-op-tolerant cases passed against the stub) on 2026-05-28
+  - `npm test -- use-body-scroll-lock.test` → 4 failed / 1 passed on 2026-05-28
+  - `npm test -- use-visual-viewport.test` → 4 failed on 2026-05-28
+  - `npm test -- use-step-morph.test` → 3 failed / 2 passed on 2026-05-28
+- [x] GREEN captured: `npm run verify` → 52 test files / 559 tests passed on 2026-05-28
+- [x] Type check: `npm run typecheck` clean
+- [x] Lint: `npm run lint` clean
+- [x] No new HIGH cardinal-principle / privacy / security findings (pure hooks, no new deps, no new data path)
+- [x] Walkthrough: N/A — Step 0 does not touch a screen; the brainfog/one-handed walkthrough lands in Step 4
+- [x] Refactor pass: none needed — each hook was implemented straight from the plan code and the test cases match 1:1 with the ACs
+
+### Evidence
+
+- Run id: `npm run verify` 2026-05-28 20:21, duration 9.75s
+- Bundle impact: 0 KB (no new deps; hooks are stripped to ~15-30 LOC each)
+- Test deltas:
+  - `use-focus-trap.test.tsx`: 6 new
+  - `use-body-scroll-lock.test.tsx`: 5 new
+  - `use-visual-viewport.test.tsx`: 4 new
+  - `use-step-morph.test.tsx`: 5 new
+  - Total: +20
+
+### Side-quests caught during implementation
+
+- **`useVisualViewport` resize-event needs `act()` in tests.** The first GREEN attempt assumed the synchronous `fireResize` would propagate to the next snapshot read, but React's state update batched. Wrapping `fireResize` in `act()` is the canonical fix and the test now demonstrates the pattern for any future hook that listens to non-React DOM events.
+- **Stub-first RED is the right shape for new modules.** The doctrine line *"It must fail for the reason you expect — the assertion mismatches, not a syntax error or missing import"* almost made me skip stub-creation. Created a no-op stub for each hook so the import resolves and tests fail on real behaviour assertions. The handoff document says to prefer the more-specific doc when conflicts arise, but here both docs agree once you read carefully — the test must fail on the assertion, which means the import has to resolve.
+- **Doc tension (`lab/` quarantine vs hooks in `src/hooks/`)**: per the BUILD-HANDOFF "all new code under `src/components/lab/`", but Step 0's plan explicitly places hooks in `src/hooks/`. The hooks are reusable across the app (settings modals, future bottom-sheets) so the placement is intentional. Resolved per the handoff's own guidance ("pick the more specific doc"); no doc edits needed — the lab/ rule applies to feature-specific UI, hooks are infrastructure.
 
 ## Open questions to settle during implementation
 
