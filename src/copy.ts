@@ -6,7 +6,7 @@
 export const copy = {
   app: {
     title: 'Gevoelscore',
-    description: 'Persoonlijke dagscore voor Long COVID — registreer in één tik.',
+    description: 'Persoonlijke dagscore voor Long COVID. Registreer in één tik.',
   },
   daily: {
     score: {
@@ -26,14 +26,16 @@ export const copy = {
   },
   timeline: {
     title: 'Tijdlijn',
+    todayTab: 'Vandaag',
     range30: '30 dagen',
     range90: '90 dagen',
     edited: 'bewerkt',
+    close: 'Sluit',
     streak: (n: number): string =>
       n === 1 ? '1 dag achter elkaar' : `${n} dagen achter elkaar`,
   },
   errors: {
-    notSaved: 'Niet opgeslagen — probeer nogmaals',
+    notSaved: 'Niet opgeslagen. Probeer nogmaals.',
     generic: 'Er ging iets mis. Probeer opnieuw.',
     notFound: 'Pagina niet gevonden',
   },

@@ -42,14 +42,14 @@ describe('<TodayShell />', () => {
   });
 
   it('renders the date heading in Dutch', () => {
-    render(<TodayShell date="2026-05-27" entry={null} allTags={[]} />);
+    render(<TodayShell date="2026-05-27" entry={null} allTags={[]} timelineEntries={[]} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       /woensdag 27 mei 2026/i,
     );
   });
 
   it('composes the ScoreRow — passes initialScore from entry', () => {
-    render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} allTags={[]} />);
+    render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} allTags={[]} timelineEntries={[]} />);
     const row = screen.getByRole('listbox', { name: /score/i });
     expect(row).toHaveAttribute('data-phase', 'set');
     const selected = within(row).getByRole('option', { selected: true });
@@ -57,13 +57,13 @@ describe('<TodayShell />', () => {
   });
 
   it('composes the ScoreRow — null entry yields idle phase', () => {
-    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
+    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} timelineEntries={[]} />);
     const row = screen.getByRole('listbox', { name: /score/i });
     expect(row).toHaveAttribute('data-phase', 'idle');
   });
 
   it('renders an H1 date and a SaveStatus slot side-by-side in the header (Step 4b AC5)', () => {
-    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
+    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} timelineEntries={[]} />);
     const heading = screen.getByRole('heading', { level: 1 });
     // The H1 lives inside a flex header container. The SaveStatus slot is
     // a sibling — in idle state SaveStatus renders nothing, so we assert
@@ -75,7 +75,7 @@ describe('<TodayShell />', () => {
   });
 
   it('renders the 4 primary category-header buttons + an "Extra opties" toggle', () => {
-    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
+    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} timelineEntries={[]} />);
     for (const category of ['mentaal', 'fysiek', 'overall', 'activiteit']) {
       // eslint-disable-next-line security/detect-non-literal-regexp -- test fixture
       const header = screen.getByRole('button', { name: new RegExp(category, 'i') });

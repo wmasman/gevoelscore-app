@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { TodayShell } from '@/components/today-shell';
-import { readDayEntryByDate } from '@/lib/api/day-entries';
+import { readDayEntriesInRange, readDayEntryByDate } from '@/lib/api/day-entries';
 import { readAllTags } from '@/lib/api/tags';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { SESSION_COOKIE_NAME } from '@/lib/auth/session';
@@ -18,6 +18,20 @@ import type { Tag } from '@/lib/domain/tag';
 //
 // On a stale cookie: render the shell empty. The first save attempt will
 // fail 401 and the standard error handler returns the user to /login.
+//
+// Step 6 added the 30-day timeline fetch in parallel with today's entry +
+// allTags. Three reads, fired concurrently.
+
+const TIMELINE_DAYS = 30;
+
+function shiftDate(date: string, days: number): string {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  const y = parsed.getUTCFullYear();
+  const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(parsed.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 export default async function HomePage() {
   const cookieStore = await cookies();
@@ -28,19 +42,27 @@ export default async function HomePage() {
 
   const today = todayInAmsterdam();
   const session = await getValidatedSession(sessionId);
-  // If the cookie is present but the session has expired or never existed
-  // server-side, fall through with no entry — let the user see the shell.
-  // Step 4's first save will surface the auth state via 401.
   let entry: DayEntry | null = null;
   let allTags: Tag[] = [];
+  let timelineEntries: DayEntry[] = [];
   if (session !== null) {
-    const [entryResult, tagsResult] = await Promise.all([
+    const from = shiftDate(today, -(TIMELINE_DAYS - 1));
+    const [entryResult, tagsResult, rangeResult] = await Promise.all([
       readDayEntryByDate(session.accessToken, today),
       readAllTags(session.accessToken),
+      readDayEntriesInRange(session.accessToken, from, today),
     ]);
     if (entryResult.ok) entry = entryResult.value;
     if (tagsResult.ok) allTags = tagsResult.value;
+    if (rangeResult.ok) timelineEntries = rangeResult.value;
   }
 
-  return <TodayShell date={today} entry={entry} allTags={allTags} />;
+  return (
+    <TodayShell
+      date={today}
+      entry={entry}
+      allTags={allTags}
+      timelineEntries={timelineEntries}
+    />
+  );
 }
