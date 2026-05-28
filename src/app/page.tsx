@@ -2,10 +2,12 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { TodayShell } from '@/components/today-shell';
 import { readDayEntryByDate } from '@/lib/api/day-entries';
+import { readAllTags } from '@/lib/api/tags';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { SESSION_COOKIE_NAME } from '@/lib/auth/session';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { todayInAmsterdam } from '@/lib/domain/date';
+import type { Tag } from '@/lib/domain/tag';
 
 // Home / Today screen. Server component: presence-only auth check (full
 // session validation happens on actual API calls from the wheel/note/tags
@@ -30,10 +32,15 @@ export default async function HomePage() {
   // server-side, fall through with no entry — let the user see the shell.
   // Step 4's first save will surface the auth state via 401.
   let entry: DayEntry | null = null;
+  let allTags: Tag[] = [];
   if (session !== null) {
-    const result = await readDayEntryByDate(session.accessToken, today);
-    if (result.ok) entry = result.value;
+    const [entryResult, tagsResult] = await Promise.all([
+      readDayEntryByDate(session.accessToken, today),
+      readAllTags(session.accessToken),
+    ]);
+    if (entryResult.ok) entry = entryResult.value;
+    if (tagsResult.ok) allTags = tagsResult.value;
   }
 
-  return <TodayShell date={today} entry={entry} />;
+  return <TodayShell date={today} entry={entry} allTags={allTags} />;
 }

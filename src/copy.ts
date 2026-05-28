@@ -15,12 +15,13 @@ export const copy = {
     },
     note: {
       label: 'Notitie',
-      placeholder: 'Notitie (optioneel)',
+      placeholder: 'Schrijf hier je notitie…',
     },
     tags: {
       label: 'Tags',
       empty: 'Geen tags in deze categorie',
       none: 'Geen tags',
+      extraToggle: 'Extra opties (Interventie, Project, etc)',
     },
   },
   timeline: {

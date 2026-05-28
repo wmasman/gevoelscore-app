@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { TodayShell } from '../today-shell';
 import type { DayEntry } from '@/lib/domain/day-entry';
-import { TAG_CATEGORIES } from '@/lib/domain/tag-category';
 
 // The wheel embedded in TodayShell uses useDayEntryUpsert → fetch. We
 // don't exercise interactions here (score-wheel.test.tsx covers that);
@@ -43,14 +42,14 @@ describe('<TodayShell />', () => {
   });
 
   it('renders the date heading in Dutch', () => {
-    render(<TodayShell date="2026-05-27" entry={null} />);
+    render(<TodayShell date="2026-05-27" entry={null} allTags={[]} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       /woensdag 27 mei 2026/i,
     );
   });
 
   it('composes the ScoreWheel — passes initialScore from entry', () => {
-    render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} />);
+    render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} allTags={[]} />);
     const wheel = screen.getByRole('listbox', { name: /score/i });
     expect(wheel).toHaveAttribute('data-phase', 'set');
     const selected = within(wheel).getByRole('option', { selected: true });
@@ -58,17 +57,21 @@ describe('<TodayShell />', () => {
   });
 
   it('composes the ScoreWheel — null entry yields idle phase', () => {
-    render(<TodayShell date="2026-05-28" entry={null} />);
+    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
     const wheel = screen.getByRole('listbox', { name: /score/i });
     expect(wheel).toHaveAttribute('data-phase', 'idle');
   });
 
-  it('renders the 8 collapsed category-header buttons in the locked enum order', () => {
-    render(<TodayShell date="2026-05-28" entry={null} />);
-    for (const category of TAG_CATEGORIES) {
-      // eslint-disable-next-line security/detect-non-literal-regexp -- test fixture iterating over a const-defined enum
+  it('renders the 4 primary category-header buttons + an "Extra opties" toggle', () => {
+    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} />);
+    for (const category of ['mentaal', 'fysiek', 'overall', 'activiteit']) {
+      // eslint-disable-next-line security/detect-non-literal-regexp -- test fixture
       const header = screen.getByRole('button', { name: new RegExp(category, 'i') });
       expect(header).toHaveAttribute('aria-expanded', 'false');
     }
+    expect(screen.getByRole('button', { name: /extra opties/i })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 });

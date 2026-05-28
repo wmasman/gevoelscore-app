@@ -27,6 +27,10 @@ import type { Score } from '@/lib/domain/score';
 type Props = {
   date: string;
   initialScore: number | null;
+  // Fires when the wheel transitions from idle → set (first deliberate save).
+  // The composite uses this to enable the note + tag picker immediately,
+  // sidestepping a server-component re-fetch.
+  onFirstSet?: () => void;
 };
 
 const WHEEL_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
@@ -34,7 +38,7 @@ const DEFAULT_IDLE_SCORE = 5;
 const MIN_SCORE = 1;
 const MAX_SCORE = 10;
 
-export function ScoreWheel({ date, initialScore }: Props) {
+export function ScoreWheel({ date, initialScore, onFirstSet }: Props) {
   const [centred, setCentred] = useState<number>(initialScore ?? DEFAULT_IDLE_SCORE);
   const [phase, setPhase] = useState<'idle' | 'set'>(initialScore !== null ? 'set' : 'idle');
   const lastSavedRef = useRef<number | null>(initialScore);
@@ -59,7 +63,10 @@ export function ScoreWheel({ date, initialScore }: Props) {
     }
     const wasIdle = phase === 'idle';
     setCentred(clamped);
-    if (wasIdle) setPhase('set');
+    if (wasIdle) {
+      setPhase('set');
+      onFirstSet?.();
+    }
     // Clamped to [1..10] above; cast to the domain Score type.
     void save({ score: clamped as Score }, { flush: wasIdle });
   }
@@ -127,10 +134,10 @@ export function ScoreWheel({ date, initialScore }: Props) {
               onClick={() => selectValue(n)}
               className={
                 isSelected
-                  ? 'flex h-12 w-12 items-center justify-center rounded-md text-2xl font-semibold ring-2 ring-accent'
+                  ? 'flex h-12 w-12 items-center justify-center rounded-md text-2xl font-semibold text-fg ring-2 ring-accent'
                   : isCentred
-                    ? 'flex h-12 w-12 items-center justify-center text-2xl text-fg-muted'
-                    : 'flex h-12 w-12 items-center justify-center text-base text-fg-muted opacity-40'
+                    ? 'flex h-12 w-12 items-center justify-center text-2xl text-fg'
+                    : 'flex h-12 w-12 items-center justify-center text-base text-fg'
               }
             >
               {n}
