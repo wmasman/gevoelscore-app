@@ -16,6 +16,7 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 - [.claude/testing.md](.claude/testing.md) — **TDD doctrine** (the loop, mandatory test layers, RED-first rule, anti-patterns)
 - [.claude/security-checklist.md](.claude/security-checklist.md) — **Security checklist** (OWASP ASVS-aligned, curated for single-user Next.js PWA + Directus)
 - [docs/architecture/frontend-conventions.md](docs/architecture/frontend-conventions.md) — **Frontend conventions** (server-component default, copy discipline, design tokens, WCAG 2.2 AA + Brainfog extensions, focus management)
+- [docs/design/brief.md](docs/design/brief.md) — **Design brief** (Things-3 anchor, warm-earth palette, humanist sans, reflective Dutch tone, restrained visual cues, forbidden patterns, opt-in-reminder rules)
 
 ## Key rules
 

@@ -206,6 +206,7 @@ If a token isn't yet defined in `@theme`, add it there (see `globals.css`) rathe
 
 ## Cross-references
 
+- [`docs/design/brief.md`](../design/brief.md) — design brief (above-WCAG visual identity: warm-earth palette, Things-3 anchor, Dutch tone, forbidden patterns). This conventions doc carries the *floor*; the brief carries the *direction*.
 - [`docs/features/daily-entry/README.md`](../features/daily-entry/README.md) — the feature that drove the foundation work.
 - [`docs/features/daily-entry/step-0-frontend-foundation.md`](../features/daily-entry/step-0-frontend-foundation.md) — the step that implemented it.
 - [`docs/audits/2026-05-27-auth-security-and-code-audit.md`](../audits/2026-05-27-auth-security-and-code-audit.md) — the audit that informed the security half of the standards layer.
