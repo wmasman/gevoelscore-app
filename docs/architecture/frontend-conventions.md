@@ -118,6 +118,83 @@ Per-route `error.tsx` / `loading.tsx` files (under nested route segments) are ad
 
 ---
 
+## Common gotchas
+
+Patterns that have already cost ≥15 minutes of debugging. Documented here so the next iteration recognises the symptom in 30 seconds.
+
+### Vitest `waitFor` does not progress under `vi.useFakeTimers()`
+
+**Symptom**: a hook test using `await waitFor(() => expect(...).toBe(...))` times out at 5000ms with no obvious reason. Tests that don't use `waitFor` (e.g. checks immediately after `act`) pass fine.
+
+**Cause**: `waitFor` polls in real wall-clock time, but fake timers freeze `setTimeout` / promises that resolve via microtask scheduling. The polled assertion never reflects the awaited state.
+
+**Fix**: switch fake timers per-test rather than per-suite. Only enable `vi.useFakeTimers()` in the specific tests that advance time (debounce / settle cases). All other tests use real timers.
+
+```ts
+// Right
+describe('useThing', () => {
+  afterEach(() => { vi.useRealTimers(); cleanup(); });
+
+  it('debounce coalesces', () => {
+    vi.useFakeTimers();   // explicit in this test only
+    // ... vi.advanceTimersByTimeAsync
+  });
+
+  it('error path', async () => {
+    // real timers (default) — waitFor works
+    await waitFor(() => expect(result.current.status).toBe('error'));
+  });
+});
+
+// Wrong: vi.useFakeTimers() in beforeEach — breaks waitFor in every test
+```
+
+### Next 15 injects a hidden `role="alert"` route announcer
+
+**Symptom**: `page.getByRole('alert')` throws "strict mode violation: resolved to 2 elements" — your real alert + something with `id="__next-route-announcer__"`.
+
+**Cause**: Next 15's App Router inserts a hidden ARIA-live region for screen-reader navigation announcements. It has `role="alert"` and no text content.
+
+**Fix**: select by content, not by role.
+
+```ts
+// Right
+await expect(page.getByText(/niet opgeslagen/i)).toBeVisible();
+
+// Wrong: ambiguous in any Next app
+await expect(page.getByRole('alert')).toBeVisible();
+```
+
+If you genuinely need role-based selection, filter out the announcer:
+
+```ts
+const ours = page.getByRole('alert').and(
+  page.locator(':not([id="__next-route-announcer__"])'),
+);
+```
+
+### Tailwind v4: prefer canonical class names over `[var(...)]`
+
+**Symptom**: VS Code's Tailwind IntelliSense flags `text-[var(--color-fg-muted)]` with "can be written as `text-fg-muted`". Both work at runtime; the arbitrary-value form bloats the CSS output and obscures intent.
+
+**Cause**: the `@theme` directive in `globals.css` exposes our CSS variables as Tailwind utility classes directly. Tailwind v4 prefers the canonical form because it can statically analyse it (smaller bundle, better autocomplete).
+
+**Fix**: use the token-named class.
+
+```tsx
+// Right
+<div className="bg-bg text-fg border-border ring-accent" />
+
+// Wrong (arbitrary-value form — works but slower + ugly)
+<div className="bg-[var(--color-bg)] text-[var(--color-fg)] border-[var(--color-border)] ring-[var(--color-accent)]" />
+```
+
+If a token isn't yet defined in `@theme`, add it there (see `globals.css`) rather than reaching for `[var(...)]`.
+
+**When to add a lint rule for this**: when we catch the same regression in a code review 2+ times after this doc lands. Then install `eslint-plugin-better-tailwindcss` with auto-fix.
+
+---
+
 ## What this doc deliberately does NOT specify
 
 - **Component library**: no `<Button>` primitive yet. Tailwind utilities are the design system for v1. Promote to a primitive when a third surface (settings, import UI) needs it.
