@@ -22,6 +22,7 @@ describe('copy', () => {
       'daily',
       'errors',
       'over',
+      'settings',
       'timeline',
     ]);
     expect(Object.keys(copy.daily).sort()).toEqual(['note', 'score', 'tags']);

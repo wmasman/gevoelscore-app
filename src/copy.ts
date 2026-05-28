@@ -37,6 +37,21 @@ export const copy = {
     streak: (n: number): string =>
       n === 1 ? '1 dag achter elkaar' : `${n} dagen achter elkaar`,
   },
+  settings: {
+    title: 'Instellingen',
+    back: 'Terug',
+    accountHeading: 'Account',
+    logout: 'Uitloggen',
+    logoutConfirmPrompt: 'Weet je het zeker?',
+    logoutConfirmYes: 'Ja, uitloggen',
+    logoutConfirmCancel: 'Annuleer',
+    logoutError: 'Uitloggen lukte niet. Probeer opnieuw.',
+    dataHeading: 'Data',
+    dataSoon: 'Binnenkort',
+    dataExport: 'Exporteren',
+    dataDelete: 'Account verwijderen',
+    iconLabel: 'Instellingen openen',
+  },
   errors: {
     notSaved: 'Niet opgeslagen. Probeer nogmaals.',
     generic: 'Er ging iets mis. Probeer opnieuw.',
