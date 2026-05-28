@@ -5,6 +5,12 @@
 **Risk:** Medium. The note field's "save on pause" debounce is easy to get subtly wrong (saves too often or skips the final keystroke). Tag picker UX has 83 chips to lay out without overwhelming the brainfog user.
 **Prerequisite:** Steps 1–4 done. **Also assumes [Step 4b](step-4b-score-row-and-save-relocation.md) has landed** — Step 4b hoists `useDayEntryUpsert(date)` to `<TodayShell>` and introduces `<SaveStatus variant="glyph" | "banner">`. This step's components reuse both.
 
+**Status (2026-05-28):** Shipped in commit `cd24b38` **before** Step 4b. The note + tag picker work merged correctly with the still-vertical `<ScoreWheel>` and the component-internal `<SaveStatus />`. When Step 4b lands, the editor will need a small refit:
+- `ScoreWheel` → `ScoreRow` import rename (one line in [`day-entry-editor.tsx`](../../../src/components/day-entry-editor.tsx)).
+- `<SaveStatus />` lifted out of [`note-field.tsx`](../../../src/components/note-field.tsx) and [`tag-category-list.tsx`](../../../src/components/tag-category-list.tsx) up to the TodayShell header per 4b AC5. Today both components render their own indicator — once 4b consolidates the indicator, drop the embedded `<SaveStatus />` from each.
+
+These are tracked by Step 4b's own AC list and do not change Step 5's acceptance criteria below.
+
 > Adds the optional context fields to the daily tap flow. Note saves on blur or after 1.5s of typing-pause. Tag chips are grouped by category, tap toggles inclusion, each toggle is an immediate PUT. AC5–AC7 from the feature README.
 
 ---
