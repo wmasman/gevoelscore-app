@@ -21,6 +21,7 @@ describe('copy', () => {
       'app',
       'daily',
       'errors',
+      'home',
       'over',
       'settings',
       'timeline',

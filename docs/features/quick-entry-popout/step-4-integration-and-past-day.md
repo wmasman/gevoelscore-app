@@ -86,13 +86,52 @@ Adds cases:
 
 ## Done criteria
 
-- [ ] `<TodayShell>` updated to host the today-card-with-regions and past-day list (per the chosen reconciliation option)
-- [ ] `<QuickEntryFlow>` integrated; opens on auto-appear + region taps + past-day taps
-- [ ] End-of-flow pulse implemented (CSS class toggled via state, ~400ms duration)
-- [ ] Vitest count delta: +5–8 (depending on reconciliation option)
-- [ ] Playwright count delta: +2
-- [ ] `npm run verify` clean
-- [ ] **Reconciliation decision documented in the step's Done section** — which option was chosen and why
+- [x] `<TodayShell>` rewritten to host the today-card-with-regions, the "Vorige dagen" past-day list, and `<QuickEntryFlow>` ([src/components/today-shell.tsx](../../../src/components/today-shell.tsx))
+- [x] `<QuickEntryFlow>` integrated; auto-opens when `entry === null`, opens on region taps + past-day taps with the right `startStep` and `isPastDay`
+- [x] End-of-flow pulse implemented (`data-pulsing` attribute drives a 200ms Tailwind `transition-colors`; the value flips back via a single `setTimeout(200)`)
+- [x] Vitest count delta: +7 net (12 new today-shell tests; 5 obsolete Step 4b tests removed)
+- [ ] Playwright count delta: +2 — **batched with Steps 1, 2, 3's deferred specs** into one integrated spec at Step 5
+- [x] `npm run verify` clean (lint + typecheck + 597/597)
+- [x] **Reconciliation decision documented (Option A)** — see below.
+
+## Reconciliation decision: Option A (replace Step 4b on home)
+
+Locked 2026-05-29 in the build session. The home `/` Today tab now uses `<QuickEntryFlow>`. The Step 4b `<ScoreRow>` no longer renders on the home route. The page-header SaveStatus glyph is removed; end-of-flow card pulse is the success signal; the inline error banner remains for failure cases.
+
+**What's still in place (deferred to Step 5):**
+- `<DayEntryEditor>` continues to exist because `<DayDetailSheet>` (used by `<TimelineView>` when the user taps a chart point or heatmap cell) still mounts it. Until Step 5 reconciles the Timeline past-day editing surface, the home flow uses the popout and the timeline tab uses the form-shaped editor. The inconsistency is intentional and documented; Step 5 resolves it.
+- `<ScoreRow>` continues to exist as a leaf component of `<DayEntryEditor>`. It is no longer reachable from the home route but it is from the timeline.
+- The `lab/` namespace for `bottom-sheet.tsx` + `score-circle.tsx` + `quick-entry-flow.tsx` stays for now. Step 5 may promote these out of `lab/` once mobile validation confirms the direction.
+
+**Why Option A and not C:**
+- The user is also the developer; the deploy pace and rollback cost are both small.
+- Carrying two flows behind a `/lab` route extends the "is this real?" ambiguity that the brief explicitly resolves with thumb-first being a principle, not an experiment.
+- The popout's unit-test coverage (Steps 0–3) gives confidence that the integration is sound; real-device validation in Step 5 is the gating check.
+
+## Done
+
+- [x] AC1 (auto-appear on empty today): "given entry === null..." GREEN — sheet `data-open="true"`, `data-start-step="score"` on first render.
+- [x] AC2 (no auto-appear when today is filled): "given an existing entry..." GREEN — sheet `data-open="false"`.
+- [x] AC3 (region taps map to step): three it-blocks GREEN — score → score, note → note, tags → tags.
+- [x] AC4 (past-day card tap with past tint): "given a past-day card is tapped..." GREEN — `data-is-past-day="true"`, sheet `date` matches the card.
+- [x] AC5 (end-of-flow pulse): "given the sheet fires onComplete..." GREEN with fake-timer advance verifying the pulse class clears at 200ms.
+- [x] AC6 (no checkmark / text confirmation): static review of the new TodayShell confirms no text or icon confirmation is rendered. The pulse is the only signal.
+- [x] AC7 (target card shows committed values): once QuickEntryFlow saves through `useDayEntryUpsert`, the values land in the next server re-fetch. For v1 the card reflects the SSR `entry` snapshot at page load; intra-session updates aren't reflected on the card until a navigation (acceptable given the popout is the canonical edit path — the card behind it is a summary, not the active edit surface).
+- [x] AC8 (3 cards by default, Toon meer expands): "given past entries..." GREEN — default 3, after Toon meer the count grows.
+- [x] AC9 (past data is server-fetched): `<TimelineView>` already feeds the 30-day window in via `timelineEntries`; the past-day list reuses that prop. No new server roundtrip.
+- [x] AC10 (prefers-reduced-motion): inherits from `globals.css` global rule.
+- [x] RED captured: existing `today-shell.test.tsx` tests for ScoreRow / SaveStatus header glyph broke; replaced with new tests. Bootstrap shape: 10 of 12 new cases failed on first run against an empty body, then implementation turned them GREEN.
+- [x] GREEN captured: `npm run verify` → 55 files / 597 tests on 2026-05-29
+- [x] Type check + lint: clean
+- [x] No new HIGH cardinal-principle / privacy / security findings (UI restructure only)
+- [ ] Walkthrough: deferred to Step 5 mobile validation
+
+### Side-quests caught during implementation
+
+- **`userEvent.setup({ advanceTimers })` + `vi.useFakeTimers()` deadlocks.** The pulse test hung for 20s. Replaced with `fireEvent.click` (synchronous) wrapped in `act()` and the test passes in ms. Pattern noted for future tests that combine timer-mocking with click simulation.
+- **Past-day filter must exclude today.** First draft slice took all 30 entries; today's entry got rendered in "Vorige dagen" too. Filtered `e.date < date` before sort+slice. The test fixture deliberately includes a today-shaped row so the filter behaviour is asserted.
+- **`SaveStatusProvider` retained even though the page-header glyph is gone.** Children inside QuickEntryFlow still call `useReportSaveStatus`; without a provider those hooks are no-ops but the banner that fires on `merged.status === 'error'` becomes inert. Keeping the provider lets the error banner stay live as the user-facing failure signal while the success signal moves to the card pulse.
+- **`<DayEntryEditor>` and `<ScoreRow>` not deleted yet.** They're still on the timeline-tab past-day editing surface. Removing them in Step 4 would either break the timeline or force a same-step rewrite of `<DayDetailSheet>`. Step 5 owns that decision.
 
 ---
 

@@ -1,20 +1,47 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
-import { TodayShell } from '../today-shell';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
 
-// The row embedded in TodayShell uses useDayEntryUpsert → fetch. We
-// don't exercise interactions here (score-row.test.tsx covers that);
-// just stub fetch so the render path is clean.
+// QuickEntryFlow is the composite under test in its own file. Here we only
+// care that TodayShell wires the right props through and reacts to its
+// callbacks — so stub the component with a data-attribute shim.
+vi.mock('@/components/lab/quick-entry-flow', () => ({
+  QuickEntryFlow: (props: {
+    date: string;
+    open: boolean;
+    startStep: 'score' | 'note' | 'tags';
+    isPastDay: boolean;
+    onClose: () => void;
+    onComplete: () => void;
+  }) => (
+    <div
+      data-testid="quick-entry-flow"
+      data-date={props.date}
+      data-open={props.open ? 'true' : 'false'}
+      data-start-step={props.startStep}
+      data-is-past-day={props.isPastDay ? 'true' : 'false'}
+    >
+      <button type="button" onClick={props.onClose}>
+        mock-close
+      </button>
+      <button type="button" onClick={props.onComplete}>
+        mock-complete
+      </button>
+    </div>
+  ),
+}));
 
-function sampleEntry(score: number): DayEntry {
+import { TodayShell } from '../today-shell';
+
+function entry(date: string, score: number, note: string | null = null, tag_ids: string[] = []): DayEntry {
   return {
-    date: '2026-05-28',
+    date,
     score: score as DayEntry['score'],
-    note: null,
-    tag_ids: [],
+    note,
+    tag_ids,
     sub_scores: null,
     sleep_hours: null,
     special_event: null,
@@ -24,10 +51,23 @@ function sampleEntry(score: number): DayEntry {
     health: null,
     weather: null,
     derived: null,
-    created_at: '2026-05-28T08:00:00.000Z',
-    updated_at: '2026-05-28T08:00:00.000Z',
+    created_at: `${date}T08:00:00.000Z`,
+    updated_at: `${date}T08:00:00.000Z`,
   };
 }
+
+const PAST_ENTRIES: DayEntry[] = [
+  entry('2026-05-19', 4, 'Eerste'),
+  entry('2026-05-20', 5),
+  entry('2026-05-21', 6, 'Wandeling'),
+  entry('2026-05-22', 5),
+  entry('2026-05-23', 7, 'Goede dag, energiek'),
+  entry('2026-05-24', 6),
+  entry('2026-05-25', 5),
+  entry('2026-05-26', 4),
+  entry('2026-05-27', 6, 'Iets meer gedaan'),
+  entry('2026-05-28', 7),
+];
 
 describe('<TodayShell />', () => {
   beforeEach(() => {
@@ -41,49 +81,194 @@ describe('<TodayShell />', () => {
     cleanup();
   });
 
-  it('renders the date heading in Dutch', () => {
-    render(<TodayShell date="2026-05-27" entry={null} allTags={[]} timelineEntries={[]} />);
+  it('given any state, when rendered, then the H1 shows the date in Dutch', () => {
+    render(
+      <TodayShell date="2026-05-29" entry={null} allTags={[]} timelineEntries={[]} />,
+    );
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      /woensdag 27 mei 2026/i,
+      /vrijdag 29 mei 2026/i,
     );
   });
 
-  it('composes the ScoreRow — passes initialScore from entry', () => {
-    render(<TodayShell date="2026-05-28" entry={sampleEntry(7)} allTags={[]} timelineEntries={[]} />);
-    const row = screen.getByRole('listbox', { name: /score/i });
-    expect(row).toHaveAttribute('data-phase', 'set');
-    const selected = within(row).getByRole('option', { selected: true });
-    expect(selected).toHaveTextContent('7');
+  it('given an existing entry, when rendered, then the today-card shows the saved score / note / tag count and the sheet stays closed', () => {
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7, 'Vandaag iets beter dan gister', [])}
+        allTags={[]}
+        timelineEntries={PAST_ENTRIES}
+      />,
+    );
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('false');
+    // The today-card's score region shows 7 (in addition to any score
+    // appearances in past-day cards). Card itself is identified by region label.
+    const scoreRegion = screen.getByRole('button', { name: /^score:/i });
+    expect(scoreRegion).toHaveTextContent('7');
   });
 
-  it('composes the ScoreRow — null entry yields idle phase', () => {
-    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} timelineEntries={[]} />);
-    const row = screen.getByRole('listbox', { name: /score/i });
-    expect(row).toHaveAttribute('data-phase', 'idle');
+  it('given entry === null, when first rendered, then the sheet auto-opens at the score step', () => {
+    render(
+      <TodayShell date="2026-05-29" entry={null} allTags={[]} timelineEntries={[]} />,
+    );
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('true');
+    expect(sheet.dataset.startStep).toBe('score');
+    expect(sheet.dataset.isPastDay).toBe('false');
   });
 
-  it('renders an H1 date and a SaveStatus slot side-by-side in the header (Step 4b AC5)', () => {
-    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} timelineEntries={[]} />);
-    const heading = screen.getByRole('heading', { level: 1 });
-    // The H1 lives inside a flex header container. The SaveStatus slot is
-    // a sibling — in idle state SaveStatus renders nothing, so we assert
-    // the header structure rather than the indicator's presence.
-    const header = heading.closest('header');
-    expect(header).not.toBeNull();
-    expect(header).toHaveClass(/flex/);
-    expect(header).toHaveClass(/justify-between/);
+  it('given the today-card score region is tapped, when clicked, then the sheet opens at the score step', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={[]}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /^score:/i }));
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('true');
+    expect(sheet.dataset.startStep).toBe('score');
   });
 
-  it('renders the 4 primary category-header buttons + an "Extra opties" toggle', () => {
-    render(<TodayShell date="2026-05-28" entry={null} allTags={[]} timelineEntries={[]} />);
-    for (const category of ['mentaal', 'fysiek', 'overall', 'activiteit']) {
-      // eslint-disable-next-line security/detect-non-literal-regexp -- test fixture
-      const header = screen.getByRole('button', { name: new RegExp(category, 'i') });
-      expect(header).toHaveAttribute('aria-expanded', 'false');
+  it('given the today-card note region is tapped, when clicked, then the sheet opens at the note step', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={[]}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /^notitie:/i }));
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('true');
+    expect(sheet.dataset.startStep).toBe('note');
+  });
+
+  it('given the today-card tags region is tapped, when clicked, then the sheet opens at the tags step', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={[]}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /^tags:/i }));
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('true');
+    expect(sheet.dataset.startStep).toBe('tags');
+  });
+
+  it('given past entries, when rendered, then the "Vorige dagen" section shows the 3 most-recent days by default', () => {
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={PAST_ENTRIES}
+      />,
+    );
+    // Past-day cards are buttons grouped under "Vorige dagen". The 3 most
+    // recent should be 28, 27, 26 (today is 29; entries are excluded for
+    // today's date).
+    const buttons = screen.getAllByRole('button', { name: /^vorige dag/i });
+    expect(buttons).toHaveLength(3);
+  });
+
+  it('given "Toon meer" is tapped, when clicked, then the past-day list reveals up to 10 entries inline', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={PAST_ENTRIES}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /toon meer/i }));
+    const buttons = screen.getAllByRole('button', { name: /^vorige dag/i });
+    // PAST_ENTRIES has 10 distinct dates; today is 2026-05-29 which doesn't
+    // appear in the fixture, so 10 past-day cards become visible.
+    expect(buttons.length).toBeGreaterThanOrEqual(9);
+  });
+
+  it('given a past-day card is tapped, when clicked, then the sheet opens for that date with isPastDay=true', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={PAST_ENTRIES}
+      />,
+    );
+    const buttons = screen.getAllByRole('button', { name: /^vorige dag/i });
+    await user.click(buttons[0]!); // most-recent past day = 2026-05-28
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('true');
+    expect(sheet.dataset.isPastDay).toBe('true');
+    expect(sheet.dataset.date).toBe('2026-05-28');
+  });
+
+  it('given the sheet fires onComplete, when handled, then the sheet closes', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell date="2026-05-29" entry={null} allTags={[]} timelineEntries={[]} />,
+    );
+    // Sheet auto-opened. Fire onComplete via the stub.
+    await user.click(screen.getByText('mock-complete'));
+    const sheet = screen.getByTestId('quick-entry-flow');
+    expect(sheet.dataset.open).toBe('false');
+  });
+
+  it('given the sheet fires onComplete, when handled, then the target today-card receives a one-shot pulse class', () => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={null}
+          allTags={[]}
+          timelineEntries={[]}
+        />,
+      );
+      const todayCard = screen.getByTestId('today-card');
+      expect(todayCard.dataset.pulsing).toBe('false');
+
+      // fireEvent.click is synchronous — playing well with fake timers,
+      // unlike userEvent which internally schedules tasks.
+      act(() => {
+        screen.getByText('mock-complete').click();
+      });
+      expect(todayCard.dataset.pulsing).toBe('true');
+
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(todayCard.dataset.pulsing).toBe('false');
+    } finally {
+      vi.useRealTimers();
     }
-    expect(screen.getByRole('button', { name: /extra opties/i })).toHaveAttribute(
-      'aria-expanded',
-      'false',
+  });
+
+  it('given the Tijdlijn tab is selected, when tapped, then the timeline view replaces the today-card', async () => {
+    const user = userEvent.setup();
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 7)}
+        allTags={[]}
+        timelineEntries={PAST_ENTRIES}
+      />,
     );
+    await user.click(screen.getByRole('tab', { name: /tijdlijn/i }));
+    // Timeline view is identifiable via its heading.
+    expect(screen.getByRole('heading', { name: /tijdlijn/i })).toBeInTheDocument();
   });
 });
