@@ -193,6 +193,7 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
         <div className="flex flex-col gap-6">
           <TodayCard
             entry={entry}
+            allTags={allTags}
             pulsing={pulseKey === 'today'}
             onTapRegion={(step) =>
               openSheetFor({ date, entry, isPastDay: false }, step)
@@ -255,63 +256,153 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
 
 type TodayCardProps = {
   entry: DayEntry | null;
+  allTags: Tag[];
   pulsing: boolean;
   onTapRegion: (step: Step) => void;
 };
 
-function TodayCard({ entry, pulsing, onTapRegion }: TodayCardProps) {
-  const tagCount = entry?.tag_ids.length ?? 0;
+// Three vertically-stacked editable regions, hairline-divided. Each
+// region carries an explicit pencil icon as the edit affordance — without
+// it, users (correctly) don't infer that the read-only summary is
+// tappable. The icon stays visible at all times to keep the affordance
+// brainfog-discoverable.
+
+function TodayCard({ entry, allTags, pulsing, onTapRegion }: TodayCardProps) {
   return (
     <article
       data-testid="today-card"
       data-pulsing={pulsing ? 'true' : 'false'}
       className={cn(
-        'flex flex-col gap-2 rounded-md border border-border p-2',
+        'flex flex-col divide-y divide-border rounded-md border border-border',
         'bg-surface transition-colors duration-200 ease-out',
         'data-[pulsing=true]:bg-accent-soft',
       )}
     >
-      <RegionButton
-        label={copy.home.scoreRegionLabel}
-        value={entry ? String(entry.score) : copy.home.scoreEmpty}
-        onClick={() => onTapRegion('score')}
-      />
-      <RegionButton
-        label={copy.home.noteRegionLabel}
-        value={truncate(entry?.note, 80) ?? copy.home.noteEmpty}
-        onClick={() => onTapRegion('note')}
-      />
-      <RegionButton
-        label={copy.home.tagsRegionLabel}
-        value={tagCount > 0 ? `${tagCount}` : copy.home.tagsEmpty}
+      <ScoreRegion score={entry?.score ?? null} onClick={() => onTapRegion('score')} />
+      <NoteRegion note={entry?.note ?? null} onClick={() => onTapRegion('note')} />
+      <TagsRegion
+        tagIds={entry?.tag_ids ?? []}
+        allTags={allTags}
         onClick={() => onTapRegion('tags')}
       />
     </article>
   );
 }
 
-type RegionButtonProps = {
-  label: string;
-  value: string;
-  onClick: () => void;
-};
-
-function RegionButton({ label, value, onClick }: RegionButtonProps) {
+function ScoreRegion({ score, onClick }: { score: number | null; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={`${label}: ${value}`}
+      aria-label={`${copy.home.scoreRegionLabel}: ${score ?? copy.home.scoreEmpty}`}
       className={cn(
-        'flex w-full items-baseline justify-between rounded-md px-3 py-3 text-left',
-        'hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent',
+        'flex w-full items-start justify-between gap-3 p-4 text-left',
+        'hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent',
       )}
     >
-      <span className="text-xs font-medium uppercase tracking-wider text-fg-muted">
-        {label}
-      </span>
-      <span className="text-base text-fg">{value}</span>
+      {score !== null ? (
+        <span className="flex items-baseline gap-3">
+          <span className="text-5xl font-semibold leading-none text-accent">{score}</span>
+          <span className="text-base text-fg-muted">{copy.home.scoreRegionLabel}</span>
+        </span>
+      ) : (
+        <span className="flex flex-col">
+          <span className="text-sm text-fg-muted">{copy.home.scoreRegionLabel}</span>
+          <span className="text-base text-fg-muted">{copy.home.scoreEmpty}</span>
+        </span>
+      )}
+      <EditIcon />
     </button>
+  );
+}
+
+function NoteRegion({ note, onClick }: { note: string | null; onClick: () => void }) {
+  const truncated = truncate(note, 140);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${copy.home.noteRegionLabel}: ${truncated ?? copy.home.noteEmpty}`}
+      className={cn(
+        'flex w-full flex-col items-start gap-2 p-4 text-left',
+        'hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent',
+      )}
+    >
+      <span className="flex w-full items-baseline justify-between gap-3">
+        <span className="text-sm text-fg-muted">{copy.home.noteRegionLabel}</span>
+        <EditIcon />
+      </span>
+      <span className={cn('text-base', truncated ? 'text-fg' : 'text-fg-muted')}>
+        {truncated ?? copy.home.noteEmpty}
+      </span>
+    </button>
+  );
+}
+
+function TagsRegion({
+  tagIds,
+  allTags,
+  onClick,
+}: {
+  tagIds: string[];
+  allTags: Tag[];
+  onClick: () => void;
+}) {
+  const tags = tagIds
+    .map((id) => allTags.find((t) => t.id === id))
+    .filter((t): t is Tag => t !== undefined);
+  const ariaValue =
+    tags.length > 0 ? tags.map((t) => t.label).join(', ') : copy.home.tagsEmpty;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`${copy.home.tagsRegionLabel}: ${ariaValue}`}
+      className={cn(
+        'flex w-full flex-col items-start gap-2 p-4 text-left',
+        'hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent',
+      )}
+    >
+      <span className="flex w-full items-baseline justify-between gap-3">
+        <span className="text-sm text-fg-muted">{copy.home.tagsRegionLabel}</span>
+        <EditIcon />
+      </span>
+      {tags.length > 0 ? (
+        <span className="flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="rounded-full bg-accent-soft px-3 py-0.5 text-sm text-accent-active"
+            >
+              {tag.label}
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span className="text-base text-fg-muted">{copy.home.tagsEmpty}</span>
+      )}
+    </button>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg
+      aria-label={copy.home.editAriaLabel}
+      role="img"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0 text-fg-subtle"
+    >
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+    </svg>
   );
 }
 

@@ -103,7 +103,7 @@ describe('<TodayShell />', () => {
     expect(sheet.dataset.open).toBe('false');
     // The today-card's score region shows 7 (in addition to any score
     // appearances in past-day cards). Card itself is identified by region label.
-    const scoreRegion = screen.getByRole('button', { name: /^score:/i });
+    const scoreRegion = screen.getByRole('button', { name: /^gevoelscore:/i });
     expect(scoreRegion).toHaveTextContent('7');
   });
 
@@ -127,7 +127,7 @@ describe('<TodayShell />', () => {
         timelineEntries={[]}
       />,
     );
-    await user.click(screen.getByRole('button', { name: /^score:/i }));
+    await user.click(screen.getByRole('button', { name: /^gevoelscore:/i }));
     const sheet = screen.getByTestId('quick-entry-flow');
     expect(sheet.dataset.open).toBe('true');
     expect(sheet.dataset.startStep).toBe('score');
