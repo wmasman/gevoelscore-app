@@ -237,7 +237,11 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
             open={sheet.open}
             startStep={sheet.startStep}
             isPastDay={sheet.isPastDay}
-            onClose={handleClose}
+            // In edit mode dismissal IS completion — the user came in
+            // to change one field, did so, and tapped away. Pulse the
+            // card so they get the same end-of-interaction signal as
+            // the fresh-entry "Klaar" path.
+            onClose={sheet.entry !== null ? handleComplete : handleClose}
             onComplete={handleComplete}
           />
         </div>
@@ -275,7 +279,10 @@ function TodayCard({ entry, allTags, pulsing, onTapRegion }: TodayCardProps) {
       className={cn(
         'flex flex-col divide-y divide-border rounded-md border border-border',
         'bg-surface transition-colors duration-200 ease-out',
-        'data-[pulsing=true]:bg-accent-soft',
+        // `!` so the pulse always wins over the hover/focus background —
+        // otherwise a hover during the 200ms pulse window could swap to
+        // surface-muted and visually consume the completion signal.
+        'data-[pulsing=true]:bg-accent-soft!',
       )}
     >
       <ScoreRegion score={entry?.score ?? null} onClick={() => onTapRegion('score')} />
@@ -426,7 +433,10 @@ function PastDayCard({ entry, pulsing, onTap }: PastDayCardProps) {
         'flex w-full items-baseline justify-between gap-3 rounded-md border border-border p-3 text-left',
         'bg-surface transition-colors duration-200 ease-out',
         'hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent',
-        'data-[pulsing=true]:bg-accent-soft',
+        // `!` so the pulse always wins over the hover/focus background —
+        // otherwise a hover during the 200ms pulse window could swap to
+        // surface-muted and visually consume the completion signal.
+        'data-[pulsing=true]:bg-accent-soft!',
       )}
     >
       <span className="flex flex-col">

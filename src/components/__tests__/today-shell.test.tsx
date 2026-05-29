@@ -257,6 +257,61 @@ describe('<TodayShell />', () => {
     }
   });
 
+  it('given an existing entry, when the popout fires onClose (dismiss in edit mode), then the today-card pulses — dismiss IS completion when editing', () => {
+    // Why: the pulse is the only end-of-interaction signal on the
+    // today-card. In edit mode the user rarely taps "Klaar" (which
+    // is the tags step's button); they change one field and dismiss.
+    // Without this, an edit feels like nothing happened.
+    vi.useFakeTimers();
+    try {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7, 'note', [])}
+          allTags={[]}
+          timelineEntries={[]}
+        />,
+      );
+      const todayCard = screen.getByTestId('today-card');
+      expect(todayCard.dataset.pulsing).toBe('false');
+
+      // Open the popout by tapping a pencil — any region works; pick note.
+      act(() => {
+        screen.getByRole('button', { name: /^notitie:/i }).click();
+      });
+
+      // Dismiss via the stub's onClose. In edit mode this should pulse.
+      act(() => {
+        screen.getByText('mock-close').click();
+      });
+      expect(todayCard.dataset.pulsing).toBe('true');
+
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(todayCard.dataset.pulsing).toBe('false');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('given entry === null, when the popout fires onClose (dismiss without ever committing), then the today-card does NOT pulse', () => {
+    // The "dismiss = complete" rule only applies in edit mode. A
+    // fresh-day dismiss without commit is the user backing out, not
+    // a save signal — pulsing would lie.
+    render(
+      <TodayShell date="2026-05-29" entry={null} allTags={[]} timelineEntries={[]} />,
+    );
+    const todayCard = screen.getByTestId('today-card');
+    expect(todayCard.dataset.pulsing).toBe('false');
+
+    // Sheet auto-opened. Dismiss without commit.
+    act(() => {
+      screen.getByText('mock-close').click();
+    });
+    expect(todayCard.dataset.pulsing).toBe('false');
+  });
+
   it('given the Tijdlijn tab is selected, when tapped, then the timeline view replaces the today-card', async () => {
     const user = userEvent.setup();
     render(
@@ -268,7 +323,10 @@ describe('<TodayShell />', () => {
       />,
     );
     await user.click(screen.getByRole('tab', { name: /tijdlijn/i }));
-    // Timeline view is identifiable via its heading.
-    expect(screen.getByRole('heading', { name: /tijdlijn/i })).toBeInTheDocument();
+    // Timeline view is identified by its aria-label'd section + the
+    // streak / range / view controls (no visible h2 — the active tab is
+    // the heading).
+    expect(screen.getByRole('region', { name: /tijdlijn/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /30 dagen/i })).toBeInTheDocument();
   });
 });

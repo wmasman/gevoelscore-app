@@ -82,6 +82,21 @@ export function QuickEntryFlow({
     };
   }, []);
 
+  // Sync internal step + editable to the latest props on the
+  // closed→open edge. useState(startStep) only reads the prop on
+  // first mount, so without this the same QuickEntryFlow instance
+  // (which lives in the tree for the page's lifetime) would keep
+  // showing whichever step it was last on — making every edit pencil
+  // open the popout at the wrong step.
+  const prevOpenRef = useRef(open);
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      setStep(startStep);
+      setEditable(initialEntry !== null);
+    }
+    prevOpenRef.current = open;
+  }, [open, startStep, initialEntry]);
+
   function handleScoreCommit(value: number): void {
     void saveScore({ score: value as DayEntry['score'] }, { flush: true });
     if (!editable) setEditable(true);

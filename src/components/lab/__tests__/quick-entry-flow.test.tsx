@@ -208,6 +208,73 @@ describe('<QuickEntryFlow />', () => {
     expect(dialog.className).toMatch(/bg-surface-muted/);
   });
 
+  it('given the sheet is closed-then-reopened with startStep="note", when re-rendered, then the note step (not score) becomes active — startStep must drive step on every open, not only at first mount', () => {
+    // Why: useState(startStep) only reads the prop once. After the
+    // initial mount, prop changes are ignored. In production this
+    // shows up as "every edit pencil opens the score screen" because
+    // QuickEntryFlow mounts once at page load with sheet.startStep
+    // initialised to 'score'.
+    const { rerender, getByRole } = render(
+      <QuickEntryFlow
+        date="2026-05-29"
+        initialEntry={EXISTING_ENTRY}
+        allTags={ALL_TAGS}
+        open={false}
+        startStep="score"
+        onClose={() => {}}
+        onComplete={() => {}}
+      />,
+    );
+
+    rerender(
+      <QuickEntryFlow
+        date="2026-05-29"
+        initialEntry={EXISTING_ENTRY}
+        allTags={ALL_TAGS}
+        open={true}
+        startStep="note"
+        onClose={() => {}}
+        onComplete={() => {}}
+      />,
+    );
+
+    // The note step is the only one that exposes both "← Score" and
+    // "Volgende: tags". If internal `step` stayed at 'score', neither
+    // button is rendered.
+    expect(getByRole('button', { name: /^←\s*Score$/i })).toBeInTheDocument();
+    expect(getByRole('button', { name: /Volgende: tags/i })).toBeInTheDocument();
+  });
+
+  it('given the sheet is closed-then-reopened with startStep="tags", when re-rendered, then the tags step (not score) becomes active', () => {
+    const { rerender, getByRole } = render(
+      <QuickEntryFlow
+        date="2026-05-29"
+        initialEntry={EXISTING_ENTRY}
+        allTags={ALL_TAGS}
+        open={false}
+        startStep="score"
+        onClose={() => {}}
+        onComplete={() => {}}
+      />,
+    );
+
+    rerender(
+      <QuickEntryFlow
+        date="2026-05-29"
+        initialEntry={EXISTING_ENTRY}
+        allTags={ALL_TAGS}
+        open={true}
+        startStep="tags"
+        onClose={() => {}}
+        onComplete={() => {}}
+      />,
+    );
+
+    // The tags step is the only one with "Klaar" + "← Notitie".
+    expect(getByRole('button', { name: /Klaar/i })).toBeInTheDocument();
+    expect(getByRole('button', { name: /^←\s*Notitie$/i })).toBeInTheDocument();
+  });
+
   it('given initialEntry is null, when rendered, then NoteField + TagCategoryList are disabled until the first score commit', () => {
     renderFlow({ initialEntry: null, startStep: 'score' });
 

@@ -90,13 +90,12 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
 
   return (
     <section
-      aria-labelledby="timeline-heading"
+      aria-label={copy.timeline.title}
       className="flex flex-col gap-4"
     >
-      <header className="flex items-baseline justify-between gap-3">
-        <h2 id="timeline-heading" className="text-2xl font-semibold">
-          {copy.timeline.title}
-        </h2>
+      {/* No visible h2 — the active "Tijdlijn" tab already names this
+          section. Screen readers still get the section via aria-label. */}
+      <header className="flex items-baseline justify-end gap-3">
         <div
           role="radiogroup"
           aria-label="Bereik"
