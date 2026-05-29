@@ -4,8 +4,9 @@
 //   - streak counter ("X dagen achter elkaar")
 //   - 30/90-day toggle
 //   - line chart of recent scores
-//   - tap-any-day → bottom sheet for that date (DayDetailSheet, which
-//     reuses DayEntryEditor for the actual editing)
+//   - tap-any-day → opens the QuickEntryFlow popout for that date with
+//     isPastDay=true (the popout is the single canonical edit surface
+//     across the app post-Step-5)
 //
 // Server component pre-fetches the 30-day window so first paint has data;
 // 90-day window is lazy on first toggle. After any save in the sheet, the
@@ -14,7 +15,7 @@
 // matters).
 
 import { useMemo, useState } from 'react';
-import { DayDetailSheet } from '@/components/day-detail-sheet';
+import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
 import { ScoreChart } from '@/components/score-chart';
 import { ScoreHeatmap } from '@/components/score-heatmap';
 import { copy } from '@/copy';
@@ -187,15 +188,22 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
         />
       )}
 
-      {selectedDate !== null && (
-        <DayDetailSheet
-          date={selectedDate}
-          entry={selectedEntry}
-          allTags={allTags}
-          onClose={() => setSelectedDate(null)}
-          onSaved={onSavedInSheet}
-        />
-      )}
+      <QuickEntryFlow
+        date={selectedDate ?? today}
+        initialEntry={selectedDate !== null ? selectedEntry : null}
+        allTags={allTags}
+        open={selectedDate !== null}
+        startStep="score"
+        isPastDay={selectedDate !== null && selectedDate !== today}
+        onClose={() => {
+          setSelectedDate(null);
+          onSavedInSheet();
+        }}
+        onComplete={() => {
+          setSelectedDate(null);
+          onSavedInSheet();
+        }}
+      />
     </section>
   );
 }

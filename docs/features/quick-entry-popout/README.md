@@ -2,7 +2,7 @@
 
 **Feature:** A persistent thumb-zone bottom-sheet for daily input. Replaces the form-shaped Today shell (score row + note + tag accordion stacked on a scrollable page) with a single sheet that lives in the thumb zone and morphs between score → note → tags steps. The interface comes to the thumb, not the other way around.
 **Version:** v1 (alternative implementation path)
-**Status:** Plan landed 2026-05-28 after a focused design exploration. Spec at [`docs/design/explorations/quick-entry-popout.md`](../../design/explorations/quick-entry-popout.md). Two throwaway HTML prototypes validated the gesture (iPhone PWA) and the full flow visual structure (desktop). Build decision: pending — depends on whether this supersedes the in-flight Step 4b horizontal score row in `daily-entry/`, or coexists.
+**Status:** Shipped 2026-05-29 — Steps 0–5 complete, **Option A reconciliation** locked. The popout is the canonical daily-entry surface on both the home / Today tab and the timeline past-day editing. `daily-entry/` Step 4b's score row, the standalone `DayDetailSheet`, and `DayEntryEditor` were removed. Mobile validation (the seven 5.A items in [the spec's Validation log](../../design/explorations/quick-entry-popout.md#validation-log)) is in progress on the user's iPhone PWA — checkboxes in the spec doc.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) · [design/explorations/quick-entry-popout.md](../../design/explorations/quick-entry-popout.md) · [daily-entry/README.md](../daily-entry/README.md)
 
 ---

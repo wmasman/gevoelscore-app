@@ -239,6 +239,17 @@ Real-device milestones for this exploration, oldest first.
 
   **Mobile validation deferred to post-build/deploy.** Testing locally on the iPhone requires friction (separate static server on the LAN) that doesn't pay off vs deploying the real feature and validating there.
 
+- **2026-05-29 — Steps 0–4 shipped + Option A reconciliation landed.** All four primitive hooks (`useFocusTrap`, `useBodyScrollLock`, `useVisualViewport`, `useStepMorph`), the `BottomSheet`, the `ScoreCircle`, the `QuickEntryFlow` composite, and the TodayShell integration are deployed. The home / Today tab uses the popout as the canonical daily-entry surface; the Tijdlijn tab uses the same popout for past-day editing (consistent UX across the app). Step 4b's `ScoreRow`, `DayEntryEditor`, and the standalone `DayDetailSheet` are removed.
+
+  Mobile validation (to be filled in after a few days of soak):
+  - [ ] iOS keyboard handling during the note step — does the panel stay above the keyboard? Are the back/forward buttons reachable?
+  - [ ] Crossfade morph quality on touch — smooth / jarring / invisible?
+  - [ ] End-of-flow tint-pulse registering as spatial confirmation — does the user see it land on the today-card?
+  - [ ] Past-day tint distinction reading without a label — does the cooler `surface-muted` bg register as "this is a different day" in < 500ms?
+  - [ ] One-handed thumb reach for all interactive elements (score circle, back, forward, drag-handle). Stopwatch the full flow on a good-day and a brainfog-simulated day.
+  - [ ] Auto-save under network throttling — does mid-flow dismiss preserve data when network is slow?
+  - [ ] Gesture isolation on touch — score-circle drag does not dismiss the sheet, even on near-diagonal drags.
+
 ## What still needs work before any build
 
 These are real open items for any future implementation:

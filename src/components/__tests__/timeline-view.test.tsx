@@ -91,31 +91,34 @@ describe('<TimelineView />', () => {
     );
   });
 
-  it('tapping a chart point opens the bottom sheet for that date', async () => {
+  it('tapping a chart point opens the QuickEntryFlow popout for that date with isPastDay=true', async () => {
     const user = userEvent.setup();
     render(<TimelineView today="2026-05-28" initialEntries={INITIAL} allTags={TAGS} />);
 
-    // No sheet yet.
+    // No popout yet.
     expect(screen.queryByRole('dialog')).toBeNull();
 
-    // Each point is a role=button inside the SVG with an aria-label
-    // containing the date and the score.
     const point = screen.getByRole('button', { name: /2026-05-27/ });
     await user.click(point);
 
+    // QuickEntryFlow renders via BottomSheet → portal → role="dialog"
+    // with the app's aria-label.
     const dialog = await screen.findByRole('dialog');
-    expect(dialog).toHaveAccessibleName(/2026-05-27|dinsdag 26 mei 2026|woensdag 27 mei 2026/i);
+    expect(dialog).toBeInTheDocument();
+    // Past tint: bg-surface-muted on the dialog confirms isPastDay=true
+    // was threaded through.
+    expect(dialog.className).toMatch(/bg-surface-muted/);
   });
 
-  it('sheet shows the day\'s saved score in the wheel + a note placeholder when note is null', async () => {
+  it('sheet shows the day\'s saved score in the score-circle slider', async () => {
     const user = userEvent.setup();
     render(<TimelineView today="2026-05-28" initialEntries={INITIAL} allTags={TAGS} />);
 
     await user.click(screen.getByRole('button', { name: /2026-05-27/ }));
 
-    // Sheet renders the editor; the row carries data-phase=set for an
-    // existing entry.
-    const row = screen.getByRole('listbox', { name: /score/i });
-    expect(row).toHaveAttribute('data-phase', 'set');
+    // QuickEntryFlow's ScoreCircle has role="slider" with aria-valuenow
+    // set to the saved score (7 for the 2026-05-27 fixture entry).
+    const slider = screen.getByRole('slider', { name: /score/i });
+    expect(slider).toHaveAttribute('aria-valuenow', '7');
   });
 });

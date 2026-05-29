@@ -64,11 +64,33 @@ Conditional on the Step 4 reconciliation option:
 
 ## Done criteria
 
-- [ ] Mobile validation completed; findings logged
-- [ ] Reconciliation cleanup landed per the chosen option
-- [ ] Feature plan README updated with final status (`Status: shipped` or `Status: deferred to v1.5` etc.)
-- [ ] Cross-doc references updated (`daily-entry/` README, design brief if any new findings warrant)
-- [ ] No regression in existing `daily-entry/` test suite
+- [ ] **Mobile validation completed; findings logged** — left to the user (the seven 5.A items, recorded in [the spec doc's Validation log](../../design/explorations/quick-entry-popout.md#validation-log)).
+- [x] Reconciliation cleanup landed per Option A (this build session):
+  - `<DayDetailSheet>` deleted; `<TimelineView>` now opens `<QuickEntryFlow>` directly with `isPastDay=true`
+  - `<DayEntryEditor>` deleted (no more callers after the home + timeline integrations both use the popout)
+  - `<ScoreRow>` deleted (no more callers after Step 4b's superseding)
+  - Corresponding test files (`day-entry-editor.test.tsx`, `score-row.test.tsx`) deleted
+  - `<NoteField>` + `<TagCategoryList>` retained — both are consumed by `<QuickEntryFlow>`'s note and tags steps
+- [x] Cross-doc references updated: `daily-entry/` README's Steps section flags every superseded item; the spec's Validation log gets a 2026-05-29 entry plus the seven mobile-validation checkboxes for the user.
+- [x] No regression in the surviving test suite — `npm run verify` clean (582/582)
+
+## Done
+
+- [x] 5.B.i — Timeline edit surface unified with home: `<QuickEntryFlow>` is the only edit affordance across both tabs. Past-day taps from the chart or the heatmap open the same popout with the past tint.
+- [x] 5.B.ii — Orphan code removed: `day-detail-sheet.tsx`, `day-entry-editor.tsx`, `score-row.tsx` and their two test files. ESLint + tsc + vitest all clean afterwards.
+- [x] 5.B.iii — `daily-entry/` README's "Steps" list carries supersession notes inline so future readers see the history (Step 4 → 4b → quick-entry-popout/4) without having to cross-walk three docs.
+- [x] 5.B.iv — Spec doc's Validation log gets the 2026-05-29 ship entry + the seven 5.A checkboxes for the user to tick as they soak.
+- [ ] 5.A — Mobile validation: the seven items in the spec's Validation log are left for the user. The popout is shipped to prod; the user runs the checklist on the iPhone PWA over the next few days and records findings.
+- [x] RED/GREEN: no new tests in this step — the verify gate confirms the existing suite still passes after the orphan removal.
+- [x] Type check + lint: clean (lint catches dead-import regressions; nothing flagged).
+- [x] No new HIGH cardinal-principle / privacy / security findings (deletion-only step on the production code).
+- [ ] Walkthrough: the seven 5.A items ARE the walkthrough. Logged in the spec's Validation log for the user.
+
+### Side-quests caught during implementation
+
+- **lab/ promotion deferred.** The three lab/ files (`bottom-sheet.tsx`, `score-circle.tsx`, `quick-entry-flow.tsx`) are now reachable from the canonical home + timeline routes. Strictly speaking they should move out of `lab/` per the BUILD-HANDOFF's quarantine rule ("code may be promoted out of lab/ once Step 4 makes a reconciliation decision"). Deferring until after the 5.A mobile validation closes — if any of the seven items fail in a way that needs a redesign, the rename adds churn to no benefit. Tracked as a single follow-up: once the soak passes, move the three files and update three imports.
+- **TimelineView re-fetch on close.** The old `<DayDetailSheet>` re-fetched the visible range via `onSaved`. With `<QuickEntryFlow>`, saves are continuous (each field saves on its own settle / commit timing), so there's no single "saved" event the timeline can hook. Current behaviour: `onClose` and `onComplete` both trigger a range re-fetch. Acceptable — slight extra read but bounded by user action.
+- **Timeline tests adapted to the new popout shape.** Two assertions (`role="listbox"` from ScoreRow, dialog `accessibleName` with the date) were updated to use the new contract (`role="slider"` on ScoreCircle, `bg-surface-muted` class on the past-tinted dialog).
 
 ---
 
