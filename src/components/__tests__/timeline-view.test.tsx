@@ -110,6 +110,24 @@ describe('<TimelineView />', () => {
     expect(dialog.className).toMatch(/bg-surface-muted/);
   });
 
+  it('given the initialEntries prop is replaced (after router.refresh), when re-rendered with range=30 active, then the chart reflects the new prop — no useState shadow', async () => {
+    // Same shape as the TodayShell prop-driven test: server-rendered
+    // data must flow through to display without local-state shadowing,
+    // otherwise router.refresh() never moves the UI.
+    const { rerender } = render(
+      <TimelineView today="2026-05-28" initialEntries={INITIAL} allTags={TAGS} />,
+    );
+    // Initially no point for 2026-05-25.
+    expect(screen.queryByRole('button', { name: /2026-05-25/ })).toBeNull();
+
+    const next: DayEntry[] = [entry('2026-05-25', 9), ...INITIAL];
+    rerender(<TimelineView today="2026-05-28" initialEntries={next} allTags={TAGS} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /2026-05-25/ })).toBeInTheDocument();
+    });
+  });
+
   it('sheet shows the day\'s saved score in the score-circle slider', async () => {
     const user = userEvent.setup();
     render(<TimelineView today="2026-05-28" initialEntries={INITIAL} allTags={TAGS} />);

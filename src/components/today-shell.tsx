@@ -23,7 +23,7 @@
 // The page-header glyph from Step 4b was removed: the popout's end-of-
 // flow pulse is now the success signal; the banner below handles errors.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
 import { SaveStatus } from '@/components/save-status';
@@ -65,41 +65,17 @@ export function TodayShell({ date, entry, allTags, timelineEntries }: Props) {
   );
 }
 
-function TodayShellInner({ date, entry: serverEntry, allTags, timelineEntries }: Props) {
+function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
   const [tab, setTab] = useState<Tab>('today');
   const merged = useMergedSaveStatus();
 
-  // Today's entry, mirrored from the server-fetched prop and re-read
-  // from /api/day-entries/today after every popout dismissal AND every
-  // time a save reports 'saved' to the SaveStatusContext. Without this
-  // the TodayCard stayed pinned to whatever the server rendered on
-  // first paint — saves reached Directus but the card kept showing the
-  // old text, which felt like the save had silently dropped.
-  const [entry, setEntry] = useState<DayEntry | null>(serverEntry);
-
-  const refetchEntry = useCallback(async (): Promise<void> => {
-    try {
-      const res = await fetch('/api/day-entries/today', {
-        credentials: 'same-origin',
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as { entry?: DayEntry | null };
-      setEntry(data.entry ?? null);
-    } catch {
-      // Network blip — leave the current display alone. Next save or
-      // dismiss will retry.
-    }
-  }, []);
-
-  // Save-status hook: when any source (NoteField, TagCategoryList,
-  // ScoreCircle, plus the timeline-tab's own sheet) transitions to
-  // 'saved', re-read today's row. This catches the note typing-settle
-  // race where the user dismisses the popout before the 1.5s settle
-  // timer fires — the dismiss-refetch returns stale, but the save's
-  // own 'saved' transition kicks a second refetch a moment later.
-  useEffect(() => {
-    if (merged.status === 'saved') void refetchEntry();
-  }, [merged.status, refetchEntry]);
+  // `entry` is read straight from the server-rendered prop. After any
+  // save useDayEntryUpsert calls router.refresh(); the server component
+  // re-runs, a fresh `entry` flows in, and the today-card display
+  // updates without any client-side state shadow. The earlier
+  // useState(entry) mirror + explicit GET refetch was load-bearing for
+  // a single use case (display refresh after save) but introduced two
+  // sources of truth; the router.refresh path is one.
 
   // Sheet state. `target` carries the date + entry being edited.
   type SheetState = {
@@ -149,7 +125,6 @@ function TodayShellInner({ date, entry: serverEntry, allTags, timelineEntries }:
     pulseTimerRef.current = setTimeout(() => {
       setPulseKey(null);
     }, PULSE_DURATION_MS);
-    void refetchEntry();
   }
 
   // Past-day list. Exclude today, sort by date descending, cap at 10.

@@ -12,6 +12,7 @@
 // timeline bottom sheet (Step 6). One source of truth for save semantics.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { DayEntryPatch } from '@/lib/api/day-entries';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -23,6 +24,7 @@ type SaveOptions = { flush?: boolean };
 export function useDayEntryUpsert(date: string) {
   const [status, setStatus] = useState<SaveStatus>('idle');
   const [lastError, setLastError] = useState<string | null>(null);
+  const router = useRouter();
 
   const abortRef = useRef<AbortController | null>(null);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,13 +73,17 @@ export function useDayEntryUpsert(date: string) {
         return;
       }
       setStatus('saved');
+      // Invalidate the current route's server-rendered data. The single
+      // source-of-truth pattern: every mutation triggers a server re-run;
+      // components read from props and never shadow with useState.
+      router.refresh();
     } catch (e) {
       if (!mountedRef.current) return;
       if (e instanceof Error && e.name === 'AbortError') return;
       setStatus('error');
       setLastError(e instanceof Error ? e.message : 'unknown');
     }
-  }, [date]);
+  }, [date, router]);
 
   const save = useCallback(
     async (patch: Partial<DayEntryPatch>, opts: SaveOptions = {}): Promise<void> => {

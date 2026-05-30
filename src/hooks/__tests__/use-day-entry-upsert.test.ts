@@ -1,6 +1,22 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
+
+// Mocked next/navigation router. We want to assert that successful saves
+// invalidate server-rendered data via router.refresh() — the single
+// invalidation primitive for the app per the data architecture pass.
+const routerMocks = vi.hoisted(() => ({
+  refresh: vi.fn(),
+  push: vi.fn(),
+  replace: vi.fn(),
+  back: vi.fn(),
+  forward: vi.fn(),
+  prefetch: vi.fn(),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => routerMocks,
+}));
+
 import { useDayEntryUpsert } from '../use-day-entry-upsert';
 
 function mockFetch(response: { status?: number; ok?: boolean; body?: unknown }) {
@@ -14,10 +30,37 @@ function mockFetch(response: { status?: number; ok?: boolean; body?: unknown }) 
 }
 
 describe('useDayEntryUpsert', () => {
+  beforeEach(() => {
+    routerMocks.refresh.mockClear();
+  });
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     cleanup();
+  });
+
+  it('on successful save, calls router.refresh() so server-fetched props re-flow without a manual GET', async () => {
+    mockFetch({ status: 200 });
+    const { result } = renderHook(() => useDayEntryUpsert('2026-05-28'));
+
+    await act(async () => {
+      await result.current.save({ score: 7 }, { flush: true });
+    });
+    await waitFor(() => expect(result.current.status).toBe('saved'));
+
+    expect(routerMocks.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('on error response, does NOT call router.refresh() — only successful writes invalidate', async () => {
+    mockFetch({ status: 502, body: { error: 'server_error' } });
+    const { result } = renderHook(() => useDayEntryUpsert('2026-05-28'));
+
+    await act(async () => {
+      await result.current.save({ score: 7 }, { flush: true });
+    });
+    await waitFor(() => expect(result.current.status).toBe('error'));
+
+    expect(routerMocks.refresh).not.toHaveBeenCalled();
   });
 
   it('save with patch (debounced) fires PUT to /api/day-entries/[date] with the patch body', async () => {

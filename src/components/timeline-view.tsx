@@ -8,16 +8,22 @@
 //     isPastDay=true (the popout is the single canonical edit surface
 //     across the app post-Step-5)
 //
-// Server component pre-fetches the 30-day window so first paint has data;
-// 90-day window is lazy on first toggle. After any save in the sheet, the
-// view re-fetches its current range (simplest correct behaviour — for v1's
-// scale a 30/90-row read is cheap; replace with local patching if it ever
-// matters).
+// Data architecture:
+//   - 30-day range is server-rendered in page.tsx and flows through as
+//     `initialEntries`. The view READS THE PROP DIRECTLY for range=30 —
+//     no useState shadow. Saves trigger router.refresh() inside
+//     useDayEntryUpsert; the server component re-runs and a fresh
+//     initialEntries arrives.
+//   - 90-day range is client-fetched on first toggle into a local
+//     cache (`range90Entries`). When a save fires while range=90 is
+//     active we refetch the 90d window — router.refresh only
+//     refreshes server data (the 30d window).
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
 import { ScoreChart } from '@/components/score-chart';
 import { ScoreHeatmap } from '@/components/score-heatmap';
+import { useMergedSaveStatus } from '@/components/save-status-context';
 import { copy } from '@/copy';
 import { currentStreak } from '@/lib/domain/streak';
 import type { DayEntry } from '@/lib/domain/day-entry';
@@ -44,8 +50,13 @@ function shiftDate(date: string, days: number): string {
 export function TimelineView({ today, initialEntries, allTags }: Props) {
   const [range, setRange] = useState<Range>(30);
   const [view, setView] = useState<View>('chart');
-  const [entries, setEntries] = useState<DayEntry[]>(initialEntries);
+  // 30d entries come straight from the prop — no shadow. 90d is a
+  // client-side lazy cache; null means "not fetched yet for this
+  // session," in which case we fall back to the 30d prop so the chart
+  // never renders empty mid-toggle.
+  const [range90Entries, setRange90Entries] = useState<DayEntry[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const merged = useMergedSaveStatus();
 
   const fromForRange = useMemo<Record<Range, string>>(
     () => ({
@@ -55,8 +66,8 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
     [today],
   );
 
-  async function fetchRange(r: Range): Promise<void> {
-    const from = fromForRange[r];
+  const fetchRange90 = useCallback(async (): Promise<void> => {
+    const from = fromForRange[90];
     try {
       const res = await fetch(
         `/api/day-entries?from=${from}&to=${today}`,
@@ -64,24 +75,29 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
       );
       if (!res.ok) return;
       const data = (await res.json()) as { entries?: DayEntry[] };
-      if (Array.isArray(data.entries)) setEntries(data.entries);
+      if (Array.isArray(data.entries)) setRange90Entries(data.entries);
     } catch {
-      // Network failure — keep showing current entries. The sheet's own
-      // save flow surfaces errors; the timeline read is best-effort.
+      // Network failure — leave whatever's there. The sheet's own save
+      // flow surfaces errors; the timeline read is best-effort.
     }
-  }
+  }, [fromForRange, today]);
 
   function onRangeChange(r: Range): void {
     if (r === range) return;
     setRange(r);
-    void fetchRange(r);
+    if (r === 90 && range90Entries === null) void fetchRange90();
   }
 
-  function onSavedInSheet(): void {
-    // Re-read the current range so the chart reflects the new value.
-    void fetchRange(range);
-  }
+  // When a save lands and the user is currently looking at the 90d
+  // window, refresh the cache. The 30d window picks up automatically
+  // via router.refresh (server re-runs, new initialEntries prop).
+  useEffect(() => {
+    if (merged.status === 'saved' && range === 90) {
+      void fetchRange90();
+    }
+  }, [merged.status, range, fetchRange90]);
 
+  const entries = range === 30 ? initialEntries : (range90Entries ?? initialEntries);
   const streak = currentStreak(entries, today);
   const selectedEntry =
     selectedDate === null
@@ -194,14 +210,8 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
         open={selectedDate !== null}
         startStep="score"
         isPastDay={selectedDate !== null && selectedDate !== today}
-        onClose={() => {
-          setSelectedDate(null);
-          onSavedInSheet();
-        }}
-        onComplete={() => {
-          setSelectedDate(null);
-          onSavedInSheet();
-        }}
+        onClose={() => setSelectedDate(null)}
+        onComplete={() => setSelectedDate(null)}
       />
     </section>
   );
