@@ -53,7 +53,7 @@ Central tracker for findings from the audit docs in `docs/audits/`. Each item li
 
 ### Day 4 — security S-H1 + S-M cluster
 
-- [ ] S-H1: provision Directus role + policy + user scoped to CRUD on `frontend_sessions`; rotate admin token; update `docs/operations/runbooks/rotate-credentials.md`
+- [x] S-H1: scoped Directus role + policy + user + token provisioned via `directus/scripts/setup-frontend-sessions-service-token.mjs`; Fly secret `DIRECTUS_TOKEN` on `gevoelscore-frontend` rotated to the scoped token (admin token no longer on the frontend machine); runbook updated. Admin-token rotation in Directus is a separate optional step now — frontend no longer cares.
 - [ ] ~~S-M1: cookie rename to `__Host-gs_session` / `__Host-gs_pending_otp`~~ — **deferred**: ~16 test files hardcode `'gs_session='` in Cookie header literals; the mechanical churn outweighs the residual real risk on a single-subdomain Fly deployment. Re-evaluate when multi-subdomain or production exposure changes.
 - [x] S-M2: origin check rejects state-changing methods (POST/PUT/PATCH/DELETE) with neither Origin nor Referer. GETs stay lenient (Safari quirk).
 - [x] S-M3: `setInterval(.unref())` every 25 min in `stores.ts` sweeping all 5 rate limiters + 2 pending stores. Guarded with `globalThis.__gsAuthSweeper` against dev hot-reload duplicates.

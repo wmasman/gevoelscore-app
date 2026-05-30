@@ -44,7 +44,11 @@ banner('setup-frontend-sessions-service-token');
 const COLLECTION = 'frontend_sessions';
 const POLICY_NAME = 'gevoelscore-frontend-sessions-only-policy';
 const ROLE_NAME = 'gevoelscore-frontend-sessions-service-role';
-const USER_EMAIL = 'frontend-sessions-service@gevoelscore.internal';
+// Email uses RFC 2606's reserved `example.com` so it passes Directus's
+// strict email validator without colliding with any real mailbox.
+// This account is never used interactively — the email is a label,
+// not a routable address.
+const USER_EMAIL = 'frontend-sessions-service@example.com';
 const ACTIONS = ['create', 'read', 'update', 'delete'];
 
 // 1) Policy ------------------------------------------------------------------
