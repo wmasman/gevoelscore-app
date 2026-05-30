@@ -8,7 +8,9 @@ Procedures for rotating every credential listed in [`../credentials.md`](../cred
 
 ## Static Directus admin token
 
-The token used by `directus/scripts/*.mjs`.
+The token used by `directus/scripts/*.mjs` to provision schema, seed tags, run migrations.
+
+**Important:** since 2026-05-30 the frontend Fly app uses a **scoped** Directus token, NOT the admin token (see "Scoped frontend-sessions token" below). Rotating the admin token does NOT log users out and does NOT require touching `gevoelscore-frontend` Fly secrets. Only your local scripts and `directus/.env.local` care.
 
 1. Open https://gevoelscore-backend.fly.dev/admin
 2. User Profile → **Token** → Generate (this revokes the previous token)
@@ -16,10 +18,55 @@ The token used by `directus/scripts/*.mjs`.
 4. Wherever you stored the old one, replace it:
    - `$env:DIRECTUS_TOKEN` in your active shell
    - `directus/.env.local` if you use one (gitignored)
+   - `.env.local` at the project root if your local scripts use it
    - Any active terminal/process that read the old one — they're now using a dead token, restart them
 5. Verify with: `curl -H "Authorization: Bearer <new>" https://gevoelscore-backend.fly.dev/users/me` → HTTP 200
 
 **Time**: ~2 minutes.
+
+---
+
+## Scoped frontend-sessions token
+
+The token used by the Next.js frontend Fly app to read/write the `frontend_sessions` collection (audit S-H1, 2026-05-30). Lives in Fly secret `DIRECTUS_TOKEN` on app `gevoelscore-frontend`. Anchored to the service user `frontend-sessions-service@gevoelscore.internal` whose role (`gevoelscore-frontend-sessions-service-role`) has CRUD on `frontend_sessions` only — nothing else.
+
+### When to rotate
+
+- Audit, periodically (every 90 days is sensible).
+- After any exposure: copy-paste into a public channel, screenshot, shared machine.
+- Immediately after the very first provisioning (script's initial run mints one token; the rotation script overwrites it on every run).
+
+### Procedure
+
+The script is **idempotent** — running it again rotates the token. It does NOT touch the policy, role, user, or permissions if they're already correct.
+
+```powershell
+# 1. Set the admin token (NOT the scoped token) — this script needs admin to mutate /policies, /roles, /users, /access.
+$env:DIRECTUS_TOKEN = "<admin static token>"
+
+# 2. Run the rotation script.
+node directus/scripts/setup-frontend-sessions-service-token.mjs
+# Prints the new token at the bottom. Capture it.
+
+# 3. Set it on Fly. Triggers a rolling redeploy (~90 s).
+fly secrets set DIRECTUS_TOKEN="<new token>" -a gevoelscore-frontend
+
+# 4. Verify the session store still works:
+#    - Open https://gevoelscore-frontend.fly.dev/ in a private window.
+#    - Log in.
+#    - Reload the page. If you stay logged in, the new scoped token is live.
+
+# 5. (Optional) If you rotated because of exposure, also clear any
+#    sessions that were issued under the compromised token:
+#    Open Directus admin UI → frontend_sessions → select all → Delete.
+#    The user re-logs in on next request.
+```
+
+**Time**: ~5 minutes including the Fly redeploy and verification.
+
+### Recovery: scoped token lost / wrong
+
+If `DIRECTUS_TOKEN` on Fly is missing or wrong, the frontend can't read `frontend_sessions` and every authenticated request returns 401 (the user gets redirected to `/login`). To recover: just re-run step 2-3 above. The script is non-destructive — re-running mints a fresh token that overwrites the broken one.
 
 ---
 
