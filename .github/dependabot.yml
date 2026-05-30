@@ -1,0 +1,42 @@
+version: 2
+
+# Weekly grouped npm updates + GitHub Actions version bumps.
+# Grouped patches keep the PR firehose manageable for a one-person
+# repo; minors come as their own group so each minor change can be
+# reviewed (and rejected) on its own. Majors are NOT auto-grouped —
+# Dependabot opens them individually so each can be evaluated for
+# breaking-change handling.
+
+updates:
+  # npm dependencies — the main package.json
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+    groups:
+      patches:
+        update-types:
+          - "patch"
+      minor:
+        update-types:
+          - "minor"
+    # Direct-deps only by default — Dependabot still surfaces transitive
+    # security vulnerabilities via security-update PRs regardless.
+    versioning-strategy: increase
+
+  # GitHub Actions versions in .github/workflows/
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci"
