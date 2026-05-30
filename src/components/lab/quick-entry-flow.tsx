@@ -117,11 +117,11 @@ export function QuickEntryFlow({
         : null;
   const forwardLabel =
     step === 'score'
-      ? 'Volgende: notitie'
+      ? copy.daily.flow.nextNote
       : step === 'note'
-        ? 'Volgende: tags'
+        ? copy.daily.flow.nextTags
         : step === 'tags'
-          ? 'Klaar'
+          ? copy.daily.flow.done
           : null;
   // On the score step the forward button stays disabled until the
   // user has committed a value (editable flips at first commit) so
@@ -149,7 +149,7 @@ export function QuickEntryFlow({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Sluiten"
+          aria-label={copy.daily.flow.close}
           className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
         >
           ✕

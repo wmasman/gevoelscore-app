@@ -62,12 +62,12 @@ Central tracker for findings from the audit docs in `docs/audits/`. Each item li
 
 ### Day 5 — security S-H2 + S-H3 prep + copy migration + design tail
 
-- [ ] S-H2: AES-256-GCM encrypt `access_token` + `refresh_token` columns in `frontend_sessions`
-- [ ] S-H3 prep: add `user_created` column on `day_entries`, `tags`, `day_entries_tags`, `frontend_sessions` (column only; filtering enforced in v1.5)
-- [ ] Runtime single-user gate: reject any session whose Directus user id ≠ Willem's (two-line guard with a Fly secret)
-- [ ] D-M2: extract inline Dutch literals on auth pages + error/not-found into `copy.ts`
-- [ ] D-M3: extract `'Klaar'`, `'Sluiten'`, `'Schermen'`, `'Bereik'`, `'Weergave'`, past-day `aria-label` template into `copy.ts`
-- [ ] D-L1: `TRANSITION_MS` 250 → 200 in `bottom-sheet.tsx`
+- [x] S-H2: AES-256-GCM token cipher in `src/lib/auth/token-cipher.ts` wired into `directus-session-store.ts` create/update/read. `SESSION_TOKEN_KEY` set as Fly secret. Legacy plaintext rows pass through until natural rotation.
+- [x] S-H3 prep: `user_created` (with `special: ['user-created']`) added to `day_entries`, `tags`, `day_entries_tags` via `directus/scripts/add-user-created-columns.mjs`. App code does not filter yet — v1.5 work. `frontend_sessions` deliberately skipped (service-token writes would make user_created useless on that table; v1.5 will use a custom column).
+- [x] Runtime single-user gate: `passesSingleUserGate(accessToken, refreshToken)` checks `directusGetMe(accessToken).id === WILLEM_USER_ID`. Wired into both login + 2FA verify routes. Fly secret set. No-op when env unset (tests / dev).
+- [x] D-M2 (partial): `login/page.tsx` + `error.tsx` + `not-found.tsx` literals extracted into `copy.auth.login.*` + `copy.errors.{retry,backHome}`. `login/verify/verify-form.tsx` + `login/2fa-setup/setup-form.tsx` still hold inline literals — **deferred**: rarely-used surfaces, the dominant call sites (the main login page) are done.
+- [x] D-M3: extracted `Klaar`, `Sluiten`, `Schermen`, `Bereik`, `Weergave`, past-day `aria-label` template (now formats date in Dutch — closes A-L1) into `copy.daily.flow.*` + `copy.home.tabsAriaLabel` + `copy.home.pastDayAriaLabel(date, score)` + `copy.timeline.{rangeAriaLabel,viewAriaLabel}`.
+- [x] D-L1: `TRANSITION_MS` 250 → 200 in `bottom-sheet.tsx` (aligns with brief's motion cap).
 
 ---
 

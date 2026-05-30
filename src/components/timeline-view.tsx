@@ -120,7 +120,7 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
       <header className="flex items-baseline justify-end gap-3">
         <div
           role="radiogroup"
-          aria-label="Bereik"
+          aria-label={copy.timeline.rangeAriaLabel}
           className="flex items-center gap-1 text-sm"
         >
           <button
@@ -158,7 +158,7 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
         </p>
         <div
           role="radiogroup"
-          aria-label="Weergave"
+          aria-label={copy.timeline.viewAriaLabel}
           className="flex items-center gap-1 text-sm"
         >
           <button

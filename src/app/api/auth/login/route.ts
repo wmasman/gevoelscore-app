@@ -13,6 +13,7 @@ import { directusLogin } from '@/lib/auth/directus-auth';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { buildSessionCookie, SESSION_MAX_AGE_S } from '@/lib/auth/session';
 import { buildPendingOtpCookie } from '@/lib/auth/pending-otp';
+import { passesSingleUserGate } from '@/lib/auth/single-user-gate';
 import {
   getClientIp,
   loginRateLimiter,
@@ -72,6 +73,12 @@ export async function POST(request: Request) {
       return res;
     }
     // invalid_credentials, network_error, directus_error — all generic
+    return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
+  }
+
+  // Single-user gate (S-H3 runtime enforcement). No-op when
+  // WILLEM_USER_ID is unset (tests, dev).
+  if (!(await passesSingleUserGate(result.value.accessToken, result.value.refreshToken))) {
     return NextResponse.json({ error: 'invalid_credentials' }, { status: 401 });
   }
 

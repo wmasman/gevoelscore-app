@@ -251,12 +251,12 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
           padding to account for it. z-30 sits under the BottomSheet
           (z-40/50) so the popout overlays the bar when open. */}
       <nav
-        aria-label="Schermen"
+        aria-label={copy.home.tabsAriaLabel}
         className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
       >
         <div
           role="tablist"
-          aria-label="Schermen"
+          aria-label={copy.home.tabsAriaLabel}
           className="mx-auto flex max-w-120 px-2"
         >
           <button
@@ -461,7 +461,7 @@ function PastDayCard({ entry, pulsing, onTap }: PastDayCardProps) {
       type="button"
       onClick={onTap}
       data-pulsing={pulsing ? 'true' : 'false'}
-      aria-label={`Vorige dag ${entry.date}, score ${entry.score}`}
+      aria-label={copy.home.pastDayAriaLabel(formatDateDutch(entry.date), entry.score)}
       className={cn(
         'flex w-full items-baseline justify-between gap-3 rounded-md border border-border p-3 text-left',
         'bg-surface transition-colors duration-200 ease-out',

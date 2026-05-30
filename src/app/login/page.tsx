@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
+import { copy } from '@/copy';
 
 type Status = 'idle' | 'submitting' | 'error';
 
@@ -26,12 +27,12 @@ export default function LoginPage() {
 
       if (res.status === 429) {
         setStatus('error');
-        setErrorMessage('Te veel pogingen. Probeer het straks opnieuw.');
+        setErrorMessage(copy.auth.login.errors.rateLimited);
         return;
       }
       if (!res.ok) {
         setStatus('error');
-        setErrorMessage('Onjuiste e-mail of wachtwoord.');
+        setErrorMessage(copy.auth.login.errors.invalidCredentials);
         return;
       }
 
@@ -47,10 +48,10 @@ export default function LoginPage() {
 
       // Unexpected shape — treat as a generic error
       setStatus('error');
-      setErrorMessage('Er ging iets mis. Probeer het opnieuw.');
+      setErrorMessage(copy.auth.login.errors.unknown);
     } catch {
       setStatus('error');
-      setErrorMessage('Verbindingsprobleem. Probeer het opnieuw.');
+      setErrorMessage(copy.auth.login.errors.network);
     }
   }
 
@@ -58,11 +59,11 @@ export default function LoginPage() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate={false}>
-      <h1 className="text-2xl font-semibold text-center">Aanmelden</h1>
+      <h1 className="text-2xl font-semibold text-center">{copy.auth.login.title}</h1>
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium mb-1">
-          E-mailadres
+          {copy.auth.login.emailLabel}
         </label>
         <input
           id="email"
@@ -81,7 +82,7 @@ export default function LoginPage() {
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium mb-1">
-          Wachtwoord
+          {copy.auth.login.passwordLabel}
         </label>
         <input
           id="password"
@@ -110,7 +111,7 @@ export default function LoginPage() {
         disabled={submitting}
         className="w-full rounded-md bg-accent-hover px-4 py-3 text-base font-semibold text-bg hover:bg-accent-active focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
       >
-        {submitting ? 'Even geduld…' : 'Aanmelden'}
+        {submitting ? copy.auth.login.submitting : copy.auth.login.submit}
       </button>
     </form>
   );

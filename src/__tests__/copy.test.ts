@@ -20,6 +20,7 @@ describe('copy', () => {
     expect(Object.keys(copy).sort()).toEqual([
       'announce',
       'app',
+      'auth',
       'daily',
       'errors',
       'home',
@@ -27,7 +28,7 @@ describe('copy', () => {
       'settings',
       'timeline',
     ]);
-    expect(Object.keys(copy.daily).sort()).toEqual(['note', 'score', 'tags']);
+    expect(Object.keys(copy.daily).sort()).toEqual(['flow', 'note', 'score', 'tags']);
     expect(Object.keys(copy.over).sort()).toEqual([
       'cta',
       'email',

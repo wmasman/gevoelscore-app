@@ -10,7 +10,7 @@ export default function NotFound() {
           href="/"
           className="mt-6 inline-flex min-h-11 items-center rounded-md bg-accent px-4 py-2 text-bg focus-visible:outline-2 focus-visible:outline-accent"
         >
-          Naar startpagina
+          {copy.errors.backHome}
         </Link>
       </div>
     </main>

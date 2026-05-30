@@ -22,7 +22,7 @@ export default function ErrorBoundary({
           onClick={reset}
           className="mt-6 min-h-11 rounded-md bg-accent px-4 py-2 text-bg focus-visible:outline-2 focus-visible:outline-accent"
         >
-          Probeer opnieuw
+          {copy.errors.retry}
         </button>
       </div>
     </main>

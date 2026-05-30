@@ -37,7 +37,11 @@ type Props = {
 };
 
 const DISMISS_THRESHOLD_PX = 100;
-const TRANSITION_MS = 250;
+// 200 ms aligns with the brief's motion cap (docs/design/brief.md:91)
+// and the brainfog-friendly "≤ 200ms" rule. The sheet's slide-up/down
+// is one of the few transitions in the app — extra polish from running
+// longer doesn't beat the discipline of one cap everywhere.
+const TRANSITION_MS = 200;
 
 export function BottomSheet({
   open,
@@ -144,7 +148,7 @@ export function BottomSheet({
           'fixed left-0 right-0 z-50 mx-auto flex max-w-120 flex-col',
           'rounded-t-[28px] shadow-[0_-8px_24px_rgba(43,37,32,0.08)]',
           'pb-[env(safe-area-inset-bottom,0)]',
-          'transition-[transform,background-color,bottom] duration-250 ease-out',
+          'transition-[transform,background-color,bottom] duration-200 ease-out',
           tint === 'past' ? 'bg-surface-muted' : 'bg-surface',
           !open && 'translate-y-full',
         )}

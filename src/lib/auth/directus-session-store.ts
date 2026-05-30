@@ -29,6 +29,7 @@ import {
   updateItem,
 } from '@directus/sdk';
 import type { SessionData, SessionStore, SessionStoreConfig } from './session';
+import { decryptToken, encryptToken } from './token-cipher';
 
 type FrontendSessionRow = {
   id: string;
@@ -57,8 +58,8 @@ function isNotFound(e: unknown): boolean {
 
 function rowToSession(row: FrontendSessionRow): SessionData {
   return {
-    accessToken: row.access_token,
-    refreshToken: row.refresh_token,
+    accessToken: decryptToken(row.access_token),
+    refreshToken: decryptToken(row.refresh_token),
     expiresAt: Date.parse(row.expires_at),
   };
 }
@@ -78,8 +79,8 @@ export function createDirectusSessionStore(
       await client.request(
         createItem('frontend_sessions', {
           id,
-          access_token: data.accessToken,
-          refresh_token: data.refreshToken,
+          access_token: encryptToken(data.accessToken),
+          refresh_token: encryptToken(data.refreshToken),
           expires_at: new Date(data.expiresAt).toISOString(),
         }),
       );
@@ -119,8 +120,8 @@ export function createDirectusSessionStore(
       try {
         await client.request(
           updateItem('frontend_sessions', id, {
-            access_token: data.accessToken,
-            refresh_token: data.refreshToken,
+            access_token: encryptToken(data.accessToken),
+            refresh_token: encryptToken(data.refreshToken),
             expires_at: new Date(data.expiresAt).toISOString(),
           }),
         );

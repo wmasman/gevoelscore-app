@@ -23,6 +23,14 @@ export const copy = {
       none: 'Geen tags',
       extraToggle: 'Extra opties (Interventie, Project, etc)',
     },
+    // Popout flow controls. The forward button label changes per
+    // step; the back button reads from daily.{score,note}.label.
+    flow: {
+      nextNote: 'Volgende: notitie',
+      nextTags: 'Volgende: tags',
+      done: 'Klaar',
+      close: 'Sluiten',
+    },
   },
   home: {
     todayHeading: 'Vandaag',
@@ -37,14 +45,22 @@ export const copy = {
     showMore: 'Toon meer',
     showLess: 'Toon minder',
     sheetAriaLabel: 'Dag-invoer',
+    tabsAriaLabel: 'Schermen',
+    // Caller is responsible for formatting the date in Dutch (the
+    // function-vs-string call shape lets copy.ts stay free of cross-
+    // module date-format imports).
+    pastDayAriaLabel: (formattedDate: string, score: number): string =>
+      `Vorige dag ${formattedDate}, score ${score}`,
   },
   timeline: {
     title: 'Tijdlijn',
     todayTab: 'Vandaag',
     range30: '30 dagen',
     range90: '90 dagen',
+    rangeAriaLabel: 'Bereik',
     viewChart: 'Lijn',
     viewHeatmap: 'Heatmap',
+    viewAriaLabel: 'Weergave',
     maSubtitle: '7-daags voortschrijdend gemiddelde',
     edited: 'bewerkt',
     close: 'Sluit',
@@ -70,6 +86,23 @@ export const copy = {
     notSaved: 'Niet opgeslagen. Probeer nogmaals.',
     generic: 'Er ging iets mis. Probeer opnieuw.',
     notFound: 'Pagina niet gevonden',
+    retry: 'Probeer opnieuw',
+    backHome: 'Naar startpagina',
+  },
+  auth: {
+    login: {
+      title: 'Aanmelden',
+      submit: 'Aanmelden',
+      submitting: 'Even geduld…',
+      emailLabel: 'E-mailadres',
+      passwordLabel: 'Wachtwoord',
+      errors: {
+        rateLimited: 'Te veel pogingen. Probeer het straks opnieuw.',
+        invalidCredentials: 'Onjuiste e-mail of wachtwoord.',
+        unknown: 'Er ging iets mis. Probeer het opnieuw.',
+        network: 'Verbindingsprobleem. Probeer het opnieuw.',
+      },
+    },
   },
   // Screen-reader-only announcements for the SaveAnnouncer's live region.
   // Visible feedback lives in the today-card pulse and the SaveStatus
