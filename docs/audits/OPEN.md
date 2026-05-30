@@ -33,13 +33,13 @@ Central tracker for findings from the audit docs in `docs/audits/`. Each item li
 
 ### Day 2 — accessibility high
 
-- [ ] A-H1: remove 500 ms score auto-advance OR gate behind `!prefers-reduced-motion` + lengthen + cancel affordance
-- [ ] A-H2 / M-L3: initial focus on the active step's primary control via `BottomSheet` `initialFocusRef`
-- [ ] A-H4: single page-level live region; one announcement per "saved" transition; throttled to ≥5 s
-- [ ] A-H5: clarify `BottomSheet` handle semantic (expose as button OR widen close ✕)
-- [ ] A-M2: `aria-valuetext={'${value} van 10'}` on ScoreCircle
-- [ ] A-M5: suppress auto-advance + pulse-class toggle when `prefers-reduced-motion`
-- [ ] A-M6: logout confirm focuses Cancel button on state transition
+- [x] A-H1: removed 500 ms score auto-advance; replaced with explicit "Volgende: notitie" button (disabled until first commit, anti-anchoring)
+- [x] A-H2 / M-L3: initial focus on the active step's primary control via `data-autofocus` selector in `useFocusTrap`
+- [x] A-H4: `SaveAnnouncer` page-level live region; one announcement per "saved" transition; throttled to ≥5 s
+- [x] A-H5: close ✕ widened to 44×44 in Day 1 covers this — handle stays `aria-hidden` as cosmetic
+- [x] A-M2: `aria-valuetext={'${value} van 10'}` on ScoreCircle
+- [x] A-M5: pulse suppressed in TodayShell when `prefers-reduced-motion` (auto-advance already removed in A-H1)
+- [x] A-M6: logout confirm wraps in `role="alertdialog"` and focuses Cancel button on state transition
 
 ### Day 3 — mobile + layout
 

@@ -22,8 +22,16 @@ export function useFocusTrap(
     if (!container) return;
     const previouslyFocused = document.activeElement as HTMLElement | null;
 
+    // Initial focus targeting. Without an explicit hint, focus lands on
+    // the first focusable in DOM order — which inside BottomSheet is the
+    // close ✕ button. One stray Enter and the user dismisses what they
+    // just opened (audit A-H2). Components can opt out by marking the
+    // wrapper of the primary action with `data-autofocus="true"`; the
+    // first focusable inside that wrapper wins.
     const focusables = container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-    const first = focusables[0] ?? container;
+    const autofocusWrapper = container.querySelector<HTMLElement>('[data-autofocus="true"]');
+    const preferred = autofocusWrapper?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR) ?? null;
+    const first = preferred ?? focusables[0] ?? container;
     first.focus();
 
     function onKeyDown(event: KeyboardEvent): void {

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import type { Tag } from '@/lib/domain/tag';
@@ -84,12 +84,15 @@ function renderFlow(overrides: Partial<React.ComponentProps<typeof QuickEntryFlo
 }
 
 describe('<QuickEntryFlow />', () => {
-  it('given startStep=score (default), when rendered, then the score-circle is the visible layer and back+forward buttons are hidden', () => {
+  it('given startStep=score (default), when rendered, then the score-circle is the visible layer; the "Volgende: notitie" forward button is present-but-disabled until a commit', () => {
     const { getByRole, queryByRole } = renderFlow();
 
     expect(getByRole('slider', { name: /score/i })).toBeInTheDocument();
-    // No back/forward yet — auto-advance handles the score→note transition.
-    expect(queryByRole('button', { name: /score|notitie|tags|klaar|volgende/i })).toBeNull();
+    // No back button on the first step.
+    expect(queryByRole('button', { name: /^←/i })).toBeNull();
+    // Forward button present but disabled — no anchoring on the default 5.
+    const forward = getByRole('button', { name: /Volgende: notitie/i });
+    expect(forward).toBeDisabled();
   });
 
   it('given the ScoreCircle commits, when it fires, then save is called with { score }', () => {
@@ -106,49 +109,46 @@ describe('<QuickEntryFlow />', () => {
     );
   });
 
-  it('given initialEntry is null, when the score commits, then after 500ms the flow auto-advances to the note step', () => {
-    vi.useFakeTimers();
-    try {
-      const { getByRole, queryByRole } = renderFlow({ initialEntry: null });
-      const slider = getByRole('slider', { name: /score/i });
-
-      fireEvent.pointerDown(slider, { clientX: 100, pointerId: 1 });
-      fireEvent.pointerMove(slider, { clientX: 120, pointerId: 1 });
-      fireEvent.pointerUp(slider, { clientX: 120, pointerId: 1 });
-
-      // Before the auto-advance timer: no back button yet.
-      expect(queryByRole('button', { name: /^←\s*Score$/i })).toBeNull();
-
-      act(() => {
-        vi.advanceTimersByTime(500);
-      });
-
-      // Back button is rendered once we've left the score step.
-      expect(getByRole('button', { name: /^←\s*Score$/i })).toBeInTheDocument();
-    } finally {
-      vi.useRealTimers();
-    }
+  it('given initialEntry is null and no commit yet, when rendered, then the "Volgende: notitie" forward button is disabled', () => {
+    // Why: the score circle shows 5 by default; the brief is explicit
+    // about not anchoring the user before they decide. The forward
+    // button only enables after an explicit commit (drag / keypress).
+    const { getByRole } = renderFlow({ initialEntry: null });
+    const forward = getByRole('button', { name: /Volgende: notitie/i });
+    expect(forward).toBeDisabled();
   });
 
-  it('given initialEntry already exists, when the score commits, then NO auto-advance fires (reviewing an existing entry must not yank the user forward)', () => {
-    vi.useFakeTimers();
-    try {
-      const { getByRole, queryByRole } = renderFlow({ initialEntry: EXISTING_ENTRY });
-      const slider = getByRole('slider', { name: /score/i });
+  it('given the score commits, when the user taps "Volgende: notitie", then the flow advances to the note step — NO auto-advance', () => {
+    // Replaces the prior 500 ms auto-advance behaviour. Per A-H1 from
+    // the 2026-05-30 audit, motion-triggered step morphs violate
+    // WCAG 2.2 SC 2.2.1 (Timing Adjustable) and contradict the brief's
+    // "no time pressure" rule. Advance is now explicit.
+    const { getByRole, queryByRole } = renderFlow({ initialEntry: null });
+    const slider = getByRole('slider', { name: /score/i });
 
-      fireEvent.pointerDown(slider, { clientX: 100, pointerId: 1 });
-      fireEvent.pointerMove(slider, { clientX: 120, pointerId: 1 });
-      fireEvent.pointerUp(slider, { clientX: 120, pointerId: 1 });
+    fireEvent.pointerDown(slider, { clientX: 100, pointerId: 1 });
+    fireEvent.pointerMove(slider, { clientX: 120, pointerId: 1 });
+    fireEvent.pointerUp(slider, { clientX: 120, pointerId: 1 });
 
-      act(() => {
-        vi.advanceTimersByTime(2000);
-      });
+    // No setTimeout in the system any more — the surface stays on
+    // score until the user taps forward.
+    expect(queryByRole('button', { name: /^←\s*Score$/i })).toBeNull();
 
-      // Still on the score step — no back button.
-      expect(queryByRole('button', { name: /^←\s*Score$/i })).toBeNull();
-    } finally {
-      vi.useRealTimers();
-    }
+    // After commit the forward button must be enabled.
+    const forward = getByRole('button', { name: /Volgende: notitie/i });
+    expect(forward).not.toBeDisabled();
+    fireEvent.click(forward);
+
+    // Now we're on the note step — back button to Score appears.
+    expect(getByRole('button', { name: /^←\s*Score$/i })).toBeInTheDocument();
+  });
+
+  it('given initialEntry already exists, when rendered, then "Volgende: notitie" is enabled immediately (no commit required to advance)', () => {
+    // Edit-mode review: the entry already has a score, so editable
+    // starts true and the user can advance without re-committing.
+    const { getByRole } = renderFlow({ initialEntry: EXISTING_ENTRY });
+    const forward = getByRole('button', { name: /Volgende: notitie/i });
+    expect(forward).not.toBeDisabled();
   });
 
   it('given startStep="note" with an existing entry, when rendered, then the note step opens with back="← Score" and forward="Volgende: tags"', () => {

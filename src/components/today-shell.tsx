@@ -24,8 +24,10 @@
 // flow pulse is now the success signal; the banner below handles errors.
 
 import { useEffect, useRef, useState } from 'react';
+import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion';
 import Link from 'next/link';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
+import { SaveAnnouncer } from '@/components/save-announcer';
 import { SaveStatus } from '@/components/save-status';
 import {
   SaveStatusProvider,
@@ -68,6 +70,10 @@ export function TodayShell({ date, entry, allTags, timelineEntries }: Props) {
 function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
   const [tab, setTab] = useState<Tab>('today');
   const merged = useMergedSaveStatus();
+  // When reduce-motion is set we skip the pulse entirely — the
+  // SaveAnnouncer's "Opgeslagen." live-region announcement carries the
+  // completion signal for those users (A-M5).
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // `entry` is read straight from the server-rendered prop. After any
   // save useDayEntryUpsert calls router.refresh(); the server component
@@ -120,6 +126,7 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
   function handleComplete(): void {
     const key = sheet.isPastDay ? sheet.date : 'today';
     setSheet((s) => ({ ...s, open: false }));
+    if (prefersReducedMotion) return;
     setPulseKey(key);
     if (pulseTimerRef.current !== null) clearTimeout(pulseTimerRef.current);
     pulseTimerRef.current = setTimeout(() => {
@@ -260,6 +267,13 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
       {merged.status === 'error' && tab === 'today' && (
         <SaveStatus status="error" error={merged.error} variant="banner" />
       )}
+
+      {/* Single page-level live region. Announces "Opgeslagen." after
+          every save completion (throttled), "Niet opgeslagen..." on
+          errors. Hidden visually; the pulse + the banner above carry
+          the sighted-user feedback. See save-announcer.tsx + A-H4 in
+          the 2026-05-30 audit. */}
+      <SaveAnnouncer />
     </main>
   );
 }

@@ -71,6 +71,13 @@ export const copy = {
     generic: 'Er ging iets mis. Probeer opnieuw.',
     notFound: 'Pagina niet gevonden',
   },
+  // Screen-reader-only announcements for the SaveAnnouncer's live region.
+  // Visible feedback lives in the today-card pulse and the SaveStatus
+  // error banner; these strings carry the same intent over assistive tech.
+  announce: {
+    saved: 'Opgeslagen.',
+    notSaved: 'Niet opgeslagen. Probeer opnieuw.',
+  },
   over: {
     title: 'Gevoelscore',
     subtitle:

@@ -18,6 +18,7 @@ describe('copy', () => {
 
   it('top-level structure is stable (snapshot lock)', () => {
     expect(Object.keys(copy).sort()).toEqual([
+      'announce',
       'app',
       'daily',
       'errors',

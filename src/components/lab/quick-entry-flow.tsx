@@ -19,10 +19,12 @@
 //    `useDayEntryUpsert` calls — they were designed that way for the
 //    daily-entry feature and we reuse them as-is.
 //
-// 3. Auto-advance from score to note fires ONLY when `initialEntry === null`.
-//    Reviewing an existing entry must not yank the user forward. The
-//    timer constant `AUTO_ADVANCE_SCORE_TO_NOTE_MS = 500` is tuneable
-//    based on real-device feedback.
+// 3. No auto-advance. The score step shows a "Volgende: notitie"
+//    forward button that becomes enabled after the first commit (i.e.
+//    after `editable` flips). The previous 500 ms auto-advance broke
+//    WCAG 2.2 SC 2.2.1 (Timing Adjustable) and contradicted the
+//    brief's "no time pressure" rule — a brainfog user reading "7"
+//    out loud saw the surface morph under them. Explicit advance only.
 //
 // 4. Editable gate: NoteField + TagCategoryList are disabled until the
 //    first score save has been initiated. After commit they become
@@ -59,8 +61,6 @@ type Props = {
   onComplete: () => void;
 };
 
-const AUTO_ADVANCE_SCORE_TO_NOTE_MS = 500;
-
 export function QuickEntryFlow({
   date,
   initialEntry,
@@ -74,13 +74,6 @@ export function QuickEntryFlow({
   const [step, setStep] = useState<Step>(startStep);
   const [editable, setEditable] = useState<boolean>(initialEntry !== null);
   const { save: saveScore } = useDayEntryUpsert(date);
-  const autoAdvanceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
-    };
-  }, []);
 
   // Sync internal step + editable to the latest props on the
   // closed→open edge. useState(startStep) only reads the prop on
@@ -100,21 +93,14 @@ export function QuickEntryFlow({
   function handleScoreCommit(value: number): void {
     void saveScore({ score: value as DayEntry['score'] }, { flush: true });
     if (!editable) setEditable(true);
-    // Auto-advance only when the user is logging today fresh, not when
-    // they're reviewing an existing entry.
-    if (initialEntry === null) {
-      if (autoAdvanceRef.current !== null) clearTimeout(autoAdvanceRef.current);
-      autoAdvanceRef.current = setTimeout(() => {
-        setStep('note');
-      }, AUTO_ADVANCE_SCORE_TO_NOTE_MS);
-    }
   }
 
   function goBack(): void {
     setStep((s) => (s === 'tags' ? 'note' : s === 'note' ? 'score' : s));
   }
   function goForward(): void {
-    if (step === 'note') setStep('tags');
+    if (step === 'score') setStep('note');
+    else if (step === 'note') setStep('tags');
     else if (step === 'tags') onComplete();
   }
 
@@ -126,7 +112,18 @@ export function QuickEntryFlow({
         ? `← ${copy.daily.note.label}`
         : null;
   const forwardLabel =
-    step === 'note' ? 'Volgende: tags' : step === 'tags' ? 'Klaar' : null;
+    step === 'score'
+      ? 'Volgende: notitie'
+      : step === 'note'
+        ? 'Volgende: tags'
+        : step === 'tags'
+          ? 'Klaar'
+          : null;
+  // On the score step the forward button stays disabled until the
+  // user has committed a value (editable flips at first commit) so
+  // the default-shown 5 can't be advanced past without an explicit
+  // user choice — matches the brief's anti-anchoring stance.
+  const forwardDisabled = step === 'score' && !editable;
 
   const layerBase =
     'absolute inset-0 flex flex-col px-6 transition-opacity duration-150 ease-out';
@@ -159,9 +156,16 @@ export function QuickEntryFlow({
           sheet's flex column, min-h-0 so it can shrink when the visual
           viewport is constrained (iPhone with keyboard up). Replaces
           the prior fixed h-95 (380px), which on iPhone PWA pushed the
-          sheet past the visible viewport once the soft keyboard rose. */}
+          sheet past the visible viewport once the soft keyboard rose.
+
+          data-autofocus on the layer matching `step` tells useFocusTrap
+          to focus the first focusable inside that wrapper rather than
+          the close ✕ button — see use-focus-trap.ts. */}
       <div className="relative min-h-0 flex-1">
-        <div className={layerClass(step === 'score')}>
+        <div
+          className={layerClass(step === 'score')}
+          data-autofocus={step === 'score' ? 'true' : undefined}
+        >
           <div className="flex h-full items-center justify-center">
             <ScoreCircle
               initialValue={initialEntry?.score ?? 5}
@@ -170,7 +174,10 @@ export function QuickEntryFlow({
             />
           </div>
         </div>
-        <div className={layerClass(step === 'note')}>
+        <div
+          className={layerClass(step === 'note')}
+          data-autofocus={step === 'note' ? 'true' : undefined}
+        >
           <div className="flex h-full flex-col pt-4">
             <NoteField
               date={date}
@@ -179,7 +186,10 @@ export function QuickEntryFlow({
             />
           </div>
         </div>
-        <div className={cn(layerClass(step === 'tags'), 'overflow-y-auto')}>
+        <div
+          className={cn(layerClass(step === 'tags'), 'overflow-y-auto')}
+          data-autofocus={step === 'tags' ? 'true' : undefined}
+        >
           <TagCategoryList
             date={date}
             allTags={allTags}
@@ -205,7 +215,8 @@ export function QuickEntryFlow({
           <button
             type="button"
             onClick={goForward}
-            className="inline-flex min-h-11 items-center rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent"
+            disabled={forwardDisabled}
+            className="inline-flex min-h-11 items-center rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             {forwardLabel}
           </button>

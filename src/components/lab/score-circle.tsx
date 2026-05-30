@@ -134,10 +134,15 @@ export function ScoreCircle({ initialValue = 5, onCommit, ariaLabel }: Props) {
     <div
       ref={circleRef}
       role="slider"
+      // aria-label keeps the prop value (defaults to copy.daily.score.label
+      // = "Score"); aria-valuetext provides the announced value with its
+      // scale, since some screen readers announce only valuenow otherwise
+      // and the "of 10" context is critical.
       aria-label={ariaLabel}
       aria-valuemin={MIN_VALUE}
       aria-valuemax={MAX_VALUE}
       aria-valuenow={value}
+      aria-valuetext={`${value} van ${MAX_VALUE}`}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

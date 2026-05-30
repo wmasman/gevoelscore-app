@@ -13,7 +13,7 @@
 // We use router.push (client-side nav) rather than location.assign so
 // the SPA stays warm — the next /login render is server-side anyway.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { copy } from '@/copy';
@@ -23,6 +23,18 @@ type LogoutState = 'idle' | 'confirming' | 'submitting' | 'error';
 export function SettingsView() {
   const router = useRouter();
   const [state, setState] = useState<LogoutState>('idle');
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  // When the confirm step appears, focus the Cancel button rather than
+  // the destructive "Ja, uitloggen". A stray Enter from a brainfog user
+  // should NOT log them out — it should harmlessly cancel. The whole
+  // confirm block is a role="alertdialog" so screen readers announce
+  // the transition without us juggling a live region.
+  useEffect(() => {
+    if (state === 'confirming') {
+      cancelButtonRef.current?.focus();
+    }
+  }, [state]);
 
   async function performLogout(): Promise<void> {
     setState('submitting');
@@ -56,22 +68,29 @@ export function SettingsView() {
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium text-fg">{copy.settings.accountHeading}</h2>
         {state === 'confirming' || state === 'submitting' ? (
-          <div className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4">
-            <p className="text-base text-fg">{copy.settings.logoutConfirmPrompt}</p>
+          <div
+            role="alertdialog"
+            aria-labelledby="logout-confirm-prompt"
+            className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4"
+          >
+            <p id="logout-confirm-prompt" className="text-base text-fg">
+              {copy.settings.logoutConfirmPrompt}
+            </p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => void performLogout()}
                 disabled={state === 'submitting'}
-                className="rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg disabled:opacity-60"
+                className="inline-flex min-h-11 items-center rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
               >
                 {copy.settings.logoutConfirmYes}
               </button>
               <button
+                ref={cancelButtonRef}
                 type="button"
                 onClick={() => setState('idle')}
                 disabled={state === 'submitting'}
-                className="rounded-md border border-border px-4 py-2 text-base text-fg-muted disabled:opacity-60"
+                className="inline-flex min-h-11 items-center rounded-md border border-border px-4 py-2 text-base text-fg-muted focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
               >
                 {copy.settings.logoutConfirmCancel}
               </button>
@@ -81,7 +100,7 @@ export function SettingsView() {
           <button
             type="button"
             onClick={() => setState('confirming')}
-            className="self-start rounded-md border border-border px-4 py-2 text-base text-fg hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
+            className="inline-flex min-h-11 items-center self-start rounded-md border border-border px-4 py-2 text-base text-fg hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
           >
             {copy.settings.logout}
           </button>
