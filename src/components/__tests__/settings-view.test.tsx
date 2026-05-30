@@ -46,9 +46,9 @@ describe('<SettingsView />', () => {
 
     // No fetch yet — the confirm prompt should appear inline.
     expect(global.fetch).not.toHaveBeenCalled();
-    expect(screen.getByText(/weet je het zeker/i)).toBeInTheDocument();
+    expect(screen.getByText(/bevestigen/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /ja, uitloggen/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /annuleer/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /annuleren/i })).toBeInTheDocument();
   });
 
   it('cancelling the confirm leaves no side effect (no fetch, no nav, prompt closes)', async () => {
@@ -56,11 +56,11 @@ describe('<SettingsView />', () => {
     render(<SettingsView />);
     await user.click(screen.getByRole('button', { name: /^uitloggen$/i }));
 
-    await user.click(screen.getByRole('button', { name: /annuleer/i }));
+    await user.click(screen.getByRole('button', { name: /annuleren/i }));
 
     expect(global.fetch).not.toHaveBeenCalled();
     expect(pushMock).not.toHaveBeenCalled();
-    expect(screen.queryByText(/weet je het zeker/i)).toBeNull();
+    expect(screen.queryByText(/bevestigen/i)).toBeNull();
   });
 
   it('confirming logout POSTs /api/auth/logout and navigates to /login', async () => {

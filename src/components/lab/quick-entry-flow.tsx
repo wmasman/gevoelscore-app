@@ -149,7 +149,7 @@ export function QuickEntryFlow({
           type="button"
           onClick={onClose}
           aria-label="Sluiten"
-          className="rounded-md p-1 text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
         >
           ✕
         </button>
@@ -194,7 +194,7 @@ export function QuickEntryFlow({
           <button
             type="button"
             onClick={goBack}
-            className="rounded-md px-4 py-2 text-base text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
+            className="inline-flex min-h-11 items-center rounded-md px-4 py-2 text-base text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
           >
             {backLabel}
           </button>
@@ -205,7 +205,7 @@ export function QuickEntryFlow({
           <button
             type="button"
             onClick={goForward}
-            className="rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent"
+            className="inline-flex min-h-11 items-center rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent"
           >
             {forwardLabel}
           </button>

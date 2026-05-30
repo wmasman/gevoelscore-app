@@ -133,8 +133,8 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
                     disabled={disabled}
                     className={
                       isSelected
-                        ? 'min-h-9 rounded-full border border-accent bg-accent px-3 py-1 text-sm text-bg disabled:opacity-60'
-                        : 'min-h-9 rounded-full border border-border bg-bg px-3 py-1 text-sm text-fg disabled:opacity-60'
+                        ? 'inline-flex min-h-11 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg disabled:opacity-60'
+                        : 'inline-flex min-h-11 items-center rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg disabled:opacity-60'
                     }
                   >
                     {t.label}
@@ -162,7 +162,7 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
         aria-expanded={extraOpen}
         onClick={() => setExtraOpen((prev) => !prev)}
         disabled={disabled}
-        className="mt-1 inline-flex items-center gap-2 self-start rounded-md px-2 py-1 text-left text-sm text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+        className="mt-1 inline-flex min-h-11 items-center gap-2 self-start rounded-md px-3 py-2 text-left text-sm text-fg-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
       >
         <span>
           {copy.daily.tags.extraToggle}

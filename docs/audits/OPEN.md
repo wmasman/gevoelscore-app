@@ -22,14 +22,14 @@ Central tracker for findings from the audit docs in `docs/audits/`. Each item li
 ### Day 1 — visible polish
 
 - [x] iOS sheet fix (M-M1 deeper repro) — shipped `a238ca8`
-- [ ] M-C1 / D-L3: PWA manifest + apple-touch-icon + apple-mobile-web-app meta tags
-- [ ] A-H3 / M-H3: 44×44 sweep — close ✕, settings cog, tag chips, "Toon meer", tabs
-- [ ] D-H1: replace `animate-pulse` skeleton with static `bg-surface-muted` blocks in `loading.tsx`
-- [ ] D-H2: `text-white` → `text-bg`, `bg-[var(--color-accent)]` → `bg-accent` in `error.tsx` + `not-found.tsx`
-- [ ] D-M1: `"Weet je het zeker?"` → `"Bevestigen."` (or drop the prompt)
-- [ ] D-L2: `"Annuleer"` → `"Annuleren"`
-- [ ] A-M3: darken `--color-fg-subtle` to ~`#7b6d5f` for ≥4.5:1 AA contrast
-- [ ] A-M4: document `text-accent` size rule (≥24 px or bold ≥18.66 px); smaller call sites → `text-accent-active`
+- [x] M-C1 / D-L3: PWA manifest + apple-mobile-web-app meta tags (icons deferred — need design assets)
+- [x] A-H3 / M-H3: 44×44 sweep — close ✕, settings cog, tag chips, "Toon meer", tabs
+- [x] D-H1: replace `animate-pulse` skeleton with static `bg-surface-muted` blocks in `loading.tsx`
+- [x] D-H2: `text-white` → `text-bg`, `bg-[var(--color-accent)]` → `bg-accent` in `error.tsx` + `not-found.tsx`
+- [x] D-M1: `"Weet je het zeker?"` → `"Bevestigen."`
+- [x] D-L2: `"Annuleer"` → `"Annuleren"`
+- [x] A-M3: darken `--color-fg-subtle` to `#7b6d5f` for ≥4.5:1 AA contrast
+- [x] A-M4: documented `text-accent` size rule in globals.css (≥24 px or bold ≥18.66 px); smaller call sites → `text-accent-active`
 
 ### Day 2 — accessibility high
 

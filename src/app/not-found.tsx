@@ -8,7 +8,7 @@ export default function NotFound() {
         <h1 className="text-2xl font-semibold">{copy.errors.notFound}</h1>
         <Link
           href="/"
-          className="mt-6 inline-block rounded-md bg-[var(--color-accent)] px-4 py-2 text-white"
+          className="mt-6 inline-flex min-h-11 items-center rounded-md bg-accent px-4 py-2 text-bg focus-visible:outline-2 focus-visible:outline-accent"
         >
           Naar startpagina
         </Link>

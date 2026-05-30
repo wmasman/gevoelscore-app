@@ -1,0 +1,14 @@
+{
+  "name": "Gevoelscore",
+  "short_name": "Gevoelscore",
+  "description": "Persoonlijke Long COVID dagboek-app voor een dagelijkse gevoelscore.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf6f1",
+  "theme_color": "#faf6f1",
+  "lang": "nl",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle", "personalization"]
+}

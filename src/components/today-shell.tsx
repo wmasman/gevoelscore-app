@@ -145,7 +145,7 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
         <Link
           href="/settings"
           aria-label={copy.settings.iconLabel}
-          className="rounded-md p-1 text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
         >
           <svg
             aria-hidden="true"
@@ -176,8 +176,8 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
           onClick={() => setTab('today')}
           className={
             tab === 'today'
-              ? '-mb-px border-b-2 border-accent px-3 py-2 text-base font-medium text-fg'
-              : '-mb-px border-b-2 border-transparent px-3 py-2 text-base text-fg-muted hover:text-fg'
+              ? '-mb-px inline-flex min-h-11 items-center border-b-2 border-accent px-3 py-2 text-base font-medium text-fg'
+              : '-mb-px inline-flex min-h-11 items-center border-b-2 border-transparent px-3 py-2 text-base text-fg-muted hover:text-fg'
           }
         >
           {copy.timeline.todayTab}
@@ -189,8 +189,8 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
           onClick={() => setTab('timeline')}
           className={
             tab === 'timeline'
-              ? '-mb-px border-b-2 border-accent px-3 py-2 text-base font-medium text-fg'
-              : '-mb-px border-b-2 border-transparent px-3 py-2 text-base text-fg-muted hover:text-fg'
+              ? '-mb-px inline-flex min-h-11 items-center border-b-2 border-accent px-3 py-2 text-base font-medium text-fg'
+              : '-mb-px inline-flex min-h-11 items-center border-b-2 border-transparent px-3 py-2 text-base text-fg-muted hover:text-fg'
           }
         >
           {copy.timeline.title}
@@ -230,7 +230,7 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="self-start rounded-md px-2 py-1 text-sm text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
+                  className="inline-flex min-h-11 items-center self-start rounded-md px-3 py-2 text-sm text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   {expanded ? copy.home.showLess : copy.home.showMore}
                 </button>

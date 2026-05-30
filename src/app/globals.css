@@ -17,7 +17,11 @@
   /* Text — warm dark, never pure black */
   --color-fg: #2b2520;
   --color-fg-muted: #6b5f54;
-  --color-fg-subtle: #9c8f82;
+  /* Darkened 2026-05-30 from #9c8f82 (~3.1:1) to meet WCAG 1.4.3 AA
+     4.5:1 ratio on bg #faf6f1. Bare `text-accent` (#b5694a) is only
+     safe at >=24 px or bold >=18.66 px; smaller call sites should
+     use `text-accent-active` (#834828, ~6:1). */
+  --color-fg-subtle: #7b6d5f;
 
   /* Accent — Clay family. Single brand color across the whole app. */
   --color-accent: #b5694a;

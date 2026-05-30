@@ -22,6 +22,17 @@ export const metadata: Metadata = {
   },
   description: copy.app.description,
   applicationName: copy.app.title,
+  // PWA install contract — see public/manifest.webmanifest. Without
+  // this, "Add to Home Screen" runs in Safari chrome, not standalone.
+  manifest: '/manifest.webmanifest',
+  // iOS-specific install hints. Apple ignores the manifest's display
+  // and standalone fields; these meta tags carry the same intent for
+  // iOS Safari + Home-Screen install.
+  appleWebApp: {
+    capable: true,
+    title: copy.app.title,
+    statusBarStyle: 'default',
+  },
 };
 
 export const viewport: Viewport = {
