@@ -105,9 +105,17 @@ export function BottomSheet({
       : 0;
 
   // Only imperative values live here — everything stylistic is Tailwind.
+  // maxHeight caps the sheet at the visible viewport (above keyboard +
+  // below status bar) so its top can't push off-screen when the soft
+  // keyboard is up — the prior bug where the textarea floated above
+  // the status bar on iPhone PWA. calc() leaves space for the iOS
+  // Dynamic Island / notch.
   const sheetStyle: React.CSSProperties = {
     bottom: `${keyboardOffset}px`,
   };
+  if (viewport.height > 0) {
+    sheetStyle.maxHeight = `calc(${viewport.height}px - env(safe-area-inset-top, 0px))`;
+  }
   if (dragging) {
     sheetStyle.transform = `translateY(${dragOffset}px)`;
     sheetStyle.transition = 'none';
@@ -133,7 +141,7 @@ export function BottomSheet({
         // children render no focusable elements (Open Q4 from step-1).
         tabIndex={-1}
         className={cn(
-          'fixed left-0 right-0 z-50 mx-auto max-w-120',
+          'fixed left-0 right-0 z-50 mx-auto flex max-w-120 flex-col',
           'rounded-t-[28px] shadow-[0_-8px_24px_rgba(43,37,32,0.08)]',
           'pb-[env(safe-area-inset-bottom,0)]',
           'transition-[transform,background-color,bottom] duration-250 ease-out',

@@ -155,9 +155,14 @@ export function QuickEntryFlow({
         </button>
       </div>
 
-      <div className="relative h-95">
+      {/* Content area: flex-1 so it claims available height inside the
+          sheet's flex column, min-h-0 so it can shrink when the visual
+          viewport is constrained (iPhone with keyboard up). Replaces
+          the prior fixed h-95 (380px), which on iPhone PWA pushed the
+          sheet past the visible viewport once the soft keyboard rose. */}
+      <div className="relative min-h-0 flex-1">
         <div className={layerClass(step === 'score')}>
-          <div className="flex flex-1 items-center justify-center">
+          <div className="flex h-full items-center justify-center">
             <ScoreCircle
               initialValue={initialEntry?.score ?? 5}
               onCommit={handleScoreCommit}
@@ -166,7 +171,7 @@ export function QuickEntryFlow({
           </div>
         </div>
         <div className={layerClass(step === 'note')}>
-          <div className="flex flex-1 flex-col justify-start pt-4">
+          <div className="flex h-full flex-col pt-4">
             <NoteField
               date={date}
               initialNote={initialEntry?.note ?? null}

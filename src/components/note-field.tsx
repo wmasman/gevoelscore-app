@@ -70,7 +70,11 @@ export function NoteField({ date, initialNote, disabled }: Props) {
   }
 
   return (
-    <label className="flex flex-col gap-1 text-sm font-medium text-fg-muted">
+    // h-full so the label fills its parent layer; the textarea then
+    // grows to fill the remaining space below the label. Replaces the
+    // prior layout where rows={3} + no flex caused the textarea to
+    // float at the top of the layer with a large empty area below.
+    <label className="flex h-full flex-col gap-1 text-sm font-medium text-fg-muted">
       {copy.daily.note.label}
       <textarea
         value={value}
@@ -84,7 +88,7 @@ export function NoteField({ date, initialNote, disabled }: Props) {
         // handler still rejects an oversized note as a defense-in-depth
         // backstop if the client is bypassed.
         maxLength={MAX_NOTE_LENGTH}
-        className="rounded-md border border-border bg-bg p-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+        className="min-h-24 flex-1 rounded-md border border-border bg-bg p-3 text-base text-fg placeholder:text-fg-muted focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
       />
     </label>
   );
