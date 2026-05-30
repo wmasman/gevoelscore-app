@@ -220,7 +220,16 @@ export function QuickEntryFlow({
             type="button"
             onClick={goForward}
             disabled={forwardDisabled}
-            className="inline-flex min-h-11 items-center rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className={cn(
+              'inline-flex min-h-11 items-center rounded-md px-4 py-2 text-base font-medium focus-visible:outline-2 focus-visible:outline-accent',
+              // Pre-commit (score step, no value set yet): outline-only,
+              // muted text — the affordance is visible but quiet. The
+              // STATE CHANGE on commit is the message: outline fills in,
+              // text contrast jumps. No motion needed.
+              forwardDisabled
+                ? 'cursor-not-allowed border border-border bg-transparent text-fg-muted'
+                : 'bg-accent-hover text-bg',
+            )}
           >
             {forwardLabel}
           </button>
