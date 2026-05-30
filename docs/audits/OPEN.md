@@ -43,13 +43,13 @@ Central tracker for findings from the audit docs in `docs/audits/`. Each item li
 
 ### Day 3 — mobile + layout
 
-- [ ] M-H1: `min-h-screen` → `min-h-dvh` on the 6 top-level shells; add `padding-bottom: env(safe-area-inset-bottom)`
-- [ ] M-H2: bottom tab bar (move tablist from top to fixed bottom)
-- [ ] M-H4: scope `hover:` to pointer devices via `@media (hover: hover)`; drop the `!` workaround on `data-[pulsing=true]:bg-accent-soft!`
-- [ ] M-M2: `html, body { overscroll-behavior: none; }`
-- [ ] M-M6: `body { -webkit-tap-highlight-color: transparent; }`
-- [ ] M-M3: drop `flush: true` on score commit so keyboard arrow bursts coalesce
-- [ ] M-M4: auto-switch to Heatmap when `range === 90` on the chart
+- [x] M-H1: `min-h-screen` → `min-h-dvh` on the 6 top-level shells; `padding-bottom: max(p,env(safe-area-inset-bottom))`
+- [x] M-H2: bottom tab bar (fixed `<nav>` outside `<main>`; main padding-bottom accounts for it)
+- [x] M-H4: `@media (hover: none)` reset reverts `:hover` styles on touch devices
+- [x] M-M2: `html, body { overscroll-behavior: none; }`
+- [x] M-M6: `body { -webkit-tap-highlight-color: transparent; }`
+- [x] M-M3: dropped `flush: true` on score commit so keyboard arrow bursts coalesce
+- [x] M-M4: TimelineView auto-switches to Heatmap when range=90
 
 ### Day 4 — security S-H1 + S-M cluster
 

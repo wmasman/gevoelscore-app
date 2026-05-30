@@ -91,7 +91,11 @@ export function QuickEntryFlow({
   }, [open, startStep, initialEntry]);
 
   function handleScoreCommit(value: number): void {
-    void saveScore({ score: value as DayEntry['score'] }, { flush: true });
+    // M-M3: no flush. The hook's 500 ms debounce coalesces a keyboard
+    // arrow-burst (one PUT per arrow keystroke previously) into a
+    // single PUT + router.refresh. Touch drag is already one pointer-
+    // up event so debounce doesn't delay it meaningfully.
+    void saveScore({ score: value as DayEntry['score'] });
     if (!editable) setEditable(true);
   }
 

@@ -3,7 +3,7 @@ import { copy } from '@/copy';
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center p-8">
+    <main className="flex min-h-dvh items-center justify-center p-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
       <div className="max-w-sm text-center">
         <h1 className="text-2xl font-semibold">{copy.errors.notFound}</h1>
         <Link

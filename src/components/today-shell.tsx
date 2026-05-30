@@ -144,8 +144,9 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
   const visiblePast = expanded ? pastEntries : pastEntries.slice(0, DEFAULT_VISIBLE_PAST_DAYS);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-120 flex-col gap-6 p-6">
-      <header className="flex flex-row items-baseline justify-between gap-3">
+    <>
+      <main className="mx-auto flex min-h-dvh max-w-120 flex-col gap-6 p-6 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <header className="flex flex-row items-baseline justify-between gap-3">
         <h1 className="text-2xl font-semibold capitalize">
           {formatDateDutch(date)}
         </h1>
@@ -170,39 +171,6 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
           </svg>
         </Link>
       </header>
-
-      <div
-        role="tablist"
-        aria-label="Schermen"
-        className="flex w-full items-center gap-2 border-b border-border"
-      >
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'today'}
-          onClick={() => setTab('today')}
-          className={
-            tab === 'today'
-              ? '-mb-px inline-flex min-h-11 items-center border-b-2 border-accent px-3 py-2 text-base font-medium text-fg'
-              : '-mb-px inline-flex min-h-11 items-center border-b-2 border-transparent px-3 py-2 text-base text-fg-muted hover:text-fg'
-          }
-        >
-          {copy.timeline.todayTab}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'timeline'}
-          onClick={() => setTab('timeline')}
-          className={
-            tab === 'timeline'
-              ? '-mb-px inline-flex min-h-11 items-center border-b-2 border-accent px-3 py-2 text-base font-medium text-fg'
-              : '-mb-px inline-flex min-h-11 items-center border-b-2 border-transparent px-3 py-2 text-base text-fg-muted hover:text-fg'
-          }
-        >
-          {copy.timeline.title}
-        </button>
-      </div>
 
       {tab === 'today' ? (
         <div className="flex flex-col gap-6">
@@ -273,8 +241,51 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
           errors. Hidden visually; the pulse + the banner above carry
           the sighted-user feedback. See save-announcer.tsx + A-H4 in
           the 2026-05-30 audit. */}
-      <SaveAnnouncer />
-    </main>
+        <SaveAnnouncer />
+      </main>
+
+      {/* Bottom tab bar — M-H2 from the 2026-05-30 audit. Tabs at the
+          top of the screen broke the project's own thumb-first rule
+          and Apple HIG (primary nav lives at the bottom for one-handed
+          reach). Fixed-position outside of <main>; main has bottom
+          padding to account for it. z-30 sits under the BottomSheet
+          (z-40/50) so the popout overlays the bar when open. */}
+      <nav
+        aria-label="Schermen"
+        className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)]"
+      >
+        <div
+          role="tablist"
+          aria-label="Schermen"
+          className="mx-auto flex max-w-120 px-2"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'today'}
+            onClick={() => setTab('today')}
+            className={cn(
+              'flex min-h-14 flex-1 items-center justify-center px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-accent',
+              tab === 'today' ? 'font-medium text-accent' : 'text-fg-muted',
+            )}
+          >
+            {copy.timeline.todayTab}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'timeline'}
+            onClick={() => setTab('timeline')}
+            className={cn(
+              'flex min-h-14 flex-1 items-center justify-center px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-accent',
+              tab === 'timeline' ? 'font-medium text-accent' : 'text-fg-muted',
+            )}
+          >
+            {copy.timeline.title}
+          </button>
+        </div>
+      </nav>
+    </>
   );
 }
 

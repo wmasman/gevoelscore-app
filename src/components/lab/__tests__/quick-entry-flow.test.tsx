@@ -103,10 +103,11 @@ describe('<QuickEntryFlow />', () => {
     fireEvent.pointerMove(slider, { clientX: 120, pointerId: 1 });
     fireEvent.pointerUp(slider, { clientX: 120, pointerId: 1 });
 
-    expect(hookMocks.save).toHaveBeenCalledWith(
-      { score: 6 },
-      expect.objectContaining({ flush: true }),
-    );
+    // Per M-M3 (audit 2026-05-30): no { flush: true }. The hook's
+    // 500 ms debounce coalesces a keyboard arrow-burst into one PUT.
+    // Touch drag is already one pointerup event so debounce is a
+    // microsecond delay there.
+    expect(hookMocks.save).toHaveBeenCalledWith({ score: 6 });
   });
 
   it('given initialEntry is null and no commit yet, when rendered, then the "Volgende: notitie" forward button is disabled', () => {

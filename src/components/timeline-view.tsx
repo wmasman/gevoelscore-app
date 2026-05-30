@@ -85,6 +85,12 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
   function onRangeChange(r: Range): void {
     if (r === range) return;
     setRange(r);
+    // M-M4: auto-switch to Heatmap at 90 days. The line chart's per-
+    // day stride at 90d (~3.8px on a 390px viewport) overlaps adjacent
+    // hit-zones up to 6 days deep, making per-day drill-down
+    // unreliable. The 44x44 heatmap cells are touch-correct at any
+    // range. User can still flip back to Lijn manually.
+    if (r === 90) setView('heatmap');
     if (r === 90 && range90Entries === null) void fetchRange90();
   }
 

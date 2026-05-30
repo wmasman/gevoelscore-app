@@ -7,7 +7,7 @@
 
 export default function Loading() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-[480px] flex-col gap-6 p-6">
+    <main className="mx-auto flex min-h-dvh max-w-120 flex-col gap-6 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="h-8 w-48 rounded-md bg-surface-muted" />
       <div className="h-64 w-full rounded-lg bg-surface-muted" />
       <div className="h-12 w-full rounded-md bg-surface-muted" />

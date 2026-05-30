@@ -54,7 +54,7 @@ export function SettingsView() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-120 flex-col gap-8 p-6">
+    <main className="mx-auto flex min-h-dvh max-w-120 flex-col gap-8 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <header className="flex items-baseline justify-between gap-3">
         <h1 className="text-2xl font-semibold">{copy.settings.title}</h1>
         <Link

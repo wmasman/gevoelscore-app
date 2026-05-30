@@ -67,6 +67,11 @@
 html,
 body {
   height: 100%;
+  /* M-M2: stop iOS PWA pull-to-refresh from firing mid-save. Without
+     this, an enthusiastic swipe while typing into the note textarea
+     can reload the page and abort the PUT. Safe everywhere — timeline
+     scrolls inside its own container, never the document. */
+  overscroll-behavior: none;
 }
 
 body {
@@ -76,6 +81,29 @@ body {
   /* Body text >= 17px, line-height >= 1.5 — brainfog target above WCAG floor. */
   font-size: 17px;
   line-height: 1.5;
+  /* M-M6: kill the dark-gray iOS tap flash. It contradicts the warm-
+     earth palette every tap. Focus-visible outline still provides
+     keyboard feedback; the today-card pulse provides touch feedback. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* M-H4: on touch devices (no precise hover pointer), revert any
+   :hover background-color / color back to the default state. Without
+   this, iOS Safari latches the :hover styles on tap until the next
+   tap elsewhere — making the just-tapped TodayCard region, past-day
+   card, or tab look "stuck selected" after the popout closes. The
+   `data-[pulsing=true]:bg-accent-soft!` workaround in TodayShell was
+   a symptom of this; with this rule in place that ! can be relaxed
+   in a later cleanup pass. */
+@media (hover: none) {
+  a:hover,
+  button:hover,
+  [role='button']:hover,
+  [role='tab']:hover,
+  [role='radio']:hover {
+    background-color: revert !important;
+    color: revert !important;
+  }
 }
 
 /* Reduced-motion default: any component that wants motion must opt out
