@@ -6,14 +6,31 @@
 // Same-origin requests (no Origin header AND no Referer) are allowed, since
 // some browsers omit Origin on same-origin requests.
 
+const STATE_CHANGING = /^(POST|PUT|PATCH|DELETE)$/i;
+
 export function validateOrigin(
   originHeader: string | null,
   refererHeader: string | null,
   allowedOrigins: readonly string[],
+  // Optional HTTP method. When omitted, the lenient (legacy) path is
+  // taken — preserved for existing tests. Production callers should
+  // ALWAYS pass `request.method` so state-changing requests without
+  // an Origin or Referer header are rejected (S-M2 in audit
+  // 2026-05-30 — defence-in-depth alongside SameSite=Strict).
+  method?: string,
 ): boolean {
-  // No Origin and no Referer → trust the same-origin path. Cross-origin
-  // requests must include at least one of these per the Fetch spec.
-  if (!originHeader && !refererHeader) return true;
+  // No Origin and no Referer:
+  //   - Safe methods (GET/HEAD/OPTIONS) or method-unknown: lenient.
+  //     Some browsers (Safari) omit Origin on same-origin GETs.
+  //   - State-changing methods: reject. Fetch spec requires at least
+  //     one of Origin/Referer for cross-origin POST/PUT/PATCH/DELETE,
+  //     and accepting headerless mutations from non-browsers (curl,
+  //     SSRF chains, header-stripping proxies that already have the
+  //     cookie) defeats the CSRF defence-in-depth.
+  if (!originHeader && !refererHeader) {
+    if (method && STATE_CHANGING.test(method)) return false;
+    return true;
+  }
 
   if (originHeader) {
     return isAllowed(originHeader, allowedOrigins);

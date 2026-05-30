@@ -51,7 +51,19 @@ export async function getValidatedSession(
   const refresh = deps.refresh ?? directusRefresh;
   const now = deps.now ?? Date.now;
 
-  const session = await store.peek(sessionId);
+  // S-M4: peek can throw on Directus 5xx / network blip. Without
+  // try/catch the exception bubbles to the route handler as an
+  // uncaught 500, which contradicts the same "preserve the row,
+  // retry next request" policy applied to refresh failures below.
+  // Treat a peek failure as "not authenticated for this request" —
+  // callers redirect to /login or return 401, the cookie stays and
+  // the next request retries.
+  let session: SessionData | undefined;
+  try {
+    session = await store.peek(sessionId);
+  } catch {
+    return null;
+  }
   if (!session) return null;
 
   if (session.expiresAt > now()) return session;

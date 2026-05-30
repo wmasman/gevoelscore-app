@@ -27,6 +27,7 @@ export async function PUT(
       request.headers.get('origin'),
       request.headers.get('referer'),
       allowedOrigins(),
+      request.method,
     )
   ) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });

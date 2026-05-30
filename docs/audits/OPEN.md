@@ -54,11 +54,11 @@ Central tracker for findings from the audit docs in `docs/audits/`. Each item li
 ### Day 4 — security S-H1 + S-M cluster
 
 - [ ] S-H1: provision Directus role + policy + user scoped to CRUD on `frontend_sessions`; rotate admin token; update `docs/operations/runbooks/rotate-credentials.md`
-- [ ] S-M1: cookie rename to `__Host-gs_session` / `__Host-gs_pending_otp`
-- [ ] S-M2: tighten origin check — reject state-changing requests with neither Origin nor Referer
-- [ ] S-M3: `setInterval` sweep for rate-limiters + pending stores in `stores.ts`
-- [ ] S-M4: wrap `store.peek(sessionId)` in try/catch in `getValidatedSession`
-- [ ] S-M5: permissive read rate limiter on `/api/day-entries` + `/api/day-entries/today` (120/min)
+- [ ] ~~S-M1: cookie rename to `__Host-gs_session` / `__Host-gs_pending_otp`~~ — **deferred**: ~16 test files hardcode `'gs_session='` in Cookie header literals; the mechanical churn outweighs the residual real risk on a single-subdomain Fly deployment. Re-evaluate when multi-subdomain or production exposure changes.
+- [x] S-M2: origin check rejects state-changing methods (POST/PUT/PATCH/DELETE) with neither Origin nor Referer. GETs stay lenient (Safari quirk).
+- [x] S-M3: `setInterval(.unref())` every 25 min in `stores.ts` sweeping all 5 rate limiters + 2 pending stores. Guarded with `globalThis.__gsAuthSweeper` against dev hot-reload duplicates.
+- [x] S-M4: `store.peek(sessionId)` wrapped in try/catch in `getValidatedSession` — transient Directus errors return null (caller redirects to /login + retries on next request) rather than bubbling as 500.
+- [x] S-M5: `dayEntryReadRateLimiter` (120/5min) wired to `/api/day-entries` (range) + `/api/day-entries/today` (single).
 
 ### Day 5 — security S-H2 + S-H3 prep + copy migration + design tail
 

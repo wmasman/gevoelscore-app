@@ -2,7 +2,9 @@
 //
 // Returns day_entries in the inclusive date range. Max range 90 days
 // (server-side cap to keep payloads bounded and discourage accidental
-// large reads). Read-only; no rate limit.
+// large reads). Permissive read rate-limit (S-M5, audit 2026-05-30):
+// 120 / 5min / IP, defence-in-depth against a leaked session cookie
+// being hammered.
 
 import { NextResponse } from 'next/server';
 import { readDayEntriesInRange } from '@/lib/api/day-entries';
@@ -10,6 +12,7 @@ import { allowedOrigins } from '@/lib/auth/allowed-origins';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { validateOrigin } from '@/lib/auth/origin-check';
 import { parseSessionCookie } from '@/lib/auth/session';
+import { dayEntryReadRateLimiter, getClientIp } from '@/lib/auth/stores';
 import { validateDate } from '@/lib/domain/date';
 
 const MAX_RANGE_DAYS = 90;
@@ -29,9 +32,19 @@ export async function GET(request: Request) {
       request.headers.get('origin'),
       request.headers.get('referer'),
       allowedOrigins(),
+      request.method,
     )
   ) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+  }
+
+  const ip = getClientIp(request);
+  const rl = dayEntryReadRateLimiter.check(ip);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'rate_limited', retry_after_ms: rl.retryAfterMs },
+      { status: 429 },
+    );
   }
 
   const sessionId = parseSessionCookie(request.headers.get('cookie'));

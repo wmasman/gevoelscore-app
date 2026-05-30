@@ -38,6 +38,15 @@ export const dayEntryWriteRateLimiter = createRateLimiter({
   windowMs: FIVE_MIN_MS,
 });
 
+// S-M5: permissive read limiter shared between /api/day-entries (range
+// read) and /api/day-entries/today. Defence-in-depth against a leaked
+// session cookie being hammered — 120/5min (24/min) leaves normal use
+// (one range re-fetch per save + occasional toggles) wide open.
+export const dayEntryReadRateLimiter = createRateLimiter({
+  limit: 120,
+  windowMs: FIVE_MIN_MS,
+});
+
 function buildSessionStore(): SessionStore {
   const adminToken = process.env.DIRECTUS_TOKEN;
   const directusUrl =
@@ -55,6 +64,40 @@ function buildSessionStore(): SessionStore {
 }
 
 export const sessionStore = buildSessionStore();
+
+// S-M3: periodic sweep across the in-memory stores so un-accessed
+// entries don't accumulate forever. Lazy expiry on access (in
+// rate-limit / pending-otp / pending-tfa) handles the read path; the
+// sweep handles the cold-key tail. Per-Fly-machine; the interval
+// keeps memory bounded under a sustained credential-stuffing burst
+// from many distinct IPs.
+//
+// Guards:
+// - global flag ensures Next.js's dev hot-reload doesn't pile up
+//   intervals each time this module is re-evaluated.
+// - .unref() lets the Node process exit even if the interval is
+//   the only reason it'd stay alive (Vitest workers, dev SIGINT).
+const SWEEP_INTERVAL_MS = 5 * FIVE_MIN_MS; // 25 min — plenty for 5-min windows
+declare global {
+  var __gsAuthSweeper: ReturnType<typeof setInterval> | undefined;
+}
+if (typeof globalThis !== 'undefined' && globalThis.__gsAuthSweeper === undefined) {
+  const handle = setInterval(() => {
+    loginRateLimiter.sweep();
+    verifyRateLimiter.sweep();
+    tfaGenerateRateLimiter.sweep();
+    tfaEnableRateLimiter.sweep();
+    dayEntryWriteRateLimiter.sweep();
+    dayEntryReadRateLimiter.sweep();
+    pendingOtpStore.cleanupExpired();
+    pendingTfaStore.cleanupExpired();
+  }, SWEEP_INTERVAL_MS);
+  // Node's Timeout.unref returns the Timeout in Node >= 14. Tests
+  // running in jsdom may have a polyfilled setInterval without
+  // .unref — guard with optional chaining.
+  handle.unref?.();
+  globalThis.__gsAuthSweeper = handle;
+}
 
 // @sensitive-store: do not pass to console.log, JSON.stringify, or any logger.
 // Contains the user's plaintext password between /login and /login/verify so
