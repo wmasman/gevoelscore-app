@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
 
@@ -79,6 +79,72 @@ describe('<TodayShell />', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     cleanup();
+  });
+
+  it('given onComplete fires after a save, when handled, then TodayShell GETs /api/day-entries/today and the today-card reflects the new entry', async () => {
+    // Why this exists: TodayCard reads `entry` as a prop set on the
+    // server. Without a client-side refetch the card stays pinned to
+    // its initial value after every save — the user types a note,
+    // dismisses, sees the pulse, looks at the card, and finds the
+    // old text. The save reached Directus; the display did not move.
+    const user = userEvent.setup();
+    const updated = entry('2026-05-29', 9, 'verse notitie', []);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, json: async () => ({ entry: updated }) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 4, 'oude notitie', [])}
+        allTags={[]}
+        timelineEntries={[]}
+      />,
+    );
+
+    // Sanity: the score region shows the server-rendered 4 first.
+    expect(screen.getByRole('button', { name: /^gevoelscore:/i })).toHaveTextContent('4');
+
+    await user.click(screen.getByText('mock-complete'));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/day-entries/today',
+        expect.objectContaining({ credentials: 'same-origin' }),
+      );
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /^gevoelscore:/i })).toHaveTextContent('9');
+    });
+  });
+
+  it('given onClose fires in edit mode, when handled, then TodayShell also GETs /api/day-entries/today (dismiss IS completion)', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, json: async () => ({ entry: null }) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      <TodayShell
+        date="2026-05-29"
+        entry={entry('2026-05-29', 4, 'oude notitie', [])}
+        allTags={[]}
+        timelineEntries={[]}
+      />,
+    );
+    // Sheet starts closed (entry exists). Open it via a pencil tap, then
+    // fire the stub's mock-close.
+    await user.click(screen.getByRole('button', { name: /^notitie:/i }));
+    await user.click(screen.getByText('mock-close'));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/day-entries/today',
+        expect.objectContaining({ credentials: 'same-origin' }),
+      );
+    });
   });
 
   it('given any state, when rendered, then the H1 shows the date in Dutch', () => {
