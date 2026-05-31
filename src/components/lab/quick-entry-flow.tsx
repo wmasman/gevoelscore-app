@@ -156,16 +156,23 @@ export function QuickEntryFlow({
         </button>
       </div>
 
-      {/* Content area: flex-1 so it claims available height inside the
-          sheet's flex column, min-h-0 so it can shrink when the visual
-          viewport is constrained (iPhone with keyboard up). Replaces
-          the prior fixed h-95 (380px), which on iPhone PWA pushed the
-          sheet past the visible viewport once the soft keyboard rose.
+      {/* Content area height. The earlier `flex-1 min-h-0` attempt
+          collapsed to 0 in iOS Safari because the BottomSheet has no
+          definite height (just a maxHeight ceiling) and flex-1 needs
+          a parent slack to claim — when there's none, it resolves to
+          its min-content = 0. Result: score circle floated above the
+          sheet, note label stacked on the footer.
+
+          Fixed-with-adaptive-cap is the correct shape: 380 px when
+          there's room, shrinks via 100dvh when the keyboard rises
+          (modern iOS Safari + Android Chrome account for the soft
+          keyboard in dvh). 160 px buffer covers handle + header +
+          footer + safe-area-inset-bottom.
 
           data-autofocus on the layer matching `step` tells useFocusTrap
           to focus the first focusable inside that wrapper rather than
           the close ✕ button — see use-focus-trap.ts. */}
-      <div className="relative min-h-0 flex-1">
+      <div className="relative h-[min(380px,calc(100dvh-160px))]">
         <div
           className={layerClass(step === 'score')}
           data-autofocus={step === 'score' ? 'true' : undefined}
