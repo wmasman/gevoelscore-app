@@ -26,6 +26,31 @@ The token used by `directus/scripts/*.mjs` to provision schema, seed tags, run m
 
 ---
 
+## Auth smoke — the integration check that unit tests can't
+
+Run this before pushing any auth-touching change, and after any Fly secret swap involving `DIRECTUS_TOKEN`, `SESSION_TOKEN_KEY`, or `WILLEM_USER_ID`. ~3 s. Catches the integration regressions unit tests can't see (e.g. on 2026-05-31 a wrong `WILLEM_USER_ID` value silently rejected every legit login — would have been caught here immediately).
+
+### Setup (once)
+
+Add to `.env.local` (gitignored):
+
+```
+WILLEM_EMAIL=wmasman@gmail.com
+WILLEM_PASSWORD=<your password>
+```
+
+### Run
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/run-auth-smoke.ps1
+```
+
+Exits 0 on PASS, 1 on FAIL. Output lists each check with ✓/✗.
+
+The script exercises: login → cookie set → authenticated read of `/api/day-entries/today` → logout → 401-after-logout. If 2FA is on for the smoke user the script exits with code 3 and a note (extend the script with OTP, or temporarily disable 2FA for the smoke target).
+
+---
+
 ## Scoped frontend-sessions token
 
 The token used by the Next.js frontend Fly app to read/write the `frontend_sessions` collection (audit S-H1, 2026-05-30). Lives in Fly secret `DIRECTUS_TOKEN` on app `gevoelscore-frontend`. Anchored to the service user `frontend-sessions-service@gevoelscore.internal` whose role (`gevoelscore-frontend-sessions-service-role`) has CRUD on `frontend_sessions` only — nothing else.
