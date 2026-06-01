@@ -149,6 +149,14 @@ export function BottomSheet({
           'rounded-t-[28px] shadow-[0_-8px_24px_rgba(43,37,32,0.08)]',
           'pb-[env(safe-area-inset-bottom,0)]',
           'transition-[transform,background-color,bottom] duration-200 ease-out',
+          // overflow-x: hidden at the sheet itself, NOT just on body —
+          // position:fixed children aren't clipped by html/body
+          // overflow rules, so any inner element forcing horizontal
+          // expansion (e.g. a flex row that doesn't shrink enough on a
+          // narrow iPhone viewport) bleeds past the sheet box into the
+          // viewport's right edge. Clipping here is the only correct
+          // place. 2026-06-01 inline-tag-creation hotfix.
+          'overflow-x-hidden',
           tint === 'past' ? 'bg-surface-muted' : 'bg-surface',
           !open && 'translate-y-full',
         )}

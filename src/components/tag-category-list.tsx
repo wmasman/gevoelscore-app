@@ -227,7 +227,7 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
           <span aria-hidden="true">{isExpanded ? '−' : '+'}</span>
         </button>
         {isExpanded && (
-          <div className="mt-1 flex flex-wrap items-center gap-2 px-1 py-2">
+          <div className="mt-1 flex flex-wrap items-center gap-2 px-0 py-2">
             {/* Composing input is rendered AT THE TOP of the chip area
                 (before the chips) so it's always visible directly under
                 the category header. Previous layout placed it at the
@@ -248,12 +248,16 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
             )}
             {isComposingHere && composing?.status !== 'pending' ? (
               // basis-full takes its own row in the flex-wrap parent;
-              // min-w-0 + flex-1 lets the input shrink to fit phone width
-              // (without these the input forced horizontal overflow).
-              <span className="flex w-full basis-full items-center gap-2">
+              // min-w-0 + flex-1 lets the input shrink to fit phone width.
+              // max-w-full prevents children from pushing the row past
+              // the parent's content width on narrow iPhone viewports
+              // (2026-06-01 fix). Tighter px-3 button padding gives the
+              // input ~16px more room.
+              <span className="flex w-full max-w-full basis-full items-center gap-2 min-w-0">
                 <input
                   ref={inputRef}
                   type="text"
+                  size={1}
                   aria-label={copy.daily.tags.newInputAriaLabel}
                   placeholder={copy.daily.tags.newInputPlaceholder}
                   value={composing.label}
@@ -280,7 +284,7 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
                     e.preventDefault();
                   }}
                   onClick={() => void submitComposer()}
-                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-accent bg-accent px-3 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   {copy.daily.tags.addButton}
                 </button>
