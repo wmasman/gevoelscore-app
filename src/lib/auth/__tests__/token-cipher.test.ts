@@ -45,20 +45,24 @@ describe('token-cipher (AES-256-GCM)', () => {
     expect(decryptToken(jwt)).toBe(jwt);
   });
 
-  // Deterministic flip: swap the LAST char with a guaranteed-different
-  // one. A blind slice-replace with 'A' is flaky when the original char
-  // is already 'A' (~1.5% probability per random ct).
-  function flipLastChar(s: string): string {
-    const last = s.slice(-1);
-    const next = last === 'A' ? 'B' : 'A';
-    return s.slice(0, -1) + next;
+  // Deterministic flip: swap the FIRST char. Tampering the LAST char of a
+  // base64url-encoded GCM tag (22 chars for 16 bytes) is flaky because the
+  // last char carries only 2 actual data bits (the other 4 are padding);
+  // an 'A' ↔ 'B' swap on that char can preserve the 2 data bits and
+  // produce a byte-identical tag after decode. The first char always
+  // encodes 6 real bits, so a swap there always changes the underlying
+  // bytes.
+  function flipFirstChar(s: string): string {
+    const first = s.slice(0, 1);
+    const next = first === 'A' ? 'B' : 'A';
+    return next + s.slice(1);
   }
 
   it('returns the stored string verbatim when ciphertext is tampered (fail-closed at auth layer)', () => {
     const plain = 'token-y';
     const encrypted = encryptToken(plain);
     const [iv, ct, tag] = encrypted.split('.');
-    const tampered = `${iv}.${flipLastChar(ct!)}.${tag}`;
+    const tampered = `${iv}.${flipFirstChar(ct!)}.${tag}`;
     const result = decryptToken(tampered);
     expect(result).toBe(tampered);
     expect(result).not.toBe(plain);
@@ -68,7 +72,7 @@ describe('token-cipher (AES-256-GCM)', () => {
     const plain = 'token-z';
     const encrypted = encryptToken(plain);
     const [iv, ct, tag] = encrypted.split('.');
-    const tampered = `${iv}.${ct}.${flipLastChar(tag!)}`;
+    const tampered = `${iv}.${ct}.${flipFirstChar(tag!)}`;
     expect(decryptToken(tampered)).toBe(tampered);
   });
 
