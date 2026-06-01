@@ -10,6 +10,11 @@
 // reveal its chips. Multiple categories may be expanded simultaneously —
 // exploration is not punished. The Extra-opties toggle and each header's
 // chip-display state are independent.
+//
+// Inline tag creation (2026-06-01): each expanded category ends with a
+// "+ nieuw" chip; tapping it reveals an inline input. Saving POSTs to
+// /api/tags then chains into the existing day-entries PUT to attach the
+// new tag-id. See docs/features/inline-tag-creation/.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useReportSaveStatus } from '@/components/save-status-context';
@@ -38,37 +43,63 @@ type Props = {
   disabled: boolean;
 };
 
+type Composing = {
+  category: TagCategory;
+  label: string;
+  status: 'idle' | 'pending' | 'error';
+};
+
+type CreateTagResponse = {
+  outcome: 'created' | 'matched_active' | 'matched_reactivated';
+  tag: Tag;
+};
+
 export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(initialTagIds));
   const [expandedCats, setExpandedCats] = useState<Set<TagCategory>>(new Set());
   const [extraOpen, setExtraOpen] = useState<boolean>(false);
+  const [composing, setComposing] = useState<Composing | null>(null);
+  // Tags that were created or reactivated in this session. Merged with
+  // allTags for rendering so the new chip appears immediately — before
+  // the parent's router.refresh re-fetches the full list.
+  const [locallyAddedTags, setLocallyAddedTags] = useState<Tag[]>([]);
   const lastSavedRef = useRef<Set<string>>(new Set(initialTagIds));
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const newChipRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const focusAfterCreateId = useRef<string | null>(null);
   const { save, status, lastError } = useDayEntryUpsert(date);
   useReportSaveStatus('tags', status, lastError);
+
+  const effectiveTags = useMemo<Tag[]>(() => {
+    if (locallyAddedTags.length === 0) return allTags;
+    const seen = new Set(allTags.map((t) => t.id));
+    const merged = [...allTags];
+    for (const t of locallyAddedTags) {
+      if (!seen.has(t.id)) merged.push(t);
+    }
+    return merged;
+  }, [allTags, locallyAddedTags]);
 
   const byCategory = useMemo(() => {
     const map = new Map<TagCategory, Tag[]>();
     for (const c of [...PRIMARY_CATEGORIES, ...EXTRA_CATEGORIES]) map.set(c, []);
-    for (const t of allTags) {
+    for (const t of effectiveTags) {
       if (t.archived_at !== null) continue;
       map.get(t.category)?.push(t);
     }
     return map;
-  }, [allTags]);
+  }, [effectiveTags]);
 
   const extraSelectedCount = useMemo(() => {
     let count = 0;
-    for (const t of allTags) {
+    for (const t of effectiveTags) {
       if (selected.has(t.id) && EXTRA_CATEGORIES.includes(t.category)) count++;
     }
     return count;
-  }, [allTags, selected]);
+  }, [effectiveTags, selected]);
 
   useEffect(() => {
     if (status === 'error') {
-      // Restore from snapshot only if current optimistic state differs —
-      // unconditional setSelected(new Set(...)) would create a fresh ref
-      // every render and loop.
       const lastSaved = lastSavedRef.current;
       const same =
         selected.size === lastSaved.size &&
@@ -78,6 +109,25 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
       lastSavedRef.current = new Set(selected);
     }
   }, [status, selected]);
+
+  // Focus the new chip after a successful create. The chip ref is set as
+  // the new tag mounts; this effect runs after that mount and moves focus.
+  useEffect(() => {
+    const id = focusAfterCreateId.current;
+    if (!id) return;
+    const el = newChipRefs.current.get(id);
+    if (el) {
+      el.focus();
+      focusAfterCreateId.current = null;
+    }
+  });
+
+  // Focus the inline input when composing opens or re-opens.
+  useEffect(() => {
+    if (composing && composing.status !== 'pending') {
+      inputRef.current?.focus();
+    }
+  }, [composing]);
 
   function toggleCategory(category: TagCategory): void {
     setExpandedCats((prev) => {
@@ -96,10 +146,56 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
     void save({ tag_ids: Array.from(nextSet) }, { flush: true });
   }
 
+  function openComposer(category: TagCategory): void {
+    setComposing({ category, label: '', status: 'idle' });
+  }
+
+  function cancelComposer(): void {
+    setComposing(null);
+  }
+
+  async function submitComposer(): Promise<void> {
+    if (!composing) return;
+    const trimmed = composing.label.trim().replace(/\s+/g, ' ');
+    if (trimmed.length === 0) return; // no-op on whitespace-only
+    const category = composing.category;
+    setComposing({ category, label: trimmed, status: 'pending' });
+
+    try {
+      const res = await fetch('/api/tags', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ label: trimmed, category }),
+      });
+      if (!res.ok) {
+        setComposing({ category, label: trimmed, status: 'error' });
+        return;
+      }
+      const body = (await res.json()) as CreateTagResponse;
+      if (body.outcome !== 'matched_active') {
+        // Add to local tag list so the chip renders immediately.
+        setLocallyAddedTags((prev) => {
+          if (prev.some((t) => t.id === body.tag.id)) return prev;
+          return [...prev, body.tag];
+        });
+      }
+      // Select the (possibly-existing) tag and chain into the day-entry save.
+      const nextSet = new Set(selected);
+      nextSet.add(body.tag.id);
+      setSelected(nextSet);
+      focusAfterCreateId.current = body.tag.id;
+      setComposing(null);
+      void save({ tag_ids: Array.from(nextSet) }, { flush: true });
+    } catch {
+      setComposing({ category, label: trimmed, status: 'error' });
+    }
+  }
+
   function renderCategory(category: TagCategory) {
     const tags = byCategory.get(category) ?? [];
     const selectedCount = tags.filter((t) => selected.has(t.id)).length;
     const isExpanded = expandedCats.has(category);
+    const isComposingHere = composing?.category === category;
     return (
       <li key={category}>
         <button
@@ -118,29 +214,86 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
           <span aria-hidden="true">{isExpanded ? '−' : '+'}</span>
         </button>
         {isExpanded && (
-          <div className="mt-1 flex flex-wrap gap-2 px-1 py-2">
-            {tags.length === 0 ? (
-              <span className="text-sm italic text-fg-muted">{copy.daily.tags.empty}</span>
-            ) : (
-              tags.map((t) => {
-                const isSelected = selected.has(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    aria-pressed={isSelected}
-                    onClick={() => toggleTag(t.id)}
-                    disabled={disabled}
-                    className={
-                      isSelected
-                        ? 'inline-flex min-h-11 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg disabled:opacity-60'
-                        : 'inline-flex min-h-11 items-center rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg disabled:opacity-60'
+          <div className="mt-1 flex flex-wrap items-center gap-2 px-1 py-2">
+            {tags.map((t) => {
+              const isSelected = selected.has(t.id);
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  ref={(el) => {
+                    if (el) newChipRefs.current.set(t.id, el);
+                    else newChipRefs.current.delete(t.id);
+                  }}
+                  aria-pressed={isSelected}
+                  onClick={() => toggleTag(t.id)}
+                  disabled={disabled}
+                  className={
+                    isSelected
+                      ? 'inline-flex min-h-11 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg disabled:opacity-60'
+                      : 'inline-flex min-h-11 items-center rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg disabled:opacity-60'
+                  }
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+            {isComposingHere && composing?.status === 'pending' && (
+              <span
+                data-pending="true"
+                aria-disabled="true"
+                className="inline-flex min-h-11 items-center rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg opacity-60"
+              >
+                {composing.label}
+              </span>
+            )}
+            {isComposingHere && composing?.status !== 'pending' ? (
+              <span className="inline-flex items-center gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  aria-label={copy.daily.tags.newInputAriaLabel}
+                  placeholder={copy.daily.tags.newInputPlaceholder}
+                  value={composing.label}
+                  onChange={(e) =>
+                    setComposing((c) => (c ? { ...c, label: e.target.value, status: 'idle' } : null))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void submitComposer();
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      cancelComposer();
                     }
-                  >
-                    {t.label}
-                  </button>
-                );
-              })
+                  }}
+                  className="inline-flex min-h-11 rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
+                />
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // Defeat the blur-vs-click race: the input's blur would
+                    // otherwise cancel composing before the click handler
+                    // fires (m2 audit fix).
+                    e.preventDefault();
+                  }}
+                  onClick={() => void submitComposer()}
+                  className="inline-flex min-h-11 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  {copy.daily.tags.addButton}
+                </button>
+              </span>
+            ) : null}
+            {!isComposingHere && (
+              <button
+                type="button"
+                onClick={() => openComposer(category)}
+                disabled={disabled}
+                aria-label={`${copy.daily.tags.addAriaLabel} ${category}`}
+                className="inline-flex min-h-11 items-center rounded-full border border-border border-dashed bg-bg px-4 py-2 text-sm text-fg-muted hover:text-fg disabled:opacity-60"
+              >
+                {copy.daily.tags.addChipLabel}
+              </button>
             )}
           </div>
         )}

@@ -57,7 +57,7 @@ export const TAG_PATTERNS = {
     { label: 'rotdag', patterns: [/rotdag/i, /slechte dag/i, /matige dag/i, /mindere dag/i] },
     { label: 'lekker snel', patterns: [/lekker snel/i] },
     { label: 'redelijke dag', patterns: [/redelijke dag/i, /redelijk goed/i, /redelijk goede/i, /best aardig/i, /best ok\b/i, /\bok\b/i] },
-    { label: 'te veel gedaan', patterns: [/te ?veel gedaan/i, /teveel gevraagd/i, /iets teveel/i, /toch teveel/i, /over (mijn |de )?grens/i] },
+    { label: 'teveel gedaan', patterns: [/te ?veel gedaan/i, /teveel gevraagd/i, /iets teveel/i, /toch teveel/i, /over (mijn |de )?grens/i] },
     { label: 'energie sparen', patterns: [/energie sparen/i, /energie save/i, /handrem/i, /rustig aan/i, /energie doseren/i, /balansdag/i, /balans dag/i, /kalm aan/i] },
   ],
 

@@ -83,6 +83,15 @@ These are real findings but explicitly out of scope this week. See the senior-le
 
 ---
 
+## Follow-ups from feature work
+
+### From the 2026-06-01 inline-tag-creation step-1 audit ([docs/features/inline-tag-creation/](../features/inline-tag-creation/))
+
+- [ ] **M1 — DB-level unique index on `tags(category, lower(trim(label)))`.** Closes the TOCTOU race window in `createOrUpsertTag` (`src/lib/api/tags.ts`). Schema migration in `directus/scripts/`. Single-user app today: race is functionally impossible; matters for multi-user.
+- [ ] **m3 — Correct the misleading audit-log row in `docs/compliance/gdpr-art9.md` §5.** That row claims `Placeholder TODO(I3)` for audit logging, but Directus's built-in `directus_activity` + `directus_revisions` collections have been logging every CRUD via SDK by default since deploy. One-line edit. Forward-compatible note: if the project's audit-log requirement ever grows beyond what built-in activity captures (e.g. tracking *attempted-but-rejected* writes), a custom collection is still a useful addition.
+
+---
+
 ## Wont-fix (with rationale)
 
 (Empty for now.)

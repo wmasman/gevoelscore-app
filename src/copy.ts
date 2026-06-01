@@ -19,9 +19,15 @@ export const copy = {
     },
     tags: {
       label: 'Tags',
-      empty: 'Geen tags in deze categorie',
+      // `empty` removed 2026-06-01: inline tag creation replaces the
+      // dead-end "Geen tags in deze categorie" with a "+ nieuw" chip.
       none: 'Geen tags',
       extraToggle: 'Extra opties (Interventie, Project, etc)',
+      addAriaLabel: 'Voeg tag toe aan',
+      newInputAriaLabel: 'Nieuwe tag',
+      newInputPlaceholder: 'Nieuwe tag',
+      addButton: 'Toevoegen',
+      addChipLabel: '+ nieuw',
     },
     // Popout flow controls. The forward button label changes per
     // step; the back button reads from daily.{score,note}.label.

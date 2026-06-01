@@ -47,6 +47,14 @@ export const dayEntryReadRateLimiter = createRateLimiter({
   windowMs: FIVE_MIN_MS,
 });
 
+// Writes to /api/tags (inline tag creation). Matches dayEntryWriteRateLimiter's
+// budget: 60/5min is enough for a power-user composing tags in one sitting
+// while still catching abuse via a leaked cookie.
+export const tagWriteRateLimiter = createRateLimiter({
+  limit: 60,
+  windowMs: FIVE_MIN_MS,
+});
+
 function buildSessionStore(): SessionStore {
   const adminToken = process.env.DIRECTUS_TOKEN;
   const directusUrl =
@@ -89,6 +97,7 @@ if (typeof globalThis !== 'undefined' && globalThis.__gsAuthSweeper === undefine
     tfaEnableRateLimiter.sweep();
     dayEntryWriteRateLimiter.sweep();
     dayEntryReadRateLimiter.sweep();
+    tagWriteRateLimiter.sweep();
     pendingOtpStore.cleanupExpired();
     pendingTfaStore.cleanupExpired();
   }, SWEEP_INTERVAL_MS);
