@@ -166,7 +166,11 @@ describe('createOrUpsertTag', () => {
     expect(result.value.tag.id).toBe('tag-existing');
   });
 
-  it('matches case-insensitively within category via _iequals filter', async () => {
+  it('matches case-insensitively within category via _icontains + JS exact-match post-filter', async () => {
+    // Directus has no _iequals operator (confirmed against official docs +
+    // programmeerprobeer reference 2026-06-01). The query uses _icontains
+    // as a coarse case-insensitive filter; the lib then post-filters in JS
+    // for exact equality on the lowercased trimmed label.
     const tag = existingTag({ label: 'pacing', category: 'mentaal' });
     let capturedQuery: unknown;
     setupMockHandlers({
@@ -184,10 +188,42 @@ describe('createOrUpsertTag', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.kind).toBe('matched_active');
-    // The query must use _iequals on the trimmed label, not _icontains.
     const filter = (capturedQuery as { filter?: { label?: Record<string, unknown> } })
       .filter?.label;
-    expect(filter).toEqual({ _iequals: 'PACING' });
+    expect(filter).toEqual({ _icontains: 'PACING' });
+  });
+
+  it('post-filters _icontains false positives (substring matches that are not exact)', async () => {
+    // _icontains matches substrings, so a query for "pacing" can return
+    // rows like "rapid-pacing". The JS post-filter must reject these.
+    const falsePositive = existingTag({
+      id: 'tag-pacing-strategy',
+      label: 'pacing-strategy',
+      category: 'mentaal',
+    });
+    setupMockHandlers({
+      readItems: () => [falsePositive],
+      createItem: () => ({
+        id: 'tag-new',
+        label: 'pacing',
+        category: 'mentaal',
+        project_id: null,
+        usage_count: 0,
+        archived_at: null,
+        created_at: '2026-06-01T00:00:00.000Z',
+      }),
+    });
+
+    const result = await createOrUpsertTag('access-token', {
+      label: 'pacing',
+      category: 'mentaal',
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    // No exact match -> a fresh tag is created, not the substring match.
+    expect(result.value.kind).toBe('created');
+    expect(result.value.tag.id).toBe('tag-new');
   });
 
   it('does NOT match across categories', async () => {

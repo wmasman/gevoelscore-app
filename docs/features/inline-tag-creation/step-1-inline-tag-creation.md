@@ -20,7 +20,7 @@ Mirrors the README's feature-level criteria, restated here so `/build-step` has 
 - [ ] **AC5: Category inheritance.** The new tag's category is the section the `+ nieuw` chip was in. No category picker.
 - [ ] **AC6: Server-side dedup (4 branches + reactivation column reset).**
   - Trim whitespace before comparing.
-  - Case-insensitive **exact** match within the same category (Directus `_iequals` filter, not `_icontains`) → return existing id; if it's archived, reactivate it (see AC6b).
+  - Case-insensitive **exact** match within the same category. Directus has no `_iequals` operator (confirmed 2026-06-01 against the [Directus filter-rules docs](https://github.com/directus/docs/blob/main/content/guides/04.connect/2.filter-rules.md) and the programmeerprobeer reference). Implementation: filter with `_icontains` as a coarse case-insensitive query, then post-filter in JS for exact equality on the lowercased trimmed label. Match → return existing id; if it's archived, reactivate it (see AC6b).
   - Same label in a different category → create as a new tag.
   - No match → create fresh.
 - [ ] **AC6b: Reactivation resets stale columns (B2 audit fix).** When a matched row is archived and is being reactivated, the PATCH sets `archived_at = null` AND `project_id = null` AND `usage_count = 0`. `created_at` is left untouched (the row's history is preserved). This prevents stale `project_id`/`usage_count` from a previous lifetime resurfacing silently. Documented in the function's TSDoc.
@@ -130,7 +130,7 @@ export async function createOrUpsertTag(
 Logic:
 1. Trim `label`, validate via the extended `validateTagLabel`. Reject `invalid_label` on `wrong_type`, `empty`, or `too_long`.
 2. Validate `category` via `validateTagCategory`. Reject `invalid_category` if not OK.
-3. Query Directus `tags` with **`filter: { category: { _eq }, label: { _iequals: trimmed } }`** (m1 audit fix — `_iequals` not `_icontains`). Limit 1.
+3. Query Directus `tags` with **`filter: { category: { _eq }, label: { _icontains: trimmed } }`** plus a JS post-filter for `row.label.toLowerCase() === trimmed.toLowerCase()`. Directus has no `_iequals` operator; this is the canonical Directus pattern for exact case-insensitive matching (see programmeerprobeer's `tvoo_frontend/src/lib/editorial/author-matching.ts` and `tvoo_frontend/src/lib/directus/search.ts` for sibling-project precedent). Limit 50 so `_icontains` substring false positives don't push the actual exact match off the result page in the small tags collection (~83 rows).
 4. If a match exists:
    - If `archived_at !== null`: PATCH the row with `{ archived_at: null, project_id: null, usage_count: 0 }` (B2 audit fix). Return `matched_reactivated` with the fully-updated tag. Document the column-reset list in TSDoc.
    - Else: return `matched_active` with the existing tag.
@@ -226,7 +226,8 @@ Every test below must be **named and failing** before the corresponding code is 
 ### Lib: `src/lib/api/__tests__/tags.test.ts` (new)
 
 - [ ] `createOrUpsertTag trims whitespace before comparing` — `"  Pacing  "` matches existing `"Pacing"`, no duplicate created.
-- [ ] `createOrUpsertTag matches case-insensitively within category via _iequals` — `"PACING"` matches existing `"pacing"` in same category, returns `matched_active`. (Asserts the filter shape uses `_iequals`, not `_icontains`.)
+- [ ] `createOrUpsertTag matches case-insensitively within category via _icontains + JS exact-match post-filter` — `"PACING"` matches existing `"pacing"` in same category, returns `matched_active`. Asserts the filter shape uses `_icontains` (the only documented case-insensitive Directus operator).
+- [ ] `createOrUpsertTag post-filters _icontains substring false positives` — a tag labelled `"pacing-strategy"` exists; a request for `"pacing"` does NOT match it; a fresh tag is created instead.
 - [ ] `createOrUpsertTag does NOT match across categories` — `"Paracetamol"` in `interventie` + `"Paracetamol"` in `custom` produces two distinct tags.
 - [ ] `createOrUpsertTag reactivates archived tag and clears stale columns` — archived row with `project_id: 'p-1'` and `usage_count: 17` becomes `{ archived_at: null, project_id: null, usage_count: 0 }`; returns `matched_reactivated`. (B2 audit fix.)
 - [ ] `createOrUpsertTag creates new tag when no match` — no existing match → POST → returns `created`.

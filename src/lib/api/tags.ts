@@ -94,8 +94,13 @@ export async function readAllTags(
 //     matched_reactivated.
 //   - no match → POST a new tag with usage_count=0 and return created.
 //
-// Dedup uses Directus's _iequals filter on the trimmed label, NOT _icontains
-// (m1 audit fix — _icontains gives false positives on substrings).
+// Dedup query: Directus has no _iequals operator. The query uses
+// _icontains (case-insensitive substring) as a coarse case-insensitive
+// filter, then JS post-filters for exact equality on the lowercased
+// trimmed label to reject substring false positives. Confirmed against
+// the Directus filter-rules docs + the programmeerprobeer reference
+// project (2026-06-01 hotfix; the earlier _iequals attempt returned
+// HTTP 400 from Directus).
 //
 // TOCTOU note: this read-then-write pattern leaves a race window when two
 // simultaneous calls with the same (category, label) arrive. For today's
@@ -155,17 +160,25 @@ export async function createOrUpsertTag(
       .with(rest())
       .with(staticToken(accessToken));
 
-    const matches = (await client.request(
+    // Directus has no _iequals operator (verified 2026-06-01: filtering by
+    // _iequals returns HTTP 400). Use _icontains (case-insensitive substring)
+    // as a coarse filter, then post-filter in JS for exact case-insensitive
+    // equality on the trimmed label. The substring filter may surface false
+    // positives (e.g. "pacing" matches "rapid-pacing"); the JS pass rejects
+    // those. Limit is generous (50) so the exact match isn't paged off the
+    // result by false positives — the tags collection is small (~83 rows).
+    const lowerLabel = label.toLowerCase();
+    const candidates = (await client.request(
       readItems('tags', {
         filter: {
           category: { _eq: category },
-          label: { _iequals: label },
+          label: { _icontains: label },
         } as never,
-        limit: 1,
+        limit: 50,
       }),
     )) as DirectusTagRow[];
 
-    const match = matches[0];
+    const match = candidates.find((r) => r.label.toLowerCase() === lowerLabel);
     if (match) {
       if (match.archived_at !== null) {
         const updated = (await client.request(

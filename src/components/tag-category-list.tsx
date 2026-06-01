@@ -248,7 +248,11 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
               </span>
             )}
             {isComposingHere && composing?.status !== 'pending' ? (
-              <span className="inline-flex items-center gap-2">
+              // `basis-full` pushes this onto its own row inside the flex-wrap
+              // parent; `min-w-0` lets the input shrink instead of overflowing
+              // the phone width. Without these the inline-flex span forced
+              // horizontal overflow on narrow viewports (2026-06-01 fix).
+              <span className="flex w-full basis-full items-center gap-2">
                 <input
                   ref={inputRef}
                   type="text"
@@ -267,7 +271,7 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
                       cancelComposer();
                     }
                   }}
-                  className="inline-flex min-h-11 rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
+                  className="min-w-0 flex-1 min-h-11 rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
                 />
                 <button
                   type="button"
@@ -278,7 +282,7 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
                     e.preventDefault();
                   }}
                   onClick={() => void submitComposer()}
-                  className="inline-flex min-h-11 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   {copy.daily.tags.addButton}
                 </button>
