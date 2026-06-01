@@ -215,6 +215,64 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
         </button>
         {isExpanded && (
           <div className="mt-1 flex flex-wrap items-center gap-2 px-1 py-2">
+            {/* Composing input is rendered AT THE TOP of the chip area
+                (before the chips) so it's always visible directly under
+                the category header. Previous layout placed it at the
+                bottom of the chip row, where on a long expanded category
+                with the keyboard up it ended up below the visible area
+                on iPhone. Top placement = always in view, no scroll
+                required. The chips below remain interactive so the user
+                can see what already exists and tap an existing chip if
+                they realise their typed label is a duplicate. */}
+            {isComposingHere && composing?.status === 'pending' && (
+              <span
+                data-pending="true"
+                aria-disabled="true"
+                className="basis-full inline-flex min-h-11 items-center rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg opacity-60"
+              >
+                {composing.label}
+              </span>
+            )}
+            {isComposingHere && composing?.status !== 'pending' ? (
+              // basis-full takes its own row in the flex-wrap parent;
+              // min-w-0 + flex-1 lets the input shrink to fit phone width
+              // (without these the input forced horizontal overflow).
+              <span className="flex w-full basis-full items-center gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  aria-label={copy.daily.tags.newInputAriaLabel}
+                  placeholder={copy.daily.tags.newInputPlaceholder}
+                  value={composing.label}
+                  onChange={(e) =>
+                    setComposing((c) => (c ? { ...c, label: e.target.value, status: 'idle' } : null))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void submitComposer();
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      cancelComposer();
+                    }
+                  }}
+                  className="min-w-0 flex-1 min-h-11 rounded-full border border-accent bg-bg px-4 py-2 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
+                />
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // Defeat the blur-vs-click race: the input's blur would
+                    // otherwise cancel composing before the click handler
+                    // fires (m2 audit fix).
+                    e.preventDefault();
+                  }}
+                  onClick={() => void submitComposer()}
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  {copy.daily.tags.addButton}
+                </button>
+              </span>
+            ) : null}
             {tags.map((t) => {
               const isSelected = selected.has(t.id);
               return (
@@ -238,56 +296,6 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
                 </button>
               );
             })}
-            {isComposingHere && composing?.status === 'pending' && (
-              <span
-                data-pending="true"
-                aria-disabled="true"
-                className="inline-flex min-h-11 items-center rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg opacity-60"
-              >
-                {composing.label}
-              </span>
-            )}
-            {isComposingHere && composing?.status !== 'pending' ? (
-              // `basis-full` pushes this onto its own row inside the flex-wrap
-              // parent; `min-w-0` lets the input shrink instead of overflowing
-              // the phone width. Without these the inline-flex span forced
-              // horizontal overflow on narrow viewports (2026-06-01 fix).
-              <span className="flex w-full basis-full items-center gap-2">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  aria-label={copy.daily.tags.newInputAriaLabel}
-                  placeholder={copy.daily.tags.newInputPlaceholder}
-                  value={composing.label}
-                  onChange={(e) =>
-                    setComposing((c) => (c ? { ...c, label: e.target.value, status: 'idle' } : null))
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      void submitComposer();
-                    } else if (e.key === 'Escape') {
-                      e.preventDefault();
-                      cancelComposer();
-                    }
-                  }}
-                  className="min-w-0 flex-1 min-h-11 rounded-full border border-border bg-bg px-4 py-2 text-sm text-fg focus-visible:outline-2 focus-visible:outline-accent"
-                />
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    // Defeat the blur-vs-click race: the input's blur would
-                    // otherwise cancel composing before the click handler
-                    // fires (m2 audit fix).
-                    e.preventDefault();
-                  }}
-                  onClick={() => void submitComposer()}
-                  className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-accent bg-accent px-4 py-2 text-sm text-bg focus-visible:outline-2 focus-visible:outline-accent"
-                >
-                  {copy.daily.tags.addButton}
-                </button>
-              </span>
-            ) : null}
             {!isComposingHere && (
               <button
                 type="button"
