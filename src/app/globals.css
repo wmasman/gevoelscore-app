@@ -72,6 +72,13 @@ body {
      can reload the page and abort the PUT. Safe everywhere — timeline
      scrolls inside its own container, never the document. */
   overscroll-behavior: none;
+  /* Defensive: any descendant that accidentally exceeds viewport width
+     (e.g. a long-label tag chip that doesn't wrap, a fixed-width
+     element, an iOS visualViewport recalc race) must not push the
+     entire document horizontally off-screen. Vertical scroll only.
+     Added 2026-06-01 after a tag-creation flow on iPhone PWA caused
+     the popout + day card to right-shift past the viewport edge. */
+  overflow-x: hidden;
 }
 
 body {

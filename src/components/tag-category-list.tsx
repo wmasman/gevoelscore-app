@@ -110,14 +110,27 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
     }
   }, [status, selected]);
 
-  // Focus the new chip after a successful create. The chip ref is set as
-  // the new tag mounts; this effect runs after that mount and moves focus.
+  // Focus + scroll the new chip into view after a successful create. The
+  // chip ref is set as the new tag mounts; this effect runs after that
+  // mount and moves focus. scrollIntoView is critical because Directus's
+  // case-sensitive ASCII sort puts capitalised labels (e.g. "Vrolijk")
+  // BEFORE all lowercase tags — so the chip can render off-screen above
+  // the user's current scroll position. Without scrollIntoView the user
+  // would think the create failed. jsdom doesn't implement
+  // scrollIntoView, so the call is guarded behind a try-catch for
+  // test-env compatibility.
   useEffect(() => {
     const id = focusAfterCreateId.current;
     if (!id) return;
     const el = newChipRefs.current.get(id);
     if (el) {
-      el.focus();
+      try {
+        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } catch {
+        // Test environments (jsdom) don't implement scrollIntoView. Real
+        // browsers do; the focus call below is the fallback signal.
+      }
+      el.focus({ preventScroll: true });
       focusAfterCreateId.current = null;
     }
   });
