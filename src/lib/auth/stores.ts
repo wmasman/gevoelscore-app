@@ -55,6 +55,23 @@ export const tagWriteRateLimiter = createRateLimiter({
   windowMs: FIVE_MIN_MS,
 });
 
+// Writes to /api/episodes and /api/episodes/[id] (v1.5 verloop-and-episodes,
+// user-facing tab: Periodes). Same posture as tagWriteRateLimiter — a power-
+// user editing one episode could fire several auto-save writes per minute,
+// 60/5min leaves the normal flow unblocked while catching credential abuse.
+export const episodeWriteRateLimiter = createRateLimiter({
+  limit: 60,
+  windowMs: FIVE_MIN_MS,
+});
+
+// Reads from /api/episodes. Matches dayEntryReadRateLimiter — primary read
+// path is server-rendered (page.tsx) so the API GET is used for client-side
+// refreshes only, with low traffic in normal use.
+export const episodeReadRateLimiter = createRateLimiter({
+  limit: 120,
+  windowMs: FIVE_MIN_MS,
+});
+
 function buildSessionStore(): SessionStore {
   const adminToken = process.env.DIRECTUS_TOKEN;
   const directusUrl =
@@ -98,6 +115,8 @@ if (typeof globalThis !== 'undefined' && globalThis.__gsAuthSweeper === undefine
     dayEntryWriteRateLimiter.sweep();
     dayEntryReadRateLimiter.sweep();
     tagWriteRateLimiter.sweep();
+    episodeWriteRateLimiter.sweep();
+    episodeReadRateLimiter.sweep();
     pendingOtpStore.cleanupExpired();
     pendingTfaStore.cleanupExpired();
   }, SWEEP_INTERVAL_MS);
