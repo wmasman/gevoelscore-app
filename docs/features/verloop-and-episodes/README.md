@@ -2,7 +2,7 @@
 
 **Feature:** The v1.5 anchor. Adds a new third top-level surface (**Context**) that holds the contextual signals affecting daily scores over time. The first (and currently only) section inside Context is **Periodes** — multi-day Episodes for interventies (coaching, physio, ergo, medication courses) and levensgebeurtenissen (holidays, partner-away weekends, big work projects). Adds a new `episodes` Directus collection, a new nullable `tags.parent_episode_id` FK so single-day tags can hang off an ongoing episode as occurrences, and the Context-tab UI for episode CRUD + tag-linking. The Context container is named for the extensibility: v1.6 Calendar bindings and v2 project context become sibling sections under the same tab.
 **Version:** v1.5
-**Status:** Designed — brainstorm resolved 2026-06-02; tab label finalised 2026-06-02 after three same-day passes (Verloop → Periodes → **Context**). Step-1 through step-5 shipped (test-suite + verify-gate green). Deploy + iOS soak pending.
+**Status:** **Shipped 2026-06-02** — all 10 ACs ticked; steps 1–5 live at https://gevoelscore-frontend.fly.dev (deploy `89e2378` + `8c3cff3`); episodes-smoke + verify-tag-link-storage scripts pass against production; iOS soak in progress.
 **Parent docs:** [ADR 0006](../../decisions/0006-three-surface-architecture.md) (three-surface architecture) · [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) · [features/tag/](../tag/) (Tag domain — referenced for the new `parent_episode_id` field)
 
 > **Folder slug note**: this folder is `features/verloop-and-episodes/` for git-history continuity. The user-facing tab label is **Context**; Periodes is a section heading INSIDE that tab. Do not rename the folder; treat the slug as an internal identifier only.
@@ -88,17 +88,17 @@ Active episodes (end_date null OR end_date >= today) at top, past below. Tap an 
 
 ### Episode detail/edit screen
 
-Fields: label, category (read-only after create — changing category is confusing), start_date picker, end_date picker (optional, with "lopend" toggle for ongoing), description textarea, [v1.6: calendar binding], "Tags die hierbij horen" list (read-only in v1.5 — linking is from the tag side, see below), archive button.
+Fields: label, category (read-only after create — changing category is confusing), start_date picker, end_date picker (optional, with "lopend" toggle for ongoing), description textarea, [v1.6: calendar binding], "Tags die hierbij horen" list (chips + per-chip unlink + a "+ Tag" launcher that opens the nested `TagPickerSheet`; ships in step-5), archive button.
 
 ### Tag-to-episode linking
 
 Daily-flow tagging stays unchanged — inline-tag-creation in Vandaag does NOT gain a "link to episode" step (kept lightweight for the sub-10-second flow).
 
 Linking happens in two places:
-1. **From the Context tab's episode detail view** — "Voeg gekoppelde tag toe": pick from existing tags OR create a new tag with the parent set.
-2. **From the inline tag editor** (future, v1.5b): a tag's detail view in the Settings → Tag-beheer screen gets a "behoort bij" picker.
+1. **From the Context tab's episode detail view** — "Voeg gekoppelde tag toe": pick from existing tags OR create a new tag with the parent set in one round-trip. **Shipped step-5 (2026-06-02).** `LinkedTagsSection` + nested `TagPickerSheet` inside `EpisodeFormSheet` edit-mode.
+2. **From the inline tag editor** (deferred, v1.5b): a tag's detail view in the Settings → Tag-beheer screen gets a "behoort bij" picker.
 
-For v1.5 the first path is the only one. Heavy management (recategorize, delete, mass-link) ships in v1.5b with the tag-management Settings screen.
+For v1.5 path 1 is the only one live. Heavy management (recategorize, delete, mass-link) ships in v1.5b with the tag-management Settings screen.
 
 ## Out of scope (v1.5)
 

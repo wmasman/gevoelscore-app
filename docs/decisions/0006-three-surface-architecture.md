@@ -35,7 +35,7 @@ The naive shapes both fail:
 The app splits into **three top-level surfaces**, each with one clear job:
 
 1. **Vandaag** — quick log (score / note / tags). **Untouched by this ADR.** The cardinal principle (one tap, sub-10-seconds) holds; nothing layered on top.
-2. **Context** (working name — see "Open questions") — manage range entities. Define event date-ranges, log intervention episodes, configure calendar / Garmin import bindings. This is where multi-day and repeating things live.
+2. **Context** (final — naming resolved 2026-06-02; see "Open questions" for the same-day Verloop → Periodes → Context history). Manages range entities: event date-ranges, intervention episodes, calendar / Garmin import bindings. Where multi-day and repeating things live. Periodes is now a section heading INSIDE this tab, not the tab label.
 3. **Tijdlijn** — read-only synthesis. Score line + episode bands + occurrence dots + free-floating tag dots, all on one timeline.
 
 The data model that supports this:

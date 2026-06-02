@@ -19,8 +19,7 @@ Items here are scoped enough that the next step is `/plan-feature` to produce a 
 | Item | Doc | Version | Size |
 |---|---|---|---|
 | Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | **v1.5a** | Small (single step file). Ships first as the v1.5 opener. |
-| Context tab + Episodes (+ tag-linking) | [features/verloop-and-episodes/](features/verloop-and-episodes/) | **v1.5** | Multi-step (5 step files). The v1.5 anchor. Folder slug kept as `verloop-and-episodes/`; user-facing tab label is **Context** (revised 2026-06-02 after three same-day passes: Verloop → Periodes → Context). Periodes is now a section heading inside the Context tab. |
-| Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | **v1.5** | Small-medium. Ships after the Periodes feature lands. |
+| Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | **v1.5** | Small-medium. The v1.5 anchor's visualisation half — surfaces episodes as bands on the Tijdlijn now that the data exists. |
 
 ## Designed (architecture set, larger design still needed)
 
@@ -45,6 +44,7 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | When |
 |---|---|---|
+| Context tab + Episodes (+ tag-linking) | [features/verloop-and-episodes/](features/verloop-and-episodes/) | 2026-06-02 (v1.5 anchor: 5 step files, all 10 ACs ticked; folder slug retained, user-facing tab is **Context** with Periodes as a section inside) |
 | Timeline gap indicator | [features/timeline-gap-indicator/](features/timeline-gap-indicator/) | 2026-06-02 |
 | Inline tag creation | [features/inline-tag-creation/](features/inline-tag-creation/) | 2026-06-01 |
 | Quick-entry popout (Steps 0–5 + iOS popout-collapse fix) | [features/quick-entry-popout/](features/quick-entry-popout/) | 2026-05-29 → 2026-05-31 |
