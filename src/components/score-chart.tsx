@@ -48,6 +48,15 @@ function daysBetween(from: string, to: string): number {
   return Math.round((b - a) / (24 * 60 * 60 * 1000));
 }
 
+function shiftDate(date: string, days: number): string {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  const y = parsed.getUTCFullYear();
+  const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(parsed.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function computeYRange(entries: DayEntry[]): { lo: number; hi: number; ticks: number[] } {
   if (entries.length === 0) return { lo: 1, hi: 10, ticks: [1, 4, 7, 10] };
   let lo: number = entries[0]!.score;
@@ -95,6 +104,21 @@ export function ScoreChart({ entries, from, to, onPointTap }: Props) {
   }
 
   const sorted = [...entries].sort((a, b) => (a.date < b.date ? -1 : 1));
+
+  // Gap indicator (2026-06-02, features/timeline-gap-indicator): one
+  // hollow dot per unlogged day in [from, to], placed at the chart
+  // bottom (just above the x-axis). Honest data: the chart shouldn't
+  // silently elide missing days; the user gets a quiet, neutral marker
+  // they can tap to retroactively log. No visible "geen score" copy —
+  // the aria-label carries the meaning for assistive tech.
+  const loggedDates = new Set(entries.map((e) => e.date));
+  const missingDates: string[] = [];
+  for (let i = 0; i < totalDays; i += 1) {
+    const d = shiftDate(from, i);
+    if (!loggedDates.has(d)) missingDates.push(d);
+  }
+  const GAP_DOT_R = 3;
+  const GAP_Y = PADDING_TOP + chartH - GAP_DOT_R;
 
   // Moving-average line: one path with M/L commands, but break into
   // sub-paths when a day yields null (window not yet warm enough OR a
@@ -160,6 +184,40 @@ export function ScoreChart({ entries, from, to, onPointTap }: Props) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+
+      {/* Gap indicators — one hollow dot per missing day at the chart
+          bottom. Rendered before raw points so logged-day dots sit on
+          top in the (rare) case the bottom y collides. */}
+      {missingDates.map((date) => (
+        <g
+          key={`gap-${date}`}
+          role="button"
+          tabIndex={0}
+          aria-label={`${date}: geen score`}
+          data-date={date}
+          data-missing="true"
+          onClick={() => onPointTap(date)}
+          onKeyDown={(ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              onPointTap(date);
+            }
+          }}
+          className="cursor-pointer focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          {/* Generous transparent hit target — matches raw-point pattern. */}
+          <circle cx={xFor(date)} cy={GAP_Y} r={12} fill="transparent" />
+          <circle
+            cx={xFor(date)}
+            cy={GAP_Y}
+            r={GAP_DOT_R}
+            fill="none"
+            className="stroke-fg-subtle"
+            strokeWidth={1}
+            opacity={0.3}
+          />
+        </g>
+      ))}
 
       {/* Raw daily points — secondary, muted, but still tappable. */}
       {sorted.map((e) => (

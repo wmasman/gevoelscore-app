@@ -144,4 +144,147 @@ describe('<ScoreChart />', () => {
     expect(labels).toContain('1');
     expect(labels).toContain('10');
   });
+
+  // -------------------------------------------------------------------------
+  // Gap indicator — added 2026-06-02 for features/timeline-gap-indicator
+  // -------------------------------------------------------------------------
+
+  describe('gap indicator for missing days', () => {
+    it('renders one gap-dot per missing day in [from, to]', () => {
+      // 3-day range, 1 logged day -> 2 gap-dots.
+      render(
+        <ScoreChart
+          entries={[entry('2026-05-27', 6)]}
+          from="2026-05-26"
+          to="2026-05-28"
+          onPointTap={() => {}}
+        />,
+      );
+      const gaps = screen.getAllByRole('button', { name: /geen score/i });
+      expect(gaps).toHaveLength(2);
+    });
+
+    it('renders no gap-dots when every day in range is logged', () => {
+      render(
+        <ScoreChart
+          entries={[
+            entry('2026-05-26', 5),
+            entry('2026-05-27', 7),
+            entry('2026-05-28', 6),
+          ]}
+          from="2026-05-26"
+          to="2026-05-28"
+          onPointTap={() => {}}
+        />,
+      );
+      expect(screen.queryAllByRole('button', { name: /geen score/i })).toHaveLength(0);
+    });
+
+    it('renders a gap-dot for every day in range when no days are logged', () => {
+      render(
+        <ScoreChart
+          entries={[]}
+          from="2026-05-26"
+          to="2026-05-28"
+          onPointTap={() => {}}
+        />,
+      );
+      expect(screen.getAllByRole('button', { name: /geen score/i })).toHaveLength(3);
+    });
+
+    it('uses the exact aria-label form "{date}: geen score"', () => {
+      render(
+        <ScoreChart
+          entries={[]}
+          from="2026-05-27"
+          to="2026-05-27"
+          onPointTap={() => {}}
+        />,
+      );
+      expect(
+        screen.getByRole('button', { name: '2026-05-27: geen score' }),
+      ).toBeInTheDocument();
+    });
+
+    it('clicking a gap-dot fires onPointTap with that missing date', async () => {
+      const user = userEvent.setup();
+      const onPointTap = vi.fn();
+      render(
+        <ScoreChart
+          entries={[entry('2026-05-27', 7)]}
+          from="2026-05-26"
+          to="2026-05-28"
+          onPointTap={onPointTap}
+        />,
+      );
+      await user.click(screen.getByRole('button', { name: '2026-05-26: geen score' }));
+      expect(onPointTap).toHaveBeenCalledWith('2026-05-26');
+    });
+
+    it('Enter key on a focused gap-dot fires onPointTap (keyboard parity with logged points)', async () => {
+      const user = userEvent.setup();
+      const onPointTap = vi.fn();
+      render(
+        <ScoreChart
+          entries={[]}
+          from="2026-05-27"
+          to="2026-05-27"
+          onPointTap={onPointTap}
+        />,
+      );
+      const gap = screen.getByRole('button', { name: '2026-05-27: geen score' });
+      gap.focus();
+      await user.keyboard('{Enter}');
+      expect(onPointTap).toHaveBeenCalledWith('2026-05-27');
+    });
+
+    it('does not render visible "geen score" text — the label lives only in aria-label', () => {
+      render(
+        <ScoreChart
+          entries={[]}
+          from="2026-05-27"
+          to="2026-05-27"
+          onPointTap={() => {}}
+        />,
+      );
+      // The accessible name comes via aria-label; no text node should
+      // expose the words to a sighted user.
+      expect(screen.queryByText(/geen score/i)).toBeNull();
+    });
+
+    it('positions the gap-dot near the chart bottom (above the x-axis baseline)', () => {
+      // PADDING_TOP = 12, SVG_HEIGHT = 200, PADDING_BOTTOM = 24, so
+      // chartH = 164 and the dot's cy should be 12 + 164 - 3 = 173.
+      render(
+        <ScoreChart
+          entries={[]}
+          from="2026-05-27"
+          to="2026-05-27"
+          onPointTap={() => {}}
+        />,
+      );
+      // Find the visible gap-dot — the 3-px radius one inside the
+      // role=button group, not the 12-px transparent hit target.
+      const dots = Array.from(
+        document.querySelectorAll('svg circle[r="3"][fill="none"]'),
+      );
+      expect(dots.length).toBe(1);
+      expect(dots[0]!.getAttribute('cy')).toBe('173');
+    });
+
+    it('does not inflate the existing "tappable circle per logged day" count', () => {
+      // Regression: the original test counts buttons matching /score \d/i.
+      // Gap-dots use "geen score" so they must NOT match that pattern.
+      render(
+        <ScoreChart
+          entries={[entry('2026-05-27', 6)]}
+          from="2026-05-26"
+          to="2026-05-28"
+          onPointTap={() => {}}
+        />,
+      );
+      const loggedPoints = screen.getAllByRole('button', { name: /score \d/i });
+      expect(loggedPoints).toHaveLength(1);
+    });
+  });
 });

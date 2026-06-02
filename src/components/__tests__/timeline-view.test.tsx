@@ -114,17 +114,27 @@ describe('<TimelineView />', () => {
     // Same shape as the TodayShell prop-driven test: server-rendered
     // data must flow through to display without local-state shadowing,
     // otherwise router.refresh() never moves the UI.
+    //
+    // Matcher is "score 9" (logged-day aria-label form) rather than the
+    // bare date, because the 2026-06-02 gap-indicator feature renders a
+    // tappable "{date}: geen score" gap-dot for every unlogged day in
+    // the range — so the bare-date matcher would match the gap-dot
+    // before the rerender, defeating the assertion's intent.
     const { rerender } = render(
       <TimelineView today="2026-05-28" initialEntries={INITIAL} allTags={TAGS} />,
     );
-    // Initially no point for 2026-05-25.
-    expect(screen.queryByRole('button', { name: /2026-05-25/ })).toBeNull();
+    // Initially: 2026-05-25 has only a gap-dot, no logged-score button.
+    expect(
+      screen.queryByRole('button', { name: /2026-05-25:\s*score\s+\d/ }),
+    ).toBeNull();
 
     const next: DayEntry[] = [entry('2026-05-25', 9), ...INITIAL];
     rerender(<TimelineView today="2026-05-28" initialEntries={next} allTags={TAGS} />);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /2026-05-25/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /2026-05-25:\s*score\s+9/ }),
+      ).toBeInTheDocument();
     });
   });
 
