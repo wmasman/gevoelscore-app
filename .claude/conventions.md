@@ -15,29 +15,33 @@ Per [ADR 0002](../docs/decisions/0002-pwa-with-directus-backend.md), the stack i
 
 ```
 src/
-  app/                  — Next.js App Router (root layout, daily page, timeline, calendar, settings, import, export)
-  components/           — shared React components (ScoreButton, TagChip, etc.)
+  app/                  — Next.js App Router (root layout, daily page, timeline, settings, future: import, export)
+  components/           — shared React components (ScoreButton, TagChip, etc.); /lab subfolder for in-flight composites
   lib/
-    api/                — Directus SDK client + typed query/mutation wrappers (the only place that knows the API surface)
-    domain/             — DayEntry, Tag, Project — typed domain logic, pure TS, no platform imports
-    validation/         — Zod schemas at API boundaries (CSV import, Directus response shape)
-    integrations/       — per-source modules (google-calendar v1.5, weather v2) with shared "fetch + aggregate + store per day" interface
-    import/             — Google Sheet / CSV / XLSX importers
-    export/             — CSV / JSON exporters
-  hooks/                — React hooks (data fetching, form state)
-  __tests__/            — co-located by module (prefer per-module __tests__/ over a top-level test folder)
+    api/                — Directus SDK client + typed query/mutation wrappers (the only place that knows the API surface). Result<T, E> helper lives here.
+    auth/               — session store, validators, rate-limiters, origin-check (the gates every Route Handler shares)
+    domain/             — DayEntry, Tag, Episode, Score, etc. — typed domain logic + validators, pure TS, no platform imports. THIS is where boundary validation lives — there is no separate `validation/` folder (see "Boundary validation via domain validators" above).
+    import/             — CSV importer for the historical Google Sheet (`csv-day-entries.ts`); add v1.5+ XLSX / other-format importers here.
+    ui/                 — small UI utilities (cn, focus-trap, scroll-lock, etc.)
+    (future) integrations/ — per-source modules (google-calendar v1.5, weather v2, garmin v2). Add when the first integration lands; not scaffolded preemptively.
+    (future) export/    — CSV / JSON exporter. Add when v1.5+ export ships; not scaffolded preemptively.
+  hooks/                — React hooks (data fetching, form state, auto-save)
 public/                 — static assets (icons, manifest.webmanifest, robots.txt)
 docs/
   features/{name}/      — per-feature plans (README + step-N-*.md), created via /plan-feature
+  decisions/            — ADRs
+directus/scripts/       — idempotent Directus REST migration + setup scripts (one POST per collection / field; never `schema apply`)
+scripts/                — local-developer tooling (PowerShell wrappers for env-loading, smoke tests, codegen helpers)
 ```
 
-Suggestion, not a constraint, until code exists. Revisit in the prototyping phase.
+Reflects the actual layout as of 2026-06-02. `validation/` was originally proposed for Zod schemas; the codebase settled on domain-validator pattern instead. `integrations/` and `export/` are listed as `(future)` placeholders — add the folder the first time you actually need it.
 
 ---
 
 ## Code conventions
 
-- **TypeScript strict.** No implicit `any`, no `Record<string, any>` for domain data. External data (Directus API responses, Google Calendar v1.5+, weather v2, CSV import) validated at the boundary with Zod schemas in `src/lib/validation/`.
+- **TypeScript strict.** No implicit `any`, no `Record<string, any>` for domain data.
+- **Boundary validation via domain validators.** External data (Directus API responses, request bodies on Next.js Route Handlers) is validated at the boundary by pure-TS validators in `src/lib/domain/*` returning the discriminated `Result<T, E>` shape `{ ok: true, value: T } | { ok: false, error: ErrorVariant }`. The validator output is the typed domain value — there is no separate "parse vs validate" step. Strict-shape checks (a `REQUIRED_KEYS` const + sorted-key comparison) reject objects with missing or extra keys so a renamed Directus column surfaces immediately rather than passing through silently. Examples: `validateEpisode`, `validateTag`, `validateDayEntry`, `validateScore`, `validateDateRange`. **Do not** introduce Zod or any other schema-validation library as a default — the imperative-validator pattern is established (60+ test files) and the per-error-variant precision is load-bearing for the route handlers' HTTP error mapping. Zod (or similar) MAY be introduced scoped to a specific wide unstructured boundary if the imperative version becomes painful — likely candidates are CSV import (roadmap), LLM JSON parsing (v2), or external integration feeds (v2). Decision belongs in the relevant feature's ADR, not a project-wide refactor.
 - **Filenames**: kebab-case (`score-button.tsx`, `day-entry.ts`). Tests co-located in `__tests__/`.
 - **No telemetry dependencies.** Reject packages that phone home — crash reporters, analytics SDKs, A/B tools. If a package needs this disabled via config, disable it and document why.
 
