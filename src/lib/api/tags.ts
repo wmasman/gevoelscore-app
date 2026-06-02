@@ -17,9 +17,9 @@ import {
 import type { Tag } from '@/lib/domain/tag';
 import { validateTagCategory, type TagCategory } from '@/lib/domain/tag-category';
 import { validateTagLabel } from '@/lib/domain/tag-label';
+import type { Result } from './result';
 
 export type TagsError = 'network_error' | 'directus_error';
-export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
 function directusUrl(): string {
   return (

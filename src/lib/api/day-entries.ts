@@ -20,12 +20,12 @@ import {
   updateItem,
 } from '@directus/sdk';
 import type { DayEntry } from '@/lib/domain/day-entry';
+import type { Result } from './result';
 
 export type DayEntriesError =
   | 'network_error'
   | 'directus_error'
   | 'missing_score_for_create';
-export type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
 
 function directusUrl(): string {
   return (
