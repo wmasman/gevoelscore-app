@@ -552,7 +552,11 @@ describe('<TodayShell />', () => {
       expect(screen.getByText('Citalopram')).toBeInTheDocument();
     });
 
-    it('does NOT render episodes with end_date set (not lopend)', () => {
+    it('renders episodes with end_date in the future (e.g. an upcoming/active vakantie)', () => {
+      // Loosened 2026-06-02: a vakantie 2026-06-10 → 2026-06-18 viewed
+      // on 2026-05-29 IS active (end_date >= today). The region now
+      // shows both lopend AND end-dated-but-not-yet-past episodes —
+      // the user wanted vakanties surfaced too.
       render(
         <TodayShell
           date="2026-05-29"
@@ -571,7 +575,43 @@ describe('<TodayShell />', () => {
         />,
       );
       expect(screen.getByText('Lopende coaching')).toBeInTheDocument();
-      expect(screen.queryByText('Vakantie Texel')).toBeNull();
+      expect(screen.getByText('Vakantie Texel')).toBeInTheDocument();
+    });
+
+    it('renders an episode whose end_date is exactly today (inclusive boundary)', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[
+            ep({
+              id: 'a',
+              label: 'Eindigt vandaag',
+              end_date: '2026-05-29',
+            }),
+          ]}
+        />,
+      );
+      expect(screen.getByText('Eindigt vandaag')).toBeInTheDocument();
+    });
+
+    it('does NOT render episodes whose end_date is in the past (already concluded)', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[
+            ep({ id: 'a', label: 'Eindigde gisteren', end_date: '2026-05-28' }),
+            ep({ id: 'b', label: 'Nog steeds open', end_date: null }),
+          ]}
+        />,
+      );
+      expect(screen.queryByText('Eindigde gisteren')).toBeNull();
+      expect(screen.getByText('Nog steeds open')).toBeInTheDocument();
     });
 
     it('does NOT render archived episodes even if end_date is null', () => {

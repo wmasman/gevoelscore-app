@@ -223,7 +223,9 @@ function TodayShellInner({
               openSheetFor({ date, entry, isPastDay: false }, step)
             }
             ongoingEpisodes={episodes.filter(
-              (e) => e.end_date === null && e.archived_at === null,
+              (e) =>
+                e.archived_at === null &&
+                (e.end_date === null || e.end_date >= date),
             )}
             onEpisodeTap={(ep) => setOngoingEditTarget(ep)}
           />

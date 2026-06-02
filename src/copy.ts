@@ -58,10 +58,13 @@ export const copy = {
     pastDayAriaLabel: (formattedDate: string, score: number): string =>
       `Vorige dag ${formattedDate}, score ${score}`,
     // Step-1 today-card ongoing-episodes region (2026-06-02). Renders
-    // below the Tags region when at least one episode has end_date=null.
+    // below the Tags region when at least one episode is currently
+    // active — end_date is null (lopend) OR in the future. The aria-
+    // label drops the "lopend" qualifier so the same string works for
+    // both fixed-end-in-the-future and open-ended episodes.
     ongoingRegionLabel: 'Loopt nu',
     ongoingEditAriaLabel: (label: string): string =>
-      `${label}, lopend, tik om te bewerken`,
+      `${label}, tik om te bewerken`,
   },
   context: {
     // Tab label + view aria-label for the v1.5 Context surface — the
