@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
+import type { Episode } from '@/lib/domain/episode';
 import { ScoreHeatmap } from '../score-heatmap';
 
 function entry(date: string, score: number): DayEntry {
@@ -90,6 +91,135 @@ describe('<ScoreHeatmap />', () => {
     const high = screen.getByRole('button', { name: /2026-05-27/ });
     expect(low.getAttribute('data-score')).toBe('2');
     expect(high.getAttribute('data-score')).toBe('9');
+  });
+
+  // -------------------------------------------------------------------------
+  // Episode-overlay — added 2026-06-02 for features/timeline-episode-overlay
+  // -------------------------------------------------------------------------
+
+  function ep(overrides: Partial<Episode> = {}): Episode {
+    return {
+      id: 'ep-default',
+      label: 'Coaching met Sarah',
+      category: 'interventie',
+      start_date: '2026-05-26',
+      end_date: '2026-05-28',
+      description: null,
+      calendar_binding: null,
+      archived_at: null,
+      created_at: '2026-05-26T00:00:00.000Z',
+      updated_at: '2026-05-26T00:00:00.000Z',
+      ...overrides,
+    };
+  }
+
+  describe('episode overlay (left-edge stripes)', () => {
+    it('regression: with no episodes prop, no stripe elements render', () => {
+      render(
+        <ScoreHeatmap
+          entries={[entry('2026-05-26', 5)]}
+          from="2026-05-26"
+          to="2026-05-26"
+          onCellTap={() => {}}
+        />,
+      );
+      expect(
+        document.querySelectorAll('[data-episode-stripe]'),
+      ).toHaveLength(0);
+    });
+
+    it('renders a stripe on every day-cell within an episode range', () => {
+      render(
+        <ScoreHeatmap
+          entries={[
+            entry('2026-05-26', 5),
+            entry('2026-05-27', 7),
+            entry('2026-05-28', 6),
+          ]}
+          from="2026-05-26"
+          to="2026-05-28"
+          onCellTap={() => {}}
+          episodes={[ep({ start_date: '2026-05-26', end_date: '2026-05-28' })]}
+        />,
+      );
+      // One stripe per in-range cell (3 days).
+      expect(
+        document.querySelectorAll('[data-episode-stripe="ep-default"]'),
+      ).toHaveLength(3);
+    });
+
+    it('stacks two concurrent episodes as two stripes on the same cell', () => {
+      render(
+        <ScoreHeatmap
+          entries={[entry('2026-05-26', 5)]}
+          from="2026-05-26"
+          to="2026-05-26"
+          onCellTap={() => {}}
+          episodes={[
+            ep({ id: 'ep-A', category: 'interventie' }),
+            ep({ id: 'ep-B', category: 'levensgebeurtenis' }),
+          ]}
+        />,
+      );
+      const cellStripes = document.querySelectorAll('[data-episode-stripe]');
+      expect(cellStripes).toHaveLength(2);
+      const ids = Array.from(cellStripes).map((s) =>
+        s.getAttribute('data-episode-stripe'),
+      );
+      expect(ids).toContain('ep-A');
+      expect(ids).toContain('ep-B');
+    });
+
+    it('skips archived episodes', () => {
+      render(
+        <ScoreHeatmap
+          entries={[entry('2026-05-26', 5)]}
+          from="2026-05-26"
+          to="2026-05-26"
+          onCellTap={() => {}}
+          episodes={[ep({ archived_at: '2026-05-30T00:00:00.000Z' })]}
+        />,
+      );
+      expect(
+        document.querySelectorAll('[data-episode-stripe]'),
+      ).toHaveLength(0);
+    });
+
+    it('category filter: levensgebeurtenis=false hides those stripes', () => {
+      render(
+        <ScoreHeatmap
+          entries={[entry('2026-05-26', 5)]}
+          from="2026-05-26"
+          to="2026-05-26"
+          onCellTap={() => {}}
+          episodes={[
+            ep({ id: 'ep-A', category: 'interventie' }),
+            ep({ id: 'ep-B', category: 'levensgebeurtenis' }),
+          ]}
+          categoriesVisible={{ interventie: true, levensgebeurtenis: false }}
+        />,
+      );
+      const ids = Array.from(
+        document.querySelectorAll('[data-episode-stripe]'),
+      ).map((s) => s.getAttribute('data-episode-stripe'));
+      expect(ids).toEqual(['ep-A']);
+    });
+
+    it('cell tap behaviour is unchanged when stripes are present', async () => {
+      const user = userEvent.setup();
+      const onCellTap = vi.fn();
+      render(
+        <ScoreHeatmap
+          entries={[entry('2026-05-26', 5)]}
+          from="2026-05-26"
+          to="2026-05-26"
+          onCellTap={onCellTap}
+          episodes={[ep()]}
+        />,
+      );
+      await user.click(screen.getByRole('button', { name: /2026-05-26/ }));
+      expect(onCellTap).toHaveBeenCalledWith('2026-05-26');
+    });
   });
 
   it('lays out cells in a 7-column week grid (one row per ISO week)', () => {

@@ -2,7 +2,7 @@
 
 **Feature:** Render Episodes as horizontal bands underneath the score line on the Tijdlijn (line-chart) and as background tints on the Heatmap. Tags that link to an episode (via `parent_episode_id`) appear as dots on their parent's band. The score signal stays the primary visual; episodes are context, not foreground.
 **Version:** v1.5 (third feature to ship after `tag-recency-sort` and `verloop-and-episodes`)
-**Status:** Designed — brainstorm resolved 2026-06-02. Step file pending — wait for `verloop-and-episodes` schema to land first (this feature depends on `episodes` table + `tags.parent_episode_id` existing).
+**Status:** **Shipped 2026-06-02** — all 22 step-1 ACs ticked; verify gate green (1060 vitest); deploy + iOS soak pending.
 **Parent docs:** [ADR 0006](../../decisions/0006-three-surface-architecture.md) (three-surface architecture — this feature is the "synthesis" half) · [features/verloop-and-episodes/](../verloop-and-episodes/) (data model + management UI) · [features/timeline-gap-indicator/](../timeline-gap-indicator/) (sibling timeline addition that already shipped)
 
 ---

@@ -19,12 +19,23 @@
 // Touch target: each cell is a 44×44 button (WCAG 2.5.5, brainfog floor).
 
 import type { DayEntry } from '@/lib/domain/day-entry';
+import type { Episode } from '@/lib/domain/episode';
+import type { EpisodeCategory } from '@/lib/domain/episode-category';
 
 type Props = {
   entries: DayEntry[];
   from: string;
   to: string;
   onCellTap: (date: string) => void;
+  /**
+   * Episode-overlay (2026-06-02). When provided, each in-range day-cell
+   * that falls within a non-archived (and non-filtered) episode's range
+   * gets a 3px left-edge stripe per overlapping episode, stacked
+   * horizontally. The cell's score-intensity tint stays primary; the
+   * stripes are the secondary signal.
+   */
+  episodes?: Episode[];
+  categoriesVisible?: Record<EpisodeCategory, boolean>;
 };
 
 const WEEKDAY_LABELS = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'] as const;
@@ -68,9 +79,42 @@ function dayNumber(date: string): string {
   return date.slice(8, 10).replace(/^0/, '');
 }
 
-export function ScoreHeatmap({ entries, from, to, onCellTap }: Props) {
+export function ScoreHeatmap({
+  entries,
+  from,
+  to,
+  onCellTap,
+  episodes = [],
+  categoriesVisible,
+}: Props) {
   const byDate = new Map<string, number>();
   for (const e of entries) byDate.set(e.date, e.score);
+
+  // Pre-filter episodes once. Archived + category-filtered + out-of-range
+  // are dropped before the per-cell overlap loop. Sort by start_date asc
+  // (then id) so stripes stack deterministically left-to-right.
+  const visibleEpisodes = episodes
+    .filter((ep) => {
+      if (ep.archived_at !== null) return false;
+      if (categoriesVisible && categoriesVisible[ep.category] === false) {
+        return false;
+      }
+      const effectiveEnd = ep.end_date ?? '9999-12-31';
+      return ep.start_date <= to && effectiveEnd >= from;
+    })
+    .sort((a, b) => {
+      if (a.start_date !== b.start_date) {
+        return a.start_date < b.start_date ? -1 : 1;
+      }
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+
+  function episodesOnDate(date: string): Episode[] {
+    return visibleEpisodes.filter((ep) => {
+      const end = ep.end_date ?? '9999-12-31';
+      return ep.start_date <= date && end >= date;
+    });
+  }
 
   // Find the Monday of `from`'s week and the Sunday of `to`'s week so
   // the grid is rectangular.
@@ -126,8 +170,13 @@ export function ScoreHeatmap({ entries, from, to, onCellTap }: Props) {
               ? `${date}: score ${score}`
               : `${date}: geen score`;
             const bg = cellBackground(score);
+            const overlapping = episodesOnDate(date);
             return (
-              <div key={date} role="gridcell" className="aspect-square">
+              <div
+                key={date}
+                role="gridcell"
+                className="relative aspect-square"
+              >
                 <button
                   type="button"
                   aria-label={label}
@@ -145,6 +194,30 @@ export function ScoreHeatmap({ entries, from, to, onCellTap }: Props) {
                 >
                   {dayNumber(date)}
                 </button>
+                {overlapping.length > 0 && (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 left-0 flex"
+                  >
+                    {overlapping.map((ep) => (
+                      <div
+                        key={ep.id}
+                        data-episode-stripe={ep.id}
+                        data-episode-category={ep.category}
+                        className={
+                          'w-0.75 ' +
+                          (ep.category === 'interventie'
+                            ? 'bg-accent'
+                            : 'bg-fg-subtle')
+                        }
+                        style={{
+                          opacity:
+                            ep.category === 'interventie' ? 0.6 : 0.5,
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

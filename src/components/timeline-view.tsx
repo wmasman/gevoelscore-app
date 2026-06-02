@@ -28,6 +28,9 @@ import { copy } from '@/copy';
 import { currentStreak } from '@/lib/domain/streak';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import type { Tag } from '@/lib/domain/tag';
+import { EpisodeFormSheet } from '@/components/episode-form-sheet';
+import type { Episode } from '@/lib/domain/episode';
+import type { EpisodeCategory } from '@/lib/domain/episode-category';
 
 type Range = 30 | 90;
 type View = 'chart' | 'heatmap';
@@ -44,6 +47,13 @@ type Props = {
    * to keep this component's existing tests + standalone use safe.
    */
   recencyByTagId?: Record<string, string>;
+  /**
+   * Episode corpus for the step-1 timeline-episode-overlay. Forwarded
+   * into ScoreChart + ScoreHeatmap; tapping a band opens an in-place
+   * EpisodeFormSheet (no cross-tab nav). Optional default-empty keeps
+   * existing tests + the pre-overlay call sites safe.
+   */
+  episodes?: Episode[];
 };
 
 function shiftDate(date: string, days: number): string {
@@ -60,9 +70,18 @@ export function TimelineView({
   initialEntries,
   allTags,
   recencyByTagId = {},
+  episodes = [],
 }: Props) {
   const [range, setRange] = useState<Range>(30);
   const [view, setView] = useState<View>('chart');
+  // Step-1: per-category toggle for the episode bands + heatmap stripes.
+  // Both default ON; state is local — resets on remount, no persistence.
+  const [categoriesVisible, setCategoriesVisible] = useState<
+    Record<EpisodeCategory, boolean>
+  >({ interventie: true, levensgebeurtenis: true });
+  // In-place EpisodeFormSheet target. Tapping a band sets this; the
+  // sheet's onClose / onSaved / onArchived all clear it.
+  const [bandEditTarget, setBandEditTarget] = useState<Episode | null>(null);
   // 30d entries come straight from the prop — no shadow. 90d is a
   // client-side lazy cache; null means "not fetched yet for this
   // session," in which case we fall back to the 30d prop so the chart
@@ -203,6 +222,47 @@ export function TimelineView({
         </div>
       </div>
 
+      {/* Step-1 per-category toggles. Both default ON. Rendered above the
+          chart/heatmap so the user sees the filter context before the
+          visual. Only shown when episodes are present so the timeline
+          stays clean for users without any episode data. */}
+      {episodes.length > 0 && (
+        <div
+          role="group"
+          aria-label={copy.timeline.episodeToggle.groupAriaLabel}
+          className="flex flex-wrap items-center gap-3 text-sm text-fg-muted"
+        >
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={categoriesVisible.interventie}
+              onChange={(e) =>
+                setCategoriesVisible((prev) => ({
+                  ...prev,
+                  interventie: e.target.checked,
+                }))
+              }
+              className="h-4 w-4"
+            />
+            <span>{copy.timeline.episodeToggle.interventies}</span>
+          </label>
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={categoriesVisible.levensgebeurtenis}
+              onChange={(e) =>
+                setCategoriesVisible((prev) => ({
+                  ...prev,
+                  levensgebeurtenis: e.target.checked,
+                }))
+              }
+              className="h-4 w-4"
+            />
+            <span>{copy.timeline.episodeToggle.periodes}</span>
+          </label>
+        </div>
+      )}
+
       {view === 'chart' ? (
         <>
           <ScoreChart
@@ -210,6 +270,10 @@ export function TimelineView({
             from={fromForRange[range]}
             to={today}
             onPointTap={(date) => setSelectedDate(date)}
+            episodes={episodes}
+            allTags={allTags}
+            categoriesVisible={categoriesVisible}
+            onEpisodeTap={(ep) => setBandEditTarget(ep)}
           />
           <p className="text-xs text-fg-subtle">{copy.timeline.maSubtitle}</p>
         </>
@@ -219,6 +283,8 @@ export function TimelineView({
           from={fromForRange[range]}
           to={today}
           onCellTap={(date) => setSelectedDate(date)}
+          episodes={episodes}
+          categoriesVisible={categoriesVisible}
         />
       )}
 
@@ -232,6 +298,23 @@ export function TimelineView({
         isPastDay={selectedDate !== null && selectedDate !== today}
         onClose={() => setSelectedDate(null)}
         onComplete={() => setSelectedDate(null)}
+      />
+
+      {/* Step-1: in-place EpisodeFormSheet. Same component as the Context
+          tab; opens when a band on the chart is tapped. Sheet's hook
+          runs router.refresh() on save/archive so the fresh episodes
+          prop arrives on the next render. */}
+      <EpisodeFormSheet
+        mode="edit"
+        category={bandEditTarget?.category ?? 'interventie'}
+        initialEpisode={bandEditTarget}
+        today={today}
+        open={bandEditTarget !== null}
+        onClose={() => setBandEditTarget(null)}
+        onSaved={() => setBandEditTarget(null)}
+        onArchived={() => setBandEditTarget(null)}
+        tags={allTags}
+        episodes={episodes}
       />
     </section>
   );

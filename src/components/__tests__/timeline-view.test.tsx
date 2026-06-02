@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
+import type { Episode } from '@/lib/domain/episode';
 import type { Tag } from '@/lib/domain/tag';
 
 // Mock the upsert hook so DayDetailSheet (rendered when a chart point is
@@ -11,6 +12,27 @@ import type { Tag } from '@/lib/domain/tag';
 vi.mock('@/hooks/use-day-entry-upsert', () => ({
   useDayEntryUpsert: () => ({
     save: vi.fn().mockResolvedValue(undefined),
+    status: 'idle' as const,
+    lastError: null,
+  }),
+}));
+
+// Step-1: mock the episode-upsert + tag-link hooks so the embedded
+// EpisodeFormSheet (rendered when a band is tapped) doesn't try to fetch.
+vi.mock('@/hooks/use-episode-upsert', () => ({
+  useEpisodeUpsert: () => ({
+    create: vi.fn().mockResolvedValue(null),
+    update: vi.fn().mockResolvedValue(null),
+    archive: vi.fn().mockResolvedValue(null),
+    status: 'idle' as const,
+    lastError: null,
+  }),
+}));
+vi.mock('@/hooks/use-tag-link-upsert', () => ({
+  useTagLinkUpsert: () => ({
+    createWithParent: vi.fn().mockResolvedValue(null),
+    link: vi.fn().mockResolvedValue(null),
+    unlink: vi.fn().mockResolvedValue(null),
     status: 'idle' as const,
     lastError: null,
   }),
@@ -148,5 +170,150 @@ describe('<TimelineView />', () => {
     // set to the saved score (7 for the 2026-05-27 fixture entry).
     const slider = screen.getByRole('slider', { name: /score/i });
     expect(slider).toHaveAttribute('aria-valuenow', '7');
+  });
+
+  // -------------------------------------------------------------------------
+  // Step-1 episode-overlay: per-category toggles + in-place EpisodeFormSheet
+  // -------------------------------------------------------------------------
+
+  function ep(overrides: Partial<Episode> = {}): Episode {
+    return {
+      id: 'ep-coaching',
+      label: 'Coaching met Sarah',
+      category: 'interventie',
+      start_date: '2026-05-20',
+      end_date: '2026-05-28',
+      description: null,
+      calendar_binding: null,
+      archived_at: null,
+      created_at: '2026-05-20T00:00:00.000Z',
+      updated_at: '2026-05-20T00:00:00.000Z',
+      ...overrides,
+    };
+  }
+
+  describe('episode overlay', () => {
+    it('renders the per-category toggle group with both checkboxes checked by default', () => {
+      render(
+        <TimelineView
+          today="2026-05-28"
+          initialEntries={INITIAL}
+          allTags={TAGS}
+          episodes={[ep()]}
+        />,
+      );
+      const interventiesToggle = screen.getByRole('checkbox', {
+        name: 'Interventies',
+      });
+      const periodesToggle = screen.getByRole('checkbox', {
+        name: 'Periodes',
+      });
+      expect(interventiesToggle).toBeChecked();
+      expect(periodesToggle).toBeChecked();
+    });
+
+    it('unchecking Interventies hides interventie bands on the chart', async () => {
+      const user = userEvent.setup();
+      render(
+        <TimelineView
+          today="2026-05-28"
+          initialEntries={INITIAL}
+          allTags={TAGS}
+          episodes={[ep({ id: 'ep-X', category: 'interventie' })]}
+        />,
+      );
+      // Initially the band is present.
+      expect(
+        document.querySelector('rect[data-episode-id="ep-X"]'),
+      ).not.toBeNull();
+
+      await user.click(screen.getByRole('checkbox', { name: 'Interventies' }));
+
+      expect(
+        document.querySelector('rect[data-episode-id="ep-X"]'),
+      ).toBeNull();
+    });
+
+    it('the two toggles are independent', async () => {
+      const user = userEvent.setup();
+      render(
+        <TimelineView
+          today="2026-05-28"
+          initialEntries={INITIAL}
+          allTags={TAGS}
+          episodes={[
+            ep({ id: 'ep-A', category: 'interventie' }),
+            ep({ id: 'ep-B', category: 'levensgebeurtenis' }),
+          ]}
+        />,
+      );
+
+      await user.click(screen.getByRole('checkbox', { name: 'Interventies' }));
+
+      // Interventie band gone; levensgebeurtenis still there.
+      expect(
+        document.querySelector('rect[data-episode-id="ep-A"]'),
+      ).toBeNull();
+      expect(
+        document.querySelector('rect[data-episode-id="ep-B"]'),
+      ).not.toBeNull();
+    });
+
+    it('tapping a band opens the EpisodeFormSheet in edit mode for that episode', async () => {
+      const user = userEvent.setup();
+      render(
+        <TimelineView
+          today="2026-05-28"
+          initialEntries={INITIAL}
+          allTags={TAGS}
+          episodes={[
+            ep({ id: 'ep-X', label: 'Coaching met Sarah' }),
+          ]}
+        />,
+      );
+
+      // Sheet not yet open.
+      expect(
+        screen.queryByRole('dialog', { name: /periode bewerken/i }),
+      ).toBeNull();
+
+      const band = screen.getByRole('button', {
+        name: /Coaching met Sarah/i,
+      });
+      await user.click(band);
+
+      // The EpisodeFormSheet's BottomSheet has aria-label "Periode bewerken".
+      expect(
+        screen.getByRole('dialog', { name: /periode bewerken/i }),
+      ).toBeInTheDocument();
+      // Title is "Bewerk interventie".
+      expect(
+        screen.getByRole('heading', { name: /bewerk interventie/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('closing the EpisodeFormSheet unmounts it', async () => {
+      const user = userEvent.setup();
+      render(
+        <TimelineView
+          today="2026-05-28"
+          initialEntries={INITIAL}
+          allTags={TAGS}
+          episodes={[ep({ id: 'ep-X' })]}
+        />,
+      );
+      const band = screen.getByRole('button', { name: /Coaching met Sarah/i });
+      await user.click(band);
+
+      // Sheet open. Click the ✕ button inside the EpisodeFormSheet.
+      const closeButton = screen.getByRole('button', { name: 'Sluit' });
+      await user.click(closeButton);
+
+      await waitFor(() =>
+        expect(
+          screen.queryByRole('heading', { name: /bewerk interventie/i }),
+        ).toBeNull(),
+      );
+    });
   });
 });

@@ -194,6 +194,13 @@ export const copy = {
     close: 'Sluit',
     streak: (n: number): string =>
       n === 1 ? '1 dag achter elkaar' : `${n} dagen achter elkaar`,
+    // Step-1 timeline-episode-overlay: per-category visibility toggles
+    // for the bands on the line chart + the stripes on the heatmap.
+    episodeToggle: {
+      groupAriaLabel: 'Periodes tonen',
+      interventies: 'Interventies',
+      periodes: 'Periodes',
+    },
   },
   settings: {
     title: 'Instellingen',

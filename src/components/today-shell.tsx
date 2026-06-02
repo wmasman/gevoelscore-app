@@ -269,6 +269,7 @@ function TodayShellInner({
           initialEntries={timelineEntries}
           allTags={allTags}
           recencyByTagId={recencyByTagId}
+          episodes={episodes}
         />
       )}
 
