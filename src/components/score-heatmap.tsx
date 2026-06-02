@@ -124,7 +124,7 @@ export function ScoreHeatmap({ entries, from, to, onCellTap }: Props) {
             const logged = score !== undefined;
             const label = logged
               ? `${date}: score ${score}`
-              : `${date}: geen log`;
+              : `${date}: geen score`;
             const bg = cellBackground(score);
             return (
               <div key={date} role="gridcell" className="aspect-square">

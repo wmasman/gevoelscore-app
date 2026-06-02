@@ -47,7 +47,7 @@ describe('<ScoreHeatmap />', () => {
     expect(screen.getByRole('button', { name: /2026-05-28/i })).toBeInTheDocument();
   });
 
-  it('missing days render as cells too but their aria-label indicates "geen log"', () => {
+  it('missing days render as cells too but their aria-label indicates "geen score"', () => {
     render(
       <ScoreHeatmap
         entries={[entry('2026-05-26', 5), entry('2026-05-28', 6)]}
@@ -56,8 +56,9 @@ describe('<ScoreHeatmap />', () => {
         onCellTap={() => {}}
       />,
     );
-    // 27 had no entry — label should say "geen log".
-    const missing = screen.getByRole('button', { name: /2026-05-27.*geen log/i });
+    // 27 had no entry — label should say "geen score" (aligned with
+    // the line chart's gap-indicator copy, 2026-06-02).
+    const missing = screen.getByRole('button', { name: /2026-05-27.*geen score/i });
     expect(missing).toBeInTheDocument();
   });
 
@@ -72,7 +73,7 @@ describe('<ScoreHeatmap />', () => {
         onCellTap={onCellTap}
       />,
     );
-    await user.click(screen.getByRole('button', { name: /2026-05-26.*geen log/i }));
+    await user.click(screen.getByRole('button', { name: /2026-05-26.*geen score/i }));
     expect(onCellTap).toHaveBeenCalledWith('2026-05-26');
   });
 
