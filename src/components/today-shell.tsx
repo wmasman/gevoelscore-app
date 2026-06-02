@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion';
 import Link from 'next/link';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
+import { PeriodesView } from '@/components/periodes-view';
 import { SaveAnnouncer } from '@/components/save-announcer';
 import { SaveStatus } from '@/components/save-status';
 import {
@@ -37,6 +38,7 @@ import { TimelineView } from '@/components/timeline-view';
 import { copy } from '@/copy';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { formatDateDutch } from '@/lib/domain/date';
+import type { Episode } from '@/lib/domain/episode';
 import type { Tag } from '@/lib/domain/tag';
 import { computeRecencyByTagId } from '@/lib/domain/tag-sort';
 import { cn } from '@/lib/ui/cn';
@@ -46,16 +48,29 @@ type Props = {
   entry: DayEntry | null;
   allTags: Tag[];
   timelineEntries: DayEntry[];
+  /**
+   * Episodes for the v1.5 Periodes tab. Server-rendered through page.tsx
+   * via readAllEpisodes (active-only). Optional default-empty keeps
+   * existing component tests passing — only the Periodes tab branch
+   * reads the prop.
+   */
+  episodes?: Episode[];
 };
 
-type Tab = 'today' | 'timeline';
+type Tab = 'today' | 'periodes' | 'timeline';
 type Step = 'score' | 'note' | 'tags';
 
 const DEFAULT_VISIBLE_PAST_DAYS = 3;
 const MAX_VISIBLE_PAST_DAYS = 10;
 const PULSE_DURATION_MS = 200;
 
-export function TodayShell({ date, entry, allTags, timelineEntries }: Props) {
+export function TodayShell({
+  date,
+  entry,
+  allTags,
+  timelineEntries,
+  episodes = [],
+}: Props) {
   return (
     <SaveStatusProvider>
       <TodayShellInner
@@ -63,12 +78,19 @@ export function TodayShell({ date, entry, allTags, timelineEntries }: Props) {
         entry={entry}
         allTags={allTags}
         timelineEntries={timelineEntries}
+        episodes={episodes}
       />
     </SaveStatusProvider>
   );
 }
 
-function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
+function TodayShellInner({
+  date,
+  entry,
+  allTags,
+  timelineEntries,
+  episodes = [],
+}: Props) {
   const [tab, setTab] = useState<Tab>('today');
   const merged = useMergedSaveStatus();
   // When reduce-motion is set we skip the pulse entirely — the
@@ -182,7 +204,9 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
         </Link>
       </header>
 
-      {tab === 'today' ? (
+      {tab === 'periodes' ? (
+        <PeriodesView episodes={episodes} today={date} />
+      ) : tab === 'today' ? (
         <div className="flex flex-col gap-6">
           <TodayCard
             entry={entry}
@@ -286,6 +310,18 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
             )}
           >
             {copy.timeline.todayTab}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'periodes'}
+            onClick={() => setTab('periodes')}
+            className={cn(
+              'flex min-h-14 flex-1 items-center justify-center px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-accent',
+              tab === 'periodes' ? 'font-medium text-accent' : 'text-fg-muted',
+            )}
+          >
+            {copy.periodes.title}
           </button>
           <button
             type="button"

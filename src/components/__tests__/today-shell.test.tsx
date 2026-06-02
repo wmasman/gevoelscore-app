@@ -361,4 +361,112 @@ describe('<TodayShell />', () => {
     expect(screen.getByRole('region', { name: /tijdlijn/i })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /30 dagen/i })).toBeInTheDocument();
   });
+
+  // ===========================================================================
+  // Periodes tab (v1.5, step-3)
+  // ===========================================================================
+
+  describe('Periodes tab', () => {
+    it('renders three tabs in order: Vandaag, Periodes, Tijdlijn', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+        />,
+      );
+
+      const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
+      expect(tabs).toEqual(['Vandaag', 'Periodes', 'Tijdlijn']);
+    });
+
+    it('given the Periodes tab is tapped, the today-card is replaced by the PeriodesView', async () => {
+      const user = userEvent.setup();
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+        />,
+      );
+
+      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+
+      // The today-card is gone, PeriodesView region is in.
+      expect(screen.queryByTestId('today-card')).toBeNull();
+      expect(screen.getByRole('region', { name: 'Periodes' })).toBeInTheDocument();
+    });
+
+    it('given Periodes is selected and episodes is empty, renders the empty-state line', async () => {
+      const user = userEvent.setup();
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[]}
+        />,
+      );
+
+      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+
+      expect(screen.getByText('Nog geen periodes.')).toBeInTheDocument();
+    });
+
+    it('given Periodes is selected and an active interventie is in the list, renders the Interventies (actief) section header', async () => {
+      const user = userEvent.setup();
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[
+            {
+              id: 'ep-a',
+              label: 'Coaching met Sarah',
+              category: 'interventie',
+              start_date: '2026-04-01',
+              end_date: null,
+              description: null,
+              calendar_binding: null,
+              archived_at: null,
+              created_at: '2026-04-01T08:00:00.000Z',
+              updated_at: '2026-04-01T08:00:00.000Z',
+            },
+          ]}
+        />,
+      );
+
+      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Interventies (actief)' }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Coaching met Sarah')).toBeInTheDocument();
+    });
+
+    it('tapping Vandaag after Periodes restores the today-card (no regression)', async () => {
+      const user = userEvent.setup();
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+        />,
+      );
+
+      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+      expect(screen.queryByTestId('today-card')).toBeNull();
+
+      await user.click(screen.getByRole('tab', { name: /vandaag/i }));
+
+      expect(screen.getByTestId('today-card')).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Periodes' })).toBeNull();
+    });
+  });
 });

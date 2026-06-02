@@ -2,11 +2,13 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { TodayShell } from '@/components/today-shell';
 import { readDayEntriesInRange, readDayEntryByDate } from '@/lib/api/day-entries';
+import { readAllEpisodes } from '@/lib/api/episodes';
 import { readAllTags } from '@/lib/api/tags';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { SESSION_COOKIE_NAME } from '@/lib/auth/session';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { todayInAmsterdam } from '@/lib/domain/date';
+import type { Episode } from '@/lib/domain/episode';
 import type { Tag } from '@/lib/domain/tag';
 
 // Home / Today screen. Server component. Two redirects guard the render:
@@ -54,15 +56,22 @@ export default async function HomePage() {
   let entry: DayEntry | null = null;
   let allTags: Tag[] = [];
   let timelineEntries: DayEntry[] = [];
+  let episodes: Episode[] = [];
   const from = shiftDate(today, -(TIMELINE_DAYS - 1));
-  const [entryResult, tagsResult, rangeResult] = await Promise.all([
+  const [entryResult, tagsResult, rangeResult, episodesResult] = await Promise.all([
     readDayEntryByDate(session.accessToken, today),
     readAllTags(session.accessToken),
     readDayEntriesInRange(session.accessToken, from, today),
+    // Active episodes only (v1.5 Periodes tab). Read failure falls
+    // back to empty list — the other tabs continue to work, the
+    // Periodes tab shows its empty state. Same fail-soft posture as
+    // the other reads above.
+    readAllEpisodes(session.accessToken),
   ]);
   if (entryResult.ok) entry = entryResult.value;
   if (tagsResult.ok) allTags = tagsResult.value;
   if (rangeResult.ok) timelineEntries = rangeResult.value;
+  if (episodesResult.ok) episodes = episodesResult.value;
 
   return (
     <TodayShell
@@ -70,6 +79,7 @@ export default async function HomePage() {
       entry={entry}
       allTags={allTags}
       timelineEntries={timelineEntries}
+      episodes={episodes}
     />
   );
 }

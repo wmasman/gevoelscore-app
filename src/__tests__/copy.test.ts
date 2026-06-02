@@ -25,6 +25,7 @@ describe('copy', () => {
       'errors',
       'home',
       'over',
+      'periodes',
       'settings',
       'timeline',
     ]);
