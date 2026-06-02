@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
+import type { Episode } from '@/lib/domain/episode';
 
 // next/navigation must be mocked because ContextView (rendered when the
 // Context tab is selected) mounts EpisodeFormSheet, whose useEpisodeUpsert
@@ -490,6 +491,172 @@ describe('<TodayShell />', () => {
 
       expect(screen.getByTestId('today-card')).toBeInTheDocument();
       expect(screen.queryByRole('region', { name: 'Context' })).toBeNull();
+    });
+  });
+
+  // ===========================================================================
+  // Today-card: ongoing-episodes region (lopend only, below Tags)
+  // ===========================================================================
+
+  function ep(overrides: Partial<Episode> = {}): Episode {
+    return {
+      id: 'ep-default',
+      label: 'Coaching met Sarah',
+      category: 'interventie',
+      start_date: '2026-05-01',
+      end_date: null,
+      description: null,
+      calendar_binding: null,
+      archived_at: null,
+      created_at: '2026-05-01T00:00:00.000Z',
+      updated_at: '2026-05-01T00:00:00.000Z',
+      ...overrides,
+    };
+  }
+
+  describe('ongoing-episodes region', () => {
+    it('does not render the region when no episodes are ongoing', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[]}
+        />,
+      );
+      expect(
+        screen.queryByRole('heading', { name: /lopend|loopt/i }),
+      ).toBeNull();
+    });
+
+    it('renders a row for each ongoing episode (end_date=null only)', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[
+            ep({ id: 'a', label: 'Coaching met Sarah', end_date: null }),
+            ep({
+              id: 'b',
+              label: 'Citalopram',
+              category: 'interventie',
+              end_date: null,
+            }),
+          ]}
+        />,
+      );
+      expect(screen.getByText('Coaching met Sarah')).toBeInTheDocument();
+      expect(screen.getByText('Citalopram')).toBeInTheDocument();
+    });
+
+    it('does NOT render episodes with end_date set (not lopend)', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[
+            ep({ id: 'a', label: 'Lopende coaching', end_date: null }),
+            ep({
+              id: 'b',
+              label: 'Vakantie Texel',
+              category: 'levensgebeurtenis',
+              end_date: '2026-07-22',
+            }),
+          ]}
+        />,
+      );
+      expect(screen.getByText('Lopende coaching')).toBeInTheDocument();
+      expect(screen.queryByText('Vakantie Texel')).toBeNull();
+    });
+
+    it('does NOT render archived episodes even if end_date is null', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[
+            ep({
+              id: 'a',
+              label: 'Oude coaching',
+              end_date: null,
+              archived_at: '2026-04-01T00:00:00.000Z',
+            }),
+          ]}
+        />,
+      );
+      expect(screen.queryByText('Oude coaching')).toBeNull();
+    });
+
+    it('each row is a button with an aria-label describing the action', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
+        />,
+      );
+      const button = screen.getByRole('button', {
+        name: /Coaching met Sarah.*tik om te bewerken/i,
+      });
+      expect(button).toBeInTheDocument();
+    });
+
+    it('tapping a row opens the EpisodeFormSheet for that episode', async () => {
+      const user = userEvent.setup();
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
+        />,
+      );
+
+      // Sheet not yet open.
+      expect(
+        screen.queryByRole('heading', { name: /bewerk interventie/i }),
+      ).toBeNull();
+
+      const row = screen.getByRole('button', {
+        name: /Coaching met Sarah.*tik om te bewerken/i,
+      });
+      await user.click(row);
+
+      expect(
+        screen.getByRole('heading', { name: /bewerk interventie/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('the region sits BELOW the Tags region inside the today-card', () => {
+      render(
+        <TodayShell
+          date="2026-05-29"
+          entry={entry('2026-05-29', 7)}
+          allTags={[]}
+          timelineEntries={PAST_ENTRIES}
+          episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
+        />,
+      );
+      const card = screen.getByTestId('today-card');
+      const tagsButton = card.querySelector('button[aria-label^="Tags"]');
+      const episodeButton = card.querySelector(
+        'button[aria-label*="Coaching met Sarah"]',
+      );
+      expect(tagsButton).not.toBeNull();
+      expect(episodeButton).not.toBeNull();
+      // Document order: Tags comes before the ongoing-episode row.
+      const cmp = tagsButton!.compareDocumentPosition(episodeButton!);
+      expect(cmp & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
   });
 });

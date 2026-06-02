@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion';
 import Link from 'next/link';
 import { ContextView } from '@/components/context-view';
+import { EpisodeFormSheet } from '@/components/episode-form-sheet';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
 import { SaveAnnouncer } from '@/components/save-announcer';
 import { SaveStatus } from '@/components/save-status';
@@ -93,6 +94,12 @@ function TodayShellInner({
 }: Props) {
   const [tab, setTab] = useState<Tab>('today');
   const merged = useMergedSaveStatus();
+  // Today-card ongoing-episodes region: tapping a row opens the in-place
+  // EpisodeFormSheet for that episode. State lives at the shell level so
+  // the form is mounted once even though the row is inside TodayCard.
+  const [ongoingEditTarget, setOngoingEditTarget] = useState<Episode | null>(
+    null,
+  );
   // When reduce-motion is set we skip the pulse entirely — the
   // SaveAnnouncer's "Opgeslagen." live-region announcement carries the
   // completion signal for those users (A-M5).
@@ -215,6 +222,10 @@ function TodayShellInner({
             onTapRegion={(step) =>
               openSheetFor({ date, entry, isPastDay: false }, step)
             }
+            ongoingEpisodes={episodes.filter(
+              (e) => e.end_date === null && e.archived_at === null,
+            )}
+            onEpisodeTap={(ep) => setOngoingEditTarget(ep)}
           />
 
           {pastEntries.length > 0 && (
@@ -261,6 +272,23 @@ function TodayShellInner({
             // the fresh-entry "Klaar" path.
             onClose={sheet.entry !== null ? handleComplete : handleClose}
             onComplete={handleComplete}
+          />
+
+          {/* In-place EpisodeFormSheet for the ongoing-episodes region
+              at the bottom of the today-card. Same sheet as Context tab
+              + Tijdlijn band-tap; centralised so saving from any
+              surface goes through the same hook + router.refresh. */}
+          <EpisodeFormSheet
+            mode="edit"
+            category={ongoingEditTarget?.category ?? 'interventie'}
+            initialEpisode={ongoingEditTarget}
+            today={date}
+            open={ongoingEditTarget !== null}
+            onClose={() => setOngoingEditTarget(null)}
+            onSaved={() => setOngoingEditTarget(null)}
+            onArchived={() => setOngoingEditTarget(null)}
+            tags={allTags}
+            episodes={episodes}
           />
         </div>
       ) : (
@@ -352,6 +380,13 @@ type TodayCardProps = {
   allTags: Tag[];
   pulsing: boolean;
   onTapRegion: (step: Step) => void;
+  /**
+   * Step-1 today-card ongoing-episodes (2026-06-02). Pre-filtered list
+   * of episodes where end_date is null AND archived_at is null. The
+   * region only renders when this is non-empty.
+   */
+  ongoingEpisodes?: Episode[];
+  onEpisodeTap?: (episode: Episode) => void;
 };
 
 // Three vertically-stacked editable regions, hairline-divided. Each
@@ -360,7 +395,14 @@ type TodayCardProps = {
 // tappable. The icon stays visible at all times to keep the affordance
 // brainfog-discoverable.
 
-function TodayCard({ entry, allTags, pulsing, onTapRegion }: TodayCardProps) {
+function TodayCard({
+  entry,
+  allTags,
+  pulsing,
+  onTapRegion,
+  ongoingEpisodes = [],
+  onEpisodeTap,
+}: TodayCardProps) {
   return (
     <article
       data-testid="today-card"
@@ -381,7 +423,47 @@ function TodayCard({ entry, allTags, pulsing, onTapRegion }: TodayCardProps) {
         allTags={allTags}
         onClick={() => onTapRegion('tags')}
       />
+      {ongoingEpisodes.length > 0 && onEpisodeTap !== undefined && (
+        <OngoingEpisodesRegion
+          episodes={ongoingEpisodes}
+          onEpisodeTap={onEpisodeTap}
+        />
+      )}
     </article>
+  );
+}
+
+function OngoingEpisodesRegion({
+  episodes,
+  onEpisodeTap,
+}: {
+  episodes: Episode[];
+  onEpisodeTap: (episode: Episode) => void;
+}) {
+  return (
+    <div className="flex w-full flex-col gap-2 p-4">
+      <span className="text-sm text-fg-muted">
+        {copy.home.ongoingRegionLabel}
+      </span>
+      <ul className="flex flex-col divide-y divide-border">
+        {episodes.map((ep) => (
+          <li key={ep.id} className="flex">
+            <button
+              type="button"
+              onClick={() => onEpisodeTap(ep)}
+              aria-label={copy.home.ongoingEditAriaLabel(ep.label)}
+              className={cn(
+                'flex min-h-11 flex-1 items-center justify-between gap-3 py-2 text-left',
+                'hover:bg-surface-muted focus-visible:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent',
+              )}
+            >
+              <span className="text-base text-fg">{ep.label}</span>
+              <EditIcon />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
