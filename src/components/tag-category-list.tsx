@@ -22,6 +22,7 @@ import { copy } from '@/copy';
 import { useDayEntryUpsert } from '@/hooks/use-day-entry-upsert';
 import type { Tag } from '@/lib/domain/tag';
 import type { TagCategory } from '@/lib/domain/tag-category';
+import { compareTagsForPicker } from '@/lib/domain/tag-sort';
 
 const PRIMARY_CATEGORIES: readonly TagCategory[] = [
   'mentaal',
@@ -41,6 +42,15 @@ type Props = {
   allTags: Tag[];
   initialTagIds: string[];
   disabled: boolean;
+  /**
+   * Map from tag-id to the most recent ISO date string the tag was
+   * attached to a day_entry. Drives the within-category sort: tags
+   * with recency come before stale tags, ordered by most-recent first.
+   * Absent → fall back to alphabetical (existing behaviour). Source
+   * is typically `computeRecencyByTagId(timelineEntries)` from the
+   * parent. Defaults to {} for tests and the no-history case.
+   */
+  recencyByTagId?: Record<string, string>;
 };
 
 type Composing = {
@@ -54,7 +64,13 @@ type CreateTagResponse = {
   tag: Tag;
 };
 
-export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Props) {
+export function TagCategoryList({
+  date,
+  allTags,
+  initialTagIds,
+  disabled,
+  recencyByTagId = {},
+}: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(initialTagIds));
   const [expandedCats, setExpandedCats] = useState<Set<TagCategory>>(new Set());
   const [extraOpen, setExtraOpen] = useState<boolean>(false);
@@ -80,6 +96,18 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
     return merged;
   }, [allTags, locallyAddedTags]);
 
+  // Recency picker sort: server-supplied recency map, plus a synthetic
+  // "used today" entry for any tag created in this session — otherwise
+  // a newly-minted tag (with no server recency yet) would sink to the
+  // no-recency bucket and the user would lose track of where their
+  // just-created chip went.
+  const effectiveRecency = useMemo(() => {
+    if (locallyAddedTags.length === 0) return recencyByTagId;
+    const merged = { ...recencyByTagId };
+    for (const t of locallyAddedTags) merged[t.id] = date;
+    return merged;
+  }, [recencyByTagId, locallyAddedTags, date]);
+
   const byCategory = useMemo(() => {
     const map = new Map<TagCategory, Tag[]>();
     for (const c of [...PRIMARY_CATEGORIES, ...EXTRA_CATEGORIES]) map.set(c, []);
@@ -87,8 +115,11 @@ export function TagCategoryList({ date, allTags, initialTagIds, disabled }: Prop
       if (t.archived_at !== null) continue;
       map.get(t.category)?.push(t);
     }
+    for (const c of map.keys()) {
+      map.get(c)!.sort((a, b) => compareTagsForPicker(a, b, effectiveRecency));
+    }
     return map;
-  }, [effectiveTags]);
+  }, [effectiveTags, effectiveRecency]);
 
   const extraSelectedCount = useMemo(() => {
     let count = 0;

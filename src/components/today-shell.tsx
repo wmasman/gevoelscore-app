@@ -23,7 +23,7 @@
 // The page-header glyph from Step 4b was removed: the popout's end-of-
 // flow pulse is now the success signal; the banner below handles errors.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion';
 import Link from 'next/link';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
@@ -38,6 +38,7 @@ import { copy } from '@/copy';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { formatDateDutch } from '@/lib/domain/date';
 import type { Tag } from '@/lib/domain/tag';
+import { computeRecencyByTagId } from '@/lib/domain/tag-sort';
 import { cn } from '@/lib/ui/cn';
 
 type Props = {
@@ -134,6 +135,15 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
     }, PULSE_DURATION_MS);
   }
 
+  // Tag-picker recency map: derive once from the 30-day timeline window.
+  // Drives the within-category recency sort in TagCategoryList (v1.5a).
+  // Same map flows to both the today-card popout and (via TimelineView)
+  // the past-day-edit popout.
+  const recencyByTagId = useMemo(
+    () => computeRecencyByTagId(timelineEntries),
+    [timelineEntries],
+  );
+
   // Past-day list. Exclude today, sort by date descending, cap at 10.
   const [expanded, setExpanded] = useState(false);
   const pastEntries = timelineEntries
@@ -217,6 +227,7 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
             date={sheet.date}
             initialEntry={sheet.entry}
             allTags={allTags}
+            recencyByTagId={recencyByTagId}
             open={sheet.open}
             startStep={sheet.startStep}
             isPastDay={sheet.isPastDay}
@@ -229,7 +240,12 @@ function TodayShellInner({ date, entry, allTags, timelineEntries }: Props) {
           />
         </div>
       ) : (
-        <TimelineView today={date} initialEntries={timelineEntries} allTags={allTags} />
+        <TimelineView
+          today={date}
+          initialEntries={timelineEntries}
+          allTags={allTags}
+          recencyByTagId={recencyByTagId}
+        />
       )}
 
       {merged.status === 'error' && tab === 'today' && (

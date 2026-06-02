@@ -36,6 +36,14 @@ type Props = {
   today: string;
   initialEntries: DayEntry[];
   allTags: Tag[];
+  /**
+   * Tag-recency map derived from the 30-day timelineEntries window
+   * by the parent (TodayShell). Forwarded into the past-day-edit
+   * popout's QuickEntryFlow so the within-category sort applies in
+   * BOTH today's flow and past-day editing. Optional with a {} default
+   * to keep this component's existing tests + standalone use safe.
+   */
+  recencyByTagId?: Record<string, string>;
 };
 
 function shiftDate(date: string, days: number): string {
@@ -47,7 +55,12 @@ function shiftDate(date: string, days: number): string {
   return `${y}-${m}-${d}`;
 }
 
-export function TimelineView({ today, initialEntries, allTags }: Props) {
+export function TimelineView({
+  today,
+  initialEntries,
+  allTags,
+  recencyByTagId = {},
+}: Props) {
   const [range, setRange] = useState<Range>(30);
   const [view, setView] = useState<View>('chart');
   // 30d entries come straight from the prop — no shadow. 90d is a
@@ -213,6 +226,7 @@ export function TimelineView({ today, initialEntries, allTags }: Props) {
         date={selectedDate ?? today}
         initialEntry={selectedDate !== null ? selectedEntry : null}
         allTags={allTags}
+        recencyByTagId={recencyByTagId}
         open={selectedDate !== null}
         startStep="score"
         isPastDay={selectedDate !== null && selectedDate !== today}

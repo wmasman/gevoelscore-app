@@ -54,6 +54,13 @@ type Props = {
   date: string;
   initialEntry: DayEntry | null;
   allTags: Tag[];
+  /**
+   * Optional tag-recency map for the v1.5a tag-picker sort. Plain
+   * Record so it crosses the server→client boundary cleanly. Default
+   * {} = alphabetical fallback (existing behaviour). Threaded down
+   * to TagCategoryList.
+   */
+  recencyByTagId?: Record<string, string>;
   open: boolean;
   startStep?: Step;
   isPastDay?: boolean;
@@ -65,6 +72,7 @@ export function QuickEntryFlow({
   date,
   initialEntry,
   allTags,
+  recencyByTagId = {},
   open,
   startStep = 'score',
   isPastDay = false,
@@ -206,6 +214,7 @@ export function QuickEntryFlow({
             allTags={allTags}
             initialTagIds={initialEntry?.tag_ids ?? []}
             disabled={!editable}
+            recencyByTagId={recencyByTagId}
           />
         </div>
       </div>

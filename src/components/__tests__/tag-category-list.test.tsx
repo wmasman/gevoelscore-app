@@ -568,4 +568,147 @@ describe('<TagCategoryList />', () => {
     expect(screen.queryByRole('textbox', { name: /nieuwe tag/i })).toBeNull();
     expect(global.fetch).not.toHaveBeenCalled();
   });
+
+  // -------------------------------------------------------------------------
+  // Recency sort within category — added 2026-06-02 for tag-recency-sort
+  // -------------------------------------------------------------------------
+
+  describe('recency sort within category', () => {
+    const MENTAAL_RECENT = [
+      tag('m-alpha', 'aurora', 'mentaal'),
+      tag('m-bravo', 'helder', 'mentaal'),
+      tag('m-charlie', 'kalm', 'mentaal'),
+      tag('m-delta', 'zeta', 'mentaal'),
+    ];
+
+    it('when recencyByTagId is provided, chips in a category render recency-first', async () => {
+      const user = userEvent.setup();
+      // 'kalm' is most recent, then 'helder'. 'aurora' and 'zeta' have no
+      // recency record and tiebreak alphabetically.
+      const recency = {
+        'm-charlie': '2026-05-28',
+        'm-bravo': '2026-05-20',
+      };
+      render(
+        <TagCategoryList
+          date="2026-05-29"
+          allTags={MENTAAL_RECENT}
+          initialTagIds={[]}
+          disabled={false}
+          recencyByTagId={recency}
+        />,
+      );
+
+      await expandCategory(user, /^mentaal/i);
+      const chips = screen
+        .getAllByRole('button', { pressed: false })
+        .filter((el) => MENTAAL_RECENT.some((t) => el.textContent?.trim() === t.label));
+      const orderedLabels = chips.map((c) => c.textContent?.trim() ?? '');
+      expect(orderedLabels).toEqual(['kalm', 'helder', 'aurora', 'zeta']);
+    });
+
+    it('default behaviour (no recencyByTagId prop) is alphabetical within category', async () => {
+      const user = userEvent.setup();
+      render(
+        <TagCategoryList
+          date="2026-05-29"
+          allTags={MENTAAL_RECENT}
+          initialTagIds={[]}
+          disabled={false}
+        />,
+      );
+
+      await expandCategory(user, /^mentaal/i);
+      const chips = screen
+        .getAllByRole('button', { pressed: false })
+        .filter((el) => MENTAAL_RECENT.some((t) => el.textContent?.trim() === t.label));
+      const orderedLabels = chips.map((c) => c.textContent?.trim() ?? '');
+      expect(orderedLabels).toEqual(['aurora', 'helder', 'kalm', 'zeta']);
+    });
+
+    it('+ nieuw chip stays at the end of the chip row regardless of recency sort', async () => {
+      const user = userEvent.setup();
+      const recency = { 'm-delta': '2026-05-28' }; // zeta most recent
+      render(
+        <TagCategoryList
+          date="2026-05-29"
+          allTags={MENTAAL_RECENT}
+          initialTagIds={[]}
+          disabled={false}
+          recencyByTagId={recency}
+        />,
+      );
+
+      await expandCategory(user, /^mentaal/i);
+      // The `+ nieuw` button is the LAST button in the chip row inside
+      // the expanded mentaal section. Tag chips and the + nieuw chip are
+      // all role=button; the new-tag affordance has a distinct aria-label.
+      const allButtonsInRow = screen.getAllByRole('button').filter((b) => {
+        const label = b.textContent?.trim() ?? '';
+        return (
+          MENTAAL_RECENT.some((t) => t.label === label) ||
+          /\+ nieuw/.test(label) ||
+          b.getAttribute('aria-label')?.toLowerCase().includes('voeg tag toe aan mentaal')
+        );
+      });
+      const last = allButtonsInRow.at(-1);
+      expect(last?.getAttribute('aria-label')).toMatch(/voeg tag toe aan mentaal/i);
+    });
+
+    it('a newly created tag appears at the FRONT of its category (synthetic now-recency)', async () => {
+      const user = userEvent.setup();
+      const fetchMock = mockFetch({
+        status: 200,
+        body: {
+          outcome: 'created',
+          tag: {
+            id: 'm-new',
+            label: 'pacing',
+            category: 'mentaal',
+            project_id: null,
+            usage_count: 0,
+            archived_at: null,
+            created_at: '2026-06-02T00:00:00.000Z',
+          },
+        },
+      });
+      // Pre-existing tags have a recent recency record; the new tag will
+      // initially have no server recency, but the component should treat
+      // it as "used today" so it appears at the front.
+      const recency = { 'm-charlie': '2026-06-01' };
+      render(
+        <TagCategoryList
+          date="2026-06-02"
+          allTags={MENTAAL_RECENT}
+          initialTagIds={[]}
+          disabled={false}
+          recencyByTagId={recency}
+        />,
+      );
+
+      await expandCategory(user, /^mentaal/i);
+      await user.click(screen.getByRole('button', { name: /voeg tag toe aan mentaal/i }));
+      await user.type(screen.getByRole('textbox', { name: /nieuwe tag/i }), 'pacing');
+      await user.keyboard('{Enter}');
+
+      // After successful create: the new chip exists and is selected.
+      const newChip = await screen.findByRole('button', { name: 'pacing' });
+      expect(newChip).toHaveAttribute('aria-pressed', 'true');
+
+      // Order: 'pacing' (just-created, synthetic today) should be the
+      // first chip; kalm (recency 2026-06-01) next; then the others
+      // alphabetically.
+      const allChips = screen
+        .getAllByRole('button')
+        .filter((b) => {
+          const label = b.textContent?.trim() ?? '';
+          return (
+            label === 'pacing' || MENTAAL_RECENT.some((t) => t.label === label)
+          );
+        });
+      const orderedLabels = allChips.map((c) => c.textContent?.trim() ?? '');
+      expect(orderedLabels[0]).toBe('pacing');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
 });
