@@ -34,6 +34,7 @@ type DirectusTagRow = {
   label: string;
   category: Tag['category'];
   project_id: string | null;
+  parent_episode_id: string | null;
   usage_count: number;
   archived_at: string | null;
   created_at: string;
@@ -70,6 +71,7 @@ export async function readAllTags(
         label: r.label,
         category: r.category,
         project_id: r.project_id,
+        parent_episode_id: r.parent_episode_id,
         usage_count: r.usage_count,
         archived_at: r.archived_at,
         created_at: r.created_at,
@@ -137,6 +139,7 @@ function rowToTag(r: DirectusTagRow): Tag {
     label: r.label,
     category: r.category,
     project_id: r.project_id,
+    parent_episode_id: r.parent_episode_id,
     usage_count: r.usage_count,
     archived_at: r.archived_at,
     created_at: r.created_at,

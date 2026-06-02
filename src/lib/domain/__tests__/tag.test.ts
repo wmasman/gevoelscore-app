@@ -8,6 +8,7 @@ function validTag(overrides: Record<string, unknown> = {}): Record<string, unkno
     label: 'hoofdpijn',
     category: 'fysiek',
     project_id: null,
+    parent_episode_id: null,
     usage_count: 0,
     archived_at: null,
     created_at: '2026-05-26T08:00:00.000Z',
@@ -179,6 +180,52 @@ describe('tag', () => {
       const result = validateTag(validTag({ archived_at: null }));
 
       expect(result.ok).toBe(true);
+    });
+  });
+
+  describe('validateTag — parent_episode_id (v1.5 addition)', () => {
+    it('accepts a Tag with parent_episode_id set to a non-empty string (linked to an Episode)', () => {
+      const result = validateTag(
+        validTag({ parent_episode_id: 'ep_01HQ5XYZ' }),
+      );
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.parent_episode_id).toBe('ep_01HQ5XYZ');
+      }
+    });
+
+    it('accepts a Tag with parent_episode_id null (standalone tag, no parent)', () => {
+      const result = validateTag(validTag({ parent_episode_id: null }));
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.parent_episode_id).toBeNull();
+      }
+    });
+
+    it('rejects parent_episode_id empty string with invalid_parent_episode_id', () => {
+      const result = validateTag(validTag({ parent_episode_id: '' }));
+
+      expect(result).toEqual({ ok: false, error: 'invalid_parent_episode_id' });
+    });
+
+    it('rejects non-string non-null parent_episode_id with invalid_parent_episode_id', () => {
+      const result = validateTag(validTag({ parent_episode_id: 42 }));
+
+      expect(result).toEqual({ ok: false, error: 'invalid_parent_episode_id' });
+    });
+
+    it('rejects missing parent_episode_id key (must be present, even if null) with invalid_shape', () => {
+      // parent_episode_id is in REQUIRED_KEYS — Directus always returns it
+      // (the column exists), so missing it signals a shape drift, not
+      // "ongoing tag". Distinguishes a schema regression from a runtime value.
+      const incomplete = validTag();
+      delete (incomplete as Record<string, unknown>).parent_episode_id;
+
+      const result = validateTag(incomplete);
+
+      expect(result).toEqual({ ok: false, error: 'invalid_shape' });
     });
   });
 

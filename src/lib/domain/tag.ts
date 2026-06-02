@@ -6,6 +6,11 @@ export type Tag = {
   label: string;
   category: TagCategory;
   project_id: string | null;
+  // v1.5: optional FK to episodes.id. When set, this tag is an
+  // "occurrence" of that episode on the day it appears in a day_entry.
+  // ON DELETE SET NULL at the DB level — if the episode is hard-deleted
+  // (Directus admin only), referencing tags revert to standalone.
+  parent_episode_id: string | null;
   usage_count: number;
   archived_at: string | null;
   created_at: string;
@@ -19,6 +24,7 @@ export type TagError =
   | 'missing_project_id'
   | 'unexpected_project_id'
   | 'invalid_project_id'
+  | 'invalid_parent_episode_id'
   | 'invalid_usage_count'
   | 'invalid_archived_at'
   | 'invalid_created_at';
@@ -33,6 +39,7 @@ const REQUIRED_KEYS = [
   'created_at',
   'id',
   'label',
+  'parent_episode_id',
   'project_id',
   'usage_count',
 ] as const;
@@ -77,6 +84,15 @@ export function validateTag(input: unknown): ValidateTagResult {
     return { ok: false, error: 'unexpected_project_id' };
   }
 
+  if (obj.parent_episode_id !== null) {
+    if (
+      typeof obj.parent_episode_id !== 'string' ||
+      obj.parent_episode_id.length === 0
+    ) {
+      return { ok: false, error: 'invalid_parent_episode_id' };
+    }
+  }
+
   if (
     typeof obj.usage_count !== 'number' ||
     Number.isNaN(obj.usage_count) ||
@@ -101,6 +117,7 @@ export function validateTag(input: unknown): ValidateTagResult {
       label: labelResult.value,
       category,
       project_id: obj.project_id as string | null,
+      parent_episode_id: obj.parent_episode_id as string | null,
       usage_count: obj.usage_count,
       archived_at: obj.archived_at as string | null,
       created_at: obj.created_at,

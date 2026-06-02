@@ -1,18 +1,18 @@
-# ADR 0006: Three-surface architecture (Vandaag / Verloop / Tijdlijn)
+# ADR 0006: Three-surface architecture (Vandaag / Periodes / Tijdlijn)
 
 - **Status**: Accepted
-- **Date**: 2026-06-01 (decision); refined 2026-06-02 (data model + naming + categories)
+- **Date**: 2026-06-01 (decision); refined 2026-06-02 (data model + naming + categories; tab label revised "Verloop" → "Periodes" same day)
 - **Version target**: **v1.5** (NOT v1 — see "Version-boundary nuance" below)
 - **Builds on**: [ADR 0002](0002-pwa-with-directus-backend.md) (Next.js + Directus stack), [ADR 0004](0004-tag-provenance-date-joins-and-tag-hierarchy.md) (tag taxonomy), the design [brief](../design/brief.md) (thumb-first, restrained motion, no extra-screens-on-input principle)
 - **Deciders**: Willem Masman (author), Claude (AI collaborator)
 
 > **2026-06-02 refinement** (during the v1.5 brainstorm session):
-> - The third tab is named **Verloop** (Dutch, "course/progression"), not the working name "Context" used in this ADR's first draft below.
+> - The third tab is named **Periodes**. Naming went through two passes: the brainstorm first landed on "Verloop", then a second pass the same day revised it to **Periodes** to avoid the expiry/decay echo of "verloopdatum" and the clinical lean of "verloop"; "Periodes" pictures the contents (date-range things) instantly and stays neutral so the content carries the narrative weight. Working name in the original draft below ("Context") is retired entirely.
 > - The data model is simpler than the original Episode + Occurrence pair: there is no separate Occurrence type. Tags get an optional `parent_episode_id` field, and **a tag with a parent IS the occurrence**. Episode is a single polymorphic collection (no separate intervention/event collections).
 > - Episode categories for v1.5: `interventie` + `levensgebeurtenis` only. `project` + `patroon` deferred to v2.
 > - Calendar binding deferred to v1.6; v1.5 ships manual-entry-only.
 >
-> See [features/verloop-and-episodes/](../features/verloop-and-episodes/) for the resolved feature plan and [features/context-tab/](../features/context-tab/) for the retired earlier draft. The architectural shape in the body of this ADR remains correct; only naming + the data-model details below have been simplified.
+> See [features/verloop-and-episodes/](../features/verloop-and-episodes/) for the resolved feature plan (folder slug retained as an internal identifier; user-facing label is **Periodes**) and [features/context-tab/](../features/context-tab/) for the retired earlier draft. The architectural shape in the body of this ADR remains correct; only naming + the data-model details below have been simplified.
 
 ## Context
 
@@ -60,7 +60,7 @@ The [brief](../app_brief_gevoelscore.md) is explicit:
 
 The context tab brings forward what the brief named as v1.5 (projects/interventies/agenda-koppeling). **This ADR does not redefine v1.** The three-surface architecture is the v1.5 plan; the v1 app continues to operate as two surfaces (Vandaag + Tijdlijn) until the v1.5 work ships.
 
-The architecture is declared now (rather than at v1.5 build time) because two upcoming v1 features — inline tag creation and timeline gap indicator — sit at the boundary and need to know which side of the v1/v1.5 line they're on. Both are v1; neither touches the context tab.
+The architecture is declared now (rather than at v1.5 build time) because two upcoming v1 features — inline tag creation and timeline gap indicator — sit at the boundary and need to know which side of the v1/v1.5 line they're on. Both are v1; neither touches the Periodes tab.
 
 ## Options considered
 
@@ -92,7 +92,7 @@ Verdict: accepted.
 
 **Open / to be brainstormed:**
 
-- **Naming of the third tab.** "Context" is descriptive but flat. Dutch candidates: *Context*, *Achtergrond*, *Verloop*, *Invloeden*. Things-3's analog is "Areas". A naming brainstorm is required before [features/context-tab/](../features/context-tab/) leaves the vision stage.
+- **Naming of the third tab.** ~~"Context" is descriptive but flat. Dutch candidates: *Context*, *Achtergrond*, *Verloop*, *Invloeden*. Things-3's analog is "Areas". A naming brainstorm is required before [features/context-tab/](../features/context-tab/) leaves the vision stage.~~ **Resolved 2026-06-02** — see the refinement note at the top of this ADR. Final label: **Periodes**.
 - **Tag-category vs episode conceptual model.** When does something become an episode vs. a tag? Is "paracetamol vandaag" a one-off interventie tag or an occurrence of a long-running "pain management" episode? Needs a brainstorm session — flagged explicitly in [features/context-tab/](../features/context-tab/) so future-us doesn't accidentally deprecate the categories.
 - **Data shape for `Episode`**. Fields beyond start/end/category/binding need to be designed against real cases (medication dose changes, coaching sessions with notes, weekend-partner-away as a recurring pattern).
 - **Privacy posture for calendar import.** Event titles can contain sensitive medical content. Import is opt-in per episode (you bind one series at a time, not the whole calendar). Delete path: removing an episode removes its occurrences; removing the binding stops further imports but doesn't delete already-imported occurrences.

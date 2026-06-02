@@ -34,6 +34,7 @@ function tag(
     label,
     category,
     project_id: category === 'project' ? 'p-1' : null,
+    parent_episode_id: null,
     usage_count: usageCount,
     archived_at: null,
     created_at: '2026-01-01T00:00:00.000Z',
