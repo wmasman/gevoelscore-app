@@ -29,6 +29,12 @@ const FRONTEND_CRUD_COLLECTIONS = [
   'project_entries',
   'project_field_configs',
   'calendar_events',
+  // v1.5 verloop-and-episodes (user-facing tab: Periodes). The frontend role
+  // gets all 4 CRUD actions on episodes — the route handler is what gates
+  // the actual API surface (no DELETE exposed; hard-delete is Directus admin
+  // only). Consistency with the other user-data collections wins over a
+  // narrow service-token permission set.
+  'episodes',
 ];
 
 const ACTIONS = ['create', 'read', 'update', 'delete'];
