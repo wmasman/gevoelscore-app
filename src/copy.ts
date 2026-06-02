@@ -85,6 +85,59 @@ export const copy = {
       dateRange: (startNl: string, endNl: string | null): string =>
         endNl === null ? `${startNl} → lopend` : `${startNl} → ${endNl}`,
     },
+    // Step-4 launcher buttons. Label is "periode" not "levensgebeurtenis"
+    // because the latter is too clinical for a button. The underlying
+    // category stays `levensgebeurtenis` in storage.
+    newInterventieButton: '+ Nieuwe interventie',
+    newPeriodeButton: '+ Nieuwe periode',
+    // Step-4 form copy. The same sheet handles create + edit; the title
+    // varies by mode + category (four combinations).
+    form: {
+      titleNewInterventie: 'Nieuwe interventie',
+      titleNewPeriode: 'Nieuwe periode',
+      titleEditInterventie: 'Bewerk interventie',
+      titleEditPeriode: 'Bewerk periode',
+      sheetAriaLabel: 'Periode bewerken',
+      labelField: 'Naam',
+      labelCountSuffix: (n: number): string => `${n}/40`,
+      startDateField: 'Begindatum',
+      ongoingToggle: 'Lopend (geen einddatum)',
+      endDateField: 'Einddatum',
+      descriptionField: 'Beschrijving',
+      descriptionPlaceholder: 'Optioneel',
+      descriptionCountSuffix: (n: number): string => `${n}/10.000`,
+      save: 'Bewaar',
+      saving: 'Even geduld…',
+      close: 'Sluit',
+      requiredMarker: 'verplicht',
+      // Inline error messages. role="alert" containers announce these
+      // to screen readers when they appear.
+      error: {
+        labelEmpty: 'Geef een naam.',
+        labelTooLong: 'Maximaal 40 tekens.',
+        startDateInvalid: 'Kies een begindatum.',
+        endDateInvalid: 'Kies een einddatum of zet "lopend" aan.',
+        endBeforeStart: 'Einddatum moet ná de begindatum liggen.',
+        descriptionTooLong: 'Maximaal 10.000 tekens.',
+        serverError: 'Opslaan lukte niet, probeer opnieuw.',
+      },
+      // aria-label for each tappable list item in the Periodes section
+      // (step-4 makes them buttons). Reads as a full episode summary so
+      // screen readers can scan the list aloud.
+      listItemAriaLabel: (
+        label: string,
+        start: string,
+        end: string | null,
+      ): string =>
+        end === null
+          ? `${label}, ${start} tot lopend, tik om te bewerken`
+          : `${label}, ${start} tot ${end}, tik om te bewerken`,
+    },
+    archive: {
+      button: 'Archiveer',
+      // SaveAnnouncer copy fired after a successful archive PATCH.
+      announced: 'Gearchiveerd.',
+    },
   },
   timeline: {
     title: 'Tijdlijn',

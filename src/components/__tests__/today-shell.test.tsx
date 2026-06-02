@@ -5,6 +5,20 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { DayEntry } from '@/lib/domain/day-entry';
 
+// next/navigation must be mocked because ContextView (rendered when the
+// Context tab is selected) mounts EpisodeFormSheet, whose useEpisodeUpsert
+// hook calls useRouter() — that throws outside a Next.js app context.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 // QuickEntryFlow is the composite under test in its own file. Here we only
 // care that TodayShell wires the right props through and reacts to its
 // callbacks — so stub the component with a data-attribute shim.

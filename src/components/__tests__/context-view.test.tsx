@@ -1,11 +1,44 @@
 /** @vitest-environment jsdom */
-
-import { afterEach, describe, expect, it } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { ContextView } from '../context-view';
+import userEvent from '@testing-library/user-event';
 import type { Episode } from '@/lib/domain/episode';
 
+// Mock EpisodeFormSheet — we want to assert on its props (mode +
+// category + initialEpisode) without rendering its full form internals.
+// The form's behaviour is covered in episode-form-sheet.test.tsx.
+const sheetMock = vi.hoisted(() => ({
+  rendered: vi.fn(),
+}));
+vi.mock('../episode-form-sheet', () => ({
+  EpisodeFormSheet: (props: {
+    mode: 'create' | 'edit';
+    category: 'interventie' | 'levensgebeurtenis';
+    initialEpisode: Episode | null;
+    open: boolean;
+    onClose: () => void;
+  }) => {
+    sheetMock.rendered(props);
+    return props.open ? (
+      <div
+        data-testid="episode-form-sheet"
+        data-mode={props.mode}
+        data-category={props.category}
+        data-id={props.initialEpisode?.id ?? 'null'}
+      >
+        <button type="button" onClick={props.onClose}>
+          mock-close
+        </button>
+      </div>
+    ) : null;
+  },
+}));
+
+import { ContextView } from '../context-view';
+
 afterEach(() => {
+  sheetMock.rendered.mockReset();
   cleanup();
 });
 
@@ -201,9 +234,62 @@ describe('<ContextView />', () => {
       expect(text).not.toContain('→ lopend');
     });
 
-    it('list items are NOT buttons — no role=button on the rendered <li>', () => {
-      // Defense-in-depth: items become tappable in step-4. Until then,
-      // they must be non-interactive.
+  });
+
+  // ===========================================================================
+  // Step-4: launcher buttons + tap-to-edit
+  // ===========================================================================
+
+  describe('launchers', () => {
+    it('renders the "+ Nieuwe interventie" launcher button', () => {
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      expect(
+        screen.getByRole('button', { name: '+ Nieuwe interventie' }),
+      ).toBeInTheDocument();
+    });
+
+    it('renders the "+ Nieuwe periode" launcher button', () => {
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      expect(
+        screen.getByRole('button', { name: '+ Nieuwe periode' }),
+      ).toBeInTheDocument();
+    });
+
+    it('tapping "+ Nieuwe interventie" opens the sheet in create mode with category=interventie', async () => {
+      const user = userEvent.setup();
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      // The sheet is rendered but closed (open=false) initially.
+      expect(screen.queryByTestId('episode-form-sheet')).toBeNull();
+
+      await user.click(
+        screen.getByRole('button', { name: '+ Nieuwe interventie' }),
+      );
+
+      const sheet = screen.getByTestId('episode-form-sheet');
+      expect(sheet.dataset.mode).toBe('create');
+      expect(sheet.dataset.category).toBe('interventie');
+      expect(sheet.dataset.id).toBe('null');
+    });
+
+    it('tapping "+ Nieuwe periode" opens the sheet in create mode with category=levensgebeurtenis', async () => {
+      const user = userEvent.setup();
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      await user.click(
+        screen.getByRole('button', { name: '+ Nieuwe periode' }),
+      );
+
+      const sheet = screen.getByTestId('episode-form-sheet');
+      expect(sheet.dataset.mode).toBe('create');
+      expect(sheet.dataset.category).toBe('levensgebeurtenis');
+    });
+  });
+
+  describe('tap-to-edit on list items', () => {
+    it('each list item is now a button (was non-interactive in step-3)', () => {
       render(
         <ContextView
           episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
@@ -211,8 +297,67 @@ describe('<ContextView />', () => {
         />,
       );
 
-      const buttons = screen.queryAllByRole('button');
-      expect(buttons.length).toBe(0);
+      // Now the item should be a button.
+      expect(
+        screen.getByRole('button', { name: /coaching met sarah/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('the list-item button has an aria-label that reads the full episode summary', () => {
+      // Per copy.context.form.listItemAriaLabel — "<label>, <start> tot
+      // lopend, tik om te bewerken" for ongoing.
+      render(
+        <ContextView
+          episodes={[
+            ep({
+              id: 'a',
+              label: 'Coaching met Sarah',
+              start_date: '2026-04-01',
+              end_date: null,
+            }),
+          ]}
+          today={TODAY}
+        />,
+      );
+
+      const btn = screen.getByRole('button', { name: /coaching met sarah/i });
+      expect(btn.getAttribute('aria-label')).toMatch(/coaching met sarah/i);
+      expect(btn.getAttribute('aria-label')).toMatch(/lopend/i);
+      expect(btn.getAttribute('aria-label')).toMatch(/tik om te bewerken/i);
+    });
+
+    it('tapping a list item opens the sheet in edit mode with the episode pre-filled', async () => {
+      const user = userEvent.setup();
+      const epActief = ep({
+        id: 'ep-coach',
+        label: 'Coaching met Sarah',
+        category: 'interventie',
+      });
+      render(<ContextView episodes={[epActief]} today={TODAY} />);
+
+      await user.click(
+        screen.getByRole('button', { name: /coaching met sarah/i }),
+      );
+
+      const sheet = screen.getByTestId('episode-form-sheet');
+      expect(sheet.dataset.mode).toBe('edit');
+      expect(sheet.dataset.category).toBe('interventie');
+      expect(sheet.dataset.id).toBe('ep-coach');
+    });
+
+    it('the sheet onClose handler resets sheet state to closed', async () => {
+      const user = userEvent.setup();
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      // Open the sheet.
+      await user.click(
+        screen.getByRole('button', { name: '+ Nieuwe interventie' }),
+      );
+      expect(screen.getByTestId('episode-form-sheet')).toBeInTheDocument();
+
+      // Close it.
+      await user.click(screen.getByText('mock-close'));
+      expect(screen.queryByTestId('episode-form-sheet')).toBeNull();
     });
   });
 });
