@@ -117,14 +117,14 @@ This feature is large enough for multiple step files. Tentative split:
 
 - [x] AC-F1: `episodes` collection exists in Directus; migration script in `directus/scripts/` is idempotent. (Step-1, 36fdadb; live + verified by `verify-schema.mjs` 39/39)
 - [x] AC-F2: `tags.parent_episode_id` field exists; existing tag rows are unaffected (all null). (Step-1, 36fdadb; live + verified by `verify-schema.mjs`)
-- [ ] AC-F3: Periodes tab appears as the third top-level surface; tab order is Vandaag / Periodes / Tijdlijn.
-- [ ] AC-F4: List view groups episodes by category, active first.
+- [x] AC-F3: Periodes tab appears as the third top-level surface; tab order is Vandaag / Periodes / Tijdlijn. (Step-3, ec25924; live + verified by today-shell + periodes-view tests)
+- [x] AC-F4: List view groups episodes by category, active first. (Step-3, ec25924; 4 sections in documented order — Interventies actief → Interventies afgerond → Levensgebeurtenissen actief → Levensgebeurtenissen afgerond)
 - [ ] AC-F5: Create-episode form supports both categories; end_date is optional with an "lopend" affordance.
 - [x] AC-F6: Episode archive is reversible (soft delete only). (Step-2, c6b31c2; PATCH archived_at: ISO archives, PATCH archived_at: null un-archives — verified end-to-end by episodes-smoke.)
 - [ ] AC-F7: From an episode detail, the user can attach an existing tag or create a new tag with the parent set. The tag appears in the episode's "Tags die hierbij horen" list.
 - [ ] AC-F8: Daily-flow tagging in Vandaag is UNCHANGED — no regression, no new affordance, no extra taps.
-- [ ] AC-F9: Server-rendered Periodes tab data flows through to display without local-state shadow (same prop-driven pattern as TodayShell and TimelineView — necessary for router.refresh to move the UI).
-- [ ] AC-F10: All v1 surfaces (Vandaag, Tijdlijn) continue working with or without episodes in the DB.
+- [x] AC-F9: Server-rendered Periodes tab data flows through to display without local-state shadow (same prop-driven pattern as TodayShell and TimelineView — necessary for router.refresh to move the UI). (Step-3, ec25924; page.tsx → TodayShell → PeriodesView prop chain, no useState shadow)
+- [x] AC-F10: All v1 surfaces (Vandaag, Tijdlijn) continue working with or without episodes in the DB. (Step-3, ec25924; verified by existing TodayShell + TimelineView tests staying green, plus auth-smoke + episodes-smoke post-deploy)
 
 ## Resolved decisions (2026-06-02)
 
