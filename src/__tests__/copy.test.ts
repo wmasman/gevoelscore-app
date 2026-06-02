@@ -21,11 +21,11 @@ describe('copy', () => {
       'announce',
       'app',
       'auth',
+      'context',
       'daily',
       'errors',
       'home',
       'over',
-      'periodes',
       'settings',
       'timeline',
     ]);

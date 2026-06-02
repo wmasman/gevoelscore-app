@@ -12,7 +12,7 @@
 - **What:** Layer Episodes onto the existing Tijdlijn so the user can see, at a glance, what was going on during a score swing — "ah, that bad week was during the citalopram afbouw" or "the good week aligns with the holiday in week 28". Two views:
   - **Line chart**: episodes render as semi-transparent horizontal bands underneath the score line, spanning their date range. Linked tags (occurrences) render as dots on the band at their date.
   - **Heatmap**: episodes render as a soft background tint on each day-cell within their range, with a thin coloured edge on the cell's left to differentiate from the score-intensity tint.
-- **Why:** A score line alone is one signal. Overlaying the things that were happening turns the timeline from "diary of feelings" into "diagnostic surface" — patterns the user can act on. This is the second-half deliverable of [ADR 0006](../../decisions/0006-three-surface-architecture.md); Periodes is "manage the episodes", Tijdlijn-overlay is "see them in context".
+- **Why:** A score line alone is one signal. Overlaying the things that were happening turns the timeline from "diary of feelings" into "diagnostic surface" — patterns the user can act on. This is the second-half deliverable of [ADR 0006](../../decisions/0006-three-surface-architecture.md); the Context tab (Periodes section) is "manage the episodes", Tijdlijn-overlay is "see them in context".
 
 ## Acceptance criteria
 
@@ -21,7 +21,7 @@
    - Rectangle y position is in a dedicated band-strip BELOW the chart's score plot area (NOT overlapping the score line). Reserve ~30px below the existing chart area for bands. Multiple concurrent episodes stack vertically (max 3 visible; overflow → "+N more" affordance, see Open questions).
    - Rectangle x position spans from `xFor(max(start_date, from))` to `xFor(min(end_date ?? to, to))`.
    - Rectangle colour comes from the episode's category: `interventie` = warm-earth accent at 30% opacity; `levensgebeurtenis` = neutral gray-tint at 25%. Tints picked to stay subordinate to the score line (per design brief restraint).
-   - Rectangle is tappable: opens the episode's detail screen in Periodes (cross-tab nav).
+   - Rectangle is tappable: opens the episode's detail screen in the Context tab (cross-tab nav).
 2. **Line chart — linked tag dots on band**:
    - For every tag attached to a day_entry where the tag has a `parent_episode_id` matching a visible band, render a small dot ON THE BAND at that day's x position.
    - Dot colour matches the band's category but at full opacity (1.0) so it reads against the band's 30% tint.
@@ -62,7 +62,7 @@
 
 ## Out of scope (v1.5)
 
-- **Editing an episode from the timeline**. Tapping a band navigates to the Periodes tab's episode detail; doesn't edit in place.
+- **Editing an episode from the timeline**. Tapping a band navigates to the Context tab's episode detail; doesn't edit in place.
 - **Multi-episode overlap visualisation beyond 3 stacks** (the "+N more" overflow UX). If real data shows >3 concurrent episodes is common, design properly in v1.6.
 - **Garmin / continuous-stream layer**. Mentioned in the original ADR 0006 as a v2 background-layer concept. Not in v1.5.
 - **Episode category colour customisation**. Two fixed colours (warm-earth for interventie, neutral for levensgebeurtenis). Per-user palette is v2.
@@ -72,5 +72,5 @@
 
 - **Band strip height**: 30px below plot area? Test on iPhone where chart is `h-48`. Might need a shorter strip (20px) at 90d when bands get tiny.
 - **Overflow stacking**: how to handle >3 concurrent episodes. Possible: a stacked "..." indicator, or wrap below into a second mini-row. Defer the visual to step-file design; for now, document the cap.
-- **Episode → tap → Periodes nav**: needs a route-level coordination so the Periodes tab opens to the right episode's detail. Possibly query-param `?episode=<id>`. Confirm shape in `/plan-feature`.
+- **Episode → tap → Context tab nav**: needs a route-level coordination so the Context tab opens to the right episode's detail. Possibly query-param `?episode=<id>`. Confirm shape in `/plan-feature`.
 - **Heatmap left-stripe vs. corner-mark**: 3px left stripe might be too subtle. Alternative: a 4px-radius dot in the cell's top-left corner per episode. Sketch both before committing.

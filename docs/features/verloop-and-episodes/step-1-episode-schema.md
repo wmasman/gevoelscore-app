@@ -1,5 +1,9 @@
 # Step 1: Episode schema + domain validators
 
+> **2026-06-02 evening note**: the user-facing tab name evolved through three same-day passes — Verloop → Periodes → **Context**. The schema described below is unaffected (no rename in the database; collection stays `episodes`); the rename was a UI-layer label. References to "Periodes tab" in the prose below should be read as "Context tab" for accuracy. See [README.md History](README.md#history).
+
+---
+
 **Estimated time:** ~3 hours
 **Test layers:** Vitest unit for the new `Episode` validator + the new `validateEpisodeLabel`, `validateEpisodeCategory`, `validateDateRange` helpers in `src/lib/domain/`. No component tests yet (UI lands in step-3). No e2e — schema change is verified by a Directus REST round-trip in the script's own sanity-check block.
 **Risk:** Low. New collection + one nullable FK column. Idempotent migration script. No existing data affected. No code path reads `episodes` or `parent_episode_id` yet — those wire up in step-2.

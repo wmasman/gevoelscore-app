@@ -1,17 +1,21 @@
-# Periodes tab + Episodes
+# Context tab + Episodes
 
-**Feature:** The v1.5 anchor. Adds a new third top-level surface (Periodes) for managing multi-day Episodes — interventions (coaching, physio, ergo, medication courses) and life events with duration (holidays, partner-away weekends, big work projects). Adds a new `episodes` Directus collection, a new nullable `tags.parent_episode_id` FK so single-day tags can hang off an ongoing episode as occurrences, and the Periodes-tab UI for episode CRUD + tag-linking.
+**Feature:** The v1.5 anchor. Adds a new third top-level surface (**Context**) that holds the contextual signals affecting daily scores over time. The first (and currently only) section inside Context is **Periodes** — multi-day Episodes for interventies (coaching, physio, ergo, medication courses) and levensgebeurtenissen (holidays, partner-away weekends, big work projects). Adds a new `episodes` Directus collection, a new nullable `tags.parent_episode_id` FK so single-day tags can hang off an ongoing episode as occurrences, and the Context-tab UI for episode CRUD + tag-linking. The Context container is named for the extensibility: v1.6 Calendar bindings and v2 project context become sibling sections under the same tab.
 **Version:** v1.5
-**Status:** Designed — brainstorm resolved 2026-06-02; tab label finalised 2026-06-02 (revised from "Verloop" → "Periodes"). Ready for step files (multi-step feature).
+**Status:** Designed — brainstorm resolved 2026-06-02; tab label finalised 2026-06-02 after three same-day passes (Verloop → Periodes → **Context**). Step-1, step-2, step-3 shipped; step-4 + step-5 pending.
 **Parent docs:** [ADR 0006](../../decisions/0006-three-surface-architecture.md) (three-surface architecture) · [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) · [features/tag/](../tag/) (Tag domain — referenced for the new `parent_episode_id` field)
 
-> **Folder slug note**: this folder is `features/verloop-and-episodes/` for git-history continuity. The user-facing tab label is **Periodes**. Do not rename the folder; treat the slug as an internal identifier only.
+> **Folder slug note**: this folder is `features/verloop-and-episodes/` for git-history continuity. The user-facing tab label is **Context**; Periodes is a section heading INSIDE that tab. Do not rename the folder; treat the slug as an internal identifier only.
 
 ---
 
 ## Naming
 
-- Tab name: **Periodes** (Dutch, "periods"). Final resolution 2026-06-02 after a second pass over "Verloop" (the earlier choice) — rejected because (a) "verloop" carries an expiry/decay echo via "verloopdatum", (b) it leans too clinical for a tab that also holds non-medical entries like a holiday, and (c) "Periodes" pictures the contents instantly: this is where date-range things live. The narrative weight lives in the **content** and on **Tijdlijn**; the tab label just needs to point cleanly.
+- Tab name: **Context** (Dutch, "context"). Final resolution 2026-06-02 after three same-day passes:
+  1. Brainstorm: "Verloop" — rejected for the expiry/decay echo of "verloopdatum" and the clinical lean.
+  2. Same-day revision: "Periodes" — rejected because the tab needed a container name large enough to also hold v1.6 Calendar bindings + v2 project context as sibling sections. "Periodes" describes only the date-range things.
+  3. Same-day final: **Context** — the container abstraction. Periodes remains as a section heading inside.
+- Tab order in the bottom nav: **Context / Vandaag / Tijdlijn**. Vandaag is **centre-positioned** so the daily-flow action is thumb-balanced on both right-hand and left-hand grip.
 - Data type: **Episode** (English in code, "interventie" / "levensgebeurtenis" in user copy).
 - Junction: a Tag's optional pointer to its parent episode is called `parent_episode_id`.
 
@@ -54,27 +58,31 @@ Decision rule the user applies in the moment: **"Does this thing have a start AN
 
 ## UI shape
 
-### Periodes tab — list view, grouped by category
+### Context tab — Periodes section, grouped by category
 
 ```
-[+ Nieuwe interventie]  [+ Nieuwe periode]
+[ Context ]   [ Vandaag ]   [ Tijdlijn ]
 
-INTERVENTIES (actief)
-  · Coaching met Sarah
-    2026-04-01 → lopend
-  · Ergotherapie
-    2026-05-15 → lopend
+PERIODES
 
-INTERVENTIES (afgerond)
-  · Citalopram afbouw
-    2025-11-01 → 2026-01-31
+  [+ Nieuwe interventie]  [+ Nieuwe periode]
 
-LEVENSGEBEURTENISSEN
-  · Vakantie Texel
-    2026-07-15 → 2026-07-22
+  Interventies (actief)
+    · Coaching met Sarah
+      2026-04-01 → lopend
+    · Ergotherapie
+      2026-05-15 → lopend
+
+  Interventies (afgerond)
+    · Citalopram afbouw
+      2025-11-01 → 2026-01-31
+
+  Levensgebeurtenissen (actief)
+    · Vakantie Texel
+      2026-07-15 → 2026-07-22
 ```
 
-Resolved 2026-06-02 against alternatives "timeline-style bands" and "calendar-month grid". List view is the cleanest for brainfog (scan one column, tap to edit). The timeline visualisation lives on Tijdlijn, not on Periodes.
+Resolved 2026-06-02 against alternatives "timeline-style bands" and "calendar-month grid". List view is the cleanest for brainfog (scan one column, tap to edit). The timeline visualisation lives on Tijdlijn, not on Context. Inside Context the heading hierarchy is: h2 "Periodes" (the section) → h3 "Interventies (actief)" etc. (the sub-groups within Periodes). v1.6 will add a sibling h2 "Agenda" (or similar) for Calendar bindings under the same Context tab.
 
 Active episodes (end_date null OR end_date >= today) at top, past below. Tap an episode → detail/edit screen. Tap "+ Nieuwe" → create form.
 
@@ -87,7 +95,7 @@ Fields: label, category (read-only after create — changing category is confusi
 Daily-flow tagging stays unchanged — inline-tag-creation in Vandaag does NOT gain a "link to episode" step (kept lightweight for the sub-10-second flow).
 
 Linking happens in two places:
-1. **From a Periodes episode's detail view** — "Voeg gekoppelde tag toe": pick from existing tags OR create a new tag with the parent set.
+1. **From the Context tab's episode detail view** — "Voeg gekoppelde tag toe": pick from existing tags OR create a new tag with the parent set.
 2. **From the inline tag editor** (future, v1.5b): a tag's detail view in the Settings → Tag-beheer screen gets a "behoort bij" picker.
 
 For v1.5 the first path is the only one. Heavy management (recategorize, delete, mass-link) ships in v1.5b with the tag-management Settings screen.
@@ -109,7 +117,7 @@ This feature is large enough for multiple step files. Tentative split:
 |---|---|---|
 | `step-1-episode-schema.md` | Directus collection + `parent_episode_id` migration scripts; Episode domain validators (`validateEpisodeLabel`, `validateEpisodeCategory`, `validateDateRange`) | Vitest unit |
 | `step-2-episodes-api.md` | `src/lib/api/episodes.ts` (read/create/update/archive); `src/app/api/episodes/route.ts` + `[id]/route.ts` | Vitest unit (lib) + route handler |
-| `step-3-periodes-tab-list.md` | New tab in TodayShell + PeriodesView component (list grouped by category) | Vitest component + e2e for tab nav |
+| `step-3-periodes-tab-list.md` | New Context tab in TodayShell + ContextView component (Periodes section grouped by category) | Vitest component + e2e for tab nav |
 | `step-4-episode-create-edit.md` | Episode form (create + edit), archive button, ongoing-toggle for end_date | Vitest component + e2e for happy-path round-trip |
 | `step-5-tag-episode-linking.md` | "Voeg gekoppelde tag toe" affordance in episode detail; create-with-parent + link-existing paths | Vitest component + route extension |
 
@@ -117,13 +125,13 @@ This feature is large enough for multiple step files. Tentative split:
 
 - [x] AC-F1: `episodes` collection exists in Directus; migration script in `directus/scripts/` is idempotent. (Step-1, 36fdadb; live + verified by `verify-schema.mjs` 39/39)
 - [x] AC-F2: `tags.parent_episode_id` field exists; existing tag rows are unaffected (all null). (Step-1, 36fdadb; live + verified by `verify-schema.mjs`)
-- [x] AC-F3: Periodes tab appears as the third top-level surface; tab order is Vandaag / Periodes / Tijdlijn. (Step-3, ec25924; live + verified by today-shell + periodes-view tests)
-- [x] AC-F4: List view groups episodes by category, active first. (Step-3, ec25924; 4 sections in documented order — Interventies actief → Interventies afgerond → Levensgebeurtenissen actief → Levensgebeurtenissen afgerond)
+- [x] AC-F3: Context tab appears as the third top-level surface; tab order is Context / Vandaag / Tijdlijn (Vandaag centred for thumb balance). (Step-3 + 2026-06-02 evening rename; live + verified by today-shell + context-view tests)
+- [x] AC-F4: Inside the Context tab, the Periodes section groups episodes by category × active/afgerond. (Step-3 + rename; h2 "Periodes" + 4 h3 sub-groups in documented order — Interventies actief → Interventies afgerond → Levensgebeurtenissen actief → Levensgebeurtenissen afgerond)
 - [ ] AC-F5: Create-episode form supports both categories; end_date is optional with an "lopend" affordance.
 - [x] AC-F6: Episode archive is reversible (soft delete only). (Step-2, c6b31c2; PATCH archived_at: ISO archives, PATCH archived_at: null un-archives — verified end-to-end by episodes-smoke.)
 - [ ] AC-F7: From an episode detail, the user can attach an existing tag or create a new tag with the parent set. The tag appears in the episode's "Tags die hierbij horen" list.
-- [ ] AC-F8: Daily-flow tagging in Vandaag is UNCHANGED — no regression, no new affordance, no extra taps.
-- [x] AC-F9: Server-rendered Periodes tab data flows through to display without local-state shadow (same prop-driven pattern as TodayShell and TimelineView — necessary for router.refresh to move the UI). (Step-3, ec25924; page.tsx → TodayShell → PeriodesView prop chain, no useState shadow)
+- [ ] AC-F8: Daily-flow tagging in Vandaag is UNCHANGED — no regression, no new affordance, no extra taps. (Vandaag is now the CENTRE tab; the daily flow itself is untouched.)
+- [x] AC-F9: Server-rendered Context tab data flows through to display without local-state shadow (same prop-driven pattern as TodayShell and TimelineView — necessary for router.refresh to move the UI). (Step-3, ec25924; page.tsx → TodayShell → ContextView prop chain, no useState shadow)
 - [x] AC-F10: All v1 surfaces (Vandaag, Tijdlijn) continue working with or without episodes in the DB. (Step-3, ec25924; verified by existing TodayShell + TimelineView tests staying green, plus auth-smoke + episodes-smoke post-deploy)
 
 ## Resolved decisions (2026-06-02)
@@ -148,3 +156,4 @@ All open questions from the original draft are settled:
 - 2026-05-31: conceived as `features/context-tab/` with Episode + Occurrence model.
 - 2026-06-02 (AM): brainstorm session resolved naming ("Verloop"), data model (single polymorphic Episode collection; no separate Occurrence type — tags-with-parent ARE the occurrences), categories (interventie + levensgebeurtenis only for v1.5), and UX shape (grouped list, not bands). `features/context-tab/` retired; this file is the replacement.
 - 2026-06-02 (PM): tab label revised "Verloop" → **Periodes** after a second pass. "Verloop" rejected for the expiry/decay echo ("verloopdatum"), clinical lean, and abstraction. Folder slug `verloop-and-episodes/` kept as an internal identifier for git-history continuity.
+- 2026-06-02 (evening): tab label revised "Periodes" → **Context** as the final structural refinement. The tab is named for the container abstraction (Context = the bigger picture stuff that affects daily scores); Periodes is preserved as a section heading inside the tab. This sets up v1.6 Calendar bindings and v2 project context as sibling sections under the same Context tab without further rename cycles. Tab order also fixed: **Context / Vandaag / Tijdlijn**, with Vandaag centre-positioned for thumb balance on the daily-flow action.

@@ -1,5 +1,9 @@
 # Step 2: Episodes API surface
 
+> **2026-06-02 evening note**: the tab name referenced throughout this file as "Periodes" was renamed to **Context** on the evening of 2026-06-02 (see [README.md History](README.md#history)). The API surface described below is unaffected — endpoints, validation, rate-limits all stay the same; only the user-facing tab label and the rendering component changed. References to "Periodes tab" in the prose below should be read as "Context tab" for accuracy. Step files are not rewritten post-rename for git-history reasons.
+
+---
+
 **Estimated time:** ~3.5 hours
 **Test layers:** Vitest unit on the new `src/lib/api/episodes.ts` (SDK mocked); Vitest unit on `src/app/api/episodes/route.ts` and `[id]/route.ts` (`vi.mock` of stores + getValidatedSession, full status-code + cookie coverage); Playwright API integration suite at `tests/api/episodes.spec.ts` (real HTTP, unhappy paths + rate-limit enforcement). No component tests yet — UI lands in step-3.
 **Risk:** Low–medium. New code paths only; no migration; the schema is forward-compatible. The Tag domain extension landed in step-1 so existing read paths through `readAllTags` already include `parent_episode_id` and have not regressed.

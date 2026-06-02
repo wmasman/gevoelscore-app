@@ -1,4 +1,8 @@
-# Step 3: Periodes tab + list view (read-only)
+# Step 3: Context tab + Periodes-section list view (read-only)
+
+> **2026-06-02 evening update**: tab label revised "Periodes" → **Context** as a final structural refinement. The component was renamed `PeriodesView` → `ContextView` and restructured to contain a `<PeriodesSection>` sub-component (h2 "Periodes" wrapping the existing h3 sub-groups). The tab order also changed: **Context / Vandaag / Tijdlijn**, with Vandaag centre-positioned. This file's body below still uses the older "Periodes" tab name in many places — those references are historic, describing the step as originally drafted. The shipped code uses Context. See [README.md History](README.md#history) for the full rename timeline.
+
+---
 
 **Estimated time:** ~3 hours
 **Test layers:** Vitest component for `PeriodesView` (jsdom + @testing-library/react); Vitest component test extending `today-shell.test.tsx` for the 3-tab nav; no new API tests (step-2 covered the wire); no Playwright e2e (the existing daily-entry flow's screen-changed assertions remain green; e2e for the new tab can wait until step-4 when mutations land).

@@ -26,8 +26,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePrefersReducedMotion } from '@/hooks/use-prefers-reduced-motion';
 import Link from 'next/link';
+import { ContextView } from '@/components/context-view';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
-import { PeriodesView } from '@/components/periodes-view';
 import { SaveAnnouncer } from '@/components/save-announcer';
 import { SaveStatus } from '@/components/save-status';
 import {
@@ -49,15 +49,15 @@ type Props = {
   allTags: Tag[];
   timelineEntries: DayEntry[];
   /**
-   * Episodes for the v1.5 Periodes tab. Server-rendered through page.tsx
-   * via readAllEpisodes (active-only). Optional default-empty keeps
-   * existing component tests passing — only the Periodes tab branch
-   * reads the prop.
+   * Episodes for the v1.5 Context tab (Periodes section). Server-
+   * rendered through page.tsx via readAllEpisodes (active-only).
+   * Optional default-empty keeps existing component tests passing —
+   * only the Context tab branch reads the prop.
    */
   episodes?: Episode[];
 };
 
-type Tab = 'today' | 'periodes' | 'timeline';
+type Tab = 'context' | 'today' | 'timeline';
 type Step = 'score' | 'note' | 'tags';
 
 const DEFAULT_VISIBLE_PAST_DAYS = 3;
@@ -204,8 +204,8 @@ function TodayShellInner({
         </Link>
       </header>
 
-      {tab === 'periodes' ? (
-        <PeriodesView episodes={episodes} today={date} />
+      {tab === 'context' ? (
+        <ContextView episodes={episodes} today={date} />
       ) : tab === 'today' ? (
         <div className="flex flex-col gap-6">
           <TodayCard
@@ -299,6 +299,21 @@ function TodayShellInner({
           aria-label={copy.home.tabsAriaLabel}
           className="mx-auto flex max-w-120 px-2"
         >
+          {/* Tab order: Context / Vandaag / Tijdlijn. Vandaag sits in the
+              CENTRE so the daily-flow action is equally reachable from
+              either thumb on both right-hand and left-hand grip. */}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'context'}
+            onClick={() => setTab('context')}
+            className={cn(
+              'flex min-h-14 flex-1 items-center justify-center px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-accent',
+              tab === 'context' ? 'font-medium text-accent' : 'text-fg-muted',
+            )}
+          >
+            {copy.context.title}
+          </button>
           <button
             type="button"
             role="tab"
@@ -310,18 +325,6 @@ function TodayShellInner({
             )}
           >
             {copy.timeline.todayTab}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'periodes'}
-            onClick={() => setTab('periodes')}
-            className={cn(
-              'flex min-h-14 flex-1 items-center justify-center px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-accent',
-              tab === 'periodes' ? 'font-medium text-accent' : 'text-fg-muted',
-            )}
-          >
-            {copy.periodes.title}
           </button>
           <button
             type="button"

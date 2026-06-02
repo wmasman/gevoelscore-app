@@ -19,14 +19,14 @@ Items here are scoped enough that the next step is `/plan-feature` to produce a 
 | Item | Doc | Version | Size |
 |---|---|---|---|
 | Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | **v1.5a** | Small (single step file). Ships first as the v1.5 opener. |
-| Periodes tab + Episodes (+ tag-linking) | [features/verloop-and-episodes/](features/verloop-and-episodes/) | **v1.5** | Multi-step (5 step files). The v1.5 anchor. Folder slug kept as `verloop-and-episodes/`; user-facing label is **Periodes** (revised 2026-06-02). |
+| Context tab + Episodes (+ tag-linking) | [features/verloop-and-episodes/](features/verloop-and-episodes/) | **v1.5** | Multi-step (5 step files). The v1.5 anchor. Folder slug kept as `verloop-and-episodes/`; user-facing tab label is **Context** (revised 2026-06-02 after three same-day passes: Verloop → Periodes → Context). Periodes is now a section heading inside the Context tab. |
 | Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | **v1.5** | Small-medium. Ships after the Periodes feature lands. |
 
 ## Designed (architecture set, larger design still needed)
 
 | Item | Doc | Version | What's pending |
 |---|---|---|---|
-| Three-surface architecture (Vandaag / Periodes / Tijdlijn) | [ADR 0006](decisions/0006-three-surface-architecture.md) | Decision | Accepted 2026-06-01; data-model + UX shape resolved 2026-06-02; tab label revised "Verloop" → "Periodes" same day. See [features/verloop-and-episodes/](features/verloop-and-episodes/). |
+| Three-surface architecture (Context / Vandaag / Tijdlijn) | [ADR 0006](decisions/0006-three-surface-architecture.md) | Decision | Accepted 2026-06-01; data-model + UX shape resolved 2026-06-02. Tab label evolved three times same day (Verloop → Periodes → Context). Final order **Context / Vandaag / Tijdlijn** with Vandaag centre-positioned for thumb balance. See [features/verloop-and-episodes/](features/verloop-and-episodes/). |
 
 ## Vision (design session needed first)
 
@@ -56,7 +56,7 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | Reason |
 |---|---|---|
-| Context tab (old name + Occurrence-type model) | [features/context-tab/](features/context-tab/) (redirect page) | Superseded 2026-06-02 by [features/verloop-and-episodes/](features/verloop-and-episodes/). Final tab label: **Periodes** (intermediate "Verloop" revised same day); Occurrence-type dropped (tags-with-parent ARE the occurrences). |
+| Context tab (Occurrence-type model only) | [features/context-tab/](features/context-tab/) (redirect page) | Superseded 2026-06-02 by [features/verloop-and-episodes/](features/verloop-and-episodes/). Note: the **tab name "Context" was eventually restored** after a three-pass same-day naming exercise (Verloop → Periodes → Context); what stayed retired is the Occurrence-type data model (tags-with-parent ARE the occurrences now) and the original folder location. |
 
 ---
 

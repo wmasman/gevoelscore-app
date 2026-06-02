@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
-import { PeriodesView } from '../periodes-view';
+import { ContextView } from '../context-view';
 import type { Episode } from '@/lib/domain/episode';
 
 afterEach(() => {
@@ -28,18 +28,35 @@ function ep(overrides: Partial<Episode> = {}): Episode {
 
 const TODAY = '2026-06-02';
 
-describe('<PeriodesView />', () => {
-  describe('empty state', () => {
-    it('given an empty list, renders the "Nog geen periodes." line', () => {
-      render(<PeriodesView episodes={[]} today={TODAY} />);
+describe('<ContextView />', () => {
+  describe('accessibility + structure', () => {
+    it('the root section has aria-label="Context"', () => {
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      expect(screen.getByLabelText('Context')).toBeTruthy();
+    });
+
+    it('renders the Periodes section heading as an h2 (always present)', () => {
+      // The Periodes h2 is always there — it's a section WITHIN Context,
+      // independent of whether there are any periodes yet. Future v1.6
+      // calendar bindings will add a sibling h2 next to it.
+      render(<ContextView episodes={[]} today={TODAY} />);
+
+      expect(screen.getByRole('heading', { level: 2, name: 'Periodes' })).toBeTruthy();
+    });
+  });
+
+  describe('empty state (no periodes)', () => {
+    it('given an empty list, renders the "Nog geen periodes." line inside the Periodes section', () => {
+      render(<ContextView episodes={[]} today={TODAY} />);
 
       expect(screen.getByText('Nog geen periodes.')).toBeTruthy();
     });
 
-    it('given an empty list, renders NO section headers', () => {
-      render(<PeriodesView episodes={[]} today={TODAY} />);
+    it('given an empty list, renders NO sub-group h3 headings', () => {
+      render(<ContextView episodes={[]} today={TODAY} />);
 
-      expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+      expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
     });
 
     it('given only archived episodes, renders the empty-state line (archived treated as no-data)', () => {
@@ -48,37 +65,37 @@ describe('<PeriodesView />', () => {
       // a list of only-archived behaves identically to an empty list.
       const archived = ep({ archived_at: '2026-05-01T10:00:00.000Z' });
 
-      render(<PeriodesView episodes={[archived]} today={TODAY} />);
+      render(<ContextView episodes={[archived]} today={TODAY} />);
 
       expect(screen.getByText('Nog geen periodes.')).toBeTruthy();
-      expect(screen.queryByRole('heading', { level: 2 })).toBeNull();
+      expect(screen.queryByRole('heading', { level: 3 })).toBeNull();
     });
   });
 
-  describe('section rendering', () => {
-    it('given a single active interventie, renders ONLY the Interventies (actief) section', () => {
+  describe('sub-group rendering', () => {
+    it('given a single active interventie, renders ONLY the Interventies (actief) h3 sub-group', () => {
       render(
-        <PeriodesView
+        <ContextView
           episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
           today={TODAY}
         />,
       );
 
-      expect(screen.getByRole('heading', { level: 2, name: 'Interventies (actief)' })).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 3, name: 'Interventies (actief)' })).toBeTruthy();
       expect(
-        screen.queryByRole('heading', { level: 2, name: 'Interventies (afgerond)' }),
+        screen.queryByRole('heading', { level: 3, name: 'Interventies (afgerond)' }),
       ).toBeNull();
       expect(
-        screen.queryByRole('heading', { level: 2, name: 'Levensgebeurtenissen (actief)' }),
+        screen.queryByRole('heading', { level: 3, name: 'Levensgebeurtenissen (actief)' }),
       ).toBeNull();
       expect(
-        screen.queryByRole('heading', { level: 2, name: 'Levensgebeurtenissen (afgerond)' }),
+        screen.queryByRole('heading', { level: 3, name: 'Levensgebeurtenissen (afgerond)' }),
       ).toBeNull();
     });
 
-    it('given a single afgerond levensgebeurtenis, renders ONLY the Levensgebeurtenissen (afgerond) section', () => {
+    it('given a single afgerond levensgebeurtenis, renders ONLY the Levensgebeurtenissen (afgerond) h3 sub-group', () => {
       render(
-        <PeriodesView
+        <ContextView
           episodes={[
             ep({
               id: 'b',
@@ -93,14 +110,14 @@ describe('<PeriodesView />', () => {
       );
 
       expect(
-        screen.getByRole('heading', { level: 2, name: 'Levensgebeurtenissen (afgerond)' }),
+        screen.getByRole('heading', { level: 3, name: 'Levensgebeurtenissen (afgerond)' }),
       ).toBeTruthy();
       expect(
-        screen.queryByRole('heading', { level: 2, name: 'Interventies (actief)' }),
+        screen.queryByRole('heading', { level: 3, name: 'Interventies (actief)' }),
       ).toBeNull();
     });
 
-    it('given a full mix, renders all four sections in the documented order', () => {
+    it('given a full mix, renders all four sub-groups in the documented order under the single Periodes h2', () => {
       const episodes = [
         ep({ id: 'ia', label: 'Coaching met Sarah', category: 'interventie' }),
         ep({
@@ -126,13 +143,13 @@ describe('<PeriodesView />', () => {
         }),
       ];
 
-      render(<PeriodesView episodes={episodes} today={TODAY} />);
+      render(<ContextView episodes={episodes} today={TODAY} />);
 
-      const headings = screen
-        .getAllByRole('heading', { level: 2 })
-        .map((h) => h.textContent);
+      const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+      const h3 = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
 
-      expect(headings).toEqual([
+      expect(h2).toEqual(['Periodes']);
+      expect(h3).toEqual([
         'Interventies (actief)',
         'Interventies (afgerond)',
         'Levensgebeurtenissen (actief)',
@@ -144,7 +161,7 @@ describe('<PeriodesView />', () => {
   describe('list items', () => {
     it('renders the episode label inside the list', () => {
       render(
-        <PeriodesView
+        <ContextView
           episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
           today={TODAY}
         />,
@@ -155,23 +172,19 @@ describe('<PeriodesView />', () => {
 
     it('renders the date range as "<start> → lopend" for ongoing episodes', () => {
       render(
-        <PeriodesView
+        <ContextView
           episodes={[ep({ id: 'a', start_date: '2026-04-01', end_date: null })]}
           today={TODAY}
         />,
       );
 
-      // formatDateDutch may format as "1 apr 2026" or similar; we just
-      // assert the "→ lopend" suffix is present somewhere in the rendered
-      // text. The exact format is locked elsewhere; here we only check
-      // the dateRange composition.
       const text = document.body.textContent ?? '';
       expect(text).toContain('→ lopend');
     });
 
     it('renders the date range as "<start> → <end>" for closed-range episodes', () => {
       render(
-        <PeriodesView
+        <ContextView
           episodes={[
             ep({
               id: 'a',
@@ -183,36 +196,23 @@ describe('<PeriodesView />', () => {
         />,
       );
 
-      // For closed range we expect TWO Dutch dates separated by →. Just
-      // assert that there's a "→" present AND no "lopend" suffix.
       const text = document.body.textContent ?? '';
       expect(text).toContain('→');
       expect(text).not.toContain('→ lopend');
     });
 
     it('list items are NOT buttons — no role=button on the rendered <li>', () => {
-      // Defense-in-depth for AC13: items become tappable in step-4.
-      // Until then, they must be non-interactive.
+      // Defense-in-depth: items become tappable in step-4. Until then,
+      // they must be non-interactive.
       render(
-        <PeriodesView
+        <ContextView
           episodes={[ep({ id: 'a', label: 'Coaching met Sarah' })]}
           today={TODAY}
         />,
       );
 
       const buttons = screen.queryAllByRole('button');
-      // The empty-state path has 0 buttons; the populated path has 0
-      // buttons. PeriodesView in step-3 does not render any
-      // interactive element.
       expect(buttons.length).toBe(0);
-    });
-  });
-
-  describe('accessibility', () => {
-    it('the root section has aria-label="Periodes"', () => {
-      render(<PeriodesView episodes={[]} today={TODAY} />);
-
-      expect(screen.getByLabelText('Periodes')).toBeTruthy();
     });
   });
 });

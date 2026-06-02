@@ -58,25 +58,33 @@ export const copy = {
     pastDayAriaLabel: (formattedDate: string, score: number): string =>
       `Vorige dag ${formattedDate}, score ${score}`,
   },
-  periodes: {
-    // Tab label + view aria-label for the v1.5 Periodes surface (the
-    // third top-level tab, between Vandaag and Tijdlijn). User-facing
-    // name is "Periodes" — the folder slug verloop-and-episodes/ stays
-    // as an internal identifier only.
-    title: 'Periodes',
-    ariaLabel: 'Periodes',
-    empty: 'Nog geen periodes.',
-    section: {
-      interventiesActive: 'Interventies (actief)',
-      interventiesDone: 'Interventies (afgerond)',
-      levensgebeurtenissenActive: 'Levensgebeurtenissen (actief)',
-      levensgebeurtenissenDone: 'Levensgebeurtenissen (afgerond)',
+  context: {
+    // Tab label + view aria-label for the v1.5 Context surface — the
+    // LEFT tab in the bottom nav (Context / Vandaag / Tijdlijn).
+    // Vandaag sits in the centre so daily-flow thumb-reach is balanced
+    // left and right. Context holds Periodes today; v1.6 adds Calendar
+    // bindings as a sibling section; v2 adds project context + patterns.
+    // The folder slug verloop-and-episodes/ stays as an internal
+    // identifier only.
+    title: 'Context',
+    ariaLabel: 'Context',
+    periodes: {
+      // Section within Context for multi-day Episodes (interventies +
+      // levensgebeurtenissen).
+      heading: 'Periodes',
+      empty: 'Nog geen periodes.',
+      section: {
+        interventiesActive: 'Interventies (actief)',
+        interventiesDone: 'Interventies (afgerond)',
+        levensgebeurtenissenActive: 'Levensgebeurtenissen (actief)',
+        levensgebeurtenissenDone: 'Levensgebeurtenissen (afgerond)',
+      },
+      // Caller passes already-formatted Dutch date strings. Separator
+      // is an arrow (`→`), not an em-dash (forbidden in UI copy per
+      // feedback-no-emdash-in-ui).
+      dateRange: (startNl: string, endNl: string | null): string =>
+        endNl === null ? `${startNl} → lopend` : `${startNl} → ${endNl}`,
     },
-    // Caller passes already-formatted Dutch date strings. Separator is
-    // an arrow (`→`), not an em-dash (forbidden in UI copy per
-    // feedback-no-emdash-in-ui).
-    dateRange: (startNl: string, endNl: string | null): string =>
-      endNl === null ? `${startNl} → lopend` : `${startNl} → ${endNl}`,
   },
   timeline: {
     title: 'Tijdlijn',

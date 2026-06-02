@@ -363,11 +363,17 @@ describe('<TodayShell />', () => {
   });
 
   // ===========================================================================
-  // Periodes tab (v1.5, step-3)
+  // Context tab (v1.5, step-3)
+  //
+  // Tab order: Context / Vandaag / Tijdlijn. Vandaag is centre-positioned
+  // so the daily-flow action stays thumb-balanced; Context (less-frequent
+  // management) goes left, Tijdlijn (less-frequent review) goes right.
+  // The Context tab today holds a Periodes section; v1.6 will add Calendar
+  // bindings as a sibling section under the same tab.
   // ===========================================================================
 
-  describe('Periodes tab', () => {
-    it('renders three tabs in order: Vandaag, Periodes, Tijdlijn', () => {
+  describe('Context tab', () => {
+    it('renders three tabs in order: Context, Vandaag, Tijdlijn', () => {
       render(
         <TodayShell
           date="2026-05-29"
@@ -378,10 +384,10 @@ describe('<TodayShell />', () => {
       );
 
       const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
-      expect(tabs).toEqual(['Vandaag', 'Periodes', 'Tijdlijn']);
+      expect(tabs).toEqual(['Context', 'Vandaag', 'Tijdlijn']);
     });
 
-    it('given the Periodes tab is tapped, the today-card is replaced by the PeriodesView', async () => {
+    it('given the Context tab is tapped, the today-card is replaced by the ContextView', async () => {
       const user = userEvent.setup();
       render(
         <TodayShell
@@ -392,14 +398,14 @@ describe('<TodayShell />', () => {
         />,
       );
 
-      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+      await user.click(screen.getByRole('tab', { name: /context/i }));
 
-      // The today-card is gone, PeriodesView region is in.
+      // The today-card is gone, ContextView region is in.
       expect(screen.queryByTestId('today-card')).toBeNull();
-      expect(screen.getByRole('region', { name: 'Periodes' })).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Context' })).toBeInTheDocument();
     });
 
-    it('given Periodes is selected and episodes is empty, renders the empty-state line', async () => {
+    it('given Context is selected and episodes is empty, renders the Periodes h2 + empty-state line', async () => {
       const user = userEvent.setup();
       render(
         <TodayShell
@@ -411,12 +417,15 @@ describe('<TodayShell />', () => {
         />,
       );
 
-      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+      await user.click(screen.getByRole('tab', { name: /context/i }));
 
+      // The Periodes section heading is always present inside Context,
+      // even when there's nothing to list.
+      expect(screen.getByRole('heading', { level: 2, name: 'Periodes' })).toBeInTheDocument();
       expect(screen.getByText('Nog geen periodes.')).toBeInTheDocument();
     });
 
-    it('given Periodes is selected and an active interventie is in the list, renders the Interventies (actief) section header', async () => {
+    it('given Context is selected and an active interventie is in the list, renders the Interventies (actief) h3 sub-group', async () => {
       const user = userEvent.setup();
       render(
         <TodayShell
@@ -441,15 +450,15 @@ describe('<TodayShell />', () => {
         />,
       );
 
-      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+      await user.click(screen.getByRole('tab', { name: /context/i }));
 
       expect(
-        screen.getByRole('heading', { level: 2, name: 'Interventies (actief)' }),
+        screen.getByRole('heading', { level: 3, name: 'Interventies (actief)' }),
       ).toBeInTheDocument();
       expect(screen.getByText('Coaching met Sarah')).toBeInTheDocument();
     });
 
-    it('tapping Vandaag after Periodes restores the today-card (no regression)', async () => {
+    it('tapping Vandaag after Context restores the today-card (no regression)', async () => {
       const user = userEvent.setup();
       render(
         <TodayShell
@@ -460,13 +469,13 @@ describe('<TodayShell />', () => {
         />,
       );
 
-      await user.click(screen.getByRole('tab', { name: /periodes/i }));
+      await user.click(screen.getByRole('tab', { name: /context/i }));
       expect(screen.queryByTestId('today-card')).toBeNull();
 
       await user.click(screen.getByRole('tab', { name: /vandaag/i }));
 
       expect(screen.getByTestId('today-card')).toBeInTheDocument();
-      expect(screen.queryByRole('region', { name: 'Periodes' })).toBeNull();
+      expect(screen.queryByRole('region', { name: 'Context' })).toBeNull();
     });
   });
 });
