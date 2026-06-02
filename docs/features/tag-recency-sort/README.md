@@ -2,7 +2,7 @@
 
 **Feature:** Within each expanded category in the daily tag picker, sort chips by recency-then-frequency-then-alphabetical instead of pure-alphabetical. The chip the user picked most recently and most often floats to the front of its category. No new UI; no LLM; no cross-category surfacing.
 **Version:** v1.5a (first piece of v1.5 — ships independently before the bigger verloop-and-episodes feature)
-**Status:** Designed — brainstorm resolved 2026-06-02. Ready for `/plan-feature` to produce a step file.
+**Status:** **Shipped 2026-06-02** (commit `426be73`). `computeRecencyByTagId` lives in [`src/lib/domain/tag-sort.ts`](../../../src/lib/domain/tag-sort.ts); wired into [`TagCategoryList`](../../../src/components/tag-category-list.tsx) and threaded through `TodayShell` + `TimelineView` so the within-category sort applies in both today's flow and past-day editing.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [features/tag-intelligence/](../tag-intelligence/) (parent vision — this is the v1.5 slice) · [features/inline-tag-creation/](../inline-tag-creation/) (the feature that introduced the inline `+ nieuw` chip)
 
 ---

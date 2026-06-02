@@ -134,6 +134,13 @@ This feature is large enough for multiple step files. Tentative split:
 - [x] AC-F9: Server-rendered Context tab data flows through to display without local-state shadow (same prop-driven pattern as TodayShell and TimelineView — necessary for router.refresh to move the UI). (Step-3, ec25924; page.tsx → TodayShell → ContextView prop chain, no useState shadow)
 - [x] AC-F10: All v1 surfaces (Vandaag, Tijdlijn) continue working with or without episodes in the DB. (Step-3, ec25924; verified by existing TodayShell + TimelineView tests staying green, plus auth-smoke + episodes-smoke post-deploy)
 
+## Post-ship follow-ons (2026-06-02 evening)
+
+After step-5 shipped, two short additions built on the episode data layer without their own feature folder:
+
+- **Timeline episode overlay** — bands + linked-tag dots + heatmap stripes + per-category toggle. See [features/timeline-episode-overlay/](../timeline-episode-overlay/) — shipped same day in commit `1608d7a`.
+- **Today-card ongoing-episodes region** — the today-card grew a fourth section (below Tags) listing every episode where `end_date IS NULL` OR `end_date >= today`. Whole row taps to edit via the in-place EpisodeFormSheet (same component as Context tab + Tijdlijn band-taps). Commits `dd51038` (initial lopend-only) + `65ba2e8` (loosened to include future-end-date episodes so vakanties surface too). No separate feature folder — small additive enhancement that builds on the data this feature established.
+
 ## Resolved decisions (2026-06-02)
 
 All open questions from the original draft are settled:

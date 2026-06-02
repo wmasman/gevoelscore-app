@@ -16,10 +16,7 @@ This doc supplements [REQUIREMENTS.md](REQUIREMENTS.md) and [app_brief_gevoelsco
 
 Items here are scoped enough that the next step is `/plan-feature` to produce a step file with acceptance criteria + test plan.
 
-| Item | Doc | Version | Size |
-|---|---|---|---|
-| Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | **v1.5a** | Small (single step file). Ships first as the v1.5 opener. |
-| Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | **v1.5** | Small-medium. The v1.5 anchor's visualisation half — surfaces episodes as bands on the Tijdlijn now that the data exists. |
+_(All v1.5 items above this line shipped 2026-06-02. Next ready-to-plan candidates pull from the **Vision** section below — promote whichever the user takes off the queue.)_
 
 ## Designed (architecture set, larger design still needed)
 
@@ -44,6 +41,9 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | When |
 |---|---|---|
+| Today-card ongoing-episodes region | follow-on note in [features/verloop-and-episodes/](features/verloop-and-episodes/) | 2026-06-02 (commits `dd51038` + `65ba2e8`; lists lopend + future-end-date episodes on the today-card with pencil-edit affordance) |
+| Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | 2026-06-02 (commit `1608d7a`; chart bands + linked-tag dots + heatmap stripes + per-category toggle, with in-place EpisodeFormSheet on band-tap) |
+| Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | 2026-06-02 (commit `426be73`; v1.5a slice of the tag-intelligence vision) |
 | Context tab + Episodes (+ tag-linking) | [features/verloop-and-episodes/](features/verloop-and-episodes/) | 2026-06-02 (v1.5 anchor: 5 step files, all 10 ACs ticked; folder slug retained, user-facing tab is **Context** with Periodes as a section inside) |
 | Timeline gap indicator | [features/timeline-gap-indicator/](features/timeline-gap-indicator/) | 2026-06-02 |
 | Inline tag creation | [features/inline-tag-creation/](features/inline-tag-creation/) | 2026-06-01 |
