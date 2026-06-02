@@ -270,6 +270,139 @@ describe('POST /api/tags', () => {
     expect(res.status).toBe(502);
   });
 
+  // -------------------------------------------------------------------------
+  // Step-5 extension: parent_episode_id in POST body
+  // -------------------------------------------------------------------------
+
+  it('regression: POST without parent_episode_id passes input through unchanged', async () => {
+    mocks.createOrUpsertTag.mockResolvedValue({
+      ok: true,
+      value: {
+        kind: 'created',
+        tag: {
+          id: 'tag-new',
+          label: 'pacing',
+          category: 'mentaal',
+          project_id: null,
+          parent_episode_id: null,
+          usage_count: 0,
+          archived_at: null,
+          created_at: '2026-06-01T00:00:00.000Z',
+        },
+      },
+    });
+
+    const res = await POST(
+      makeRequest(
+        { label: 'pacing', category: 'mentaal' },
+        { cookie: 'gs_session=s-id' },
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    // The route must NOT inject parent_episode_id when the caller omits it.
+    const args = mocks.createOrUpsertTag.mock.calls[0]?.[1] as Record<
+      string,
+      unknown
+    >;
+    expect(args).not.toHaveProperty('parent_episode_id');
+  });
+
+  it('POST with parent_episode_id: <UUID> threads value to createOrUpsertTag', async () => {
+    const VALID_EPISODE_ID = '550e8400-e29b-41d4-a716-446655440000';
+    mocks.createOrUpsertTag.mockResolvedValue({
+      ok: true,
+      value: {
+        kind: 'created',
+        tag: {
+          id: 'tag-new',
+          label: 'coaching sessie',
+          category: 'interventie',
+          project_id: null,
+          parent_episode_id: VALID_EPISODE_ID,
+          usage_count: 0,
+          archived_at: null,
+          created_at: '2026-06-02T00:00:00.000Z',
+        },
+      },
+    });
+
+    const res = await POST(
+      makeRequest(
+        {
+          label: 'coaching sessie',
+          category: 'interventie',
+          parent_episode_id: VALID_EPISODE_ID,
+        },
+        { cookie: 'gs_session=s-id' },
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.tag.parent_episode_id).toBe(VALID_EPISODE_ID);
+    const args = mocks.createOrUpsertTag.mock.calls[0]?.[1] as Record<
+      string,
+      unknown
+    >;
+    expect(args.parent_episode_id).toBe(VALID_EPISODE_ID);
+  });
+
+  it('POST with parent_episode_id: null threads explicit null through', async () => {
+    mocks.createOrUpsertTag.mockResolvedValue({
+      ok: true,
+      value: {
+        kind: 'created',
+        tag: {
+          id: 'tag-new',
+          label: 'standalone',
+          category: 'mentaal',
+          project_id: null,
+          parent_episode_id: null,
+          usage_count: 0,
+          archived_at: null,
+          created_at: '2026-06-02T00:00:00.000Z',
+        },
+      },
+    });
+
+    const res = await POST(
+      makeRequest(
+        { label: 'standalone', category: 'mentaal', parent_episode_id: null },
+        { cookie: 'gs_session=s-id' },
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    const args = mocks.createOrUpsertTag.mock.calls[0]?.[1] as Record<
+      string,
+      unknown
+    >;
+    expect(args).toHaveProperty('parent_episode_id', null);
+  });
+
+  it('returns 400 invalid_parent_episode_id when the lib rejects a malformed UUID', async () => {
+    mocks.createOrUpsertTag.mockResolvedValue({
+      ok: false,
+      error: 'invalid_parent_episode_id',
+    });
+
+    const res = await POST(
+      makeRequest(
+        {
+          label: 'pacing',
+          category: 'mentaal',
+          parent_episode_id: 'not-a-uuid',
+        },
+        { cookie: 'gs_session=s-id' },
+      ),
+    );
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toBe('invalid_parent_episode_id');
+  });
+
   it('does NOT attempt to attach to a day_entry — the route is single-purpose', async () => {
     mocks.createOrUpsertTag.mockResolvedValue({
       ok: true,

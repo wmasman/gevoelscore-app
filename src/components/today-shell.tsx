@@ -205,7 +205,7 @@ function TodayShellInner({
       </header>
 
       {tab === 'context' ? (
-        <ContextView episodes={episodes} today={date} />
+        <ContextView episodes={episodes} today={date} tags={allTags} />
       ) : tab === 'today' ? (
         <div className="flex flex-col gap-6">
           <TodayCard

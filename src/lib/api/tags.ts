@@ -15,6 +15,7 @@ import {
   updateItem,
 } from '@directus/sdk';
 import type { Tag } from '@/lib/domain/tag';
+import { validateParentEpisodeId } from '@/lib/domain/parent-episode-id';
 import { validateTagCategory, type TagCategory } from '@/lib/domain/tag-category';
 import { validateTagLabel } from '@/lib/domain/tag-label';
 import type { Result } from './result';
@@ -120,6 +121,13 @@ const RESET_ON_REACTIVATE = {
 export type CreateOrUpsertTagInput = {
   label: string;
   category: TagCategory;
+  // Step-5: optional. When omitted → existing daily-flow semantics
+  // (tag created unlinked). When provided → validated through
+  // validateParentEpisodeId; null = unlinked, UUID = linked. In the
+  // matched_active branch the value is also enforced via an extra PATCH
+  // if it differs; in matched_reactivated it's folded into the single
+  // reactivation PATCH body.
+  parent_episode_id?: string | null;
 };
 
 export type CreateOrUpsertTagOutcome =
@@ -130,6 +138,7 @@ export type CreateOrUpsertTagOutcome =
 export type CreateOrUpsertTagError =
   | 'invalid_label'
   | 'invalid_category'
+  | 'invalid_parent_episode_id'
   | 'network_error'
   | 'directus_error';
 
@@ -154,6 +163,22 @@ export async function createOrUpsertTag(
   if (!labelResult.ok) return { ok: false, error: 'invalid_label' };
   const categoryResult = validateTagCategory(input.category);
   if (!categoryResult.ok) return { ok: false, error: 'invalid_category' };
+
+  // Parent is opt-in. Only validate when the caller explicitly passed it
+  // (including null, which means "set to null"). `undefined` means "leave
+  // alone" — the existing daily-flow contract.
+  const hasParentInput = Object.prototype.hasOwnProperty.call(
+    input,
+    'parent_episode_id',
+  );
+  let parentEpisodeId: string | null | undefined = undefined;
+  if (hasParentInput) {
+    const parentResult = validateParentEpisodeId(input.parent_episode_id);
+    if (!parentResult.ok) {
+      return { ok: false, error: 'invalid_parent_episode_id' };
+    }
+    parentEpisodeId = parentResult.value;
+  }
 
   const label = labelResult.value;
   const category = categoryResult.value;
@@ -184,23 +209,108 @@ export async function createOrUpsertTag(
     const match = candidates.find((r) => r.label.toLowerCase() === lowerLabel);
     if (match) {
       if (match.archived_at !== null) {
+        // Reactivation: fold parent_episode_id into the single PATCH body
+        // if the caller provided it, so we don't double-round-trip. When
+        // omitted, parent_episode_id is preserved as-is from the archived row.
+        const reactivatePatch =
+          parentEpisodeId !== undefined
+            ? { ...RESET_ON_REACTIVATE, parent_episode_id: parentEpisodeId }
+            : RESET_ON_REACTIVATE;
         const updated = (await client.request(
-          updateItem('tags', match.id, RESET_ON_REACTIVATE),
+          updateItem('tags', match.id, reactivatePatch),
         )) as DirectusTagRow;
-        return { ok: true, value: { kind: 'matched_reactivated', tag: rowToTag(updated) } };
+        return {
+          ok: true,
+          value: { kind: 'matched_reactivated', tag: rowToTag(updated) },
+        };
+      }
+      // matched_active: if caller supplied parent_episode_id and it differs,
+      // PATCH the parent into place. Idempotent — equal values skip the wire.
+      if (
+        parentEpisodeId !== undefined &&
+        parentEpisodeId !== match.parent_episode_id
+      ) {
+        const updated = (await client.request(
+          updateItem('tags', match.id, {
+            parent_episode_id: parentEpisodeId,
+          }),
+        )) as DirectusTagRow;
+        return {
+          ok: true,
+          value: { kind: 'matched_active', tag: rowToTag(updated) },
+        };
       }
       return { ok: true, value: { kind: 'matched_active', tag: rowToTag(match) } };
     }
 
+    // Create branch — include parent_episode_id in the POST body only when
+    // explicitly provided. Omission preserves the existing daily-flow wire
+    // contract (no behavioural change to the inline-tag-creation path).
+    const createBody: Record<string, unknown> = {
+      label,
+      category,
+      project_id: null,
+      usage_count: 0,
+    };
+    if (parentEpisodeId !== undefined) {
+      createBody.parent_episode_id = parentEpisodeId;
+    }
     const created = (await client.request(
-      createItem('tags', {
-        label,
-        category,
-        project_id: null,
-        usage_count: 0,
-      } as never),
+      createItem('tags', createBody as never),
     )) as DirectusTagRow;
     return { ok: true, value: { kind: 'created', tag: rowToTag(created) } };
+  } catch (e) {
+    if (isNetworkError(e)) return { ok: false, error: 'network_error' };
+    return { ok: false, error: 'directus_error' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// updateTag — step-5 PATCH wrapper. Handles the picker's re-link and unlink
+// paths. v1.5 patch surface is intentionally tight: only parent_episode_id.
+// Any unknown key returns 'invalid_patch' before any wire call so a future
+// regression that adds a stray field can't silently leak to Directus.
+// ---------------------------------------------------------------------------
+
+export type UpdateTagPatch = {
+  parent_episode_id: string | null;
+};
+
+export type UpdateTagError = TagsError | 'invalid_patch';
+
+const ALLOWED_PATCH_KEYS = new Set(['parent_episode_id']);
+
+export async function updateTag(
+  accessToken: string,
+  id: string,
+  patch: UpdateTagPatch,
+): Promise<Result<Tag, UpdateTagError>> {
+  if (typeof patch !== 'object' || patch === null || Array.isArray(patch)) {
+    return { ok: false, error: 'invalid_patch' };
+  }
+  const keys = Object.keys(patch);
+  if (keys.length === 0) {
+    return { ok: false, error: 'invalid_patch' };
+  }
+  for (const key of keys) {
+    if (!ALLOWED_PATCH_KEYS.has(key)) {
+      return { ok: false, error: 'invalid_patch' };
+    }
+  }
+  const parentResult = validateParentEpisodeId(patch.parent_episode_id);
+  if (!parentResult.ok) {
+    return { ok: false, error: 'invalid_patch' };
+  }
+
+  try {
+    const client = createDirectus<DirectusSchema>(directusUrl())
+      .with(rest())
+      .with(staticToken(accessToken));
+
+    const updated = (await client.request(
+      updateItem('tags', id, { parent_episode_id: parentResult.value }),
+    )) as DirectusTagRow;
+    return { ok: true, value: rowToTag(updated) };
   } catch (e) {
     if (isNetworkError(e)) return { ok: false, error: 'network_error' };
     return { ok: false, error: 'directus_error' };

@@ -37,6 +37,19 @@ vi.mock('@/hooks/use-episode-upsert', () => ({
   useEpisodeUpsert: () => hookMocks,
 }));
 
+// Mock the tag-link hook too — step-5 wires it into EpisodeFormSheet for
+// the LinkedTagsSection + TagPickerSheet integration.
+const tagLinkMocks = vi.hoisted(() => ({
+  createWithParent: vi.fn(),
+  link: vi.fn(),
+  unlink: vi.fn(),
+  status: 'idle' as 'idle' | 'saving' | 'saved' | 'error',
+  lastError: null as string | null,
+}));
+vi.mock('@/hooks/use-tag-link-upsert', () => ({
+  useTagLinkUpsert: () => tagLinkMocks,
+}));
+
 import { EpisodeFormSheet } from '../episode-form-sheet';
 
 const TODAY = '2026-06-02';
@@ -60,6 +73,11 @@ beforeEach(() => {
   hookMocks.archive.mockReset().mockResolvedValue(HAPPY_EPISODE);
   hookMocks.status = 'idle';
   hookMocks.lastError = null;
+  tagLinkMocks.createWithParent.mockReset();
+  tagLinkMocks.link.mockReset();
+  tagLinkMocks.unlink.mockReset();
+  tagLinkMocks.status = 'idle';
+  tagLinkMocks.lastError = null;
 });
 afterEach(() => {
   cleanup();
@@ -524,6 +542,250 @@ describe('<EpisodeFormSheet />', () => {
       );
 
       expect(screen.getByRole('dialog', { name: 'Periode bewerken' })).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // Step-5: tag-linking integration
+  // ===========================================================================
+
+  describe('tag-linking integration', () => {
+    it('does NOT render LinkedTagsSection in create mode', () => {
+      render(
+        <EpisodeFormSheet
+          mode="create"
+          category="interventie"
+          initialEpisode={null}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+        />,
+      );
+
+      // No "Tags die hierbij horen" heading anywhere in create mode.
+      expect(
+        screen.queryByRole('heading', { name: 'Tags die hierbij horen' }),
+      ).toBeNull();
+      // No "+ Tag" button either.
+      expect(screen.queryByRole('button', { name: '+ Tag' })).toBeNull();
+    });
+
+    it('renders LinkedTagsSection in edit mode with the heading + + Tag button', () => {
+      render(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+
+      expect(
+        screen.getByRole('heading', { name: 'Tags die hierbij horen' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '+ Tag' })).toBeInTheDocument();
+    });
+
+    it('tapping "+ Tag" opens the nested TagPickerSheet (picker title visible)', async () => {
+      const user = userEvent.setup();
+      render(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+
+      // Picker not yet open.
+      expect(
+        screen.queryByRole('heading', { name: 'Kies of maak een tag' }),
+      ).toBeNull();
+
+      await user.click(screen.getByRole('button', { name: '+ Tag' }));
+
+      expect(
+        screen.getByRole('heading', { name: 'Kies of maak een tag' }),
+      ).toBeInTheDocument();
+    });
+
+    it('selecting an existing tag in the picker calls hook.link(tagId, episodeId)', async () => {
+      const user = userEvent.setup();
+      const otherTag = {
+        id: 'tag-pacing',
+        label: 'pacing',
+        category: 'mentaal' as const,
+        project_id: null,
+        parent_episode_id: null,
+        usage_count: 0,
+        archived_at: null,
+        created_at: '2026-06-01T00:00:00.000Z',
+      };
+      tagLinkMocks.link.mockResolvedValue({
+        ...otherTag,
+        parent_episode_id: HAPPY_EPISODE.id,
+      });
+      render(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[otherTag]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: '+ Tag' }));
+      await user.click(screen.getByRole('button', { name: /pacing/ }));
+
+      expect(tagLinkMocks.link).toHaveBeenCalledWith(
+        'tag-pacing',
+        HAPPY_EPISODE.id,
+      );
+    });
+
+    it('unlinking a linked tag calls hook.unlink(tagId)', async () => {
+      const user = userEvent.setup();
+      const linkedTag = {
+        id: 'tag-linked',
+        label: 'coaching sessie',
+        category: 'interventie' as const,
+        project_id: null,
+        parent_episode_id: HAPPY_EPISODE.id,
+        usage_count: 0,
+        archived_at: null,
+        created_at: '2026-06-01T00:00:00.000Z',
+      };
+      tagLinkMocks.unlink.mockResolvedValue({
+        ...linkedTag,
+        parent_episode_id: null,
+      });
+      render(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[linkedTag]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'Verwijder koppeling: coaching sessie',
+        }),
+      );
+
+      expect(tagLinkMocks.unlink).toHaveBeenCalledWith('tag-linked');
+    });
+
+    it('creating a new tag in the picker calls hook.createWithParent with parent set', async () => {
+      const user = userEvent.setup();
+      tagLinkMocks.createWithParent.mockResolvedValue({
+        id: 'tag-new',
+        label: 'huiswerk',
+        category: 'interventie',
+        project_id: null,
+        parent_episode_id: HAPPY_EPISODE.id,
+        usage_count: 0,
+        archived_at: null,
+        created_at: '2026-06-02T00:00:00.000Z',
+      });
+      render(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: '+ Tag' }));
+      await user.click(
+        screen.getByRole('button', { name: '+ Maak een nieuwe tag aan' }),
+      );
+      await user.type(screen.getByLabelText('Tag naam'), 'huiswerk');
+      await user.selectOptions(screen.getByLabelText(/Categorie/i), 'interventie');
+      await user.click(screen.getByRole('button', { name: 'Toevoegen' }));
+
+      await waitFor(() =>
+        expect(tagLinkMocks.createWithParent).toHaveBeenCalledWith({
+          label: 'huiswerk',
+          category: 'interventie',
+          parent_episode_id: HAPPY_EPISODE.id,
+        }),
+      );
+    });
+
+    it('picker closes when EpisodeFormSheet itself is closed (no orphan sheet)', () => {
+      const { rerender } = render(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+      // (No need to actually open the picker — when the parent sheet is
+      // closed, the picker JSX is gone entirely because the picker is
+      // mounted INSIDE the parent's open={open} BottomSheet.)
+      rerender(
+        <EpisodeFormSheet
+          mode="edit"
+          category="interventie"
+          initialEpisode={HAPPY_EPISODE}
+          today={TODAY}
+          open={false}
+          onClose={vi.fn()}
+          onSaved={vi.fn()}
+          onArchived={vi.fn()}
+          tags={[]}
+          episodes={[HAPPY_EPISODE]}
+        />,
+      );
+
+      expect(
+        screen.queryByRole('heading', { name: 'Kies of maak een tag' }),
+      ).toBeNull();
+      expect(
+        screen.queryByRole('heading', { name: 'Bewerk interventie' }),
+      ).toBeNull();
     });
   });
 });

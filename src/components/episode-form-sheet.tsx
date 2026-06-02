@@ -22,12 +22,17 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { BottomSheet } from '@/components/lab/bottom-sheet';
+import { LinkedTagsSection } from '@/components/linked-tags-section';
+import { TagPickerSheet } from '@/components/tag-picker-sheet';
 import { copy } from '@/copy';
 import { useEpisodeUpsert } from '@/hooks/use-episode-upsert';
+import { useTagLinkUpsert } from '@/hooks/use-tag-link-upsert';
 import type { Episode } from '@/lib/domain/episode';
 import type { EpisodeCategory } from '@/lib/domain/episode-category';
 import { MAX_EPISODE_DESCRIPTION_LENGTH } from '@/lib/domain/episode-description';
 import { MAX_EPISODE_LABEL_LENGTH } from '@/lib/domain/episode-label';
+import type { Tag } from '@/lib/domain/tag';
+import type { TagCategory } from '@/lib/domain/tag-category';
 import { cn } from '@/lib/ui/cn';
 
 type Mode = 'create' | 'edit';
@@ -47,6 +52,14 @@ type Props = {
   onClose: () => void;
   onSaved: (ep: Episode) => void;
   onArchived: (ep: Episode) => void;
+  /**
+   * Step-5: full tag corpus for the LinkedTagsSection + TagPickerSheet
+   * integration. Optional default-empty keeps existing tests/call sites
+   * working in create mode (where the section never renders anyway).
+   */
+  tags?: Tag[];
+  /** Step-5: episodes corpus for the picker's "(bij: <label>)" suffix. */
+  episodes?: Episode[];
 };
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -60,6 +73,8 @@ export function EpisodeFormSheet({
   onClose,
   onSaved,
   onArchived,
+  tags = [],
+  episodes = [],
 }: Props) {
   // Form state — local only; commits to the server on Bewaar.
   const [label, setLabel] = useState<string>('');
@@ -76,6 +91,44 @@ export function EpisodeFormSheet({
   const [showDescriptionError, setShowDescriptionError] = useState<boolean>(false);
 
   const { create, update, archive, status, lastError } = useEpisodeUpsert();
+
+  // Step-5: tag-linking surface (edit mode only). Hook fires three intents
+  // — createWithParent / link / unlink — each round-trips through the API
+  // and triggers router.refresh, so a fresh tags prop arrives on the next
+  // render. The picker's open state lives here (alongside the form state)
+  // because picker + form are conceptually one editing surface.
+  const tagLink = useTagLinkUpsert();
+  const [pickerOpen, setPickerOpen] = useState<boolean>(false);
+
+  // Close the picker whenever the parent form closes, so reopening the
+  // form doesn't restore a stale picker. Same closed→open edge guard
+  // pattern as the form state above.
+  useEffect(() => {
+    if (!open) setPickerOpen(false);
+  }, [open]);
+
+  async function handlePickExisting(tagId: string): Promise<void> {
+    if (initialEpisode === null) return;
+    const updated = await tagLink.link(tagId, initialEpisode.id);
+    if (updated) setPickerOpen(false);
+  }
+
+  async function handleCreateNewTag(input: {
+    label: string;
+    category: TagCategory;
+  }): Promise<void> {
+    if (initialEpisode === null) return;
+    const created = await tagLink.createWithParent({
+      label: input.label,
+      category: input.category,
+      parent_episode_id: initialEpisode.id,
+    });
+    if (created) setPickerOpen(false);
+  }
+
+  async function handleUnlinkTag(tagId: string): Promise<void> {
+    await tagLink.unlink(tagId);
+  }
 
   // Closed → open edge: re-sync state from props. The sheet is mounted
   // for the lifetime of the parent; without this guard the user would
@@ -365,6 +418,18 @@ export function EpisodeFormSheet({
           )}
         </div>
 
+        {/* Step-5: tag-linking section (edit mode only). The picker lives
+            below — see TagPickerSheet at the end of the BottomSheet. */}
+        {mode === 'edit' && initialEpisode !== null && (
+          <LinkedTagsSection
+            episode={initialEpisode}
+            tags={tags}
+            onUnlink={(tagId) => void handleUnlinkTag(tagId)}
+            onOpenPicker={() => setPickerOpen(true)}
+            disabled={tagLink.status === 'saving'}
+          />
+        )}
+
         {/* Action row */}
         <div className="flex items-center justify-between gap-3 pt-2">
           {/* Archive (edit mode only) — one-tap, no confirm. Action is
@@ -400,6 +465,23 @@ export function EpisodeFormSheet({
           </button>
         </div>
       </form>
+
+      {/* Step-5: nested picker. Mounted INSIDE the parent BottomSheet's
+          children so it shares the form's lifecycle — when the form
+          closes, the picker JSX is gone too. open state is local. */}
+      {mode === 'edit' && initialEpisode !== null && (
+        <TagPickerSheet
+          episode={initialEpisode}
+          tags={tags}
+          episodes={episodes}
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onPickExisting={(tagId) => void handlePickExisting(tagId)}
+          onCreateNew={(input) => void handleCreateNewTag(input)}
+          saving={tagLink.status === 'saving'}
+          lastError={tagLink.lastError}
+        />
+      )}
     </BottomSheet>
   );
 }

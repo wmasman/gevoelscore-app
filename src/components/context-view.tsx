@@ -35,10 +35,14 @@ import { formatDateDutch } from '@/lib/domain/date';
 import type { Episode } from '@/lib/domain/episode';
 import type { EpisodeCategory } from '@/lib/domain/episode-category';
 import { groupEpisodes } from '@/lib/domain/episode-groups';
+import type { Tag } from '@/lib/domain/tag';
 
 type Props = {
   episodes: Episode[];
   today: string;
+  /** Step-5: full tag corpus, threaded into EpisodeFormSheet for the
+   *  LinkedTagsSection + TagPickerSheet integration. */
+  tags?: Tag[];
 };
 
 type SheetState =
@@ -56,7 +60,7 @@ type SheetState =
       initialEpisode: Episode;
     };
 
-export function ContextView({ episodes, today }: Props) {
+export function ContextView({ episodes, today, tags = [] }: Props) {
   const [sheet, setSheet] = useState<SheetState>({ open: false });
 
   function openCreate(category: EpisodeCategory): void {
@@ -101,6 +105,8 @@ export function ContextView({ episodes, today }: Props) {
         onClose={closeSheet}
         onSaved={closeSheet}
         onArchived={closeSheet}
+        tags={tags}
+        episodes={episodes}
       />
     </section>
   );

@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { label?: unknown; category?: unknown };
+  let body: { label?: unknown; category?: unknown; parent_episode_id?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -69,12 +69,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'malformed_body' }, { status: 400 });
   }
 
-  const result = await createOrUpsertTag(session.accessToken, {
+  // Step-5: parent_episode_id is optional in the body. When present, it
+  // must be `string | null` — anything else fails the malformed_body gate
+  // before the SDK is reached. The lib runs validateParentEpisodeId, so
+  // a wrong UUID shape surfaces as 'invalid_parent_episode_id' from the
+  // Result and is mapped to a 400 below.
+  const hasParentInBody = Object.prototype.hasOwnProperty.call(
+    body,
+    'parent_episode_id',
+  );
+  if (
+    hasParentInBody &&
+    body.parent_episode_id !== null &&
+    typeof body.parent_episode_id !== 'string'
+  ) {
+    return NextResponse.json({ error: 'malformed_body' }, { status: 400 });
+  }
+
+  const libInput: Parameters<typeof createOrUpsertTag>[1] = {
     label: body.label,
     // `createOrUpsertTag` runs `validateTagCategory` itself; the cast here
     // is a parser convenience, not a trust-the-client assertion.
     category: body.category as never,
-  });
+  };
+  if (hasParentInBody) {
+    libInput.parent_episode_id = body.parent_episode_id as string | null;
+  }
+
+  const result = await createOrUpsertTag(session.accessToken, libInput);
 
   if (!result.ok) {
     if (result.error === 'invalid_label') {
@@ -82,6 +104,12 @@ export async function POST(request: Request) {
     }
     if (result.error === 'invalid_category') {
       return NextResponse.json({ error: 'invalid_category' }, { status: 400 });
+    }
+    if (result.error === 'invalid_parent_episode_id') {
+      return NextResponse.json(
+        { error: 'invalid_parent_episode_id' },
+        { status: 400 },
+      );
     }
     return NextResponse.json({ error: 'server_error' }, { status: 502 });
   }

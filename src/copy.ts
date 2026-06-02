@@ -138,6 +138,47 @@ export const copy = {
       // SaveAnnouncer copy fired after a successful archive PATCH.
       announced: 'Gearchiveerd.',
     },
+    // Step-5: tag-to-episode linking surface. Renders inside the edit-mode
+    // EpisodeFormSheet between description + action row. Picker is a nested
+    // BottomSheet over the form; tagging from the daily flow is unchanged.
+    tagLinking: {
+      heading: 'Tags die hierbij horen',
+      empty: 'Nog geen gekoppelde tags.',
+      addButton: '+ Tag',
+      // aria-label for each linked-tag chip's remove button. The chip
+      // itself is non-tappable in v1.5 (no detail view); the ✕ is the
+      // only affordance.
+      unlinkAriaLabel: (label: string): string => `Verwijder koppeling: ${label}`,
+    },
+    tagPicker: {
+      sheetAriaLabel: 'Tag kiezen of nieuw aanmaken',
+      title: 'Kies of maak een tag',
+      createButton: '+ Maak een nieuwe tag aan',
+      // Suffix on rows whose tag is linked elsewhere — communicates the
+      // silent re-parent ("you'll move this tag here on tap").
+      bijSuffix: (otherEpisodeLabel: string): string => `(bij: ${otherEpisodeLabel})`,
+      emptyCorpus: 'Nog geen andere tags. Maak er een aan.',
+      // Mini-form for inline tag creation. Submits POST /api/tags with
+      // parent_episode_id pre-set — one round-trip. Field label is
+      // "Tag naam" (not "Naam") so it disambiguates from the episode
+      // form's "Naam" field a screen reader would otherwise read twice.
+      newTagLabelField: 'Tag naam',
+      newTagLabelPlaceholder: 'Naam van de tag',
+      newTagCategoryField: 'Categorie',
+      newTagCategoryPlaceholder: 'Kies een categorie',
+      // Submit is "Toevoegen" (not "Bewaar") so it differs from the
+      // parent EpisodeFormSheet's save button — otherwise the same label
+      // names two semantically different actions on screen at once.
+      newTagSubmit: 'Toevoegen',
+      cancel: 'Annuleer',
+      close: 'Sluit',
+      error: {
+        labelEmpty: 'Geef een naam.',
+        labelTooLong: 'Maximaal 40 tekens.',
+        categoryMissing: 'Kies een categorie.',
+        serverError: 'Opslaan lukte niet, probeer opnieuw.',
+      },
+    },
   },
   timeline: {
     title: 'Tijdlijn',

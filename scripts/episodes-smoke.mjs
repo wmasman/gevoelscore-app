@@ -8,8 +8,15 @@
 //   6) GET — assert archived episode NOT in default list
 //   7) GET ?archived=all — assert archived episode IS in list
 //   8) PATCH un-archive (archived_at = null)
-//   9) hard-DELETE via admin DIRECTUS_TOKEN — cleanup the test row
-//  10) logout
+//   8a) Step-5: POST /api/tags with parent_episode_id (one round-trip
+//       inline create + link)
+//   8b) Step-5: PATCH /api/tags/[id] unlink
+//   8c) Step-5: PATCH /api/tags/[id] re-link
+//   8d) Step-5: PATCH /api/tags non-UUID id → 400 invalid_id
+//   9) PATCH /api/episodes garbage [id] → 400 invalid_request
+//  10) hard-DELETE via admin DIRECTUS_TOKEN — cleanup the test rows
+//      (tag first, then episode, to honour the parent_episode_id FK)
+//  11) logout
 //
 // Why hard-DELETE for cleanup: the frontend API does NOT expose a DELETE
 // endpoint (per the verloop-and-episodes README — hard delete is admin
@@ -46,6 +53,7 @@ const origin = BASE;
 let cookieJar = '';
 let allPassed = true;
 let episodeId = null;
+let smokeTagId = null;
 
 function extractSessionCookie(res) {
   const headers = res.headers.getSetCookie?.() ?? [];
@@ -64,6 +72,24 @@ function step(label, ok, detail) {
 }
 
 async function cleanupIfNeeded() {
+  // Step-5 added a smoke tag — clean that up first (FK to episode means
+  // deleting the episode while a smoke tag still references it would
+  // fail, depending on Directus's ON DELETE behaviour. Tag first is safe).
+  if (smokeTagId) {
+    try {
+      const res = await fetch(`${DIRECTUS_BASE}/items/tags/${smokeTagId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+      });
+      if (res.ok) {
+        console.log(`\n  cleanup: hard-DELETE tag ${smokeTagId} → 204`);
+      } else {
+        console.log(`\n  cleanup: tag hard-DELETE returned status ${res.status} — manual cleanup may be needed`);
+      }
+    } catch (e) {
+      console.log(`\n  cleanup: tag hard-DELETE threw ${e instanceof Error ? e.message : String(e)} — manual cleanup may be needed`);
+    }
+  }
   if (!episodeId) return;
   try {
     const res = await fetch(`${DIRECTUS_BASE}/items/episodes/${episodeId}`, {
@@ -243,6 +269,88 @@ try {
     'PATCH un-archive returns 200 with archived_at null',
     unarchiveRes.status === 200 && unarchiveBody.episode?.archived_at === null,
     `status=${unarchiveRes.status}`,
+  );
+
+  // ---------------------------------------------------------------------
+  // Step-5: tag-to-episode linking round-trip
+  //
+  // 8a) POST /api/tags with { parent_episode_id } in one round-trip
+  // 8b) PATCH /api/tags/[id] with parent set to null → unlinked
+  // 8c) PATCH /api/tags/[id] with parent set back → re-linked
+  // 8d) PATCH /api/tags/[id] with bad UUID id → 400 invalid_id
+  // ---------------------------------------------------------------------
+  const SMOKE_TAG_LABEL = '_smoke tag';
+  const createTagRes = await fetch(`${BASE}/api/tags`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: origin,
+      Cookie: cookieJar,
+    },
+    body: JSON.stringify({
+      label: SMOKE_TAG_LABEL,
+      category: 'interventie',
+      parent_episode_id: episodeId,
+    }),
+  });
+  const createTagBody = await createTagRes.json().catch(() => ({}));
+  step(
+    'POST /api/tags with parent_episode_id returns 200 + linked tag',
+    createTagRes.status === 200 &&
+      !!createTagBody.tag?.id &&
+      createTagBody.tag?.parent_episode_id === episodeId,
+    `status=${createTagRes.status}`,
+  );
+  smokeTagId = createTagBody.tag?.id ?? null;
+
+  if (smokeTagId) {
+    const unlinkRes = await fetch(`${BASE}/api/tags/${smokeTagId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: origin,
+        Cookie: cookieJar,
+      },
+      body: JSON.stringify({ parent_episode_id: null }),
+    });
+    const unlinkBody = await unlinkRes.json().catch(() => ({}));
+    step(
+      'PATCH /api/tags/[id] unlink returns 200 + null parent',
+      unlinkRes.status === 200 && unlinkBody.tag?.parent_episode_id === null,
+      `status=${unlinkRes.status}`,
+    );
+
+    const relinkRes = await fetch(`${BASE}/api/tags/${smokeTagId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Origin: origin,
+        Cookie: cookieJar,
+      },
+      body: JSON.stringify({ parent_episode_id: episodeId }),
+    });
+    const relinkBody = await relinkRes.json().catch(() => ({}));
+    step(
+      'PATCH /api/tags/[id] re-link returns 200 + parent set',
+      relinkRes.status === 200 &&
+        relinkBody.tag?.parent_episode_id === episodeId,
+      `status=${relinkRes.status}`,
+    );
+  }
+
+  const badTagIdRes = await fetch(`${BASE}/api/tags/not-a-uuid`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Origin: origin,
+      Cookie: cookieJar,
+    },
+    body: JSON.stringify({ parent_episode_id: null }),
+  });
+  step(
+    'PATCH /api/tags non-UUID id rejected with 400',
+    badTagIdRes.status === 400,
+    `status=${badTagIdRes.status}`,
   );
 
   // ---------------------------------------------------------------------
