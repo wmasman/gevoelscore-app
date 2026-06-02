@@ -1,9 +1,9 @@
 # Tag intelligence
 
-**Feature:** A growing intelligence layer around the tag system. Auto-create tags from notes, algorithmic surfacing of relevant tags per day, merge/group/consolidate operations, per-user tagging universe. The unifying ambition: the system thinks along, so the tag step takes less cognitive effort, not more.
-**Version:** v1.5 (parts) / v2 (parts) — see "Component breakdown"
-**Status:** Vision — design session needed before commitment. Sub-pieces are not yet scoped.
-**Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) · [features/tag/](../tag/) (Tag domain) · [features/inline-tag-creation/](../inline-tag-creation/) (the small v1 feature this vision is north star for)
+**Feature:** A growing intelligence layer around the tag system. The unifying ambition: the system thinks along, so the tag step takes less cognitive effort, not more.
+**Version:** v2-likely. The 2026-06-02 brainstorm spun out the local v1.5 piece — chip-sort by recency-then-frequency — into its own feature [features/tag-recency-sort/](../tag-recency-sort/). What remains here is the harder, higher-cost stuff: LLM-driven note inference, merge/consolidate UX, per-user tag universe.
+**Status:** Vision — design session needed before commitment on the remaining pieces (LLM scope, multi-user). Tag-management UX (delete / recategorize / archive in the Settings tab) is spun out as a separate v1.5b feature: see [features/tag-management-settings/](../tag-management-settings/) when it lands.
+**Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) · [features/tag/](../tag/) (Tag domain) · [features/inline-tag-creation/](../inline-tag-creation/) (the v1 feature this vision was the north star for) · [features/tag-recency-sort/](../tag-recency-sort/) (the v1.5a slice already designed)
 
 ---
 
@@ -34,20 +34,13 @@ The note field in Vandaag accepts free text. After save, an inference step propo
 
 **Decision blockers:** at least the locality + privacy questions must be resolved before this feature can be scoped. Worth its own brainstorm session.
 
-### B. Algorithmic surfacing (v1.5 / v2)
+### B. Algorithmic surfacing (split: v1.5a basic / v2 ML)
 
-Show the most-likely-relevant tags first when the tag step opens. Signals to combine:
+Show the most-likely-relevant tags first when the tag step opens.
 
-- Recency (last used in the past N days)
-- Frequency (lifetime count)
-- Score correlation (tags that co-occur with this score range)
-- Day-of-week patterns
-- Time-of-day (where the user logs in their day)
-- Note-content correlation (if a note is already typed, tags that historically co-occur with similar notes)
+**v1.5a slice — spun out to [features/tag-recency-sort/](../tag-recency-sort/) on 2026-06-02.** Sort chips WITHIN each expanded category by recency-then-frequency-then-alphabetical. No new UI surface; no cross-category strip; no LLM. Local heuristic only. The 2026-06-02 brainstorm rejected a separate "recent strip" above the categories — too prominent for a brainfog-sensitive surface, and the in-category sort gives 80% of the benefit with zero new screen real estate.
 
-The simple v1.5 version is recency + frequency sort (no ML). The v2 version layers correlation signals as the user accumulates more data. **Both are the same problem in different stages of evolution** — design the UI shape so the surfacing algorithm can swap underneath without UI change.
-
-The minimum surfacing UX: a horizontal strip of "Recent / Often used" tags above the category list. Tapping one selects it. Tapping the category header still works as today for browsing the full set. This shape works for both the simple and ML versions.
+**v2 — what stays here:** correlation signals (score, day-of-week, time-of-day, note-content cooccurrence). These need real data accumulation + a richer surfacing algorithm and may benefit from ML or a local model. **Open question:** does the v1.5a in-category sort capture enough of the friction, or does the soak surface a clear need for the v2 signals? Wait for the soak data.
 
 ### C. Merge / group / consolidate (v2)
 

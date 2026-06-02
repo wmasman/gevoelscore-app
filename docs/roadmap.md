@@ -10,7 +10,7 @@ This doc supplements [REQUIREMENTS.md](REQUIREMENTS.md) and [app_brief_gevoelsco
 
 | Item | Detail | Notes |
 |---|---|---|
-| Soak-test mode | [memory: project-soak-test-mode](../../.claude/projects/c--Users-Gebruiker-Documents-gevoelscore-app/memory/project_soak_test_mode.md) | iOS PWA usage gathers friction signal. Quick-entry popout + audit fixes (Days 0–5) shipped 2026-05-31. |
+| Soak-test mode (v1) | [memory: project-soak-test-mode](../../.claude/projects/c--Users-Gebruiker-Documents-gevoelscore-app/memory/project_soak_test_mode.md) | iOS PWA usage gathering friction signal. v1 complete: quick-entry popout, inline tag creation, timeline gap indicator all live. |
 
 ## Ready to plan (next)
 
@@ -18,17 +18,15 @@ Items here are scoped enough that the next step is `/plan-feature` to produce a 
 
 | Item | Doc | Version | Size |
 |---|---|---|---|
-| Inline tag creation | [features/inline-tag-creation/](features/inline-tag-creation/) | v1 | Small (single step file) |
-| Timeline gap indicator | [features/timeline-gap-indicator/](features/timeline-gap-indicator/) | v1 | Small (single step file) |
+| Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | **v1.5a** | Small (single step file). Ships first as the v1.5 opener. |
+| Verloop tab + Episodes (+ tag-linking) | [features/verloop-and-episodes/](features/verloop-and-episodes/) | **v1.5** | Multi-step (5 step files). The v1.5 anchor. |
+| Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | **v1.5** | Small-medium. Ships after verloop-and-episodes lands. |
 
-## Designed (architecture set, brainstorm pending)
-
-Items here have an architectural decision (often an ADR) but need a design session before `/plan-feature` can run — usually because naming, conceptual model, or data shape is still open.
+## Designed (architecture set, larger design still needed)
 
 | Item | Doc | Version | What's pending |
 |---|---|---|---|
-| Three-surface architecture (Vandaag / Context / Tijdlijn) | [ADR 0006](decisions/0006-three-surface-architecture.md) | Decision | Accepted 2026-06-01 |
-| Context tab — episodes + occurrences | [features/context-tab/](features/context-tab/) | v1.5 | Brainstorm: naming, conceptual model overlap with existing tag categories, data shape |
+| Three-surface architecture (Vandaag / Verloop / Tijdlijn) | [ADR 0006](decisions/0006-three-surface-architecture.md) | Decision | Accepted 2026-06-01; data-model + naming + UX shape resolved 2026-06-02 in [features/verloop-and-episodes/](features/verloop-and-episodes/). |
 
 ## Vision (design session needed first)
 
@@ -36,26 +34,36 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | Likely version |
 |---|---|---|
-| Tag intelligence (auto-create from notes, surfacing algorithm, merge/consolidate, per-user universe) | [features/tag-intelligence/](features/tag-intelligence/) | v1.5 / v2 |
-| Calendar import (Google/Apple, episode-bound only) | sub-section in [features/context-tab/](features/context-tab/) | v1.5 |
+| Tag management in Settings (delete, recategorize, archive, accept suggestions) | _to be written_: `features/tag-management-settings/` | v1.5b |
+| Calendar binding (Google Calendar → episode) | sub-section in [features/verloop-and-episodes/](features/verloop-and-episodes/) §Out of scope | v1.6 |
+| Tag intelligence — LLM note-inference, correlation surfacing, merge/consolidate | [features/tag-intelligence/](features/tag-intelligence/) | v2 |
 | Garmin integration (continuous-stream layer on timeline) | not yet documented | v2 |
 | Multi-user / per-user data scoping (schema migration: `user_owner` on `tags`, `day_entries`) | not yet documented | v2 |
+| Episode categories beyond v1.5: `project`, `patroon` | [features/verloop-and-episodes/](features/verloop-and-episodes/) §Out of scope | v2 |
 
 ## Shipped (recent)
 
 | Item | Doc | When |
 |---|---|---|
+| Timeline gap indicator | [features/timeline-gap-indicator/](features/timeline-gap-indicator/) | 2026-06-02 |
+| Inline tag creation | [features/inline-tag-creation/](features/inline-tag-creation/) | 2026-06-01 |
 | Quick-entry popout (Steps 0–5 + iOS popout-collapse fix) | [features/quick-entry-popout/](features/quick-entry-popout/) | 2026-05-29 → 2026-05-31 |
 | Audit-fix week (Days 0–5: CI, manifest, contrast, auth hardening) | [audits/OPEN.md](audits/OPEN.md), [plans/2026-05-27-audit-remediation-and-standards-enforcement.md](plans/2026-05-27-audit-remediation-and-standards-enforcement.md) | 2026-05-27 → 2026-05-31 |
 | Daily entry (Steps 0–6 + 4b) | [features/daily-entry/](features/daily-entry/) | 2026-05-28 |
 | Frontend session persistence | [ADR 0005](decisions/0005-frontend-session-persistence.md) | 2026-05-28 |
+
+## Retired / superseded
+
+| Item | Doc | Reason |
+|---|---|---|
+| Context tab (old name + Occurrence-type model) | [features/context-tab/](features/context-tab/) (redirect page) | Superseded 2026-06-02 by [features/verloop-and-episodes/](features/verloop-and-episodes/). Naming → "Verloop"; Occurrence-type dropped (tags-with-parent ARE the occurrences). |
 
 ---
 
 ## How to use this doc
 
 - `Ready to plan` items are direct inputs to `/plan-feature`.
-- `Designed` items need a design session (brainstorm conversation) before they can drop into `Ready to plan`. The "What's pending" column names the blockers.
+- `Designed` items have an ADR or vision doc but need a design session (brainstorm conversation) before they can drop into `Ready to plan`. The "What's pending" column names the blockers.
 - `Vision` items need a tradeoff conversation (cost, privacy, locality, scope) before they can drop into `Designed`. They often have concrete UX direction noted but no commitment on implementation.
 - When a feature in `Ready to plan` or `Designed` contradicts something in [REQUIREMENTS.md](REQUIREMENTS.md) or the [brief](app_brief_gevoelscore.md) (e.g. v1 vs. v1.5 boundary), the feature README documents the disagreement explicitly. The roadmap's version column reflects the resolved answer.
 - "Status" updates that are volatile (e.g. "in iOS soak", "deferred audit items") live in memory or the relevant feature README — not here. This doc is the index, not the news feed.

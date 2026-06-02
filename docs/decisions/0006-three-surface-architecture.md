@@ -1,10 +1,18 @@
-# ADR 0006: Three-surface architecture (Vandaag / Context / Tijdlijn)
+# ADR 0006: Three-surface architecture (Vandaag / Verloop / Tijdlijn)
 
 - **Status**: Accepted
-- **Date**: 2026-06-01
+- **Date**: 2026-06-01 (decision); refined 2026-06-02 (data model + naming + categories)
 - **Version target**: **v1.5** (NOT v1 — see "Version-boundary nuance" below)
 - **Builds on**: [ADR 0002](0002-pwa-with-directus-backend.md) (Next.js + Directus stack), [ADR 0004](0004-tag-provenance-date-joins-and-tag-hierarchy.md) (tag taxonomy), the design [brief](../design/brief.md) (thumb-first, restrained motion, no extra-screens-on-input principle)
 - **Deciders**: Willem Masman (author), Claude (AI collaborator)
+
+> **2026-06-02 refinement** (during the v1.5 brainstorm session):
+> - The third tab is named **Verloop** (Dutch, "course/progression"), not the working name "Context" used in this ADR's first draft below.
+> - The data model is simpler than the original Episode + Occurrence pair: there is no separate Occurrence type. Tags get an optional `parent_episode_id` field, and **a tag with a parent IS the occurrence**. Episode is a single polymorphic collection (no separate intervention/event collections).
+> - Episode categories for v1.5: `interventie` + `levensgebeurtenis` only. `project` + `patroon` deferred to v2.
+> - Calendar binding deferred to v1.6; v1.5 ships manual-entry-only.
+>
+> See [features/verloop-and-episodes/](../features/verloop-and-episodes/) for the resolved feature plan and [features/context-tab/](../features/context-tab/) for the retired earlier draft. The architectural shape in the body of this ADR remains correct; only naming + the data-model details below have been simplified.
 
 ## Context
 
