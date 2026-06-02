@@ -18,9 +18,21 @@ const expectations = [
   ['tags', 'label', 'string', 'character varying', { is_nullable: false }],
   ['tags', 'category', 'string', 'character varying', { is_nullable: false }],
   ['tags', 'parent_id', 'uuid', 'uuid', { is_nullable: true }],
+  ['tags', 'parent_episode_id', 'uuid', 'uuid', { is_nullable: true }],
   ['tags', 'project_id', 'uuid', 'uuid', { is_nullable: true }],
   ['tags', 'usage_count', 'integer', 'integer', { is_nullable: false }],
   ['tags', 'archived_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+
+  // episodes — v1.5 verloop-and-episodes feature
+  ['episodes', 'label', 'string', 'character varying', { is_nullable: false }],
+  ['episodes', 'category', 'string', 'character varying', { is_nullable: false }],
+  ['episodes', 'start_date', 'date', 'date', { is_nullable: false }],
+  ['episodes', 'end_date', 'date', 'date', { is_nullable: true }],
+  ['episodes', 'description', 'text', 'text', { is_nullable: true }],
+  ['episodes', 'calendar_binding', 'json', 'json', { is_nullable: true }],
+  ['episodes', 'archived_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+  ['episodes', 'created_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+  ['episodes', 'updated_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
 
   // M2M junctions
   ['day_entries_tags', 'day_entries_id', 'uuid', 'uuid', { is_nullable: false }],
