@@ -23,7 +23,7 @@ foreach ($line in Get-Content $envFile) {
   if ($line -match '^\s*([A-Z_][A-Z0-9_]*)=(.+?)\s*$') {
     $name = $Matches[1]
     $value = $Matches[2].Trim("'").Trim('"')
-    if ($name -in @('DIRECTUS_TOKEN', 'DIRECTUS_URL')) {
+    if ($name -in @('DIRECTUS_TOKEN', 'DIRECTUS_URL', 'DATABASE_URL')) {
       Set-Item -Path "env:$name" -Value $value
     }
   }
