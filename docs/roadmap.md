@@ -16,7 +16,11 @@ This doc supplements [REQUIREMENTS.md](REQUIREMENTS.md) and [app_brief_gevoelsco
 
 Items here are scoped enough that the next step is `/plan-feature` to produce a step file with acceptance criteria + test plan.
 
-_(All v1.5 items above this line shipped 2026-06-02. Next ready-to-plan candidates pull from the **Vision** section below — promote whichever the user takes off the queue.)_
+| Item | Doc | Version | Size |
+|---|---|---|---|
+| Data export (CSV / JSON) | _to be written_: `features/data-export/` | **v1 (overdue)** | Small. The [`/over`](../src/copy.ts) landing page promises "Exporteren en wissen zijn ingebouwd" as a hard principle but Settings still shows it as `binnenkort`. Server-side aggregation across `day_entries` / `tags` / `episodes` / `sessions` → streaming download. |
+| Account deletion | _to be written_: `features/account-deletion/` | **v1 (overdue)** | Small. Same `/over` promise as data export. Confirm-twice flow (matches the logout-confirm pattern). Cascades through Directus: delete sessions, then user-owned rows, then the auth user. |
+| Tag merge | _designed in_ [features/tag-management-settings/](features/tag-management-settings/) §Out of scope | **v1.5c** | Medium. Combine two tags into one with `day_entries.tag_ids[]` rewrite — atomic transaction across collections. Highest-value cleanup action; deliberately deferred from v1.5b to ship once the simpler tag-management surface had real soak signal. |
 
 ## Designed (architecture set, larger design still needed)
 
@@ -30,7 +34,6 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | Likely version |
 |---|---|---|
-| Tag management in Settings (delete, recategorize, archive, accept suggestions) | _to be written_: `features/tag-management-settings/` | v1.5b |
 | Calendar binding (Google Calendar → episode) | sub-section in [features/verloop-and-episodes/](features/verloop-and-episodes/) §Out of scope | v1.6 |
 | Tag intelligence — LLM note-inference, correlation surfacing, merge/consolidate | [features/tag-intelligence/](features/tag-intelligence/) | v2 |
 | Garmin integration (continuous-stream layer on timeline) | not yet documented | v2 |
@@ -41,6 +44,7 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | When |
 |---|---|---|
+| Tag management in Settings | [features/tag-management-settings/](features/tag-management-settings/) | 2026-06-03 (commit `b58433f` + 2 hotfixes `070b64c` / `b233c2d`; v1.5b — rename / recategorize / archive / un-archive / re-parent / hard-delete with confirm. Merge deferred to v1.5c per the step file's Out of scope.) |
 | Today-card ongoing-episodes region | follow-on note in [features/verloop-and-episodes/](features/verloop-and-episodes/) | 2026-06-02 (commits `dd51038` + `65ba2e8`; lists lopend + future-end-date episodes on the today-card with pencil-edit affordance) |
 | Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | 2026-06-02 (commit `1608d7a`; chart bands + linked-tag dots + heatmap stripes + per-category toggle, with in-place EpisodeFormSheet on band-tap) |
 | Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | 2026-06-02 (commit `426be73`; v1.5a slice of the tag-intelligence vision) |
