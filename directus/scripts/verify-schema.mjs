@@ -5,6 +5,7 @@
 import { banner, directusRequest } from './lib/directus-request.mjs';
 import { queryPg } from './lib/sql-migration.mjs';
 import {
+  verifyCheckConstraints,
   verifyRelations,
   verifyUniqueIndexes,
 } from './lib/verify-relations-and-uniques.mjs';
@@ -184,15 +185,84 @@ try {
 }
 
 // ────────────────────────────────────────────────────────────────────────
+// Step 0b / AC0b.5: CHECK constraints (tier 3 hardening).
+// ────────────────────────────────────────────────────────────────────────
+
+console.log('\n─ CHECK constraint checks ─');
+
+const checkExpectations = [
+  {
+    conname: 'tags_category_check',
+    table: 'tags',
+    // PG canonicalizes `IN (...)` into `= ANY (ARRAY[...])`. Match the
+    // actual rendered form by checking the enum values, not the syntax.
+    definitionMustMatch: /category.*mentaal.*fysiek.*overall.*custom/i,
+  },
+  {
+    conname: 'episodes_category_check',
+    table: 'episodes',
+    definitionMustMatch: /category.*interventie.*levensgebeurtenis/i,
+  },
+  {
+    conname: 'day_entries_score_check',
+    table: 'day_entries',
+    definitionMustMatch: /score.*1.*10/i,
+  },
+  {
+    conname: 'day_entries_sleep_hours_check',
+    table: 'day_entries',
+    definitionMustMatch: /sleep_hours.*(NULL|0).*24/i,
+  },
+  {
+    conname: 'episodes_date_order_check',
+    table: 'episodes',
+    definitionMustMatch: /end_date.*NULL.*start_date/i,
+  },
+  {
+    conname: 'day_entries_tags_confidence_check',
+    table: 'day_entries_tags',
+    definitionMustMatch: /confidence.*(NULL|0).*1/i,
+  },
+  {
+    conname: 'project_entries_tags_confidence_check',
+    table: 'project_entries_tags',
+    definitionMustMatch: /confidence.*(NULL|0).*1/i,
+  },
+];
+
+let checkResult = { passes: [], failures: [] };
+try {
+  checkResult = await verifyCheckConstraints(queryPg, checkExpectations);
+  for (const name of checkResult.passes) console.log(`  ✅ ${name}`);
+  for (const f of checkResult.failures) {
+    console.log(`  ❌ ${f.name}`);
+    for (const issue of f.issues) console.log(`     - ${issue}`);
+  }
+  console.log(`  ${checkResult.passes.length}/${checkExpectations.length} passed`);
+} catch (e) {
+  console.log(`  ⚠️  CHECK-constraint checks skipped: ${(e && e.message ? e.message : String(e)).split('\n')[0]}`);
+  checkResult = {
+    passes: [],
+    failures: checkExpectations.map((x) => ({
+      name: x.conname,
+      issues: ['PG check could not run; verify DATABASE_URL is set'],
+    })),
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // Combined exit
 // ────────────────────────────────────────────────────────────────────────
 
 const totalFailures =
-  failures.length + relationResult.failures.length + indexResult.failures.length;
+  failures.length +
+  relationResult.failures.length +
+  indexResult.failures.length +
+  checkResult.failures.length;
 
 console.log('\n' + '─'.repeat(64));
 console.log(
-  `  TOTAL passed: ${passes.length + relationResult.passes.length + indexResult.passes.length}` +
+  `  TOTAL passed: ${passes.length + relationResult.passes.length + indexResult.passes.length + checkResult.passes.length}` +
     ` / failed: ${totalFailures}`,
 );
 console.log('─'.repeat(64) + '\n');

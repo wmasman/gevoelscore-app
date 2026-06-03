@@ -82,3 +82,49 @@ export async function verifyUniqueIndexes(queryPg, expectations) {
 
   return { passes, failures };
 }
+
+// step-0b AC0b.5: CHECK-constraint verifier. Queries pg_constraint joined
+// with pg_class to get the table name; reads pg_get_constraintdef for the
+// human-readable definition string and regex-asserts the key tokens.
+export async function verifyCheckConstraints(queryPg, expectations) {
+  const passes = [];
+  const failures = [];
+
+  const rows = await queryPg(
+    `SELECT c.conname AS conname,
+            t.relname AS tablename,
+            pg_get_constraintdef(c.oid) AS def
+     FROM pg_constraint c
+     JOIN pg_class t ON t.oid = c.conrelid
+     WHERE c.contype = 'c' AND t.relnamespace = 'public'::regnamespace`,
+  );
+  const byName = new Map(rows.map((r) => [r.conname, r]));
+
+  for (const expected of expectations) {
+    const issues = [];
+    const found = byName.get(expected.conname);
+    if (!found) {
+      issues.push('not found in pg_constraint');
+    } else {
+      if (expected.table && found.tablename !== expected.table) {
+        issues.push(`table: expected ${expected.table}, got ${found.tablename}`);
+      }
+      if (
+        expected.definitionMustMatch &&
+        !expected.definitionMustMatch.test(found.def)
+      ) {
+        issues.push(
+          `definitionMustMatch: pattern ${expected.definitionMustMatch} did not match actual def "${found.def}"`,
+        );
+      }
+    }
+
+    if (issues.length === 0) {
+      passes.push(expected.conname);
+    } else {
+      failures.push({ name: expected.conname, issues });
+    }
+  }
+
+  return { passes, failures };
+}

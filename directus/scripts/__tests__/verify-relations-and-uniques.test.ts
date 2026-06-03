@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error — .mjs lib without type declarations is intentional.
 import {
+  verifyCheckConstraints,
   verifyRelations,
   verifyUniqueIndexes,
 } from '../lib/verify-relations-and-uniques.mjs';
@@ -164,6 +165,65 @@ describe('verify-relations-and-uniques', () => {
 
       expect(result.failures).toHaveLength(1);
       expect(result.failures[0].issues.join(' ')).toMatch(/definitionMustMatch/);
+    });
+  });
+
+  describe('verifyCheckConstraints', () => {
+    it('given a CHECK constraint that matches the expected def, when verified, then records a pass', async () => {
+      const queryPg = vi.fn(async () => [
+        {
+          conname: 'day_entries_score_check',
+          tablename: 'day_entries',
+          def: 'CHECK ((score >= 1 AND score <= 10))',
+        },
+      ]);
+
+      const result = await verifyCheckConstraints(queryPg, [
+        {
+          conname: 'day_entries_score_check',
+          table: 'day_entries',
+          definitionMustMatch: /score.*1.*10/i,
+        },
+      ]);
+
+      expect(result.passes).toEqual(['day_entries_score_check']);
+      expect(result.failures).toEqual([]);
+    });
+
+    it('given a missing CHECK constraint, when verified, then records a failure', async () => {
+      const queryPg = vi.fn(async () => []);
+
+      const result = await verifyCheckConstraints(queryPg, [
+        {
+          conname: 'tags_category_check',
+          table: 'tags',
+          definitionMustMatch: /category/i,
+        },
+      ]);
+
+      expect(result.failures).toHaveLength(1);
+      expect(result.failures[0].issues.join(' ')).toMatch(/not found/i);
+    });
+
+    it('given a CHECK constraint on the wrong table, when verified, then records a failure', async () => {
+      const queryPg = vi.fn(async () => [
+        {
+          conname: 'tags_category_check',
+          tablename: 'episodes',
+          def: 'CHECK (category IN (...))',
+        },
+      ]);
+
+      const result = await verifyCheckConstraints(queryPg, [
+        {
+          conname: 'tags_category_check',
+          table: 'tags',
+          definitionMustMatch: /category/i,
+        },
+      ]);
+
+      expect(result.failures).toHaveLength(1);
+      expect(result.failures[0].issues.join(' ')).toMatch(/table: expected tags/);
     });
   });
 });
