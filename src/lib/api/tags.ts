@@ -54,18 +54,26 @@ function isNetworkError(e: unknown): boolean {
 
 export async function readAllTags(
   accessToken: string,
+  opts: { includeArchived?: boolean } = {},
 ): Promise<Result<Tag[], TagsError>> {
   try {
     const client = createDirectus<DirectusSchema>(directusUrl())
       .with(rest())
       .with(staticToken(accessToken));
 
+    // includeArchived defaults to false to preserve the existing daily-
+    // flow contract (the picker / today-card / timeline never see
+    // archived tags). The Settings → Tag-beheer surface opts in so the
+    // "Toon gearchiveerd" toggle actually has something to surface.
+    const query: { filter?: unknown; sort: string[]; limit: number } = {
+      sort: ['category', 'label'],
+      limit: -1,
+    };
+    if (!opts.includeArchived) {
+      query.filter = { archived_at: { _null: true } };
+    }
     const rows = (await client.request(
-      readItems('tags', {
-        filter: { archived_at: { _null: true } } as never,
-        sort: ['category', 'label'],
-        limit: -1,
-      }),
+      readItems('tags', query as never),
     )) as DirectusTagRow[];
 
     return {

@@ -79,6 +79,30 @@ describe('tags SDK wrapper', () => {
     expect(result.value[1]!.category).toBe('fysiek');
   });
 
+  it('default call passes archived_at: { _null: true } filter', async () => {
+    let capturedQuery: { filter?: unknown } | undefined;
+    mocks.request.mockImplementation(async (cmd: { query?: unknown }) => {
+      capturedQuery = cmd.query as { filter?: unknown };
+      return [];
+    });
+
+    await readAllTags('access-token');
+
+    expect(capturedQuery?.filter).toEqual({ archived_at: { _null: true } });
+  });
+
+  it('with includeArchived: true does NOT pass the archived_at filter', async () => {
+    let capturedQuery: { filter?: unknown } | undefined;
+    mocks.request.mockImplementation(async (cmd: { query?: unknown }) => {
+      capturedQuery = cmd.query as { filter?: unknown };
+      return [];
+    });
+
+    await readAllTags('access-token', { includeArchived: true });
+
+    expect(capturedQuery?.filter).toBeUndefined();
+  });
+
   it('maps a fetch TypeError to network_error', async () => {
     mocks.request.mockRejectedValue(new TypeError('fetch failed'));
 

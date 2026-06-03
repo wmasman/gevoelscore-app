@@ -53,9 +53,12 @@ export default async function SettingsPage() {
   let allTags: Tag[] = [];
   let episodes: Episode[] = [];
   let timelineEntries: DayEntry[] = [];
+  // Settings → Tag-beheer must see archived tags too (the "Toon
+  // gearchiveerd" toggle gates UI visibility, not the source list).
+  // Episodes follows the same pattern via includeArchived: true.
   const [tagsResult, episodesResult, rangeResult] = await Promise.all([
-    readAllTags(session.accessToken),
-    readAllEpisodes(session.accessToken),
+    readAllTags(session.accessToken, { includeArchived: true }),
+    readAllEpisodes(session.accessToken, { includeArchived: true }),
     readDayEntriesInRange(session.accessToken, from, today),
   ]);
   if (tagsResult.ok) allTags = tagsResult.value;
