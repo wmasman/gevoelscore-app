@@ -328,7 +328,7 @@ export function TagFormSheet({
                 type="button"
                 onClick={() => void handleConfirmDelete()}
                 disabled={status === 'saving'}
-                className="inline-flex min-h-11 items-center rounded-md bg-error px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
+                className="inline-flex min-h-11 items-center rounded-md bg-accent-hover px-4 py-2 text-base font-medium text-bg focus-visible:outline-2 focus-visible:outline-accent disabled:opacity-60"
               >
                 {t.form.confirm.confirm}
               </button>
