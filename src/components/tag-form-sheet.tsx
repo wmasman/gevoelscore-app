@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { BottomSheet } from '@/components/lab/bottom-sheet';
+import { TagMergeTargetPickerSheet } from '@/components/tag-merge-target-picker-sheet';
 import { copy } from '@/copy';
 import { useTagManage, type TagManagePatch } from '@/hooks/use-tag-manage';
 import type { Episode } from '@/lib/domain/episode';
@@ -28,10 +29,16 @@ import { cn } from '@/lib/ui/cn';
 type Props = {
   tag: Tag;
   episodes: Episode[];
+  // v1.5c: full non-archived corpus, forwarded by TagManagementSection so
+  // the merge button can compute "no same-category alternatives exist"
+  // and the nested picker has its candidate list. Defaults to [] for
+  // back-compat with any pre-merge call sites.
+  tags?: Tag[];
   open: boolean;
   onClose: () => void;
   onSaved: (tag: Tag) => void;
   onDeleted: (deletedId: string) => void;
+  onMerged?: (affected_days: number) => void;
 };
 
 // Map server-side per-field error codes to Dutch copy.
@@ -57,10 +64,12 @@ function serverErrorCopy(code: string | null): string | null {
 export function TagFormSheet({
   tag,
   episodes,
+  tags = [],
   open,
   onClose,
   onSaved,
   onDeleted,
+  onMerged,
 }: Props) {
   const t = copy.settings.tagManagement;
 
@@ -69,9 +78,11 @@ export function TagFormSheet({
   const [parent, setParent] = useState<string | null>(tag.parent_episode_id);
   const [showLabelError, setShowLabelError] = useState<boolean>(false);
   const [confirming, setConfirming] = useState<boolean>(false);
+  const [mergePickerOpen, setMergePickerOpen] = useState<boolean>(false);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
-  const { save, setArchived, hardDelete, status, lastError } = useTagManage();
+  const { save, setArchived, hardDelete, merge, status, lastError } =
+    useTagManage();
 
   // Closed → open edge: re-sync state from props. Same pattern as
   // EpisodeFormSheet — prevOpenRef starts at false so a component that
@@ -84,6 +95,7 @@ export function TagFormSheet({
       setParent(tag.parent_episode_id);
       setShowLabelError(false);
       setConfirming(false);
+      setMergePickerOpen(false);
     }
     prevOpenRef.current = open;
   }, [open, tag]);
@@ -140,8 +152,27 @@ export function TagFormSheet({
     }
   }
 
+  async function handleMergeConfirmed(target: Tag): Promise<void> {
+    const result = await merge(tag.id, target.id);
+    if (result) {
+      setMergePickerOpen(false);
+      onMerged?.(result.affected_days);
+      onClose();
+    }
+  }
+
   const archived = tag.archived_at !== null;
   const canHardDelete = tag.usage_count === 0;
+  // v1.5c: merge button disabled if no same-category non-archived peers,
+  // or if the source is itself archived (you can't rewrite history from
+  // a retired tag — un-archive first).
+  const mergeAlternatives = tags.filter(
+    (alt) =>
+      alt.category === tag.category &&
+      alt.archived_at === null &&
+      alt.id !== tag.id,
+  );
+  const canMerge = !archived && mergeAlternatives.length > 0;
   const serverBanner = serverErrorCopy(lastError);
 
   return (
@@ -302,6 +333,15 @@ export function TagFormSheet({
           {!canHardDelete && (
             <p className="text-xs text-fg-subtle">{t.form.deleteHint}</p>
           )}
+
+          <button
+            type="button"
+            onClick={() => setMergePickerOpen(true)}
+            disabled={!canMerge || status === 'saving'}
+            className="inline-flex min-h-11 items-center justify-center rounded-md border border-border px-4 py-2 text-base text-fg-muted hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t.merge.buttonLabel}
+          </button>
         </div>
 
         {/* Inline confirm alertdialog — appears INSIDE the form */}
@@ -336,6 +376,17 @@ export function TagFormSheet({
           </div>
         )}
       </form>
+
+      {/* v1.5c: nested merge target picker — sheet-over-sheet pattern */}
+      <TagMergeTargetPickerSheet
+        source={tag}
+        tags={tags}
+        open={mergePickerOpen}
+        onClose={() => setMergePickerOpen(false)}
+        onMergeConfirmed={(target) => void handleMergeConfirmed(target)}
+        saving={status === 'saving'}
+        lastError={lastError}
+      />
     </BottomSheet>
   );
 }

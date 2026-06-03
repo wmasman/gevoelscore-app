@@ -287,6 +287,33 @@ export const copy = {
           tagInUse: 'Tag is in gebruik en kan niet verwijderd worden.',
         },
       },
+      // Tag-merge (v1.5c) — see docs/features/tag-merge/
+      merge: {
+        buttonLabel: 'Samenvoegen met...',
+        sheetTitle: 'Samenvoegen met...',
+        sheetAriaLabel: 'Tag samenvoegen',
+        close: 'Sluit',
+        emptyState: 'Geen andere tags in deze categorie om mee samen te voegen.',
+        confirm: {
+          prompt: (
+            sourceLabel: string,
+            usageCount: number,
+            targetLabel: string,
+          ): string =>
+            `Tag "${sourceLabel}" samenvoegen met "${targetLabel}"? ${usageCount} ${usageCount === 1 ? 'dag waarop' : 'dagen waarop'} "${sourceLabel}" voorkomt ${usageCount === 1 ? 'krijgt' : 'krijgen'} "${targetLabel}". Daarna wordt "${sourceLabel}" definitief verwijderd.`,
+          cancel: 'Annuleer',
+          confirm: 'Ja, samenvoegen',
+        },
+        error: {
+          sameTag: 'Dit is dezelfde tag.',
+          sourceNotFound: 'Tag bestaat niet meer.',
+          targetNotFound: 'Doel-tag bestaat niet meer.',
+          sourceArchived: 'Deze tag is gearchiveerd. Activeer eerst opnieuw.',
+          targetArchived: 'Doel-tag is gearchiveerd. Activeer eerst opnieuw.',
+          categoryMismatch: 'Tags moeten in dezelfde categorie staan.',
+          serverError: 'Samenvoegen lukte niet, probeer opnieuw.',
+        },
+      },
     },
   },
   errors: {

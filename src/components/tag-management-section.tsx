@@ -157,6 +157,10 @@ export function TagManagementSection({
         <TagFormSheet
           tag={editTarget}
           episodes={episodes}
+          // v1.5c: forward the full non-archived corpus so the merge
+          // button + nested picker can compute eligible same-category
+          // alternatives.
+          tags={tags}
           open={true}
           onClose={() => setEditTarget(null)}
           onSaved={() => setEditTarget(null)}
