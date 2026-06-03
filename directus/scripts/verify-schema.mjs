@@ -3,6 +3,11 @@
 // bug — see docs/architecture/directus-schema-management.md "Lesson 3".
 
 import { banner, directusRequest } from './lib/directus-request.mjs';
+import { queryPg } from './lib/sql-migration.mjs';
+import {
+  verifyRelations,
+  verifyUniqueIndexes,
+} from './lib/verify-relations-and-uniques.mjs';
 
 banner('verify-schema');
 
@@ -97,15 +102,108 @@ for (const [collection, field, dType, pgType, extras] of expectations) {
 }
 
 console.log('\n' + '─'.repeat(64));
-console.log(`  Passed: ${passes.length}/${expectations.length}`);
-console.log(`  Failed: ${failures.length}/${expectations.length}`);
+console.log(`  Field-level passed: ${passes.length}/${expectations.length}`);
+console.log(`  Field-level failed: ${failures.length}/${expectations.length}`);
 console.log('─'.repeat(64) + '\n');
 
-if (failures.length > 0) {
-  console.log('Failures detail:');
-  for (const f of failures) {
-    console.log(`  ${f.collection}.${f.field}:`);
-    f.issues.forEach((i) => console.log(`    - ${i}`));
+// ────────────────────────────────────────────────────────────────────────
+// Step 0 / AC0.10: FK on_delete behavior. Six relations defined in
+// upgrade-m2m-tags.mjs + setup-schema.mjs + add-tag-hierarchy.mjs +
+// add-episodes.mjs. The /relations API exposes schema.on_delete; CASCADE
+// vs SET NULL is load-bearing and must not regress silently.
+// ────────────────────────────────────────────────────────────────────────
+
+console.log('─ Relation on_delete checks ─');
+
+const relationExpectations = [
+  { collection: 'day_entries_tags', field: 'day_entries_id', related_collection: 'day_entries', on_delete: 'CASCADE' },
+  { collection: 'day_entries_tags', field: 'tags_id', related_collection: 'tags', on_delete: 'CASCADE' },
+  { collection: 'project_entries_tags', field: 'project_entries_id', related_collection: 'project_entries', on_delete: 'CASCADE' },
+  { collection: 'project_entries_tags', field: 'tags_id', related_collection: 'tags', on_delete: 'CASCADE' },
+  { collection: 'tags', field: 'parent_id', related_collection: 'tags', on_delete: 'SET NULL' },
+  { collection: 'tags', field: 'parent_episode_id', related_collection: 'episodes', on_delete: 'SET NULL' },
+];
+
+const relationResult = await verifyRelations(directusRequest, relationExpectations);
+for (const name of relationResult.passes) console.log(`  ✅ ${name}`);
+for (const f of relationResult.failures) {
+  console.log(`  ❌ ${f.name}`);
+  for (const issue of f.issues) console.log(`     - ${issue}`);
+}
+console.log(`  ${relationResult.passes.length}/${relationExpectations.length} passed`);
+
+// ────────────────────────────────────────────────────────────────────────
+// Step 0 / AC0.11: UNIQUE indexes (composite + partial). Queried via
+// pg_indexes since Directus' field API doesn't expose composite/partial
+// uniqueness. Requires DATABASE_URL from the Neon connection string.
+// ────────────────────────────────────────────────────────────────────────
+
+console.log('\n─ UNIQUE index checks ─');
+
+const indexExpectations = [
+  {
+    indexname: 'day_entries_tags_unique_pair',
+    definitionMustMatch: /UNIQUE INDEX day_entries_tags_unique_pair.*ON.*day_entries_tags.*\(day_entries_id, tags_id\)/i,
+  },
+  {
+    indexname: 'project_entries_tags_unique_pair',
+    definitionMustMatch: /UNIQUE INDEX project_entries_tags_unique_pair.*ON.*project_entries_tags.*\(project_entries_id, tags_id\)/i,
+  },
+  {
+    indexname: 'tags_label_category_active_unique',
+    // PG renders the index def as `lower((label)::text), category` after
+    // implicit text-casting. We assert lower() + label + category + the
+    // partial WHERE; the exact tokenization between is PG's business.
+    definitionMustMatch: /UNIQUE INDEX tags_label_category_active_unique.*ON.*tags.*lower.*label.*category.*WHERE \(?archived_at IS NULL\)?/i,
+  },
+  {
+    indexname: 'episodes_label_category_active_unique',
+    definitionMustMatch: /UNIQUE INDEX episodes_label_category_active_unique.*ON.*episodes.*lower.*label.*category.*WHERE \(?archived_at IS NULL\)?/i,
+  },
+];
+
+let indexResult = { passes: [], failures: [] };
+try {
+  indexResult = await verifyUniqueIndexes(queryPg, indexExpectations);
+  for (const name of indexResult.passes) console.log(`  ✅ ${name}`);
+  for (const f of indexResult.failures) {
+    console.log(`  ❌ ${f.name}`);
+    for (const issue of f.issues) console.log(`     - ${issue}`);
+  }
+  console.log(`  ${indexResult.passes.length}/${indexExpectations.length} passed`);
+} catch (e) {
+  console.log(`  ⚠️  UNIQUE-index checks skipped: ${(e && e.message ? e.message : String(e)).split('\n')[0]}`);
+  // Surface as a failure so verify-schema exit code reflects the gap.
+  indexResult = {
+    passes: [],
+    failures: indexExpectations.map((x) => ({
+      name: x.indexname,
+      issues: ['PG check could not run; verify DATABASE_URL is set'],
+    })),
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Combined exit
+// ────────────────────────────────────────────────────────────────────────
+
+const totalFailures =
+  failures.length + relationResult.failures.length + indexResult.failures.length;
+
+console.log('\n' + '─'.repeat(64));
+console.log(
+  `  TOTAL passed: ${passes.length + relationResult.passes.length + indexResult.passes.length}` +
+    ` / failed: ${totalFailures}`,
+);
+console.log('─'.repeat(64) + '\n');
+
+if (totalFailures > 0) {
+  if (failures.length > 0) {
+    console.log('Field-level failures detail:');
+    for (const f of failures) {
+      console.log(`  ${f.collection}.${f.field}:`);
+      f.issues.forEach((i) => console.log(`    - ${i}`));
+    }
   }
   process.exit(1);
 }
