@@ -13,7 +13,11 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/__tests__/**/*.test.ts', 'src/**/__tests__/**/*.test.tsx'],
+    include: [
+      'src/**/__tests__/**/*.test.ts',
+      'src/**/__tests__/**/*.test.tsx',
+      'directus/scripts/**/__tests__/**/*.test.ts',
+    ],
     environment: 'node',
     globals: false,
     coverage: {
