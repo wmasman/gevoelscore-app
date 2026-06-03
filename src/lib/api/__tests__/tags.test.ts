@@ -34,10 +34,26 @@ vi.mock('@directus/sdk', () => {
       collection,
       id,
     }),
+    readItem: (collection: string, id: string) => ({
+      __cmd: 'readItem',
+      collection,
+      id,
+    }),
+    deleteItems: (collection: string, ids: unknown) => ({
+      __cmd: 'deleteItems',
+      collection,
+      ids,
+    }),
+    updateItems: (collection: string, ids: unknown, patch: unknown) => ({
+      __cmd: 'updateItems',
+      collection,
+      ids,
+      patch,
+    }),
   };
 });
 
-import { createOrUpsertTag, deleteTag, readAllTags, updateTag } from '../tags';
+import { createOrUpsertTag, deleteTag, mergeTag, readAllTags, updateTag } from '../tags';
 
 const VALID_EPISODE_ID = '550e8400-e29b-41d4-a716-446655440000';
 const OTHER_EPISODE_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -118,25 +134,39 @@ describe('tags SDK wrapper', () => {
 // ---------------------------------------------------------------------------
 
 type MockCmd = {
-  __cmd: 'readItems' | 'createItem' | 'updateItem' | 'deleteItem';
+  __cmd:
+    | 'readItems'
+    | 'readItem'
+    | 'createItem'
+    | 'updateItem'
+    | 'deleteItem'
+    | 'deleteItems'
+    | 'updateItems';
   collection?: string;
   query?: unknown;
   item?: unknown;
   id?: string;
+  ids?: unknown;
   patch?: unknown;
 };
 
 function setupMockHandlers(handlers: {
   readItems?: (cmd: MockCmd) => unknown;
+  readItem?: (cmd: MockCmd) => unknown;
   createItem?: (cmd: MockCmd) => unknown;
   updateItem?: (cmd: MockCmd) => unknown;
   deleteItem?: (cmd: MockCmd) => unknown;
+  deleteItems?: (cmd: MockCmd) => unknown;
+  updateItems?: (cmd: MockCmd) => unknown;
 }) {
   mocks.request.mockImplementation(async (cmd: MockCmd) => {
     if (cmd.__cmd === 'readItems' && handlers.readItems) return handlers.readItems(cmd);
+    if (cmd.__cmd === 'readItem' && handlers.readItem) return handlers.readItem(cmd);
     if (cmd.__cmd === 'createItem' && handlers.createItem) return handlers.createItem(cmd);
     if (cmd.__cmd === 'updateItem' && handlers.updateItem) return handlers.updateItem(cmd);
     if (cmd.__cmd === 'deleteItem' && handlers.deleteItem) return handlers.deleteItem(cmd);
+    if (cmd.__cmd === 'deleteItems' && handlers.deleteItems) return handlers.deleteItems(cmd);
+    if (cmd.__cmd === 'updateItems' && handlers.updateItems) return handlers.updateItems(cmd);
     throw new Error(`Unhandled mock command: ${cmd.__cmd}`);
   });
 }
@@ -915,6 +945,361 @@ describe('deleteTag', () => {
     mocks.request.mockRejectedValue(new Error('404 not found'));
 
     const result = await deleteTag('access-token', 'tag-1');
+
+    expect(result).toEqual({ ok: false, error: 'directus_error' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// mergeTag — step v1.5c. Tests 1-14 from
+// docs/features/tag-merge/step-1-tag-merge.md.
+// ---------------------------------------------------------------------------
+
+describe('mergeTag', () => {
+  beforeEach(() => {
+    mocks.request.mockReset();
+  });
+
+  function tagRow(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      id: 'tag-source',
+      label: 'hoofdpijn',
+      category: 'fysiek',
+      project_id: null,
+      parent_episode_id: null,
+      usage_count: 0,
+      archived_at: null,
+      created_at: '2026-01-01T00:00:00.000Z',
+      ...overrides,
+    };
+  }
+
+  type JunctionRow = { id: string; day_entries_id: string; tags_id: string };
+
+  function happyMockSetup(opts: {
+    source: ReturnType<typeof tagRow>;
+    target: ReturnType<typeof tagRow>;
+    sourceJunctions: JunctionRow[];
+    targetOverlapJunctions: JunctionRow[];
+    recountResult: number;
+  }) {
+    const calls: { cmd: string; payload: unknown }[] = [];
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems') {
+        const q = cmd.query as Record<string, unknown>;
+        const filter = (q?.filter ?? {}) as Record<string, unknown>;
+        // Combined source+target tag read?
+        if (cmd.collection === 'tags') {
+          calls.push({ cmd: 'readItems(tags)', payload: filter });
+          return [opts.source, opts.target];
+        }
+        if (cmd.collection === 'day_entries_tags') {
+          // Source-junction read (filter.tags_id._eq === source.id, no _and)
+          if (
+            !filter._and &&
+            (filter.tags_id as { _eq?: string })?._eq === opts.source.id
+          ) {
+            // Recount (aggregate) vs. source-junctions read are
+            // disambiguated by the presence of aggregate / fields shape.
+            const hasAggregate = Boolean(
+              (q as { aggregate?: unknown }).aggregate,
+            );
+            if (hasAggregate) {
+              calls.push({ cmd: 'readItems(source-aggregate)', payload: q });
+              return [{ count: opts.sourceJunctions.length }];
+            }
+            calls.push({ cmd: 'readItems(source-junctions)', payload: filter });
+            return opts.sourceJunctions;
+          }
+          // Recount target junction count (aggregate)
+          if (
+            (filter.tags_id as { _eq?: string })?._eq === opts.target.id &&
+            !filter._and
+          ) {
+            calls.push({ cmd: 'readItems(target-recount)', payload: q });
+            return [{ count: opts.recountResult }];
+          }
+          // Target overlap read (filter._and with target + day_entries_id IN)
+          if (Array.isArray(filter._and)) {
+            calls.push({ cmd: 'readItems(target-overlap)', payload: filter });
+            return opts.targetOverlapJunctions;
+          }
+        }
+        return [];
+      }
+      if (cmd.__cmd === 'deleteItems') {
+        calls.push({ cmd: 'deleteItems', payload: cmd.ids });
+        return { success: true };
+      }
+      if (cmd.__cmd === 'updateItems') {
+        calls.push({ cmd: 'updateItems', payload: { ids: cmd.ids, patch: cmd.patch } });
+        return [];
+      }
+      if (cmd.__cmd === 'updateItem') {
+        calls.push({ cmd: 'updateItem', payload: { id: cmd.id, patch: cmd.patch } });
+        return { ...opts.target, ...(cmd.patch as Record<string, unknown>) };
+      }
+      if (cmd.__cmd === 'deleteItem') {
+        calls.push({ cmd: 'deleteItem', payload: cmd.id });
+        return { success: true };
+      }
+      throw new Error(`Unhandled mock command in happyMockSetup: ${cmd.__cmd}`);
+    });
+    return { calls };
+  }
+
+  it('test 1: source === target → same_tag BEFORE any wire call', async () => {
+    const result = await mergeTag('access-token', 'tag-a', 'tag-a');
+
+    expect(result).toEqual({ ok: false, error: 'same_tag' });
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
+  it('test 2: source/target tag read is ONE combined readItems(tags, filter id _in [source, target]) call', async () => {
+    let combinedFilter: unknown;
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems' && cmd.collection === 'tags') {
+        combinedFilter = ((cmd.query as Record<string, unknown>)?.filter as unknown);
+        return [tagRow({ id: 'tag-source' }), tagRow({ id: 'tag-target' })];
+      }
+      // No-op everything else — test 2 only cares about the combined read shape.
+      if (cmd.__cmd === 'readItems') return [];
+      if (cmd.__cmd === 'updateItems' || cmd.__cmd === 'deleteItems') return { success: true };
+      if (cmd.__cmd === 'updateItem' || cmd.__cmd === 'deleteItem') return { success: true };
+      throw new Error(`Unhandled: ${cmd.__cmd}`);
+    });
+
+    await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(combinedFilter).toEqual({ id: { _in: ['tag-source', 'tag-target'] } });
+    const tagsReadCalls = mocks.request.mock.calls.filter(
+      ([cmd]) => (cmd as MockCmd).__cmd === 'readItems' && (cmd as MockCmd).collection === 'tags',
+    );
+    expect(tagsReadCalls).toHaveLength(1);
+  });
+
+  it('test 3: source tag missing from combined-read result → source_not_found', async () => {
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems' && cmd.collection === 'tags') {
+        return [tagRow({ id: 'tag-target' })]; // only target
+      }
+      return [];
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({ ok: false, error: 'source_not_found' });
+  });
+
+  it('test 4: target tag missing from combined-read result → target_not_found', async () => {
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems' && cmd.collection === 'tags') {
+        return [tagRow({ id: 'tag-source' })]; // only source
+      }
+      return [];
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({ ok: false, error: 'target_not_found' });
+  });
+
+  it('test 5: source archived → source_archived', async () => {
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems' && cmd.collection === 'tags') {
+        return [
+          tagRow({ id: 'tag-source', archived_at: '2026-05-01T00:00:00Z' }),
+          tagRow({ id: 'tag-target' }),
+        ];
+      }
+      return [];
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({ ok: false, error: 'source_archived' });
+  });
+
+  it('test 6: target archived → target_archived', async () => {
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems' && cmd.collection === 'tags') {
+        return [
+          tagRow({ id: 'tag-source' }),
+          tagRow({ id: 'tag-target', archived_at: '2026-05-01T00:00:00Z' }),
+        ];
+      }
+      return [];
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({ ok: false, error: 'target_archived' });
+  });
+
+  it('test 7: categories differ → category_mismatch', async () => {
+    mocks.request.mockImplementation(async (cmd: MockCmd) => {
+      if (cmd.__cmd === 'readItems' && cmd.collection === 'tags') {
+        return [
+          tagRow({ id: 'tag-source', category: 'fysiek' }),
+          tagRow({ id: 'tag-target', category: 'mentaal' }),
+        ];
+      }
+      return [];
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({ ok: false, error: 'category_mismatch' });
+  });
+
+  it('test 8: happy path no overlap → bulk PATCH all source ids; bulk DELETE skipped or empty; affected_days = 3', async () => {
+    const { calls } = happyMockSetup({
+      source: tagRow({ id: 'tag-source' }),
+      target: tagRow({ id: 'tag-target' }),
+      sourceJunctions: [
+        { id: 'j-1', day_entries_id: 'd-1', tags_id: 'tag-source' },
+        { id: 'j-2', day_entries_id: 'd-2', tags_id: 'tag-source' },
+        { id: 'j-3', day_entries_id: 'd-3', tags_id: 'tag-source' },
+      ],
+      targetOverlapJunctions: [], // no overlap
+      recountResult: 3,
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({
+      ok: true,
+      value: { source_id: 'tag-source', target_id: 'tag-target', affected_days: 3 },
+    });
+    const patchCall = calls.find((c) => c.cmd === 'updateItems');
+    expect(patchCall?.payload).toEqual({
+      ids: ['j-1', 'j-2', 'j-3'],
+      patch: { tags_id: 'tag-target' },
+    });
+    // bulk DELETE either skipped or called with empty array
+    const deleteCall = calls.find((c) => c.cmd === 'deleteItems');
+    if (deleteCall) expect(deleteCall.payload).toEqual([]);
+  });
+
+  it('test 9: happy path full overlap → bulk DELETE all source ids; bulk PATCH skipped or empty', async () => {
+    const { calls } = happyMockSetup({
+      source: tagRow({ id: 'tag-source' }),
+      target: tagRow({ id: 'tag-target' }),
+      sourceJunctions: [
+        { id: 'j-1', day_entries_id: 'd-1', tags_id: 'tag-source' },
+        { id: 'j-2', day_entries_id: 'd-2', tags_id: 'tag-source' },
+      ],
+      // target already on both days
+      targetOverlapJunctions: [
+        { id: 'jt-1', day_entries_id: 'd-1', tags_id: 'tag-target' },
+        { id: 'jt-2', day_entries_id: 'd-2', tags_id: 'tag-target' },
+      ],
+      recountResult: 2,
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.affected_days).toBe(2);
+    const deleteCall = calls.find((c) => c.cmd === 'deleteItems');
+    expect(deleteCall?.payload).toEqual(['j-1', 'j-2']);
+    const patchCall = calls.find((c) => c.cmd === 'updateItems');
+    if (patchCall) {
+      expect((patchCall.payload as { ids: string[] }).ids).toEqual([]);
+    }
+  });
+
+  it('test 10: happy path partial overlap → bulk DELETE overlap id; bulk PATCH non-overlap ids', async () => {
+    const { calls } = happyMockSetup({
+      source: tagRow({ id: 'tag-source' }),
+      target: tagRow({ id: 'tag-target' }),
+      sourceJunctions: [
+        { id: 'j-1', day_entries_id: 'd-1', tags_id: 'tag-source' },
+        { id: 'j-2', day_entries_id: 'd-2', tags_id: 'tag-source' }, // overlap
+        { id: 'j-3', day_entries_id: 'd-3', tags_id: 'tag-source' },
+      ],
+      targetOverlapJunctions: [
+        { id: 'jt-2', day_entries_id: 'd-2', tags_id: 'tag-target' },
+      ],
+      recountResult: 3,
+    });
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.affected_days).toBe(3);
+    const deleteCall = calls.find((c) => c.cmd === 'deleteItems');
+    expect(deleteCall?.payload).toEqual(['j-2']);
+    const patchCall = calls.find((c) => c.cmd === 'updateItems');
+    expect((patchCall?.payload as { ids: string[] }).ids.sort()).toEqual(['j-1', 'j-3']);
+    expect((patchCall?.payload as { patch: unknown }).patch).toEqual({
+      tags_id: 'tag-target',
+    });
+  });
+
+  it('test 11: bulk DELETE always issued BEFORE bulk PATCH (order load-bearing for UNIQUE)', async () => {
+    const { calls } = happyMockSetup({
+      source: tagRow({ id: 'tag-source' }),
+      target: tagRow({ id: 'tag-target' }),
+      sourceJunctions: [
+        { id: 'j-1', day_entries_id: 'd-1', tags_id: 'tag-source' },
+        { id: 'j-2', day_entries_id: 'd-2', tags_id: 'tag-source' },
+      ],
+      targetOverlapJunctions: [
+        { id: 'jt-1', day_entries_id: 'd-1', tags_id: 'tag-target' },
+      ],
+      recountResult: 2,
+    });
+
+    await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    const deleteIdx = calls.findIndex((c) => c.cmd === 'deleteItems');
+    const patchIdx = calls.findIndex((c) => c.cmd === 'updateItems');
+    expect(deleteIdx).toBeGreaterThanOrEqual(0);
+    expect(patchIdx).toBeGreaterThanOrEqual(0);
+    expect(deleteIdx).toBeLessThan(patchIdx);
+  });
+
+  it('test 12: target.usage_count is set from the post-rewrite junction-row count (not from source+delta math)', async () => {
+    const { calls } = happyMockSetup({
+      // Drift: target.usage_count_pre says 100 but real count post-rewrite is 5
+      source: tagRow({ id: 'tag-source', usage_count: 2 }),
+      target: tagRow({ id: 'tag-target', usage_count: 100 }),
+      sourceJunctions: [
+        { id: 'j-1', day_entries_id: 'd-1', tags_id: 'tag-source' },
+        { id: 'j-2', day_entries_id: 'd-2', tags_id: 'tag-source' },
+      ],
+      targetOverlapJunctions: [],
+      recountResult: 5, // truth: 3 target_pre + 2 newly-moved = 5
+    });
+
+    await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    const tagPatch = calls.find(
+      (c) =>
+        c.cmd === 'updateItem' &&
+        (c.payload as { id: string }).id === 'tag-target',
+    );
+    expect(tagPatch).toBeDefined();
+    expect((tagPatch?.payload as { patch: { usage_count: number } }).patch).toEqual({
+      usage_count: 5,
+    });
+  });
+
+  it('test 13: surfaces network errors as network_error', async () => {
+    mocks.request.mockRejectedValue(new TypeError('fetch failed'));
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
+
+    expect(result).toEqual({ ok: false, error: 'network_error' });
+  });
+
+  it('test 14: surfaces other Directus failures as directus_error', async () => {
+    mocks.request.mockRejectedValue(new Error('500 internal'));
+
+    const result = await mergeTag('access-token', 'tag-source', 'tag-target');
 
     expect(result).toEqual({ ok: false, error: 'directus_error' });
   });

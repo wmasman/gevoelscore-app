@@ -10,11 +10,13 @@ import {
   createDirectus,
   createItem,
   deleteItem,
+  deleteItems,
   readItem,
   readItems,
   rest,
   staticToken,
   updateItem,
+  updateItems,
 } from '@directus/sdk';
 import { isIsoUtcTimestamp } from '@/lib/domain/iso-timestamp';
 import type { Tag } from '@/lib/domain/tag';
@@ -44,8 +46,19 @@ type DirectusTagRow = {
   created_at: string;
 };
 
+// Step v1.5c mergeTag rewrites M2M junction rows directly via the SDK,
+// so the schema type must include `day_entries_tags` alongside `tags`
+// for the type narrower to accept collection-name args. Mirrors the
+// shape in day-entries.ts.
+type DirectusJunctionRow = {
+  id: string;
+  day_entries_id: string;
+  tags_id: string;
+};
+
 type DirectusSchema = {
   tags: DirectusTagRow[];
+  day_entries_tags: DirectusJunctionRow[];
 };
 
 function isNetworkError(e: unknown): boolean {
@@ -426,6 +439,184 @@ export async function deleteTag(
 
     await client.request(deleteItem('tags', id));
     return { ok: true, value: { deleted_id: id } };
+  } catch (e) {
+    if (isNetworkError(e)) return { ok: false, error: 'network_error' };
+    return { ok: false, error: 'directus_error' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// mergeTag — step v1.5c.
+//
+// Combines two same-category tags into one. Rewrites every
+// `day_entries_tags` junction row pointing at `sourceId` to point at
+// `targetId` (deduplicating where target was already on the same day),
+// recomputes target's `usage_count` from junction truth, then hard-deletes
+// the source.
+//
+// AC3-AC8 from docs/features/tag-merge/step-1-tag-merge.md. The
+// bulk-delete-then-bulk-patch ordering is load-bearing AND DB-enforced
+// since step-0 added UNIQUE(day_entries_id, tags_id) on the junction
+// table — reversed order would hit the constraint and fail PG 23505.
+// ---------------------------------------------------------------------------
+
+export type MergeTagError =
+  | 'same_tag'
+  | 'source_not_found'
+  | 'target_not_found'
+  | 'source_archived'
+  | 'target_archived'
+  | 'category_mismatch'
+  | 'network_error'
+  | 'directus_error';
+
+export type MergeTagOutcome = {
+  source_id: string;
+  target_id: string;
+  affected_days: number;
+};
+
+type JunctionRow = { id: string; day_entries_id: string; tags_id: string };
+
+export async function mergeTag(
+  accessToken: string,
+  sourceId: string,
+  targetId: string,
+): Promise<Result<MergeTagOutcome, MergeTagError>> {
+  // AC3a: same-tag check first, BEFORE any wire call.
+  if (sourceId === targetId) {
+    return { ok: false, error: 'same_tag' };
+  }
+
+  try {
+    const client = createDirectus<DirectusSchema>(directusUrl())
+      .with(rest())
+      .with(staticToken(accessToken));
+
+    // AC3b: combined source+target tag read via `id _in [source, target]`.
+    // One round-trip instead of two; missing-row detected by lookup.
+    const tagsResp = (await client.request(
+      readItems('tags', {
+        filter: { id: { _in: [sourceId, targetId] } } as never,
+        limit: 2,
+      }),
+    )) as DirectusTagRow[];
+
+    const source = tagsResp.find((t) => t.id === sourceId);
+    const target = tagsResp.find((t) => t.id === targetId);
+    if (!source) return { ok: false, error: 'source_not_found' };
+    if (!target) return { ok: false, error: 'target_not_found' };
+
+    // AC3c: archived check.
+    if (source.archived_at !== null) {
+      return { ok: false, error: 'source_archived' };
+    }
+    if (target.archived_at !== null) {
+      return { ok: false, error: 'target_archived' };
+    }
+
+    // AC3d: category match.
+    if (source.category !== target.category) {
+      return { ok: false, error: 'category_mismatch' };
+    }
+
+    // AC4a: source junction read.
+    const sourceJunctions = (await client.request(
+      readItems('day_entries_tags', {
+        filter: { tags_id: { _eq: sourceId } } as never,
+        fields: ['id', 'day_entries_id', 'tags_id'],
+        limit: -1,
+      }),
+    )) as JunctionRow[];
+
+    const sourceDays = sourceJunctions.map((j) => j.day_entries_id);
+    const affectedDays = new Set(sourceDays).size;
+
+    // Early-exit: source has zero junctions. Skip junction-rewrite + target
+    // recount; only the source hard-delete is meaningful. This also makes
+    // a "retry-after-partial-failure" idempotent — second pass finds 0
+    // junctions, finishes cleanly with affected_days=0.
+    if (sourceJunctions.length === 0) {
+      await client.request(deleteItem('tags', sourceId));
+      return {
+        ok: true,
+        value: { source_id: sourceId, target_id: targetId, affected_days: 0 },
+      };
+    }
+
+    // AC4b: target overlap read — junctions on (target, day) for days the
+    // source touches. Filtered to sourceDays so target's total junction set
+    // doesn't matter; the read is bounded by source size.
+    const targetOverlapJunctions = (await client.request(
+      readItems('day_entries_tags', {
+        filter: {
+          _and: [
+            { tags_id: { _eq: targetId } },
+            { day_entries_id: { _in: sourceDays } },
+          ],
+        } as never,
+        fields: ['day_entries_id'],
+        limit: -1,
+      }),
+    )) as Array<{ day_entries_id: string }>;
+
+    const overlapDays = new Set(
+      targetOverlapJunctions.map((j) => j.day_entries_id),
+    );
+
+    // Partition source junction IDs by overlap-day membership.
+    const overlapIds: string[] = [];
+    const nonOverlapIds: string[] = [];
+    for (const j of sourceJunctions) {
+      if (overlapDays.has(j.day_entries_id)) overlapIds.push(j.id);
+      else nonOverlapIds.push(j.id);
+    }
+
+    // AC5: bulk DELETE overlap FIRST, then bulk PATCH non-overlap. Order
+    // is load-bearing AND DB-enforced (step-0's UNIQUE(day_entries_id,
+    // tags_id) would reject patch-first on every overlap day).
+    if (overlapIds.length > 0) {
+      await client.request(
+        deleteItems('day_entries_tags', overlapIds as never),
+      );
+    }
+    if (nonOverlapIds.length > 0) {
+      await client.request(
+        updateItems('day_entries_tags', nonOverlapIds as never, {
+          tags_id: targetId,
+        } as never),
+      );
+    }
+
+    // AC6: recount target.usage_count from junction-table truth. Aggregate
+    // count is a single round-trip; the result returns [{ count: 'N' }]
+    // (Directus stringifies aggregate counts). EXTRACT-ME: this read +
+    // PATCH pair is `recountTagUsage(token, tagId)`. Only call site today
+    // so kept inline; extract when a second consumer appears (scheduled
+    // drift-recount script, bulk-merge UI, future ML-junction writes).
+    const targetCountResp = (await client.request(
+      readItems('day_entries_tags', {
+        filter: { tags_id: { _eq: targetId } } as never,
+        aggregate: { count: '*' },
+      } as never),
+    )) as Array<{ count: string | number }>;
+    const newTargetUsage = Number(targetCountResp?.[0]?.count ?? 0);
+
+    await client.request(
+      updateItem('tags', targetId, { usage_count: newTargetUsage }),
+    );
+
+    // AC7: source hard-delete. At this point source has 0 junction refs.
+    await client.request(deleteItem('tags', sourceId));
+
+    return {
+      ok: true,
+      value: {
+        source_id: sourceId,
+        target_id: targetId,
+        affected_days: affectedDays,
+      },
+    };
   } catch (e) {
     if (isNetworkError(e)) return { ok: false, error: 'network_error' };
     return { ok: false, error: 'directus_error' };
