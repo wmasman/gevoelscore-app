@@ -10,7 +10,7 @@ This doc supplements [REQUIREMENTS.md](REQUIREMENTS.md) and [app_brief_gevoelsco
 
 | Item | Detail | Notes |
 |---|---|---|
-| Soak-test mode (v1) | [memory: project-soak-test-mode](../../.claude/projects/c--Users-Gebruiker-Documents-gevoelscore-app/memory/project_soak_test_mode.md) | iOS PWA usage gathering friction signal. v1 complete: quick-entry popout, inline tag creation, timeline gap indicator all live. |
+| Soak-test mode (v1 → v1.5c) | [memory: project-soak-test-mode](../../.claude/projects/c--Users-Gebruiker-Documents-gevoelscore-app/memory/project_soak_test_mode.md) | iOS PWA usage gathering friction signal. All v1 + v1.5 + v1.5a/b/c live; tag-merge soak (UI + brainfog-sensitive confirm flow) in progress on the user's iPhone PWA. |
 
 ## Ready to plan (next)
 
@@ -18,7 +18,7 @@ Items here are scoped enough that the next step is `/plan-feature` to produce a 
 
 | Item | Doc | Version | Size |
 |---|---|---|---|
-| Tag merge | _designed in_ [features/tag-management-settings/](features/tag-management-settings/) §Out of scope | **v1.5c** | Medium. Combine two tags into one with `day_entries.tag_ids[]` rewrite. Highest-value cleanup action; deliberately deferred from v1.5b to ship once the simpler tag-management surface had real soak signal. |
+| Tier 3 schema hardening (CHECK constraints) | [features/tag-merge/step-0-junction-integrity.md](features/tag-merge/step-0-junction-integrity.md) §Out of scope | **v1.5d** | Small (~2h). Defense-in-depth at the DB level: `CHECK(category IN (…))` on `tags.category` + `episodes.category`; `CHECK(score BETWEEN 0 AND 100)` on `day_entries.score`; `CHECK(sleep_hours BETWEEN 0 AND 24)`; `CHECK(start_date <= end_date OR end_date IS NULL)` on `episodes`; `CHECK(confidence BETWEEN 0 AND 1)` on both junction tables. Same audit→apply→verify shape as step-0; lower hazard than the uniqueness gaps so it waited for step-0 soak. Reuses the SQL migration + verifier extensions step-0 introduced. |
 
 ## Designed (architecture set, larger design still needed)
 
@@ -32,6 +32,7 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | Likely version |
 |---|---|---|
+| **Historical CSV backfill** — parse the user's 1.363-day Google Sheet export into `day_entries`. Domain parser is scoped; the import-driving UI + dedup-against-existing-days are not. Backlogged because new entries flow in via the app now, but trends + streak counter remain blank for everything pre-2026-05-28 until this lands. | [features/csv-import/](features/csv-import/) (parser plan) | v1.6 |
 | Calendar binding (Google Calendar → episode) | sub-section in [features/verloop-and-episodes/](features/verloop-and-episodes/) §Out of scope | v1.6 |
 | Tag intelligence — LLM note-inference, correlation surfacing, merge/consolidate | [features/tag-intelligence/](features/tag-intelligence/) | v2 |
 | Garmin integration (continuous-stream layer on timeline) | not yet documented | v2 |
@@ -44,7 +45,9 @@ Items here are coherent enough to name but need a deeper conversation about trad
 
 | Item | Doc | When |
 |---|---|---|
-| Tag management in Settings | [features/tag-management-settings/](features/tag-management-settings/) | 2026-06-03 (commit `b58433f` + 2 hotfixes `070b64c` / `b233c2d`; v1.5b — rename / recategorize / archive / un-archive / re-parent / hard-delete with confirm. Merge deferred to v1.5c per the step file's Out of scope.) |
+| **Tag merge** | [features/tag-merge/](features/tag-merge/) | 2026-06-03 (commits `36737f5..35b9421`; v1.5c — `mergeTag` SDK with combined source+target read + bulk-DELETE-then-bulk-PATCH junction rewrite + recount-from-truth + source hard-delete; `POST /api/tags/[id]/merge` route; `useTagManage.merge`; `TagMergeTargetPickerSheet` with internal confirm-mode; `TagFormSheet` integration with `tags` corpus threaded from `TagManagementSection`; 54 new vitest tests; prod smoke 11/11 against deployed frontend.) |
+| **DB integrity hardening (step-0)** | [features/tag-merge/step-0-junction-integrity.md](features/tag-merge/step-0-junction-integrity.md) | 2026-06-03 (commits `36737f5..2228f63`; 4 UNIQUE indexes — junction-pair composites on `day_entries_tags` + `project_entries_tags`, partial case-insensitive `(LOWER(label), category) WHERE archived_at IS NULL` on `tags` + `episodes`; new `pg`-backed `runSqlFile` + `queryPg` helpers; `verify-schema.mjs` extended with 6 FK `on_delete` assertions + 4 UNIQUE assertions; prod verifier 49/49 green; constraint-enforcement smoke 6/6.) |
+| Tag management in Settings | [features/tag-management-settings/](features/tag-management-settings/) | 2026-06-03 (commit `b58433f` + 2 hotfixes `070b64c` / `b233c2d`; v1.5b — rename / recategorize / archive / un-archive / re-parent / hard-delete with confirm.) |
 | Today-card ongoing-episodes region | follow-on note in [features/verloop-and-episodes/](features/verloop-and-episodes/) | 2026-06-02 (commits `dd51038` + `65ba2e8`; lists lopend + future-end-date episodes on the today-card with pencil-edit affordance) |
 | Timeline episode overlay | [features/timeline-episode-overlay/](features/timeline-episode-overlay/) | 2026-06-02 (commit `1608d7a`; chart bands + linked-tag dots + heatmap stripes + per-category toggle, with in-place EpisodeFormSheet on band-tap) |
 | Tag recency sort within category | [features/tag-recency-sort/](features/tag-recency-sort/) | 2026-06-02 (commit `426be73`; v1.5a slice of the tag-intelligence vision) |
