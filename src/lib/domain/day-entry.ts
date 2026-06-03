@@ -1,4 +1,5 @@
 import { validateDate } from './date';
+import { isIsoUtcTimestamp } from './iso-timestamp';
 import { normalizeNote } from './note';
 import { validateScore, type Score } from './score';
 import { validateSleepHours } from './sleep-hours';
@@ -62,9 +63,6 @@ const REQUIRED_KEYS = [
   'updated_at',
   'weather',
 ] as const;
-
-const ISO_UTC_TIMESTAMP_REGEX =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
 export function validateDayEntry(input: unknown): ValidateDayEntryResult {
   // Shape: must be a plain object with exactly the required keys.
@@ -157,9 +155,3 @@ export function validateDayEntry(input: unknown): ValidateDayEntryResult {
   };
 }
 
-function isIsoUtcTimestamp(input: unknown): input is string {
-  if (typeof input !== 'string') return false;
-  if (!ISO_UTC_TIMESTAMP_REGEX.test(input)) return false;
-  const parsed = new Date(input);
-  return !Number.isNaN(parsed.getTime());
-}

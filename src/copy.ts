@@ -224,6 +224,70 @@ export const copy = {
     dataExport: 'Exporteren',
     dataDelete: 'Account verwijderen',
     iconLabel: 'Instellingen openen',
+    // Step v1.5b — tag-management surface inside /settings, between
+    // Account and Data. Drill-down via TagFormSheet (BottomSheet).
+    tagManagement: {
+      heading: 'Tag-beheer',
+      showArchivedToggle: 'Toon gearchiveerd',
+      archivedSuffix: '(gearchiveerd)',
+      emptyCorpus: 'Geen tags. Tags maak je in het Vandaag-scherm.',
+      // (label, dutch category) — read by screen readers on tap-into-row
+      rowAriaLabel: (label: string, categoryDutch: string): string =>
+        `${label}, ${categoryDutch}, tik om te bewerken`,
+      // (label, count, dutch-date) — read inside the form's Status block
+      statusUsed: (count: number, dutchDate: string): string =>
+        count === 1
+          ? `1 keer gebruikt, laatst ${dutchDate}`
+          : `${count} keer gebruikt, laatst ${dutchDate}`,
+      statusNeverUsed: 'Nog niet gebruikt',
+      // Dutch category labels — same set as TagPickerSheet's CATEGORY_LABEL
+      categoryLabel: {
+        mentaal: 'Mentaal',
+        fysiek: 'Fysiek',
+        overall: 'Overall',
+        activiteit: 'Activiteit',
+        gebeurtenis: 'Gebeurtenis',
+        interventie: 'Interventie',
+        project: 'Project',
+        custom: 'Custom',
+      },
+      // TagFormSheet copy — the BottomSheet that opens on row-tap.
+      form: {
+        sheetAriaLabel: 'Tag bewerken',
+        title: 'Tag bewerken',
+        close: 'Sluit',
+        labelField: 'Naam',
+        categoryField: 'Categorie',
+        parentField: 'Behoort bij',
+        parentNone: 'Geen',
+        save: 'Bewaar',
+        saving: 'Even geduld…',
+        archive: 'Archiveer',
+        unarchive: 'Activeer opnieuw',
+        delete: 'Verwijder',
+        deleteHint: 'Alleen mogelijk als de tag nooit gebruikt is.',
+        // inline confirm alertdialog (M5: focus lands on Annuleer)
+        confirm: {
+          prompt: (label: string): string =>
+            `Tag "${label}" definitief verwijderen? Deze actie kan niet ongedaan gemaakt worden.`,
+          cancel: 'Annuleer',
+          confirm: 'Ja, verwijder',
+        },
+        error: {
+          labelEmpty: 'Geef een naam.',
+          labelTooLong: 'Maximaal 40 tekens.',
+          labelTooManyWords: 'Maximaal 2 woorden.',
+          categoryMissing: 'Kies een categorie.',
+          serverError: 'Opslaan lukte niet, probeer opnieuw.',
+          // Per-field server errors (M1 fix dividend)
+          invalidLabel: 'Naam is ongeldig.',
+          invalidCategory: 'Categorie is ongeldig.',
+          invalidArchivedAt: 'Archiveerstatus is ongeldig.',
+          invalidParent: 'Episode is ongeldig.',
+          tagInUse: 'Tag is in gebruik en kan niet verwijderd worden.',
+        },
+      },
+    },
   },
   errors: {
     notSaved: 'Niet opgeslagen. Probeer nogmaals.',

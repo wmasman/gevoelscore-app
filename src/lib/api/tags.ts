@@ -9,11 +9,14 @@
 import {
   createDirectus,
   createItem,
+  deleteItem,
+  readItem,
   readItems,
   rest,
   staticToken,
   updateItem,
 } from '@directus/sdk';
+import { isIsoUtcTimestamp } from '@/lib/domain/iso-timestamp';
 import type { Tag } from '@/lib/domain/tag';
 import { validateParentEpisodeId } from '@/lib/domain/parent-episode-id';
 import { validateTagCategory, type TagCategory } from '@/lib/domain/tag-category';
@@ -266,19 +269,41 @@ export async function createOrUpsertTag(
 }
 
 // ---------------------------------------------------------------------------
-// updateTag — step-5 PATCH wrapper. Handles the picker's re-link and unlink
-// paths. v1.5 patch surface is intentionally tight: only parent_episode_id.
-// Any unknown key returns 'invalid_patch' before any wire call so a future
-// regression that adds a stray field can't silently leak to Directus.
+// updateTag — PATCH wrapper.
+//
+// Step-5 (2026-06-02): single key, parent_episode_id, for the picker's
+// re-link / unlink paths.
+//
+// Step v1.5b (2026-06-03): extended to also accept label, category,
+// archived_at — for the Settings → Tag-beheer surface (rename /
+// recategorize / archive / un-archive). Per-field validation surfaces
+// distinct error variants (invalid_label / invalid_category /
+// invalid_archived_at / invalid_parent_episode_id) so the UI can show
+// the user which field is wrong. The invalid_patch variant is reserved
+// for shape-level violations (empty body, unknown key, non-object).
 // ---------------------------------------------------------------------------
 
 export type UpdateTagPatch = {
-  parent_episode_id: string | null;
+  label?: string;
+  category?: TagCategory;
+  archived_at?: string | null;
+  parent_episode_id?: string | null;
 };
 
-export type UpdateTagError = TagsError | 'invalid_patch';
+export type UpdateTagError =
+  | TagsError
+  | 'invalid_patch'
+  | 'invalid_label'
+  | 'invalid_category'
+  | 'invalid_archived_at'
+  | 'invalid_parent_episode_id';
 
-const ALLOWED_PATCH_KEYS = new Set(['parent_episode_id']);
+const ALLOWED_PATCH_KEYS = new Set([
+  'label',
+  'category',
+  'archived_at',
+  'parent_episode_id',
+]);
 
 export async function updateTag(
   accessToken: string,
@@ -297,9 +322,39 @@ export async function updateTag(
       return { ok: false, error: 'invalid_patch' };
     }
   }
-  const parentResult = validateParentEpisodeId(patch.parent_episode_id);
-  if (!parentResult.ok) {
-    return { ok: false, error: 'invalid_patch' };
+
+  // Per-field validation. Each runs only if the key is present in the
+  // patch (the form sends only changed keys, so an absent key means "no
+  // change"). The output is the wire-body — we re-build it field by
+  // field rather than spreading the input directly so the validated /
+  // normalised values land in Directus.
+  const wireBody: Record<string, unknown> = {};
+
+  if ('label' in patch) {
+    const labelResult = validateTagLabel(patch.label);
+    if (!labelResult.ok) return { ok: false, error: 'invalid_label' };
+    wireBody.label = labelResult.value;
+  }
+  if ('category' in patch) {
+    const categoryResult = validateTagCategory(patch.category);
+    if (!categoryResult.ok) return { ok: false, error: 'invalid_category' };
+    wireBody.category = categoryResult.value;
+  }
+  if ('archived_at' in patch) {
+    if (patch.archived_at === null) {
+      wireBody.archived_at = null;
+    } else if (isIsoUtcTimestamp(patch.archived_at)) {
+      wireBody.archived_at = patch.archived_at;
+    } else {
+      return { ok: false, error: 'invalid_archived_at' };
+    }
+  }
+  if ('parent_episode_id' in patch) {
+    const parentResult = validateParentEpisodeId(patch.parent_episode_id);
+    if (!parentResult.ok) {
+      return { ok: false, error: 'invalid_parent_episode_id' };
+    }
+    wireBody.parent_episode_id = parentResult.value;
   }
 
   try {
@@ -308,9 +363,61 @@ export async function updateTag(
       .with(staticToken(accessToken));
 
     const updated = (await client.request(
-      updateItem('tags', id, { parent_episode_id: parentResult.value }),
+      updateItem('tags', id, wireBody as never),
     )) as DirectusTagRow;
     return { ok: true, value: rowToTag(updated) };
+  } catch (e) {
+    if (isNetworkError(e)) return { ok: false, error: 'network_error' };
+    return { ok: false, error: 'directus_error' };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// deleteTag — step v1.5b hard-delete wrapper.
+//
+// Does NOT itself gate by usage_count — the route handler enforces that
+// rule (read-then-delete with a logical-FK guard against
+// day_entries.tag_ids[]). The lib stays single-purpose: it forwards the
+// DELETE to Directus and maps the Result variant.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// readTagById — step v1.5b targeted single-row read.
+//
+// Used by the DELETE /api/tags/[id] route to gate hard-delete by
+// usage_count === 0 BEFORE issuing the Directus delete. Returns the
+// full Tag (not just usage_count) so the route can include the count
+// in the 400 tag_in_use response.
+// ---------------------------------------------------------------------------
+
+export async function readTagById(
+  accessToken: string,
+  id: string,
+): Promise<Result<Tag, TagsError>> {
+  try {
+    const client = createDirectus<DirectusSchema>(directusUrl())
+      .with(rest())
+      .with(staticToken(accessToken));
+
+    const row = (await client.request(readItem('tags', id))) as DirectusTagRow;
+    return { ok: true, value: rowToTag(row) };
+  } catch (e) {
+    if (isNetworkError(e)) return { ok: false, error: 'network_error' };
+    return { ok: false, error: 'directus_error' };
+  }
+}
+
+export async function deleteTag(
+  accessToken: string,
+  id: string,
+): Promise<Result<{ deleted_id: string }, TagsError>> {
+  try {
+    const client = createDirectus<DirectusSchema>(directusUrl())
+      .with(rest())
+      .with(staticToken(accessToken));
+
+    await client.request(deleteItem('tags', id));
+    return { ok: true, value: { deleted_id: id } };
   } catch (e) {
     if (isNetworkError(e)) return { ok: false, error: 'network_error' };
     return { ok: false, error: 'directus_error' };

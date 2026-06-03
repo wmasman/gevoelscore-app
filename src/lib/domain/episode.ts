@@ -1,6 +1,7 @@
 import { validateDateRange } from './date-range';
 import { validateEpisodeCategory, type EpisodeCategory } from './episode-category';
 import { validateEpisodeLabel } from './episode-label';
+import { isIsoUtcTimestamp } from './iso-timestamp';
 
 export type Episode = {
   id: string;
@@ -45,11 +46,6 @@ const REQUIRED_KEYS = [
   'start_date',
   'updated_at',
 ] as const;
-
-// Inline copy of day-entry/tag.ts's regex. Extract to a shared module
-// when a fourth caller appears (3+ rule). Until then, local.
-const ISO_UTC_TIMESTAMP_REGEX =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
 export function validateEpisode(input: unknown): ValidateEpisodeResult {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {
@@ -115,9 +111,3 @@ export function validateEpisode(input: unknown): ValidateEpisodeResult {
   };
 }
 
-function isIsoUtcTimestamp(input: unknown): input is string {
-  if (typeof input !== 'string') return false;
-  if (!ISO_UTC_TIMESTAMP_REGEX.test(input)) return false;
-  const parsed = new Date(input);
-  return !Number.isNaN(parsed.getTime());
-}

@@ -29,10 +29,15 @@ vi.mock('@directus/sdk', () => {
       id,
       patch,
     }),
+    deleteItem: (collection: string, id: string) => ({
+      __cmd: 'deleteItem',
+      collection,
+      id,
+    }),
   };
 });
 
-import { createOrUpsertTag, readAllTags, updateTag } from '../tags';
+import { createOrUpsertTag, deleteTag, readAllTags, updateTag } from '../tags';
 
 const VALID_EPISODE_ID = '550e8400-e29b-41d4-a716-446655440000';
 const OTHER_EPISODE_ID = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -89,7 +94,7 @@ describe('tags SDK wrapper', () => {
 // ---------------------------------------------------------------------------
 
 type MockCmd = {
-  __cmd: 'readItems' | 'createItem' | 'updateItem';
+  __cmd: 'readItems' | 'createItem' | 'updateItem' | 'deleteItem';
   collection?: string;
   query?: unknown;
   item?: unknown;
@@ -101,11 +106,13 @@ function setupMockHandlers(handlers: {
   readItems?: (cmd: MockCmd) => unknown;
   createItem?: (cmd: MockCmd) => unknown;
   updateItem?: (cmd: MockCmd) => unknown;
+  deleteItem?: (cmd: MockCmd) => unknown;
 }) {
   mocks.request.mockImplementation(async (cmd: MockCmd) => {
     if (cmd.__cmd === 'readItems' && handlers.readItems) return handlers.readItems(cmd);
     if (cmd.__cmd === 'createItem' && handlers.createItem) return handlers.createItem(cmd);
     if (cmd.__cmd === 'updateItem' && handlers.updateItem) return handlers.updateItem(cmd);
+    if (cmd.__cmd === 'deleteItem' && handlers.deleteItem) return handlers.deleteItem(cmd);
     throw new Error(`Unhandled mock command: ${cmd.__cmd}`);
   });
 }
@@ -646,12 +653,12 @@ describe('updateTag', () => {
     expect(result.value.parent_episode_id).toBeNull();
   });
 
-  it('rejects malformed UUID in patch with invalid_patch BEFORE wire', async () => {
+  it('rejects malformed UUID with invalid_parent_episode_id BEFORE wire (M1: per-field variant)', async () => {
     const result = await updateTag('access-token', 'tag-1', {
       parent_episode_id: 'not-a-uuid' as never,
     });
 
-    expect(result).toEqual({ ok: false, error: 'invalid_patch' });
+    expect(result).toEqual({ ok: false, error: 'invalid_parent_episode_id' });
     expect(mocks.request).not.toHaveBeenCalled();
   });
 
@@ -660,16 +667,8 @@ describe('updateTag', () => {
       'access-token',
       'tag-1',
       // @ts-expect-error — testing runtime guard against forbidden keys
-      { label: 'sneaky', parent_episode_id: VALID_EPISODE_ID },
+      { foo: 'bar', parent_episode_id: VALID_EPISODE_ID },
     );
-
-    expect(result).toEqual({ ok: false, error: 'invalid_patch' });
-    expect(mocks.request).not.toHaveBeenCalled();
-  });
-
-  it('rejects empty patch with invalid_patch', async () => {
-    // @ts-expect-error — testing runtime guard against empty patch
-    const result = await updateTag('access-token', 'tag-1', {});
 
     expect(result).toEqual({ ok: false, error: 'invalid_patch' });
     expect(mocks.request).not.toHaveBeenCalled();
@@ -691,6 +690,207 @@ describe('updateTag', () => {
     const result = await updateTag('access-token', 'tag-1', {
       parent_episode_id: VALID_EPISODE_ID,
     });
+
+    expect(result).toEqual({ ok: false, error: 'directus_error' });
+  });
+
+  // -------------------------------------------------------------------------
+  // Step v1.5b: extended patch surface (label + category + archived_at)
+  // with per-field error variants (M1 audit fix).
+  // -------------------------------------------------------------------------
+
+  describe('extended patch surface — label / category / archived_at', () => {
+    const ISO = '2026-06-03T10:00:00.000Z';
+
+    it('PATCH with label → 200 with updated tag; wire body contains only label', async () => {
+      let capturedPatch: Record<string, unknown> | undefined;
+      setupMockHandlers({
+        updateItem: (cmd) => {
+          capturedPatch = cmd.patch as Record<string, unknown>;
+          return existingTag({ id: 'tag-1', label: 'pacing-strategy' });
+        },
+      });
+
+      const result = await updateTag('access-token', 'tag-1', {
+        label: 'pacing-strategy',
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.label).toBe('pacing-strategy');
+      expect(capturedPatch).toEqual({ label: 'pacing-strategy' });
+    });
+
+    it('PATCH with category → 200 with updated tag', async () => {
+      setupMockHandlers({
+        updateItem: () => existingTag({ id: 'tag-1', category: 'fysiek' }),
+      });
+
+      const result = await updateTag('access-token', 'tag-1', {
+        category: 'fysiek',
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.category).toBe('fysiek');
+    });
+
+    it('PATCH with archived_at (ISO timestamp) → 200 with archived tag', async () => {
+      setupMockHandlers({
+        updateItem: () => existingTag({ id: 'tag-1', archived_at: ISO }),
+      });
+
+      const result = await updateTag('access-token', 'tag-1', {
+        archived_at: ISO,
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.archived_at).toBe(ISO);
+    });
+
+    it('PATCH with archived_at: null → 200 with un-archived tag', async () => {
+      setupMockHandlers({
+        updateItem: () => existingTag({ id: 'tag-1', archived_at: null }),
+      });
+
+      const result = await updateTag('access-token', 'tag-1', {
+        archived_at: null,
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.value.archived_at).toBeNull();
+    });
+
+    it('PATCH combining label + category + parent_episode_id → ONE wire call with all three', async () => {
+      let capturedPatch: Record<string, unknown> | undefined;
+      let wireCalls = 0;
+      setupMockHandlers({
+        updateItem: (cmd) => {
+          wireCalls += 1;
+          capturedPatch = cmd.patch as Record<string, unknown>;
+          return existingTag({
+            id: 'tag-1',
+            label: 'new-label',
+            category: 'fysiek',
+            parent_episode_id: VALID_EPISODE_ID,
+          });
+        },
+      });
+
+      const result = await updateTag('access-token', 'tag-1', {
+        label: 'new-label',
+        category: 'fysiek',
+        parent_episode_id: VALID_EPISODE_ID,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(wireCalls).toBe(1);
+      expect(capturedPatch).toEqual({
+        label: 'new-label',
+        category: 'fysiek',
+        parent_episode_id: VALID_EPISODE_ID,
+      });
+    });
+
+    it('rejects empty label string with invalid_label BEFORE wire', async () => {
+      const result = await updateTag('access-token', 'tag-1', { label: '' });
+
+      expect(result).toEqual({ ok: false, error: 'invalid_label' });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('rejects too-long label with invalid_label BEFORE wire', async () => {
+      const result = await updateTag('access-token', 'tag-1', {
+        label: 'a'.repeat(50),
+      });
+
+      expect(result).toEqual({ ok: false, error: 'invalid_label' });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('rejects too-many-words label with invalid_label BEFORE wire', async () => {
+      const result = await updateTag('access-token', 'tag-1', {
+        label: 'naar de fysio',
+      });
+
+      expect(result).toEqual({ ok: false, error: 'invalid_label' });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('rejects non-enum category with invalid_category BEFORE wire', async () => {
+      const result = await updateTag('access-token', 'tag-1', {
+        category: 'made-up' as never,
+      });
+
+      expect(result).toEqual({ ok: false, error: 'invalid_category' });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('rejects malformed archived_at with invalid_archived_at BEFORE wire', async () => {
+      const result = await updateTag('access-token', 'tag-1', {
+        archived_at: 'yesterday' as never,
+      });
+
+      expect(result).toEqual({ ok: false, error: 'invalid_archived_at' });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('rejects empty patch with invalid_patch (shape-level)', async () => {
+      const result = await updateTag('access-token', 'tag-1', {});
+
+      expect(result).toEqual({ ok: false, error: 'invalid_patch' });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('regression: existing parent_episode_id-only patches still work', async () => {
+      setupMockHandlers({
+        updateItem: () =>
+          existingTag({ id: 'tag-1', parent_episode_id: VALID_EPISODE_ID }),
+      });
+
+      const result = await updateTag('access-token', 'tag-1', {
+        parent_episode_id: VALID_EPISODE_ID,
+      });
+
+      expect(result.ok).toBe(true);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deleteTag — step v1.5b hard-delete wrapper. Does NOT itself check
+// usage_count — that gate lives in the route handler (read-then-delete).
+// ---------------------------------------------------------------------------
+
+describe('deleteTag', () => {
+  beforeEach(() => {
+    mocks.request.mockReset();
+  });
+
+  it('happy path → returns ok with deleted_id', async () => {
+    setupMockHandlers({
+      deleteItem: () => undefined,
+    });
+
+    const result = await deleteTag('access-token', 'tag-1');
+
+    expect(result).toEqual({ ok: true, value: { deleted_id: 'tag-1' } });
+  });
+
+  it('surfaces network errors as network_error', async () => {
+    mocks.request.mockRejectedValue(new TypeError('fetch failed'));
+
+    const result = await deleteTag('access-token', 'tag-1');
+
+    expect(result).toEqual({ ok: false, error: 'network_error' });
+  });
+
+  it('surfaces other request errors as directus_error', async () => {
+    mocks.request.mockRejectedValue(new Error('404 not found'));
+
+    const result = await deleteTag('access-token', 'tag-1');
 
     expect(result).toEqual({ ok: false, error: 'directus_error' });
   });

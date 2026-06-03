@@ -47,11 +47,15 @@ export const dayEntryReadRateLimiter = createRateLimiter({
   windowMs: FIVE_MIN_MS,
 });
 
-// Writes to /api/tags (inline tag creation). Matches dayEntryWriteRateLimiter's
-// budget: 60/5min is enough for a power-user composing tags in one sitting
-// while still catching abuse via a leaked cookie.
+// Writes to /api/tags (inline tag creation + step-5 link/unlink + v1.5b
+// tag-management Settings: rename / recategorize / archive / un-archive /
+// hard-delete). Raised from 60 → 200 / 5min in v1.5b (M4 audit fix): a
+// real cleanup-pass session might edit 30-60 tags in a few minutes, which
+// burned half-to-all of the original 60/5min budget on legitimate use.
+// 200/5min stays anti-abuse-shaped (no human typing on a mobile keyboard
+// can sustain >40 writes/min) while comfortably absorbing a cleanup pass.
 export const tagWriteRateLimiter = createRateLimiter({
-  limit: 60,
+  limit: 200,
   windowMs: FIVE_MIN_MS,
 });
 

@@ -26,7 +26,7 @@ Reference frames: **OWASP ASVS** (Application Security Verification Standard) fo
 - [ ] No `dangerouslySetInnerHTML` without a documented `@security` justification + DOMPurify sanitization.
 - [ ] No user-controlled values in `href` / `src` / `style` attributes without validation.
 - [ ] All Directus queries go through `src/lib/api/` using the `@directus/sdk` (parameterized). No string-concat SQL anywhere.
-- [ ] Zod schemas in `src/lib/validation/` at every API boundary — Directus responses, CSV imports, OAuth payloads. Validate before the value reaches the domain layer.
+- [ ] **Boundary validation at every API surface** via domain validators in `src/lib/domain/*` returning the discriminated `Result<T, E>` shape. Strict-shape `REQUIRED_KEYS` checks reject missing or extra keys so a renamed Directus column surfaces immediately. Examples: `validateEpisode`, `validateTag`, `validateDayEntry`, `validateScore`. See [conventions.md §Code conventions](conventions.md#code-conventions) — "Boundary validation via domain validators" — for the full rule + when Zod scoped to a specific wide unstructured boundary (CSV import, LLM JSON, integration feeds) is acceptable.
 - [ ] Token-format validation: any string treated as a token (Directus session, CSRF, OAuth code) is validated to the expected character set + length before use.
 
 ## A04 — Insecure Design

@@ -1,3 +1,4 @@
+import { isIsoUtcTimestamp } from './iso-timestamp';
 import { validateTagCategory, type TagCategory } from './tag-category';
 import { validateTagLabel } from './tag-label';
 
@@ -43,11 +44,6 @@ const REQUIRED_KEYS = [
   'project_id',
   'usage_count',
 ] as const;
-
-// Inline copy of day-entry.ts's regex. When a third caller needs this, extract
-// to src/lib/domain/iso-timestamp.ts; until then per the 3+ rule keep it local.
-const ISO_UTC_TIMESTAMP_REGEX =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
 
 export function validateTag(input: unknown): ValidateTagResult {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {
@@ -125,9 +121,3 @@ export function validateTag(input: unknown): ValidateTagResult {
   };
 }
 
-function isIsoUtcTimestamp(input: unknown): input is string {
-  if (typeof input !== 'string') return false;
-  if (!ISO_UTC_TIMESTAMP_REGEX.test(input)) return false;
-  const parsed = new Date(input);
-  return !Number.isNaN(parsed.getTime());
-}

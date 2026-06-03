@@ -16,11 +16,30 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { TagManagementSection } from '@/components/tag-management-section';
 import { copy } from '@/copy';
+import type { DayEntry } from '@/lib/domain/day-entry';
+import type { Episode } from '@/lib/domain/episode';
+import type { Tag } from '@/lib/domain/tag';
 
 type LogoutState = 'idle' | 'confirming' | 'submitting' | 'error';
 
-export function SettingsView() {
+type Props = {
+  /**
+   * v1.5b — three reads from the server component for the Tag-beheer
+   * section. Optional defaults keep existing tests + standalone use
+   * (e.g. the dev-server first paint) safe.
+   */
+  allTags?: Tag[];
+  episodes?: Episode[];
+  timelineEntries?: DayEntry[];
+};
+
+export function SettingsView({
+  allTags = [],
+  episodes = [],
+  timelineEntries = [],
+}: Props = {}) {
   const router = useRouter();
   const [state, setState] = useState<LogoutState>('idle');
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
@@ -111,6 +130,12 @@ export function SettingsView() {
           </p>
         )}
       </section>
+
+      <TagManagementSection
+        tags={allTags}
+        episodes={episodes}
+        timelineEntries={timelineEntries}
+      />
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-medium text-fg">{copy.settings.dataHeading}</h2>

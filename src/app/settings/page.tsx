@@ -1,14 +1,40 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SettingsView } from '@/components/settings-view';
+import { readDayEntriesInRange } from '@/lib/api/day-entries';
+import { readAllEpisodes } from '@/lib/api/episodes';
+import { readAllTags } from '@/lib/api/tags';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
 import { SESSION_COOKIE_NAME } from '@/lib/auth/session';
+import type { DayEntry } from '@/lib/domain/day-entry';
+import { todayInAmsterdam } from '@/lib/domain/date';
+import type { Episode } from '@/lib/domain/episode';
+import type { Tag } from '@/lib/domain/tag';
 
 // /settings — v1 surface: logout + binnenkort stubs for export + delete.
+// v1.5b: + Tag-beheer section (between Account and Data) for tag
+// management — rename / recategorize / archive / un-archive / re-parent /
+// hard-delete (gated by usage_count === 0).
 //
 // Auth-gated with the same two-tier redirect as the home page (ADR 0005):
 // missing cookie OR session-not-in-store → /login. We don't want a stale
 // cookie to dump the user into a "log out" screen they can't act on.
+//
+// After auth, the three reads (allTags + episodes + 90-day day_entries
+// for the recency-sort derivation) fire in parallel. Read failures fall
+// back to empty arrays — the Tag-beheer section degrades to the empty-
+// corpus state without blocking the rest of /settings.
+
+const TIMELINE_DAYS = 90;
+
+function shiftDate(date: string, days: number): string {
+  const parsed = new Date(`${date}T12:00:00Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  const y = parsed.getUTCFullYear();
+  const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(parsed.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 export default async function SettingsPage() {
   const cookieStore = await cookies();
@@ -20,5 +46,27 @@ export default async function SettingsPage() {
   if (session === null) {
     redirect('/login');
   }
-  return <SettingsView />;
+
+  const today = todayInAmsterdam();
+  const from = shiftDate(today, -(TIMELINE_DAYS - 1));
+
+  let allTags: Tag[] = [];
+  let episodes: Episode[] = [];
+  let timelineEntries: DayEntry[] = [];
+  const [tagsResult, episodesResult, rangeResult] = await Promise.all([
+    readAllTags(session.accessToken),
+    readAllEpisodes(session.accessToken),
+    readDayEntriesInRange(session.accessToken, from, today),
+  ]);
+  if (tagsResult.ok) allTags = tagsResult.value;
+  if (episodesResult.ok) episodes = episodesResult.value;
+  if (rangeResult.ok) timelineEntries = rangeResult.value;
+
+  return (
+    <SettingsView
+      allTags={allTags}
+      episodes={episodes}
+      timelineEntries={timelineEntries}
+    />
+  );
 }
