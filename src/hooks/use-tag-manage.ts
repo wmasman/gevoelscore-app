@@ -53,7 +53,7 @@ export function useTagManage() {
   const fire = useCallback(
     async <T,>(
       url: string,
-      method: 'PATCH' | 'DELETE',
+      method: 'PATCH' | 'DELETE' | 'POST',
       body: unknown | null,
     ): Promise<T | null> => {
       abortRef.current?.abort();
@@ -152,6 +152,21 @@ export function useTagManage() {
     [fire],
   );
 
+  const merge = useCallback(
+    async (
+      sourceId: string,
+      targetId: string,
+    ): Promise<MergeOutcome | null> => {
+      const data = await fire<MergeOutcome>(
+        `/api/tags/${sourceId}/merge`,
+        'POST',
+        { target_tag_id: targetId },
+      );
+      return data ?? null;
+    },
+    [fire],
+  );
+
   return {
     rename,
     recategorize,
@@ -159,7 +174,14 @@ export function useTagManage() {
     reparent,
     save,
     hardDelete,
+    merge,
     status,
     lastError,
   };
 }
+
+export type MergeOutcome = {
+  source_id: string;
+  target_id: string;
+  affected_days: number;
+};
