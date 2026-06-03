@@ -2,7 +2,10 @@
 
 **Feature:** Combine two same-category tags into one. Inside `TagFormSheet`, a new "Samenvoegen met…" button opens a nested picker of other tags in the same category. Pick the target → confirm with affected-day count → server rewrites every `day_entries_tags` junction row that pointed at the source to point at the target (de-duplicating where the target was already on the same day) → hard-deletes the source. The result: a single canonical tag, with every day that ever had the source now having the target instead.
 **Version:** v1.5c (deferred from v1.5b's `tag-management-settings` to ship after that surface had real soak signal).
-**Status:** Designed 2026-06-03; step file pending `/build-step`.
+**Status:** Designed 2026-06-03; step files pending `/build-step`.
+**Steps:**
+- **[Step 0 — Junction + label integrity hardening](./step-0-junction-integrity.md)** (DB prerequisite). Adds the 4 UNIQUE constraints that step 1's correctness depends on (composite uniques on the two junctions + partial uniques on `tags.(LOWER(label), category)` + `episodes.(LOWER(label), category)` where `archived_at IS NULL`) and extends `verify-schema.mjs` to assert them.
+- **[Step 1 — Tag merge](./step-1-tag-merge.md)** (the feature). Builds on the step-0 constraints.
 **Parent docs:** [features/tag-management-settings/](../tag-management-settings/) (parent v1.5b that deferred this) · [features/inline-tag-creation/](../inline-tag-creation/) (creates the duplicate-tag pressure this resolves) · [features/tag-recency-sort/](../tag-recency-sort/) (the picker that benefits from a cleaner corpus)
 
 ---
@@ -75,16 +78,18 @@ Body:   { target_tag_id: string }
 
 The route handles the whole transaction internally:
 
-1. **Validate** source + target both exist and both are non-archived.
-2. **Validate** source.id ≠ target.id, source.category === target.category.
-3. **Read** all `day_entries_tags` rows where `tags_id = source`. Capture distinct `day_entries_id`s.
-4. **Read** `day_entries_tags` rows where `tags_id = target AND day_entries_id IN <sourceDays>`. Build a set of "days that already have target".
-5. **Rewrite**: for each source junction:
-   - If the day is in the "already-has-target" set → `DELETE` the source junction (dedup).
-   - Else → `PATCH` the junction's `tags_id` to target.
-6. **Recompute** target's `usage_count` (count of distinct `day_entries_id`s where `tags_id = target` AFTER the rewrite) and PATCH the target tag row.
+1. **Validate** via a **single combined read**: `readItems('tags', { filter: { id: { _in: [sourceId, targetId] } } })` returns both rows (or fewer, surfacing source_not_found / target_not_found). Both must be non-archived. source.id ≠ target.id and source.category === target.category.
+2. **Read** all `day_entries_tags` rows where `tags_id = source`. Capture distinct `day_entries_id`s (sourceDays).
+3. **Read** `day_entries_tags` rows where `tags_id = target AND day_entries_id IN <sourceDays>`. Build the set of "days that already have target" (overlapDays). Junction reads stay split because the target read is filtered by source days — combining would pull target's full junction set even when target ≫ source.
+4. **Partition** source junction IDs by `day_entries_id ∈ overlapDays` → `overlapJunctionIds` + `nonOverlapJunctionIds`.
+5. **Rewrite in two bulk ID-array operations, ordered**:
+   - **Bulk DELETE** `overlapJunctionIds` from `day_entries_tags` (removes would-be duplicates).
+   - **Bulk PATCH** `nonOverlapJunctionIds` setting `{ tags_id: target_id }`. The order matters: bulk PATCH first would collide on UNIQUE(`day_entries_id`, `tags_id`) for every overlap day and fail the whole batch.
+6. **Recompute** target's `usage_count` from the actual post-rewrite junction count and PATCH the target tag row.
 7. **Hard-delete** the source tag row (bypasses the usage_count gate — at this point source has zero references).
 8. **Return** `{ source_id, target_id, affected_days: <count of distinct days touched> }`.
+
+**Round-trip count per merge: 5** — one combined tag read + two junction reads + two bulk junction writes counts as 5 Directus round-trips, plus 1 PATCH (target.usage_count) + 1 DELETE (source). The count is constant w.r.t. source size up to ~hundreds of junctions; very large sources would need pagination on step 2.
 
 The hard-delete in step 7 is direct via the Directus SDK (`deleteTag` from `tags.ts`) — not via the gated DELETE route — because the route's `usage_count > 0 → 400` gate would otherwise reject the call if the stored `usage_count` is stale.
 
@@ -94,11 +99,13 @@ Directus doesn't expose cross-collection ACID. Single-user single-device app mea
 
 | Step | Failure mode | Recovery |
 |---|---|---|
-| 3 (read source junctions) | Network — no writes done | Retry safely. |
-| 4 (read target junctions) | Network — no writes done | Retry safely. |
-| 5 (rewrite junctions) | Partial — some moved, some not | Source still exists; rerun the merge — the second pass finds fewer source junctions and converges. |
-| 6 (recount target.usage_count) | Failed after rewrite | `usage_count` drifts; cosmetic only. A scheduled `recount-usage-counts` script could fix later (out of scope). |
-| 7 (hard-delete source) | Failed after rewrite | Source has 0 references but still exists. Manual delete via Directus admin, OR the user retries merge (step 3 finds 0 junctions, route returns success with 0 affected). |
+| 1 (combined source/target tag read) | Network — no writes done | Retry safely. |
+| 2 (read source junctions) | Network — no writes done | Retry safely. |
+| 3 (read target junctions) | Network — no writes done | Retry safely. |
+| 5a (bulk DELETE overlap junctions) | Bulk atomic; either all overlap junctions removed or none. If failed → source still has all junctions (incl. overlap); rerun merge. | Retry. The bulk DELETE is idempotent w.r.t. retry — second pass recomputes overlap from current state. |
+| 5b (bulk PATCH non-overlap to target) | Bulk atomic; either all non-overlap moved or none. If failed AFTER 5a → overlap junctions gone, non-overlap still point at source; rerun merge. | Retry. Second pass: source junction count = original non-overlap; overlap set is empty (target already has those days); the patch moves remainder cleanly. |
+| 6 (recount target.usage_count) | Failed after rewrite | `usage_count` drifts; cosmetic only. The `recountTagUsage` helper (see step-1 §Notes) is the future fix; a scheduled recount script could call it for any drifty tag (out of scope). |
+| 7 (hard-delete source) | Failed after rewrite | Source has 0 references but still exists. Manual delete via Directus admin, OR the user retries merge (step 2 finds 0 junctions, route returns success with affected_days=0). |
 
 TOCTOU note: same posture as step-5 of verloop-and-episodes + step v1.5b's hard-delete. Functionally impossible on a single-user single-device app.
 
