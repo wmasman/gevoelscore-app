@@ -2,7 +2,7 @@
 
 **Feature:** A new "Tag-beheer" section on the `/settings` page that lets the user clean up their tag corpus — rename, recategorize, archive, un-archive, re-parent (set/clear `parent_episode_id` from the tag side), and hard-delete unused (usage_count === 0) tags. Drill-down per tag via a BottomSheet, mirroring the `EpisodeFormSheet` pattern. Surfaces archived tags behind a "Toon gearchiveerd" toggle. **No daily-flow regression** — the inline-create + recency-sorted picker in `QuickEntryFlow` stays untouched.
 **Version:** v1.5b (administrative cleanup pass; ships after the v1.5 anchor + timeline overlay + today-card region all stabilised)
-**Status:** **Shipped 2026-06-03** — all 22 ACs ticked; verify gate green (1148 vitest); deploy + smoke pending.
+**Status:** **Shipped 2026-06-03** (commit `b58433f` + hotfixes `070b64c` / `b233c2d`). All 22 ACs ticked; deployed to prod; soak in progress on iPhone PWA. Merge button (v1.5c) added on top of this surface in commit `727b112`.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [features/verloop-and-episodes/](../verloop-and-episodes/) (step-5 deferred the tag-side re-parent path here) · [features/tag-recency-sort/](../tag-recency-sort/) (shipped sibling — same picker that benefits from cleanup) · [features/inline-tag-creation/](../inline-tag-creation/) (shipped sibling that creates the tag-corpus pressure this feature relieves)
 
 ---

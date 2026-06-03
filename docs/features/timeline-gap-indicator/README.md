@@ -2,7 +2,7 @@
 
 **Feature:** A restrained visual cue on the timeline for days that have no score (skipped or future-not-yet-logged days). No copy, no guilt-trip language; a faint hollow dot at the score position is the canonical shape.
 **Version:** v1
-**Status:** Planning — ready for `/plan-feature` to produce step file(s).
+**Status:** **Shipped 2026-06-02** (commit `83ef836`). Hollow-dot rendering lives in the line-chart timeline view; days without a `day_entry` resolve to a faint outline-only marker at neutral y. No copy added; no nudging tone.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) (forbidden patterns: no guilt-tripping cues)
 
 ---

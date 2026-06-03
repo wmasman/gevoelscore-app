@@ -2,7 +2,7 @@
 
 **Feature:** A `+ nieuw` chip at the end of each expanded category's chip row in the daily tag picker. Tapping it reveals an inline label entry + save button. Saving creates a tag in that category and auto-attaches it to today's entry.
 **Version:** v1
-**Status:** Planning — ready for `/plan-feature` to produce step file(s).
+**Status:** **Shipped 2026-06-01** (commit `2fac249`). `+ nieuw` chip lives in [`src/components/tag-category-list.tsx`](../../../src/components/tag-category-list.tsx); creation goes through [`createOrUpsertTag`](../../../src/lib/api/tags.ts) (matched_active / matched_reactivated / created branches with case-insensitive label match). Step-0 of `tag-merge` later closed the read-then-write race at the DB level via a partial UNIQUE index on `(LOWER(label), category) WHERE archived_at IS NULL`.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) · [design/brief.md](../../design/brief.md) · [features/tag/](../tag/) (Tag domain) · [features/tag-intelligence/](../tag-intelligence/) (vision — north star for tagging UX)
 
 ---

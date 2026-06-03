@@ -2,10 +2,11 @@
 
 **Feature:** Combine two same-category tags into one. Inside `TagFormSheet`, a new "Samenvoegen met…" button opens a nested picker of other tags in the same category. Pick the target → confirm with affected-day count → server rewrites every `day_entries_tags` junction row that pointed at the source to point at the target (de-duplicating where the target was already on the same day) → hard-deletes the source. The result: a single canonical tag, with every day that ever had the source now having the target instead.
 **Version:** v1.5c (deferred from v1.5b's `tag-management-settings` to ship after that surface had real soak signal).
-**Status:** Designed 2026-06-03; step files pending `/build-step`.
-**Steps:**
-- **[Step 0 — Junction + label integrity hardening](./step-0-junction-integrity.md)** (DB prerequisite). Adds the 4 UNIQUE constraints that step 1's correctness depends on (composite uniques on the two junctions + partial uniques on `tags.(LOWER(label), category)` + `episodes.(LOWER(label), category)` where `archived_at IS NULL`) and extends `verify-schema.mjs` to assert them.
-- **[Step 1 — Tag merge](./step-1-tag-merge.md)** (the feature). Builds on the step-0 constraints.
+**Status:** **Shipped 2026-06-03** (commits `36737f5..103ace6`). Deployed to prod; smoke 11/11 green; soak in progress on iPhone PWA.
+**Steps (all shipped):**
+- **[Step 0 — Junction + label integrity hardening](./step-0-junction-integrity.md)** (DB prerequisite, commits `36737f5..2228f63`). 4 UNIQUE indexes — composites on the two junction tables + partial case-insensitive `(LOWER(label), category) WHERE archived_at IS NULL` on `tags` + `episodes`. Introduced the `pg`-backed `runSqlFile` / `queryPg` helpers and the FK + UNIQUE assertions in `verify-schema.mjs`.
+- **[Step 0b — Tier 3 CHECK constraints](./step-0b-check-constraints.md)** (defense-in-depth, commit `063b609`). 7 CHECK constraints: category enums on `tags` + `episodes`, score 1-10, sleep_hours 0-24, episode date order, confidence 0-1 on both junctions.
+- **[Step 1 — Tag merge](./step-1-tag-merge.md)** (the feature itself, commits `8efb03b..35b9421`). `mergeTag` SDK + `POST /api/tags/[id]/merge` route + `useTagManage.merge` + `TagMergeTargetPickerSheet` + `TagFormSheet` integration.
 **Parent docs:** [features/tag-management-settings/](../tag-management-settings/) (parent v1.5b that deferred this) · [features/inline-tag-creation/](../inline-tag-creation/) (creates the duplicate-tag pressure this resolves) · [features/tag-recency-sort/](../tag-recency-sort/) (the picker that benefits from a cleaner corpus)
 
 ---

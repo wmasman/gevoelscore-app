@@ -2,7 +2,7 @@
 
 **Feature:** The cardinal v1 product — one tap to log today's gevoelscore, optional note + tags, and a timeline that shows the patterns underneath. The audit-hardened auth layer is in place; this is what the auth was protecting.
 **Version:** v1
-**Status:** **Built 2026-05-28** — Steps 0 through 6 (incl. 4b redesign) all committed on `main`. 495 vitest + 44 chromium e2e green. Awaiting frontend deploy to Fly. Manual walkthroughs (phone stopwatch, brainfog, a11y) deferred until after deploy so they run against the production build, not the dev server.
+**Status:** **Shipped 2026-05-28** — Steps 0 through 6 (incl. 4b redesign) committed on `main` + deployed to prod. In daily soak since. Step 4b's score row, the standalone `DayDetailSheet`, and `DayEntryEditor` were later removed when the [quick-entry-popout](../quick-entry-popout/) became the canonical daily-entry surface (Option A reconciliation, 2026-05-29).
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md), [app_brief_gevoelscore.md](../../app_brief_gevoelscore.md), [data-model.md](../../architecture/data-model.md), [queries-and-views.md](../../architecture/queries-and-views.md), [security-checklist](../../../.claude/security-checklist.md)
 
 ---
