@@ -18,9 +18,7 @@ Items here are scoped enough that the next step is `/plan-feature` to produce a 
 
 | Item | Doc | Version | Size |
 |---|---|---|---|
-| Data export (CSV / JSON) | _to be written_: `features/data-export/` | **v1 (overdue)** | Small. The [`/over`](../src/copy.ts) landing page promises "Exporteren en wissen zijn ingebouwd" as a hard principle but Settings still shows it as `binnenkort`. Server-side aggregation across `day_entries` / `tags` / `episodes` / `sessions` → streaming download. |
-| Account deletion | _to be written_: `features/account-deletion/` | **v1 (overdue)** | Small. Same `/over` promise as data export. Confirm-twice flow (matches the logout-confirm pattern). Cascades through Directus: delete sessions, then user-owned rows, then the auth user. |
-| Tag merge | _designed in_ [features/tag-management-settings/](features/tag-management-settings/) §Out of scope | **v1.5c** | Medium. Combine two tags into one with `day_entries.tag_ids[]` rewrite — atomic transaction across collections. Highest-value cleanup action; deliberately deferred from v1.5b to ship once the simpler tag-management surface had real soak signal. |
+| Tag merge | _designed in_ [features/tag-management-settings/](features/tag-management-settings/) §Out of scope | **v1.5c** | Medium. Combine two tags into one with `day_entries.tag_ids[]` rewrite. Highest-value cleanup action; deliberately deferred from v1.5b to ship once the simpler tag-management surface had real soak signal. |
 
 ## Designed (architecture set, larger design still needed)
 
@@ -38,6 +36,8 @@ Items here are coherent enough to name but need a deeper conversation about trad
 | Tag intelligence — LLM note-inference, correlation surfacing, merge/consolidate | [features/tag-intelligence/](features/tag-intelligence/) | v2 |
 | Garmin integration (continuous-stream layer on timeline) | not yet documented | v2 |
 | Multi-user / per-user data scoping (schema migration: `user_owner` on `tags`, `day_entries`) | not yet documented | v2 |
+| **Data export (CSV / JSON)** — promised on `/over` but **deferred until multi-user lands** (single-user, single-admin: Directus admin export is sufficient; the `binnenkort` stub in Settings remains aspirational). | _to be written_: `features/data-export/` | v2 (blocked on multi-user) |
+| **Account deletion** — same `/over` promise; same deferral. Single-user means there's no "log out and leave" pressure; Directus admin handles deletion. | _to be written_: `features/account-deletion/` | v2 (blocked on multi-user) |
 | Episode categories beyond v1.5: `project`, `patroon` | [features/verloop-and-episodes/](features/verloop-and-episodes/) §Out of scope | v2 |
 
 ## Shipped (recent)
