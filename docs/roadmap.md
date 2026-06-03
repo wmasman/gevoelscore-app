@@ -14,11 +14,7 @@ This doc supplements [REQUIREMENTS.md](REQUIREMENTS.md) and [app_brief_gevoelsco
 
 ## Ready to plan (next)
 
-Items here are scoped enough that the next step is `/plan-feature` to produce a step file with acceptance criteria + test plan.
-
-| Item | Doc | Version | Size |
-|---|---|---|---|
-| Tier 3 schema hardening (CHECK constraints) | [features/tag-merge/step-0-junction-integrity.md](features/tag-merge/step-0-junction-integrity.md) §Out of scope | **v1.5d** | Small (~2h). Defense-in-depth at the DB level: `CHECK(category IN (…))` on `tags.category` + `episodes.category`; `CHECK(score BETWEEN 0 AND 100)` on `day_entries.score`; `CHECK(sleep_hours BETWEEN 0 AND 24)`; `CHECK(start_date <= end_date OR end_date IS NULL)` on `episodes`; `CHECK(confidence BETWEEN 0 AND 1)` on both junction tables. Same audit→apply→verify shape as step-0; lower hazard than the uniqueness gaps so it waited for step-0 soak. Reuses the SQL migration + verifier extensions step-0 introduced. |
+_Empty — the nearest in-flight surface is the tag-merge iOS soak above. The Vision section below has the next-likeliest candidates once new work needs a queue._
 
 ## Designed (architecture set, larger design still needed)
 
@@ -46,6 +42,7 @@ Items here are coherent enough to name but need a deeper conversation about trad
 | Item | Doc | When |
 |---|---|---|
 | **Tag merge** | [features/tag-merge/](features/tag-merge/) | 2026-06-03 (commits `36737f5..35b9421`; v1.5c — `mergeTag` SDK with combined source+target read + bulk-DELETE-then-bulk-PATCH junction rewrite + recount-from-truth + source hard-delete; `POST /api/tags/[id]/merge` route; `useTagManage.merge`; `TagMergeTargetPickerSheet` with internal confirm-mode; `TagFormSheet` integration with `tags` corpus threaded from `TagManagementSection`; 54 new vitest tests; prod smoke 11/11 against deployed frontend.) |
+| **Tier 3 CHECK constraints (step-0b)** | [features/tag-merge/step-0b-check-constraints.md](features/tag-merge/step-0b-check-constraints.md) | 2026-06-03 (commit `063b609`; v1.5d — 7 CHECK constraints applied to prod: tag/episode category enums, `score BETWEEN 1 AND 10`, `sleep_hours BETWEEN 0 AND 24`, `episodes.end_date >= start_date`, `confidence BETWEEN 0 AND 1` on both junction tables. Reuses step-0's audit→apply→verify pattern; new `verifyCheckConstraints` lib joins pg_constraint + pg_class. Prod verifier now 56/56 green; constraint-enforcement smoke 6/6 — Directus surfaces PG 23514 on each violation.) |
 | **DB integrity hardening (step-0)** | [features/tag-merge/step-0-junction-integrity.md](features/tag-merge/step-0-junction-integrity.md) | 2026-06-03 (commits `36737f5..2228f63`; 4 UNIQUE indexes — junction-pair composites on `day_entries_tags` + `project_entries_tags`, partial case-insensitive `(LOWER(label), category) WHERE archived_at IS NULL` on `tags` + `episodes`; new `pg`-backed `runSqlFile` + `queryPg` helpers; `verify-schema.mjs` extended with 6 FK `on_delete` assertions + 4 UNIQUE assertions; prod verifier 49/49 green; constraint-enforcement smoke 6/6.) |
 | Tag management in Settings | [features/tag-management-settings/](features/tag-management-settings/) | 2026-06-03 (commit `b58433f` + 2 hotfixes `070b64c` / `b233c2d`; v1.5b — rename / recategorize / archive / un-archive / re-parent / hard-delete with confirm.) |
 | Today-card ongoing-episodes region | follow-on note in [features/verloop-and-episodes/](features/verloop-and-episodes/) | 2026-06-02 (commits `dd51038` + `65ba2e8`; lists lopend + future-end-date episodes on the today-card with pencil-edit affordance) |
