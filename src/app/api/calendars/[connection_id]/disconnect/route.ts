@@ -60,18 +60,21 @@ export async function POST(request: Request, context: Context) {
   }
 
   const userId = process.env.WILLEM_USER_ID;
-  const adminToken = process.env.DIRECTUS_TOKEN;
   const kek = process.env.CALENDAR_KEK;
-  if (!userId || !adminToken || !kek) {
+  if (!userId || !kek) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
+  // session.accessToken (user's per-request Directus token tied to the
+  // gevoelscore-frontend-api policy) has the right perms; DIRECTUS_TOKEN
+  // env var is the scoped sessions-only token and would 403 here.
+  const accessToken = session.accessToken;
 
   const { connection_id } = await context.params;
   if (!isUuidShape(connection_id)) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 });
   }
 
-  const connResult = await readConnectionById(adminToken, connection_id);
+  const connResult = await readConnectionById(accessToken, connection_id);
   if (!connResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
@@ -99,7 +102,7 @@ export async function POST(request: Request, context: Context) {
 
   // Delete the local connection row. FK CASCADE removes events +
   // series_exclusions.
-  const deleteResult = await deleteConnection(adminToken, connection_id);
+  const deleteResult = await deleteConnection(accessToken, connection_id);
   if (!deleteResult.ok) {
     return NextResponse.json(
       { error: 'directus_error', revoke_ok: revokeOk },

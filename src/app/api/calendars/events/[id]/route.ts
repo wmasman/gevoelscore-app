@@ -68,10 +68,13 @@ export async function PATCH(request: Request, context: Context) {
   }
 
   const userId = process.env.WILLEM_USER_ID;
-  const adminToken = process.env.DIRECTUS_TOKEN;
-  if (!userId || !adminToken) {
+  if (!userId) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
+  // session.accessToken (user's per-request token, scoped to
+  // gevoelscore-frontend-api policy) — NOT DIRECTUS_TOKEN env var, which
+  // is the sessions-only-policy token.
+  const accessToken = session.accessToken;
 
   const { id } = await context.params;
   if (!isUuidShape(id)) {
@@ -121,7 +124,7 @@ export async function PATCH(request: Request, context: Context) {
   }
 
   // Ownership: read event → connection → user_id check.
-  const eventResult = await readCalendarEventById(adminToken, id);
+  const eventResult = await readCalendarEventById(accessToken, id);
   if (!eventResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
@@ -129,7 +132,7 @@ export async function PATCH(request: Request, context: Context) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
   }
   const event = eventResult.value;
-  const connResult = await readConnectionById(adminToken, event.connection_id);
+  const connResult = await readConnectionById(accessToken, event.connection_id);
   if (!connResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
@@ -157,7 +160,7 @@ export async function PATCH(request: Request, context: Context) {
   ) {
     // 1. Insert exclusion FIRST (durable rule).
     const insertResult = await insertSeriesExclusion(
-      adminToken,
+      accessToken,
       event.connection_id,
       event.recurrence_id,
       new Date().toISOString(),
@@ -168,7 +171,7 @@ export async function PATCH(request: Request, context: Context) {
 
     // 2. Bulk PATCH all siblings.
     const siblingsResult = await readEventsByRecurrenceId(
-      adminToken,
+      accessToken,
       event.connection_id,
       event.recurrence_id,
     );
@@ -176,7 +179,7 @@ export async function PATCH(request: Request, context: Context) {
       return NextResponse.json({ error: 'directus_error' }, { status: 502 });
     }
     const bulkResult = await patchCalendarEventsBulk(
-      adminToken,
+      accessToken,
       siblingsResult.value.map((r) => r.id),
       {
         included_as_context: false,
@@ -188,7 +191,7 @@ export async function PATCH(request: Request, context: Context) {
     }
   } else if (Object.keys(patch).length > 0) {
     // Plain per-row patch (linked_tag/episode + per-row include flip).
-    const patchResult = await patchCalendarEvent(adminToken, id, patch);
+    const patchResult = await patchCalendarEvent(accessToken, id, patch);
     if (!patchResult.ok) {
       return NextResponse.json({ error: 'directus_error' }, { status: 502 });
     }

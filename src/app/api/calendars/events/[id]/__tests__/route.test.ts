@@ -92,7 +92,7 @@ function recurringEvent() {
 beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv('WILLEM_USER_ID', USER_ID);
-  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  vi.stubEnv('DIRECTUS_TOKEN', 'at');
 
   mocks.getValidatedSession.mockReset();
   mocks.writeCheck.mockReset();
@@ -160,7 +160,7 @@ describe('PATCH /api/calendars/events/[id]', () => {
 
     expect(res.status).toBe(200);
     expect(mocks.patchCalendarEvent).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       EVENT_ID,
       expect.objectContaining({ linked_tag_id: TAG_ID }),
     );
@@ -180,7 +180,7 @@ describe('PATCH /api/calendars/events/[id]', () => {
 
     expect(res.status).toBe(200);
     expect(mocks.patchCalendarEvent).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       EVENT_ID,
       expect.objectContaining({ linked_episode_id: EPISODE_ID }),
     );
@@ -201,7 +201,7 @@ describe('PATCH /api/calendars/events/[id]', () => {
     expect(mocks.insertSeriesExclusion).not.toHaveBeenCalled();
     expect(mocks.patchCalendarEventsBulk).not.toHaveBeenCalled();
     expect(mocks.patchCalendarEvent).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       EVENT_ID,
       expect.objectContaining({
         included_as_context: false,
@@ -223,13 +223,13 @@ describe('PATCH /api/calendars/events/[id]', () => {
     await PATCH(request, context);
 
     expect(mocks.insertSeriesExclusion).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       CONN_ID,
       'rec-yoga',
       expect.any(String),
     );
     expect(mocks.patchCalendarEventsBulk).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       ['sib-1', 'sib-2', 'sib-3'],
       {
         included_as_context: false,
@@ -253,7 +253,7 @@ describe('PATCH /api/calendars/events/[id]', () => {
     expect(mocks.insertSeriesExclusion).not.toHaveBeenCalled();
     expect(mocks.patchCalendarEventsBulk).not.toHaveBeenCalled();
     expect(mocks.patchCalendarEvent).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       EVENT_ID,
       expect.objectContaining({
         included_as_context: true,

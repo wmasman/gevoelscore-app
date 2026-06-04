@@ -93,7 +93,7 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv('WILLEM_USER_ID', USER_ID);
   vi.stubEnv('CALENDAR_KEK', 'test-kek-32-bytes-base64-pad-here==');
-  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  vi.stubEnv('DIRECTUS_TOKEN', 'at');
 
   mocks.getValidatedSession.mockReset();
   mocks.writeCheck.mockReset();
@@ -212,7 +212,7 @@ describe('POST /api/calendars/[connection_id]/calendars', () => {
     const res = await POST(request, context);
 
     expect(res.status).toBe(200);
-    expect(mocks.patchConnection).toHaveBeenCalledWith('admin-token', CONN_ID, {
+    expect(mocks.patchConnection).toHaveBeenCalledWith('at', CONN_ID, {
       included_calendar_ids: ['cal-a', 'cal-b'],
     });
   });

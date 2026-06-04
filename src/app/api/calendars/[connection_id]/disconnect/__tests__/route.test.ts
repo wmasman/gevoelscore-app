@@ -70,7 +70,7 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv('WILLEM_USER_ID', USER_ID);
   vi.stubEnv('CALENDAR_KEK', 'test-kek-32-bytes-base64-pad-here==');
-  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  vi.stubEnv('DIRECTUS_TOKEN', 'at');
 
   mocks.getValidatedSession.mockReset();
   mocks.writeCheck.mockReset();
@@ -143,7 +143,7 @@ describe('POST /api/calendars/[connection_id]/disconnect', () => {
 
     expect(res.status).toBe(200);
     expect(mocks.revoke).toHaveBeenCalledWith('plain-refresh');
-    expect(mocks.deleteConnection).toHaveBeenCalledWith('admin-token', CONN_ID);
+    expect(mocks.deleteConnection).toHaveBeenCalledWith('at', CONN_ID);
     const body = (await res.json()) as { ok: boolean; revoke_ok: boolean };
     expect(body.ok).toBe(true);
     expect(body.revoke_ok).toBe(true);

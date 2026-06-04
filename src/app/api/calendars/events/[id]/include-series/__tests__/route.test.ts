@@ -64,7 +64,7 @@ function makePost(opts: { cookie?: string } = {}): {
 beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv('WILLEM_USER_ID', USER_ID);
-  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  vi.stubEnv('DIRECTUS_TOKEN', 'at');
 
   mocks.getValidatedSession.mockReset();
   mocks.writeCheck.mockReset();
@@ -121,12 +121,12 @@ describe('POST /api/calendars/events/[id]/include-series', () => {
 
     expect(res.status).toBe(200);
     expect(mocks.deleteSeriesExclusion).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       CONN_ID,
       'rec-yoga',
     );
     expect(mocks.patchCalendarEventsBulk).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       ['sib-1', 'sib-2'],
       { included_as_context: true, user_decision: 'user_included' },
     );

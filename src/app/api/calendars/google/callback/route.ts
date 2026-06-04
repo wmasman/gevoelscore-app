@@ -94,12 +94,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 
-  // Upsert connection
-  const accessToken = process.env.DIRECTUS_TOKEN;
-  if (!accessToken) {
-    return NextResponse.json({ error: 'server_error' }, { status: 500 });
-  }
-  const upsertResult = await upsertConnection(accessToken, {
+  // Upsert connection using the user's per-request Directus token
+  // (session.accessToken). This is the same pattern as tags / episodes /
+  // day-entries routes. The Fly `DIRECTUS_TOKEN` env var is the scoped
+  // sessions-only-policy token — it has access to frontend_sessions ONLY,
+  // not to calendar collections. session.accessToken belongs to the
+  // gevoelscore-frontend-api policy which has CRUD on calendar_*.
+  const upsertResult = await upsertConnection(session.accessToken, {
     user_id: userId,
     provider: 'google',
     provider_account_email: exchanged.accountEmail,

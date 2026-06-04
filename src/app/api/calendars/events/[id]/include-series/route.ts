@@ -58,17 +58,19 @@ export async function POST(request: Request, context: Context) {
   }
 
   const userId = process.env.WILLEM_USER_ID;
-  const adminToken = process.env.DIRECTUS_TOKEN;
-  if (!userId || !adminToken) {
+  if (!userId) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
+  // session.accessToken (user's per-request token, scoped to
+  // gevoelscore-frontend-api policy) — NOT DIRECTUS_TOKEN env var.
+  const accessToken = session.accessToken;
 
   const { id } = await context.params;
   if (!isUuidShape(id)) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 });
   }
 
-  const eventResult = await readCalendarEventById(adminToken, id);
+  const eventResult = await readCalendarEventById(accessToken, id);
   if (!eventResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
@@ -83,7 +85,7 @@ export async function POST(request: Request, context: Context) {
     );
   }
 
-  const connResult = await readConnectionById(adminToken, event.connection_id);
+  const connResult = await readConnectionById(accessToken, event.connection_id);
   if (!connResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
@@ -93,7 +95,7 @@ export async function POST(request: Request, context: Context) {
 
   // 1. DELETE the series_exclusion row.
   const deleteResult = await deleteSeriesExclusion(
-    adminToken,
+    accessToken,
     event.connection_id,
     event.recurrence_id,
   );
@@ -103,7 +105,7 @@ export async function POST(request: Request, context: Context) {
 
   // 2. Bulk PATCH all sibling events.
   const siblingsResult = await readEventsByRecurrenceId(
-    adminToken,
+    accessToken,
     event.connection_id,
     event.recurrence_id,
   );
@@ -111,7 +113,7 @@ export async function POST(request: Request, context: Context) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
   const ids = siblingsResult.value.map((r) => r.id);
-  const bulkResult = await patchCalendarEventsBulk(adminToken, ids, {
+  const bulkResult = await patchCalendarEventsBulk(accessToken, ids, {
     included_as_context: true,
     user_decision: 'user_included',
   });

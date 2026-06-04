@@ -57,20 +57,33 @@ function bearerMatches(authHeader: string | null, secret: string): boolean {
 export async function POST(request: Request) {
   // ─────────────────────────────────────────────────────────────
   // Auth gate: bearer FIRST (cron path), then session (Ververs-nu path).
+  // Bearer path uses process.env.DIRECTUS_TOKEN (TODO: step-2 will need
+  // a different token — the scoped sessions-only token can't access
+  // calendar collections. Defer to when the GHA cron actually fires).
+  // Session path uses session.accessToken (user's per-request token,
+  // tied to gevoelscore-frontend-api policy with calendar perms).
   // ─────────────────────────────────────────────────────────────
-  const adminToken = process.env.DIRECTUS_TOKEN;
   const kek = process.env.CALENDAR_KEK;
   const syncSecret = process.env.CALENDAR_SYNC_SECRET;
-  if (!adminToken || !kek) {
+  if (!kek) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 
   let scope: 'session' | 'bearer';
+  let accessToken: string;
   let userId: string | null = null;
 
   const authHeader = request.headers.get('authorization');
   if (authHeader && syncSecret && bearerMatches(authHeader, syncSecret)) {
     scope = 'bearer';
+    // TODO(step-2): scoped sessions-only DIRECTUS_TOKEN can't access
+    // calendar_connections. Need a separate "cron" token with the
+    // gevoelscore-frontend-api policy (or a new admin-scope policy).
+    const bearerToken = process.env.DIRECTUS_TOKEN;
+    if (!bearerToken) {
+      return NextResponse.json({ error: 'server_error' }, { status: 500 });
+    }
+    accessToken = bearerToken;
   } else {
     if (
       !validateOrigin(
@@ -95,6 +108,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }
     userId = willem;
+    accessToken = session.accessToken;
 
     const ip = getClientIp(request);
     const rl = calendarWriteRateLimiter.check(ip);
@@ -112,8 +126,8 @@ export async function POST(request: Request) {
   // ─────────────────────────────────────────────────────────────
   const connectionsResult =
     scope === 'session'
-      ? await readActiveConnectionsForUser(adminToken, userId!)
-      : await readAllActiveConnections(adminToken);
+      ? await readActiveConnectionsForUser(accessToken, userId!)
+      : await readAllActiveConnections(accessToken);
   if (!connectionsResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
@@ -128,25 +142,25 @@ export async function POST(request: Request) {
     provider: getGoogleProvider(),
     decrypt: (enc) => decrypt(enc, kek),
     readSeriesExclusions: async (connId) => {
-      const r = await readSeriesExclusionRecurrenceIds(adminToken, connId);
+      const r = await readSeriesExclusionRecurrenceIds(accessToken, connId);
       if (!r.ok) throw new Error(r.error);
       return r.value;
     },
     readExistingEvents: async (connId, ids) => {
-      const r = await readEventsByProviderIds(adminToken, connId, ids);
+      const r = await readEventsByProviderIds(accessToken, connId, ids);
       if (!r.ok) throw new Error(r.error);
       return r.value;
     },
     createEvent: async (row) => {
-      const r = await createCalendarEvent(adminToken, row);
+      const r = await createCalendarEvent(accessToken, row);
       if (!r.ok) throw new Error(r.error);
     },
     updateEvent: async (id, patch) => {
-      const r = await patchCalendarEvent(adminToken, id, patch);
+      const r = await patchCalendarEvent(accessToken, id, patch);
       if (!r.ok) throw new Error(r.error);
     },
     updateConnection: async (id, patch) => {
-      const r = await patchConnection(adminToken, id, patch);
+      const r = await patchConnection(accessToken, id, patch);
       if (!r.ok) throw new Error(r.error);
     },
   };

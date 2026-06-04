@@ -33,7 +33,7 @@ type Context = { params: Promise<{ connection_id: string }> };
 async function authenticate(
   request: Request,
 ): Promise<
-  | { ok: true; userId: string; adminToken: string }
+  | { ok: true; userId: string; accessToken: string }
   | { ok: false; response: Response }
 > {
   if (
@@ -64,20 +64,22 @@ async function authenticate(
     };
   }
   const userId = process.env.WILLEM_USER_ID;
-  const adminToken = process.env.DIRECTUS_TOKEN;
-  if (!userId || !adminToken) {
+  if (!userId) {
     return {
       ok: false,
       response: NextResponse.json({ error: 'server_error' }, { status: 500 }),
     };
   }
-  return { ok: true, userId, adminToken };
+  // Use session.accessToken (user's per-request token tied to the
+  // gevoelscore-frontend-api policy) for Directus calls — NOT the
+  // scoped sessions-only DIRECTUS_TOKEN env var.
+  return { ok: true, userId, accessToken: session.accessToken };
 }
 
 async function resolveConnectionOrFail(
   rawId: string,
   userId: string,
-  adminToken: string,
+  accessToken: string,
 ): Promise<
   | { ok: true; connection: import('@/lib/api/calendars').DirectusCalendarConnectionRow }
   | { ok: false; response: Response }
@@ -88,7 +90,7 @@ async function resolveConnectionOrFail(
       response: NextResponse.json({ error: 'invalid_id' }, { status: 400 }),
     };
   }
-  const connResult = await readConnectionById(adminToken, rawId);
+  const connResult = await readConnectionById(accessToken, rawId);
   if (!connResult.ok) {
     return {
       ok: false,
@@ -113,7 +115,7 @@ async function resolveConnectionOrFail(
 export async function GET(request: Request, context: Context) {
   const auth = await authenticate(request);
   if (!auth.ok) return auth.response;
-  const { userId, adminToken } = auth;
+  const { userId, accessToken } = auth;
 
   const ip = getClientIp(request);
   const rl = calendarWriteRateLimiter.check(ip);
@@ -128,7 +130,7 @@ export async function GET(request: Request, context: Context) {
   const resolved = await resolveConnectionOrFail(
     connection_id,
     userId,
-    adminToken,
+    accessToken,
   );
   if (!resolved.ok) return resolved.response;
   const { connection } = resolved;
@@ -156,7 +158,7 @@ export async function GET(request: Request, context: Context) {
 export async function POST(request: Request, context: Context) {
   const auth = await authenticate(request);
   if (!auth.ok) return auth.response;
-  const { userId, adminToken } = auth;
+  const { userId, accessToken } = auth;
 
   const ip = getClientIp(request);
   const rl = calendarWriteRateLimiter.check(ip);
@@ -171,7 +173,7 @@ export async function POST(request: Request, context: Context) {
   const resolved = await resolveConnectionOrFail(
     connection_id,
     userId,
-    adminToken,
+    accessToken,
   );
   if (!resolved.ok) return resolved.response;
 
@@ -190,7 +192,7 @@ export async function POST(request: Request, context: Context) {
     return NextResponse.json({ error: 'malformed_body' }, { status: 400 });
   }
 
-  const patchResult = await patchConnection(adminToken, connection_id, {
+  const patchResult = await patchConnection(accessToken, connection_id, {
     included_calendar_ids: ids as string[],
   });
   if (!patchResult.ok) {

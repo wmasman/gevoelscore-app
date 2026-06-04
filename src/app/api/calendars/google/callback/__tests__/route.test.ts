@@ -45,7 +45,7 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv('WILLEM_USER_ID', '16f6f68b-e683-4dc9-8afc-e80695c4259d');
   vi.stubEnv('CALENDAR_KEK', 'test-kek-32-bytes-base64-pad-here==');
-  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  vi.stubEnv('DIRECTUS_TOKEN', 'at');
 
   mocks.getValidatedSession.mockReset();
   mocks.upsertConnection.mockReset();
@@ -142,7 +142,7 @@ describe('GET /api/calendars/google/callback', () => {
       'test-kek-32-bytes-base64-pad-here==',
     );
     expect(mocks.upsertConnection).toHaveBeenCalledWith(
-      'admin-token',
+      'at',
       expect.objectContaining({
         user_id: '16f6f68b-e683-4dc9-8afc-e80695c4259d',
         provider: 'google',
