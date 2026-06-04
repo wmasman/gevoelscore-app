@@ -102,12 +102,16 @@ function isNetworkError(e: unknown): boolean {
 }
 
 function classifyError(e: unknown): CalendarsError {
-  // Temporary diagnostic logging. The @directus/sdk throws structured
-  // objects with shape { errors: [{ message, extensions: { code, ... } }] }
-  // rather than Error instances, so we extract the known fields here.
-  // No PII: error messages from the SDK contain endpoint paths +
-  // status codes + collection names, not user data.
-  // TODO: remove once step-1 ships and the integration is proven.
+  // Logs the underlying Directus SDK error (code + first line of
+  // message) before classifying. The SDK throws structured objects of
+  // shape { errors: [{ message, extensions: { code, ... } }] } rather
+  // than Error instances, so we extract the known fields here.
+  //
+  // Worth keeping in prod: the verbose form survived the step-1 debug
+  // arc (surfaced FORBIDDEN, RECORD_NOT_UNIQUE during the historical
+  // backfill). No PII: SDK error messages contain endpoint paths +
+  // status codes + collection names, not user data. If it ever
+  // becomes noisy, gate behind `process.env.NODE_ENV !== 'production'`.
   try {
     const obj = e as Record<string, unknown> | null | undefined;
     const errors = obj?.errors as

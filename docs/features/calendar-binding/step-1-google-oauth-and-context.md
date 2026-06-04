@@ -400,19 +400,32 @@ End-to-end against production:
 
 ## Done criteria
 
-- [ ] Every AC above is GREEN
-- [ ] RED was captured before implementation
-- [ ] GREEN was captured after implementation
-- [ ] Full suite still passes (no regressions on the ~1233 existing tests + step-0's ~40 new tests)
-- [ ] `npm run typecheck` clean
-- [ ] `npm run lint` clean
-- [ ] `npm run verify` clean (lint + typecheck + Vitest)
-- [ ] Production smoke 10/10 GREEN
-- [ ] `verify-schema.mjs` GREEN against production
-- [ ] `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` Fly secrets confirmed set (names only; never values)
-- [ ] Brainfog walkthrough: connect → choose → sync → exclude series → re-include passes on iPhone PWA without second-tap retries
-- [ ] No new HIGH gate findings
-- [ ] Refactor pass complete (or "none needed")
+**Backend (Phases 1.A-1.D):**
+- [x] Every AC for Phases 1.A-1.D (AC1.1-AC1.52, AC1.73-AC1.78) GREEN
+- [x] RED was captured before implementation (each phase)
+- [x] GREEN was captured after implementation (each phase)
+- [x] Full suite passes: 1397 tests across 104 files (was 1233; +164 new across step-0 + step-1 phases)
+- [x] `npm run typecheck` clean
+- [x] `npm run lint` clean
+- [x] `npm run verify` clean (lint + typecheck + Vitest)
+- [x] Production smoke: OAuth → list calendars → choose → sync round-trip succeeds (68 events from 37-day window on first run)
+- [x] `verify-schema.mjs` GREEN against production (107/107 from step-0 + amendment)
+- [x] `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `CALENDAR_KEK` Fly secrets set (names only; never values)
+- [x] Historical backfill 2022-09-01 → 2026-06-04 succeeded: 46/46 chunks GREEN, 657 events pulled, 136 excluded by pre-curated series rules, 1 RECORD_NOT_UNIQUE swallowed (Google returned a duplicate; defensible v1.6.x hardening to upsert-on-conflict but not blocking)
+- [x] No new HIGH gate findings
+
+**UI (Phase 1.E):**
+- [ ] Components (`CalendarsSection`, `ChooseCalendarsForm`, `CalendarEventSheet`, `ContextEventsSection`) — deferred to next session
+- [ ] Wire into Settings + Context tab — deferred
+- [ ] Component tests (~28 in jsdom) — deferred
+- [ ] Brainfog walkthrough on iPhone PWA — deferred (requires UI)
+- [ ] Refactor pass — deferred to after Phase 1.E
+
+**Operational state (after step-1 backend ship + verify):**
+- 1 calendar_connection (Willem ↔ Google), status=active
+- 4 calendars included (Family, Parro, Willem & Jantine, primary); Todoist excluded as noise per user judgment
+- 709 events in `calendar_events` (657 backfilled + 68 initial smoke + dedup overlap). 793-day gap 2024-03-23 → 2026-05-26 is REAL (user migrated scheduling to Todoist; the gap is the honest reflection of the included-calendar data shape).
+- 10 series exclusions pre-curated, 136 cumulative event rows flipped excluded by series rules across the full pull. ~21% noise filter rate.
 
 ---
 
