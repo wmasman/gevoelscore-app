@@ -107,7 +107,13 @@ export function buildSessionCookie(sessionId: string | null, maxAgeSeconds: numb
     `${SESSION_COOKIE_NAME}=${value}`,
     'HttpOnly',
     'Secure',
-    'SameSite=Strict',
+    // SameSite=Lax (not Strict) so the cookie flows on top-level cross-site
+    // GET navigation — required for OAuth callback redirects (e.g. Google
+    // -> /api/calendars/google/callback in the v1.6 calendar-binding
+    // feature). CSRF protection on POST mutations still comes from the
+    // explicit Origin / Referer check in src/lib/auth/origin-check.ts;
+    // Lax still blocks cross-site POST + fetch + XHR.
+    'SameSite=Lax',
     'Path=/',
     `Max-Age=${maxAgeSeconds}`,
   ].join('; ');

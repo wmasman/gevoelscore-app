@@ -68,7 +68,9 @@ describe('POST /api/auth/login', () => {
     expect(setCookie).toContain('gs_session=session-id-1');
     expect(setCookie).toContain('HttpOnly');
     expect(setCookie).toContain('Secure');
-    expect(setCookie).toContain('SameSite=Strict');
+    // SameSite=Lax (not Strict) for OAuth-friendly session — see
+    // session.ts comment + cal-oauth-state.ts.
+    expect(setCookie).toContain('SameSite=Lax');
     expect(setCookie).toContain('Path=/');
     expect(mocks.sessionCreate).toHaveBeenCalledWith(
       expect.objectContaining({ accessToken: 'at', refreshToken: 'rt' }),

@@ -1,6 +1,12 @@
 // Validates that an incoming request's Origin (or Referer) header points at
 // an allowed origin. Used by state-changing Route Handlers as part of the
-// CSRF defence (alongside SameSite=Strict cookies — see security-checklist A08).
+// CSRF defence (alongside SameSite=Lax cookies — see security-checklist A08).
+//
+// SameSite=Lax blocks cross-site POST/fetch/XHR (the typical CSRF vector)
+// but allows top-level cross-site GET navigation (OAuth redirects, magic
+// link emails, payment callbacks). This Origin check is the explicit guard
+// on mutations — it rejects state-changing requests whose Origin / Referer
+// doesn't match an allowed origin, independent of any SameSite behaviour.
 //
 // Strict equality only — no wildcards, no subdomain matching.
 // Same-origin requests (no Origin header AND no Referer) are allowed, since
@@ -16,7 +22,7 @@ export function validateOrigin(
   // taken — preserved for existing tests. Production callers should
   // ALWAYS pass `request.method` so state-changing requests without
   // an Origin or Referer header are rejected (S-M2 in audit
-  // 2026-05-30 — defence-in-depth alongside SameSite=Strict).
+  // 2026-05-30 — defence-in-depth alongside the SameSite cookie attr).
   method?: string,
 ): boolean {
   // No Origin and no Referer:

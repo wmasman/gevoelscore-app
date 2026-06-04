@@ -167,13 +167,17 @@ describe('session', () => {
   });
 
   describe('buildSessionCookie', () => {
-    it('produces a httpOnly Secure SameSite=Strict cookie with Max-Age', () => {
+    it('produces a httpOnly Secure SameSite=Lax cookie with Max-Age', () => {
+      // SameSite=Lax (not Strict) so the cookie flows on top-level cross-site
+      // GET navigation, which OAuth callbacks need (e.g. Google -> our
+      // /api/calendars/google/callback redirect). CSRF on mutations is
+      // covered by the validateOrigin check, not by SameSite.
       const cookie = buildSessionCookie('abc-123', 3600);
 
       expect(cookie).toContain(`${SESSION_COOKIE_NAME}=abc-123`);
       expect(cookie).toContain('HttpOnly');
       expect(cookie).toContain('Secure');
-      expect(cookie).toContain('SameSite=Strict');
+      expect(cookie).toContain('SameSite=Lax');
       expect(cookie).toContain('Path=/');
       expect(cookie).toContain('Max-Age=3600');
     });
