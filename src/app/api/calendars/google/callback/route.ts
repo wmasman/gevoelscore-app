@@ -21,6 +21,7 @@ import {
 } from '@/lib/auth/cal-oauth-state';
 import { encrypt } from '@/lib/auth/envelope-encryption';
 import { getValidatedSession } from '@/lib/auth/get-validated-session';
+import { getPublicOrigin } from '@/lib/auth/public-origin';
 import { parseSessionCookie } from '@/lib/auth/session';
 import { upsertConnection } from '@/lib/api/calendars';
 import { getGoogleProvider } from '@/lib/integrations/google/get-provider';
@@ -63,8 +64,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 
-  // Exchange code for tokens + account email
-  const redirectUri = `${requestUrl.origin}/api/calendars/google/callback`;
+  // Exchange code for tokens + account email. Must use the same
+  // redirect_uri that was sent to Google in the auth URL, which means
+  // the public origin (not Node's internal 0.0.0.0:3000).
+  const publicOrigin = getPublicOrigin(request);
+  const redirectUri = `${publicOrigin}/api/calendars/google/callback`;
   let exchanged: {
     refreshToken: string;
     accessToken: string;
@@ -108,9 +112,12 @@ export async function GET(request: Request) {
   }
   const connectionId = upsertResult.value;
 
-  // Redirect to the calendar-selection page + clear state cookie
+  // Redirect to the calendar-selection page + clear state cookie.
+  // Same public-origin derivation: if we used requestUrl.origin here,
+  // the browser would be sent to https://0.0.0.0:3000/... which is
+  // unreachable.
   const response = NextResponse.redirect(
-    `${requestUrl.origin}/settings/kalenders/choose?connection_id=${encodeURIComponent(connectionId)}`,
+    `${publicOrigin}/settings/kalenders/choose?connection_id=${encodeURIComponent(connectionId)}`,
     302,
   );
   response.headers.set('Set-Cookie', clearStateCookie());
