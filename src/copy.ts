@@ -224,6 +224,37 @@ export const copy = {
     dataExport: 'Exporteren',
     dataDelete: 'Account verwijderen',
     iconLabel: 'Instellingen openen',
+    // v1.6 — kalender-integration surface inside /settings, between
+    // Account and Tag-beheer (placed above tag-beheer because it's a
+    // setup activity; tag-beheer is ongoing cleanup).
+    calendars: {
+      heading: 'Kalenders',
+      emptyState: 'Geen kalenders verbonden.',
+      connectGoogle: 'Verbind Google Calendar',
+      connectOther: '+ Verbind een andere kalender',
+      otherComingSoon: 'Binnenkort: Outlook, Apple',
+      // (email) — row label
+      rowLabel: (email: string): string => email,
+      statusActive: 'Verbonden',
+      statusError: 'Fout',
+      statusDisconnected: 'Ontkoppeld',
+      // (relative) — e.g. "Gesynchroniseerd: 2 uur geleden"
+      lastSyncedAt: (relative: string): string => `Gesynchroniseerd: ${relative}`,
+      neverSynced: 'Nog niet gesynchroniseerd',
+      refresh: 'Ververs nu',
+      refreshing: 'Synchroniseren...',
+      disconnect: 'Ontkoppel',
+      disconnectConfirmPrompt:
+        'Deze kalender ontkoppelen? Bestaande events worden verwijderd. De koppeling met Google wordt ingetrokken.',
+      disconnectConfirmYes: 'Ja, ontkoppel',
+      disconnectConfirmCancel: 'Annuleren',
+      disconnecting: 'Ontkoppelen...',
+      connectError: 'Verbinden lukte niet. Probeer opnieuw.',
+      refreshError: 'Synchroniseren lukte niet. Probeer opnieuw.',
+      disconnectError: 'Ontkoppelen lukte niet. Probeer opnieuw.',
+      revokeFailedWarning:
+        'Lokaal verwijderd, maar intrekken bij Google lukte niet. Trek de toegang handmatig in via myaccount.google.com.',
+    },
     // Step v1.5b — tag-management surface inside /settings, between
     // Account and Data. Drill-down via TagFormSheet (BottomSheet).
     tagManagement: {

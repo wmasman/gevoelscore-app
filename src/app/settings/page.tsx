@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { SettingsView } from '@/components/settings-view';
+import { readActiveConnectionsForUser } from '@/lib/api/calendars';
+import type { DirectusCalendarConnectionRow } from '@/lib/api/calendars';
 import { readDayEntriesInRange } from '@/lib/api/day-entries';
 import { readAllEpisodes } from '@/lib/api/episodes';
 import { readAllTags } from '@/lib/api/tags';
@@ -53,23 +55,34 @@ export default async function SettingsPage() {
   let allTags: Tag[] = [];
   let episodes: Episode[] = [];
   let timelineEntries: DayEntry[] = [];
+  let calendarConnections: DirectusCalendarConnectionRow[] = [];
   // Settings → Tag-beheer must see archived tags too (the "Toon
   // gearchiveerd" toggle gates UI visibility, not the source list).
   // Episodes follows the same pattern via includeArchived: true.
-  const [tagsResult, episodesResult, rangeResult] = await Promise.all([
-    readAllTags(session.accessToken, { includeArchived: true }),
-    readAllEpisodes(session.accessToken, { includeArchived: true }),
-    readDayEntriesInRange(session.accessToken, from, today),
-  ]);
+  // v1.6 — calendar_connections for the Kalenders section. v1.6
+  // single-user means the WILLEM_USER_ID env-var-resolved id is used;
+  // multi-user (v2) will read user_id from the session.
+  const willemUserId = process.env.WILLEM_USER_ID ?? '';
+  const [tagsResult, episodesResult, rangeResult, connectionsResult] =
+    await Promise.all([
+      readAllTags(session.accessToken, { includeArchived: true }),
+      readAllEpisodes(session.accessToken, { includeArchived: true }),
+      readDayEntriesInRange(session.accessToken, from, today),
+      willemUserId
+        ? readActiveConnectionsForUser(session.accessToken, willemUserId)
+        : Promise.resolve({ ok: true as const, value: [] }),
+    ]);
   if (tagsResult.ok) allTags = tagsResult.value;
   if (episodesResult.ok) episodes = episodesResult.value;
   if (rangeResult.ok) timelineEntries = rangeResult.value;
+  if (connectionsResult.ok) calendarConnections = connectionsResult.value;
 
   return (
     <SettingsView
       allTags={allTags}
       episodes={episodes}
       timelineEntries={timelineEntries}
+      calendarConnections={calendarConnections}
     />
   );
 }

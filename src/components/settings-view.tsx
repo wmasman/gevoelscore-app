@@ -16,8 +16,10 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CalendarsSection } from '@/components/calendars-section';
 import { TagManagementSection } from '@/components/tag-management-section';
 import { copy } from '@/copy';
+import type { DirectusCalendarConnectionRow } from '@/lib/api/calendars';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import type { Episode } from '@/lib/domain/episode';
 import type { Tag } from '@/lib/domain/tag';
@@ -33,12 +35,19 @@ type Props = {
   allTags?: Tag[];
   episodes?: Episode[];
   timelineEntries?: DayEntry[];
+  /**
+   * v1.6 — calendar_connections rows for the Kalenders surface.
+   * Optional default for tests + first-paint safety (same pattern as
+   * the v1.5b reads above).
+   */
+  calendarConnections?: DirectusCalendarConnectionRow[];
 };
 
 export function SettingsView({
   allTags = [],
   episodes = [],
   timelineEntries = [],
+  calendarConnections = [],
 }: Props = {}) {
   const router = useRouter();
   const [state, setState] = useState<LogoutState>('idle');
@@ -130,6 +139,8 @@ export function SettingsView({
           </p>
         )}
       </section>
+
+      <CalendarsSection connections={calendarConnections} />
 
       <TagManagementSection
         tags={allTags}
