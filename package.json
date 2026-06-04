@@ -24,6 +24,7 @@
     "audit": "npm audit --audit-level=high",
     "verify": "npm run lint && npm run typecheck && npm test",
     "verify:full": "npm run verify && npm run audit && npm run test:e2e",
+    "predeploy": "npm run test:e2e -- tests/e2e/no-console-errors.spec.ts --project=chromium",
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
