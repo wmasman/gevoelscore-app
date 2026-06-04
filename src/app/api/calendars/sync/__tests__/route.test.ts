@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   writeCheck: vi.fn(),
   readActiveConnectionsForUser: vi.fn(),
   readAllActiveConnections: vi.fn(),
+  recordCronRun: vi.fn(),
   syncConnection: vi.fn(),
   getGoogleProvider: vi.fn(),
   decrypt: vi.fn(),
@@ -42,6 +43,7 @@ vi.mock('@/lib/api/calendars', () => ({
   createCalendarEvent: mocks.createCalendarEvent,
   patchCalendarEvent: mocks.patchCalendarEvent,
   patchConnection: mocks.patchConnection,
+  recordCronRun: mocks.recordCronRun,
 }));
 
 vi.mock('@/lib/sync/calendar-sync', () => ({
@@ -92,6 +94,8 @@ beforeEach(() => {
   mocks.writeCheck.mockReset();
   mocks.readActiveConnectionsForUser.mockReset();
   mocks.readAllActiveConnections.mockReset();
+  mocks.recordCronRun.mockReset();
+  mocks.recordCronRun.mockResolvedValue(undefined);
   mocks.syncConnection.mockReset();
   mocks.getGoogleProvider.mockReset();
 
@@ -229,5 +233,90 @@ describe('POST /api/calendars/sync', () => {
     const res = await POST(makePost({ authHeader: `Bearer ${samelen}` }));
 
     expect(res.status).toBe(401); // falls through, no session → 401
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // step-2 Phase 2.B — recordCronRun integration (AC2.3-2.5)
+  // ────────────────────────────────────────────────────────────
+
+  it('test 64 (step-2): session path → recordCronRun called with success counts (AC2.4)', async () => {
+    await POST(makePost({ cookie: 'gs_session=s-1' }));
+
+    expect(mocks.recordCronRun).toHaveBeenCalledTimes(1);
+    expect(mocks.recordCronRun).toHaveBeenCalledWith(
+      'at',
+      'daily_calendar_sync',
+      {
+        ok: true,
+        details: {
+          connections: 1,
+          events_pulled: 5,
+          events_upserted: 5,
+          events_excluded_by_series: 0,
+        },
+      },
+    );
+  });
+
+  it('test 65 (step-2): bearer path → recordCronRun called with the cron token + success counts (AC2.4)', async () => {
+    await POST(
+      makePost({
+        authHeader: 'Bearer bearer-secret-32-bytes-base64-here==',
+      }),
+    );
+
+    expect(mocks.recordCronRun).toHaveBeenCalledTimes(1);
+    expect(mocks.recordCronRun).toHaveBeenCalledWith(
+      'cron-token',
+      'daily_calendar_sync',
+      {
+        ok: true,
+        details: {
+          connections: 1,
+          events_pulled: 5,
+          events_upserted: 5,
+          events_excluded_by_series: 0,
+        },
+      },
+    );
+  });
+
+  it('test 66 (step-2): if recordCronRun rejects, the sync route still returns 200 with aggregate results (AC2.5)', async () => {
+    // Defense in depth — the wrapper itself is no-throw, but the route
+    // must also swallow any breach of that contract so a future bug
+    // in recordCronRun can never break the user's Ververs nu response
+    // or the cron's HTTP signal.
+    mocks.recordCronRun.mockRejectedValueOnce(
+      new Error('cron_monitor unreachable'),
+    );
+
+    const res = await POST(makePost({ cookie: 'gs_session=s-1' }));
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; events_pulled: number };
+    expect(body.ok).toBe(true);
+    expect(body.events_pulled).toBe(5);
+    // The route MUST attempt the monitor write. Without this check the
+    // test passes vacuously when recordCronRun isn't wired at all.
+    expect(mocks.recordCronRun).toHaveBeenCalledTimes(1);
+  });
+
+  it('test 67 (step-2): per-connection error → recordCronRun called with { ok: false, error: code } (AC2.3)', async () => {
+    mocks.syncConnection.mockResolvedValue({
+      connectionId: 'conn-1',
+      eventsPulled: 0,
+      eventsUpserted: 0,
+      eventsExcludedBySeries: 0,
+      errors: ['refresh_token_invalid'],
+    });
+
+    await POST(makePost({ cookie: 'gs_session=s-1' }));
+
+    expect(mocks.recordCronRun).toHaveBeenCalledTimes(1);
+    expect(mocks.recordCronRun).toHaveBeenCalledWith(
+      'at',
+      'daily_calendar_sync',
+      { ok: false, error: 'refresh_token_invalid' },
+    );
   });
 });

@@ -19,6 +19,7 @@
 import * as crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import {
+  type CronRunResult,
   createCalendarEvent,
   patchCalendarEvent,
   patchConnection,
@@ -26,6 +27,7 @@ import {
   readAllActiveConnections,
   readEventsByProviderIds,
   readSeriesExclusionRecurrenceIds,
+  recordCronRun,
 } from '@/lib/api/calendars';
 import { allowedOrigins } from '@/lib/auth/allowed-origins';
 import { decrypt } from '@/lib/auth/envelope-encryption';
@@ -212,18 +214,52 @@ export async function POST(request: Request) {
     results.push(result);
   }
 
+  const eventsPulled = results.reduce((s, r) => s + r.eventsPulled, 0);
+  const eventsUpserted = results.reduce((s, r) => s + r.eventsUpserted, 0);
+  const eventsExcludedBySeries = results.reduce(
+    (s, r) => s + r.eventsExcludedBySeries,
+    0,
+  );
+  const errors = results.flatMap((r) => r.errors);
+
+  // ─────────────────────────────────────────────────────────────
+  // cron_monitor write (step-2 Phase 2.B, AC2.3/2.4/2.5).
+  //
+  // Called on BOTH paths (manual Ververs nu AND daily cron) so the
+  // monitor row is "last sync, however triggered" — the most useful
+  // signal for staleness checks. Result body is counts-only on success
+  // (AC2.2) and a short error code on failure (AC2.3); the wrapper
+  // enforces a 1000-char cap as a final defense.
+  //
+  // recordCronRun is no-throw by contract (AC2.5), but the .catch()
+  // here is defense in depth: a future bug in the wrapper cannot
+  // break Ververs nu's 200 response or the cron's HTTP signal.
+  // ─────────────────────────────────────────────────────────────
+  const cronResult: CronRunResult =
+    errors.length === 0
+      ? {
+          ok: true,
+          details: {
+            connections: results.length,
+            events_pulled: eventsPulled,
+            events_upserted: eventsUpserted,
+            events_excluded_by_series: eventsExcludedBySeries,
+          },
+        }
+      : { ok: false, error: errors[0]! };
+  await recordCronRun(accessToken, 'daily_calendar_sync', cronResult).catch(
+    () => undefined,
+  );
+
   return NextResponse.json(
     {
       ok: true,
       scope,
       connections: results.length,
-      events_pulled: results.reduce((s, r) => s + r.eventsPulled, 0),
-      events_upserted: results.reduce((s, r) => s + r.eventsUpserted, 0),
-      events_excluded_by_series: results.reduce(
-        (s, r) => s + r.eventsExcludedBySeries,
-        0,
-      ),
-      errors: results.flatMap((r) => r.errors),
+      events_pulled: eventsPulled,
+      events_upserted: eventsUpserted,
+      events_excluded_by_series: eventsExcludedBySeries,
+      errors,
     },
     { status: 200 },
   );
