@@ -100,14 +100,31 @@ const V1_PLACEHOLDER_FIELDS = [
   'attendees_count',
 ];
 
-// Guard: refuse to drop columns if rows exist.
-console.log('  Running migration guard (assert calendar_events empty)...');
-await assertCalendarEventsEmpty(queryPg);
-console.log('  ✅ calendar_events is empty');
+// Check whether the v1 placeholder migration still needs to run. The
+// guard (assert calendar_events empty) only matters when we'd actually
+// drop columns; once the v1.6 migration has run, the placeholder
+// columns are gone and re-running the script should be a no-op even
+// with rows. We probe v1-EXCLUSIVE columns (ones that don't exist in
+// the v1.6 shape) — attendees_count exists in both shapes so it's not
+// a useful signal.
+const V1_EXCLUSIVE_FIELDS = V1_PLACEHOLDER_FIELDS.filter(
+  (f) => f !== 'attendees_count',
+);
+const placeholderStillPresent = (
+  await Promise.all(V1_EXCLUSIVE_FIELDS.map((f) => fieldExists('calendar_events', f)))
+).some(Boolean);
 
-// Drop v1 placeholder columns. Idempotent: skipped if already gone.
-for (const field of V1_PLACEHOLDER_FIELDS) {
-  await dropFieldIfExists('calendar_events', field);
+if (placeholderStillPresent) {
+  console.log('  Running migration guard (assert calendar_events empty)...');
+  await assertCalendarEventsEmpty(queryPg);
+  console.log('  ✅ calendar_events is empty');
+
+  // Drop v1 placeholder columns. Idempotent: skipped if already gone.
+  for (const field of V1_PLACEHOLDER_FIELDS) {
+    await dropFieldIfExists('calendar_events', field);
+  }
+} else {
+  console.log('  ⏩ v1 placeholder columns already removed; skipping guard + drops');
 }
 
 // ─────────────────────────────────────────────────────────────────
