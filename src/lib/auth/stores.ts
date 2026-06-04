@@ -76,6 +76,18 @@ export const episodeReadRateLimiter = createRateLimiter({
   windowMs: FIVE_MIN_MS,
 });
 
+// Writes to /api/calendars/* (v1.6 calendar-binding feature). Covers OAuth
+// connect/callback/disconnect, choose-calendars POST, manual `Ververs nu`
+// sync, per-event PATCH, and include-series POST. 100/5min (20/min) absorbs
+// a bulk-linking session (user tagging dozens of events at once) without
+// burning the budget; tighter than tag-write (200/5min) because calendar
+// writes are typically rarer in steady state. The bearer-gated cron path
+// of /api/calendars/sync bypasses this limiter (system, not user).
+export const calendarWriteRateLimiter = createRateLimiter({
+  limit: 100,
+  windowMs: FIVE_MIN_MS,
+});
+
 function buildSessionStore(): SessionStore {
   const adminToken = process.env.DIRECTUS_TOKEN;
   const directusUrl =
@@ -121,6 +133,7 @@ if (typeof globalThis !== 'undefined' && globalThis.__gsAuthSweeper === undefine
     tagWriteRateLimiter.sweep();
     episodeWriteRateLimiter.sweep();
     episodeReadRateLimiter.sweep();
+    calendarWriteRateLimiter.sweep();
     pendingOtpStore.cleanupExpired();
     pendingTfaStore.cleanupExpired();
   }, SWEEP_INTERVAL_MS);
