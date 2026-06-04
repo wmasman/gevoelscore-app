@@ -41,6 +41,16 @@ type Props = {
    * the v1.5b reads above).
    */
   calendarConnections?: DirectusCalendarConnectionRow[];
+  /**
+   * v1.6.1 hydration fix — server snapshots the current time once and
+   * threads it down to CalendarsSection so SSR and client paint
+   * agree on relative timestamps ("2 uur geleden"). Without this,
+   * `new Date()` running twice (server then client) drifts across
+   * `relativeDutchTime` thresholds and causes React #418.
+   * Tests + standalone use can omit it; CalendarsSection falls back
+   * to `new Date()` only when no `now` is passed.
+   */
+  now?: Date;
 };
 
 export function SettingsView({
@@ -48,6 +58,7 @@ export function SettingsView({
   episodes = [],
   timelineEntries = [],
   calendarConnections = [],
+  now,
 }: Props = {}) {
   const router = useRouter();
   const [state, setState] = useState<LogoutState>('idle');
@@ -140,7 +151,7 @@ export function SettingsView({
         )}
       </section>
 
-      <CalendarsSection connections={calendarConnections} />
+      <CalendarsSection connections={calendarConnections} now={now} />
 
       <TagManagementSection
         tags={allTags}

@@ -23,8 +23,12 @@ import { relativeDutchTime } from '@/lib/domain/relative-dutch-time';
 type Props = {
   connections: DirectusCalendarConnectionRow[];
   /**
-   * Test-only override for `new Date()`. Production passes nothing →
-   * the component reads the wall clock when rendering relative timestamps.
+   * Server-snapshotted `now` for relative-time rendering. Must be passed
+   * from the server component (see app/settings/page.tsx) so SSR and
+   * client hydration agree on the rendered text. Without it, `new Date()`
+   * runs twice (server then client) and drifts across relativeDutchTime
+   * thresholds, producing React #418 hydration mismatches. The fallback
+   * to `new Date()` exists only for tests and standalone use.
    */
   now?: Date;
 };

@@ -77,12 +77,22 @@ export default async function SettingsPage() {
   if (rangeResult.ok) timelineEntries = rangeResult.value;
   if (connectionsResult.ok) calendarConnections = connectionsResult.value;
 
+  // v1.6.1 hydration fix: snapshot `now` here on the server and thread
+  // it down. CalendarsSection's relative-time rendering ("2 uur geleden")
+  // would otherwise compute `new Date()` once during SSR and once during
+  // client hydration, drifting across thresholds in relativeDutchTime
+  // and causing React #418 hydration mismatches (seen as 200+ console
+  // errors on /settings). After router.refresh() this re-snapshots so
+  // the displayed time stays roughly current.
+  const now = new Date();
+
   return (
     <SettingsView
       allTags={allTags}
       episodes={episodes}
       timelineEntries={timelineEntries}
       calendarConnections={calendarConnections}
+      now={now}
     />
   );
 }
