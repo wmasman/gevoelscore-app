@@ -110,10 +110,18 @@ function mapToPatch(
   };
 }
 
+export type SyncWindow = {
+  /** Override the default 7-back computation. Useful for historical backfill. */
+  from?: Date;
+  /** Override the default 30-forward computation. */
+  to?: Date;
+};
+
 export async function syncConnection(
   connection: DirectusCalendarConnectionRow,
   deps: SyncDeps,
   now: Date,
+  windowOverride?: SyncWindow,
 ): Promise<SyncResult> {
   const result: SyncResult = {
     connectionId: connection.id,
@@ -139,9 +147,13 @@ export async function syncConnection(
     return result;
   }
 
-  // 2. Fetch events in the rolling window.
-  const from = new Date(now.getTime() - SYNC_WINDOW_BACK_DAYS * MS_PER_DAY);
-  const to = new Date(now.getTime() + SYNC_WINDOW_FORWARD_DAYS * MS_PER_DAY);
+  // 2. Fetch events in the rolling window (or the override for backfill).
+  const from =
+    windowOverride?.from ??
+    new Date(now.getTime() - SYNC_WINDOW_BACK_DAYS * MS_PER_DAY);
+  const to =
+    windowOverride?.to ??
+    new Date(now.getTime() + SYNC_WINDOW_FORWARD_DAYS * MS_PER_DAY);
 
   let fetched: CalendarEvent[];
   try {

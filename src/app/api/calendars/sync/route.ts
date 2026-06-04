@@ -166,12 +166,45 @@ export async function POST(request: Request) {
   };
 
   // ─────────────────────────────────────────────────────────────
+  // Optional ?from=YYYY-MM-DD&to=YYYY-MM-DD window override (session
+  // path only, for historical backfill). Bearer path keeps the
+  // default 7-back/30-forward.
+  // ─────────────────────────────────────────────────────────────
+  let windowOverride: { from?: Date; to?: Date } | undefined;
+  if (scope === 'session') {
+    const requestUrl = new URL(request.url);
+    const fromParam = requestUrl.searchParams.get('from');
+    const toParam = requestUrl.searchParams.get('to');
+    if (fromParam || toParam) {
+      const override: { from?: Date; to?: Date } = {};
+      if (fromParam) {
+        const d = new Date(fromParam);
+        if (Number.isNaN(d.getTime())) {
+          return NextResponse.json(
+            { error: 'invalid_from' },
+            { status: 400 },
+          );
+        }
+        override.from = d;
+      }
+      if (toParam) {
+        const d = new Date(toParam);
+        if (Number.isNaN(d.getTime())) {
+          return NextResponse.json({ error: 'invalid_to' }, { status: 400 });
+        }
+        override.to = d;
+      }
+      windowOverride = override;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // Iterate connections sequentially (single-user app; sequential is
   // safe + simpler error semantics than Promise.all).
   // ─────────────────────────────────────────────────────────────
   const results: SyncResult[] = [];
   for (const connection of connections) {
-    const result = await syncConnection(connection, deps, new Date());
+    const result = await syncConnection(connection, deps, new Date(), windowOverride);
     results.push(result);
   }
 

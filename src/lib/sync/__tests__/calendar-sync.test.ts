@@ -166,6 +166,39 @@ describe('calendar-sync', () => {
       expect(from.getTime()).toBe(NOW.getTime() - 7 * 24 * 60 * 60 * 1000);
       expect(to.getTime()).toBe(NOW.getTime() + 30 * 24 * 60 * 60 * 1000);
     });
+
+    it('given a windowOverride, when synced, then provider.fetchEvents uses the overridden from/to (for historical backfill)', async () => {
+      const provider = makeProvider();
+      const deps = makeDeps({ provider });
+      const conn = makeConnection({
+        included_calendar_ids: ['cal-a'],
+      });
+      const customFrom = new Date('2022-09-01T00:00:00Z');
+      const customTo = new Date('2022-09-30T00:00:00Z');
+
+      await syncConnection(conn, deps, NOW, { from: customFrom, to: customTo });
+
+      const [, , from, to] = (provider.fetchEvents as MockedFunction<
+        CalendarProvider['fetchEvents']
+      >).mock.calls[0]!;
+      expect(from.getTime()).toBe(customFrom.getTime());
+      expect(to.getTime()).toBe(customTo.getTime());
+    });
+
+    it('given a partial windowOverride (only `from`), when synced, then `to` falls back to the default forward window', async () => {
+      const provider = makeProvider();
+      const deps = makeDeps({ provider });
+      const conn = makeConnection({ included_calendar_ids: ['cal-a'] });
+      const customFrom = new Date('2022-09-01T00:00:00Z');
+
+      await syncConnection(conn, deps, NOW, { from: customFrom });
+
+      const [, , from, to] = (provider.fetchEvents as MockedFunction<
+        CalendarProvider['fetchEvents']
+      >).mock.calls[0]!;
+      expect(from.getTime()).toBe(customFrom.getTime());
+      expect(to.getTime()).toBe(NOW.getTime() + 30 * 24 * 60 * 60 * 1000);
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────
