@@ -102,16 +102,40 @@ function isNetworkError(e: unknown): boolean {
 }
 
 function classifyError(e: unknown): CalendarsError {
-  // Temporary diagnostic logging — calendars.ts errors were generic
-  // 'directus_error' with no surface info, blocking the prod-smoke
-  // step-1 verification. Logs the underlying error class + first line
-  // of the message to Fly stdout. No PII: error messages from the SDK
-  // contain endpoint paths + status codes, not user data.
-  // TODO: remove or downgrade once step-1 ships and the integration is
-  // proven; replace with structured logging in a follow-up.
-  const cls = e instanceof Error ? e.constructor.name : typeof e;
-  const msg = e instanceof Error ? e.message.split('\n')[0]?.slice(0, 200) : String(e).slice(0, 200);
-  console.error(`[calendars] directus call failed: ${cls}: ${msg}`);
+  // Temporary diagnostic logging. The @directus/sdk throws structured
+  // objects with shape { errors: [{ message, extensions: { code, ... } }] }
+  // rather than Error instances, so we extract the known fields here.
+  // No PII: error messages from the SDK contain endpoint paths +
+  // status codes + collection names, not user data.
+  // TODO: remove once step-1 ships and the integration is proven.
+  try {
+    const obj = e as Record<string, unknown> | null | undefined;
+    const errors = obj?.errors as
+      | Array<{ message?: string; extensions?: { code?: string } }>
+      | undefined;
+    if (Array.isArray(errors) && errors.length > 0) {
+      const first = errors[0];
+      console.error(
+        `[calendars] directus_error: ${first?.extensions?.code ?? 'unknown'}: ${(first?.message ?? 'no message').slice(0, 300)}`,
+      );
+    } else if (e instanceof Error) {
+      console.error(
+        `[calendars] directus_error: ${e.constructor.name}: ${e.message.slice(0, 300)}`,
+      );
+    } else {
+      // Fallback: dump the keys we know are safe.
+      const safe = {
+        status: obj?.status,
+        statusText: obj?.statusText,
+        message: typeof obj?.message === 'string' ? obj.message.slice(0, 300) : undefined,
+        name: typeof obj?.name === 'string' ? obj.name : undefined,
+      };
+      console.error(`[calendars] directus_error: ${JSON.stringify(safe)}`);
+    }
+  } catch {
+    // never throw from a logger
+    console.error('[calendars] directus_error: (failed to serialize)');
+  }
   return isNetworkError(e) ? 'network_error' : 'directus_error';
 }
 
