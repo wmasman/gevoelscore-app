@@ -102,6 +102,16 @@ function isNetworkError(e: unknown): boolean {
 }
 
 function classifyError(e: unknown): CalendarsError {
+  // Temporary diagnostic logging — calendars.ts errors were generic
+  // 'directus_error' with no surface info, blocking the prod-smoke
+  // step-1 verification. Logs the underlying error class + first line
+  // of the message to Fly stdout. No PII: error messages from the SDK
+  // contain endpoint paths + status codes, not user data.
+  // TODO: remove or downgrade once step-1 ships and the integration is
+  // proven; replace with structured logging in a follow-up.
+  const cls = e instanceof Error ? e.constructor.name : typeof e;
+  const msg = e instanceof Error ? e.message.split('\n')[0]?.slice(0, 200) : String(e).slice(0, 200);
+  console.error(`[calendars] directus call failed: ${cls}: ${msg}`);
   return isNetworkError(e) ? 'network_error' : 'directus_error';
 }
 
