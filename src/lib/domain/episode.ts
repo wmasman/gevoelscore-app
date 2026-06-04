@@ -10,8 +10,11 @@ export type Episode = {
   start_date: string;
   end_date: string | null;
   description: string | null;
-  // v1.5: always null. The column exists for v1.6 calendar binding;
-  // typed `unknown | null` for now and locked to null in the validator.
+  // v1.6 ships calendar binding via the event-side `calendar_events.linked_episode_id`
+  // (Shape A in docs/features/calendar-binding/). This column is reserved for
+  // v1.6.1 calendar-bound episodes (Shape B — promoting a recurring series to
+  // an episode that auto-tracks it). Typed `unknown | null` for now and locked
+  // to null in the validator until that feature ships.
   calendar_binding: unknown | null;
   archived_at: string | null;
   created_at: string;
@@ -77,9 +80,10 @@ export function validateEpisode(input: unknown): ValidateEpisodeResult {
     return { ok: false, error: 'invalid_description' };
   }
 
-  // v1.5 gate: calendar_binding must be null. The column exists for
-  // v1.6 but accepting any non-null shape now would lock us in before
-  // that design lands.
+  // v1.6 gate: calendar_binding must be null. The column is reserved for
+  // v1.6.1 (Shape B calendar-bound episodes). v1.6 ships only Shape A
+  // (event-side `calendar_events.linked_episode_id`); accepting a non-null
+  // calendar_binding now would lock us in before v1.6.1 design lands.
   if (obj.calendar_binding !== null) {
     return { ok: false, error: 'invalid_calendar_binding' };
   }

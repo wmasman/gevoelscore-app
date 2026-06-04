@@ -212,8 +212,11 @@ describe('episode', () => {
       expect(result).toEqual({ ok: false, error: 'invalid_description' });
     });
 
-    it('rejects non-null calendar_binding with invalid_calendar_binding (v1.5 gate)', () => {
-      // Column exists in schema for v1.6 but v1.5 must lock it to null.
+    it('rejects non-null calendar_binding with invalid_calendar_binding (v1.6 gate — column reserved for v1.6.1)', () => {
+      // v1.6 ships Shape A (event-side linked_episode_id only). The
+      // episodes.calendar_binding column stays locked to null until
+      // v1.6.1 (Shape B calendar-bound episodes). See
+      // docs/features/calendar-binding/ Future considerations.
       const result = validateEpisode(
         validEpisode({ calendar_binding: { google: 'series_xyz' } }),
       );

@@ -56,8 +56,51 @@ const expectations = [
   ['projects', 'start_date', 'date', 'date', { is_nullable: false }],
   ['projects', 'status', 'string', 'character varying', { is_nullable: false }],
 
-  ['calendar_events', 'google_event_id', 'string', 'character varying', { is_unique: true, is_nullable: false }],
-  ['calendar_events', 'date', 'date', 'date', { is_nullable: false }],
+  // calendar_events — v1.6 multi-provider shape. Migrated from the v1
+  // Google-specific placeholder. See features/calendar-binding/step-0.
+  ['calendar_events', 'connection_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['calendar_events', 'provider', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_events', 'provider_event_id', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_events', 'recurrence_id', 'string', 'character varying', { is_nullable: true }],
+  ['calendar_events', 'start_at', 'timestamp', 'timestamp with time zone', { is_nullable: false }],
+  ['calendar_events', 'end_at', 'timestamp', 'timestamp with time zone', { is_nullable: false }],
+  ['calendar_events', 'all_day', 'boolean', 'boolean', { is_nullable: false }],
+  ['calendar_events', 'title', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_events', 'attendees_count', 'integer', 'integer', { is_nullable: false }],
+  ['calendar_events', 'declined', 'boolean', 'boolean', { is_nullable: false }],
+  // Step-0 amendment 2026-06-04: 6 additional fields for v1.6.x rules + v2 learned rules
+  ['calendar_events', 'event_type', 'string', 'character varying', { is_nullable: true }],
+  ['calendar_events', 'status', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_events', 'transparency', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_events', 'organizer_is_self', 'boolean', 'boolean', { is_nullable: false }],
+  ['calendar_events', 'ical_uid', 'string', 'character varying', { is_nullable: true }],
+  ['calendar_events', 'html_link', 'string', 'character varying', { is_nullable: true }],
+  ['calendar_events', 'linked_tag_id', 'uuid', 'uuid', { is_nullable: true }],
+  ['calendar_events', 'linked_episode_id', 'uuid', 'uuid', { is_nullable: true }],
+  ['calendar_events', 'included_as_context', 'boolean', 'boolean', { is_nullable: false }],
+  ['calendar_events', 'user_decision', 'string', 'character varying', { is_nullable: false }],
+
+  // calendar_connections — v1.6 per-user OAuth connection rows
+  ['calendar_connections', 'user_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['calendar_connections', 'provider', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_connections', 'provider_account_email', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_connections', 'refresh_token_encrypted', 'text', 'text', { is_nullable: false }],
+  ['calendar_connections', 'scope', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_connections', 'connected_at', 'timestamp', 'timestamp with time zone', { is_nullable: false }],
+  ['calendar_connections', 'last_synced_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+  ['calendar_connections', 'status', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_connections', 'included_calendar_ids', 'json', 'json', { is_nullable: false }],
+
+  // calendar_series_exclusions — v1.6 user-excluded recurrences
+  ['calendar_series_exclusions', 'connection_id', 'uuid', 'uuid', { is_nullable: false }],
+  ['calendar_series_exclusions', 'recurrence_id', 'string', 'character varying', { is_nullable: false }],
+  ['calendar_series_exclusions', 'excluded_at', 'timestamp', 'timestamp with time zone', { is_nullable: false }],
+
+  // cron_monitor — shared infra (introduced v1.6)
+  ['cron_monitor', 'job_name', 'string', 'character varying', { is_nullable: false }],
+  ['cron_monitor', 'last_run_at', 'timestamp', 'timestamp with time zone', { is_nullable: true }],
+  ['cron_monitor', 'expected_interval_hours', 'integer', 'integer', { is_nullable: false }],
+  ['cron_monitor', 'is_active', 'boolean', 'boolean', { is_nullable: false }],
 
   ['garmin_daily', 'date', 'date', 'date', { is_unique: true, is_nullable: false }],
   ['health_daily', 'date', 'date', 'date', { is_unique: true, is_nullable: false }],
@@ -123,6 +166,16 @@ const relationExpectations = [
   { collection: 'project_entries_tags', field: 'tags_id', related_collection: 'tags', on_delete: 'CASCADE' },
   { collection: 'tags', field: 'parent_id', related_collection: 'tags', on_delete: 'SET NULL' },
   { collection: 'tags', field: 'parent_episode_id', related_collection: 'episodes', on_delete: 'SET NULL' },
+
+  // calendar-binding v1.6 — cascade chain on Ontkoppel: disconnecting
+  // a calendar_connections row cascades to its events + series_exclusions.
+  // Linked tag/episode references SET NULL so deletion of a tag/episode
+  // doesn't drop the event row (the event survives as an unlinked event).
+  { collection: 'calendar_events', field: 'connection_id', related_collection: 'calendar_connections', on_delete: 'CASCADE' },
+  { collection: 'calendar_events', field: 'linked_tag_id', related_collection: 'tags', on_delete: 'SET NULL' },
+  { collection: 'calendar_events', field: 'linked_episode_id', related_collection: 'episodes', on_delete: 'SET NULL' },
+  { collection: 'calendar_connections', field: 'user_id', related_collection: 'directus_users', on_delete: 'CASCADE' },
+  { collection: 'calendar_series_exclusions', field: 'connection_id', related_collection: 'calendar_connections', on_delete: 'CASCADE' },
 ];
 
 const relationResult = await verifyRelations(directusRequest, relationExpectations);
@@ -160,6 +213,34 @@ const indexExpectations = [
   {
     indexname: 'episodes_label_category_active_unique',
     definitionMustMatch: /UNIQUE INDEX episodes_label_category_active_unique.*ON.*episodes.*lower.*label.*category.*WHERE \(?archived_at IS NULL\)?/i,
+  },
+
+  // calendar-binding v1.6 — UNIQUE composites for idempotent upsert + per-recurrence exclusion
+  {
+    indexname: 'calendar_events_provider_event_unique',
+    definitionMustMatch: /UNIQUE INDEX calendar_events_provider_event_unique.*ON.*calendar_events.*\(connection_id, provider_event_id\)/i,
+  },
+  {
+    indexname: 'calendar_connections_user_provider_email_unique',
+    definitionMustMatch: /UNIQUE INDEX calendar_connections_user_provider_email_unique.*ON.*calendar_connections.*\(user_id, provider, provider_account_email\)/i,
+  },
+  {
+    indexname: 'calendar_series_exclusions_unique',
+    definitionMustMatch: /UNIQUE INDEX calendar_series_exclusions_unique.*ON.*calendar_series_exclusions.*\(connection_id, recurrence_id\)/i,
+  },
+  {
+    indexname: 'cron_monitor_job_name_unique',
+    definitionMustMatch: /UNIQUE INDEX cron_monitor_job_name_unique.*ON.*cron_monitor.*\(job_name\)/i,
+  },
+
+  // calendar-binding v1.6 — performance indexes (non-unique) for date-range + series queries
+  {
+    indexname: 'calendar_events_connection_start_idx',
+    definitionMustMatch: /INDEX calendar_events_connection_start_idx.*ON.*calendar_events.*\(connection_id, start_at\)/i,
+  },
+  {
+    indexname: 'calendar_events_connection_recurrence_idx',
+    definitionMustMatch: /INDEX calendar_events_connection_recurrence_idx.*ON.*calendar_events.*\(connection_id, recurrence_id\)/i,
   },
 ];
 
@@ -227,6 +308,39 @@ const checkExpectations = [
     conname: 'project_entries_tags_confidence_check',
     table: 'project_entries_tags',
     definitionMustMatch: /confidence.*(NULL|0).*1/i,
+  },
+
+  // calendar-binding v1.6 — enum + range CHECK constraints
+  {
+    conname: 'calendar_connections_status_check',
+    table: 'calendar_connections',
+    definitionMustMatch: /status.*active.*disconnected.*error/i,
+  },
+  {
+    conname: 'calendar_connections_provider_check',
+    table: 'calendar_connections',
+    definitionMustMatch: /provider.*google/i,
+  },
+  {
+    conname: 'calendar_events_provider_check',
+    table: 'calendar_events',
+    definitionMustMatch: /provider.*google/i,
+  },
+  {
+    conname: 'calendar_events_user_decision_check',
+    table: 'calendar_events',
+    definitionMustMatch: /user_decision.*auto.*user_included.*user_excluded/i,
+  },
+  {
+    conname: 'calendar_events_end_after_start_check',
+    table: 'calendar_events',
+    definitionMustMatch: /end_at.*start_at/i,
+  },
+  // Step-0 amendment 2026-06-04: status enum CHECK
+  {
+    conname: 'calendar_events_status_check',
+    table: 'calendar_events',
+    definitionMustMatch: /status.*confirmed.*tentative.*cancelled/i,
   },
 ];
 

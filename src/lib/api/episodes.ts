@@ -102,10 +102,11 @@ function isNotFoundError(e: unknown): boolean {
 }
 
 function rowToEpisode(r: DirectusEpisodeRow): Episode {
-  // Force calendar_binding to null per the v1.5 gate. The schema column
-  // is reserved for v1.6 calendar binding; until then any non-null value
-  // is forbidden. We normalise here so the domain layer never sees a
-  // non-null calendar_binding from a stray Directus admin write.
+  // Force calendar_binding to null per the v1.6 gate. The schema column
+  // is reserved for v1.6.1 calendar-bound episodes (Shape B from
+  // docs/features/calendar-binding/); v1.6 ships only Shape A (event-side
+  // linked_episode_id). We normalise here so the domain layer never sees
+  // a non-null calendar_binding from a stray Directus admin write.
   return {
     id: r.id,
     label: r.label,
