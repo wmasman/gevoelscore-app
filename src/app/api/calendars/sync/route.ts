@@ -57,11 +57,18 @@ function bearerMatches(authHeader: string | null, secret: string): boolean {
 export async function POST(request: Request) {
   // ─────────────────────────────────────────────────────────────
   // Auth gate: bearer FIRST (cron path), then session (Ververs-nu path).
-  // Bearer path uses process.env.DIRECTUS_TOKEN (TODO: step-2 will need
-  // a different token — the scoped sessions-only token can't access
-  // calendar collections. Defer to when the GHA cron actually fires).
+  //
+  // Bearer path uses CALENDAR_CRON_DIRECTUS_TOKEN — a scoped service
+  // token tied to the `gevoelscore-frontend-api` policy (same policy
+  // as session.accessToken, so CRUD on calendar_* + cron_monitor).
+  // Provisioned by directus/scripts/setup-cron-service-token.mjs and
+  // staged on Fly via scripts/rotate-cron-token.ps1. NOT the same as
+  // the legacy `DIRECTUS_TOKEN` env var — that one is the
+  // sessions-only scoped token (S-H1) and would FORBIDDEN on
+  // calendar_connections.
+  //
   // Session path uses session.accessToken (user's per-request token,
-  // tied to gevoelscore-frontend-api policy with calendar perms).
+  // tied to the same gevoelscore-frontend-api policy).
   // ─────────────────────────────────────────────────────────────
   const kek = process.env.CALENDAR_KEK;
   const syncSecret = process.env.CALENDAR_SYNC_SECRET;
@@ -76,10 +83,7 @@ export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
   if (authHeader && syncSecret && bearerMatches(authHeader, syncSecret)) {
     scope = 'bearer';
-    // TODO(step-2): scoped sessions-only DIRECTUS_TOKEN can't access
-    // calendar_connections. Need a separate "cron" token with the
-    // gevoelscore-frontend-api policy (or a new admin-scope policy).
-    const bearerToken = process.env.DIRECTUS_TOKEN;
+    const bearerToken = process.env.CALENDAR_CRON_DIRECTUS_TOKEN;
     if (!bearerToken) {
       return NextResponse.json({ error: 'server_error' }, { status: 500 });
     }

@@ -81,7 +81,11 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv('WILLEM_USER_ID', USER_ID);
   vi.stubEnv('CALENDAR_KEK', 'test-kek');
-  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  // Step-1 used DIRECTUS_TOKEN for the bearer path; step-2 swaps to
+  // CALENDAR_CRON_DIRECTUS_TOKEN (scoped to the frontend-api policy)
+  // because DIRECTUS_TOKEN on Fly is the sessions-only scoped token
+  // and would FORBIDDEN on calendar_connections.
+  vi.stubEnv('CALENDAR_CRON_DIRECTUS_TOKEN', 'cron-token');
   vi.stubEnv('CALENDAR_SYNC_SECRET', 'bearer-secret-32-bytes-base64-here==');
 
   mocks.getValidatedSession.mockReset();
@@ -175,6 +179,32 @@ describe('POST /api/calendars/sync', () => {
     expect(body.scope).toBe('bearer');
     expect(mocks.readAllActiveConnections).toHaveBeenCalled();
     expect(mocks.readActiveConnectionsForUser).not.toHaveBeenCalled();
+  });
+
+  it('test 61b (step-2): bearer path uses CALENDAR_CRON_DIRECTUS_TOKEN as the Directus accessToken (not session.accessToken)', async () => {
+    await POST(
+      makePost({
+        authHeader: 'Bearer bearer-secret-32-bytes-base64-here==',
+      }),
+    );
+
+    // The wrapper-call here is the loadActiveConnections path; it must
+    // be invoked with the cron token, not anything user-scoped.
+    expect(mocks.readAllActiveConnections).toHaveBeenCalledWith('cron-token');
+  });
+
+  it('test 61c (step-2): bearer path with valid auth but CALENDAR_CRON_DIRECTUS_TOKEN unset → 500 server_error', async () => {
+    vi.stubEnv('CALENDAR_CRON_DIRECTUS_TOKEN', '');
+    const res = await POST(
+      makePost({
+        authHeader: 'Bearer bearer-secret-32-bytes-base64-here==',
+      }),
+    );
+
+    expect(res.status).toBe(500);
+    expect((await res.json()).error).toBe('server_error');
+    // Must NOT reach the Directus layer when the env var is missing.
+    expect(mocks.readAllActiveConnections).not.toHaveBeenCalled();
   });
 
   it('test 62: per-connection error is captured in result.errors but route still returns 200', async () => {
