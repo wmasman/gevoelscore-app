@@ -16,6 +16,8 @@
 
 import { NextResponse } from 'next/server';
 import {
+  countEventsBySourceCalendar,
+  deleteEventsBySourceCalendarIds,
   patchConnection,
   readConnectionById,
 } from '@/lib/api/calendars';
@@ -152,7 +154,27 @@ export async function GET(request: Request, context: Context) {
     return NextResponse.json({ error: 'provider_error' }, { status: 502 });
   }
 
-  return NextResponse.json({ calendars }, { status: 200 });
+  // v1.6.1: also return the connection's CURRENT included_calendar_ids
+  // and a per-calendar event-count so the choose-calendars form can:
+  //   1. Pre-check the calendars the user already selected
+  //   2. Show the user how many events would be removed if they uncheck
+  //      a previously-included calendar.
+  // Counts include all-time events for this connection (not just the
+  // sync window) since that's what would actually be deleted.
+  const countsResult = await countEventsBySourceCalendar(
+    accessToken,
+    connection.id,
+  );
+  const event_counts_by_calendar_id = countsResult.ok ? countsResult.value : {};
+
+  return NextResponse.json(
+    {
+      calendars,
+      included_calendar_ids: connection.included_calendar_ids,
+      event_counts_by_calendar_id,
+    },
+    { status: 200 },
+  );
 }
 
 export async function POST(request: Request, context: Context) {
@@ -176,6 +198,7 @@ export async function POST(request: Request, context: Context) {
     accessToken,
   );
   if (!resolved.ok) return resolved.response;
+  const { connection } = resolved;
 
   let body: Record<string, unknown>;
   try {
@@ -191,20 +214,48 @@ export async function POST(request: Request, context: Context) {
   if (!Array.isArray(ids) || ids.some((id) => typeof id !== 'string')) {
     return NextResponse.json({ error: 'malformed_body' }, { status: 400 });
   }
+  const newIds = ids as string[];
+
+  // v1.6.1: when the caller removes calendars from the include list,
+  // they may also opt into deleting existing events of those calendars.
+  // Default is false (data-preserving). The form asks the user before
+  // sending true. Field name is verbose on purpose: it's a destructive
+  // op being requested.
+  const deleteFlag = body.delete_excluded_calendar_events;
+  if (deleteFlag !== undefined && typeof deleteFlag !== 'boolean') {
+    return NextResponse.json({ error: 'malformed_body' }, { status: 400 });
+  }
+
+  const oldIds = new Set(connection.included_calendar_ids);
+  const removedCalendarIds = [...oldIds].filter((id) => !newIds.includes(id));
+
+  let eventsDeleted = 0;
+  if (deleteFlag === true && removedCalendarIds.length > 0) {
+    const del = await deleteEventsBySourceCalendarIds(
+      accessToken,
+      connection.id,
+      removedCalendarIds,
+    );
+    if (!del.ok) {
+      return NextResponse.json({ error: 'directus_error' }, { status: 502 });
+    }
+    eventsDeleted = del.value;
+  }
 
   const patchResult = await patchConnection(accessToken, connection_id, {
-    included_calendar_ids: ids as string[],
+    included_calendar_ids: newIds,
   });
   if (!patchResult.ok) {
     return NextResponse.json({ error: 'directus_error' }, { status: 502 });
   }
 
-  // AC1.35: immediate-sync trigger deferred to Phase 1.D when the event
-  // CRUD wrappers (readEventsByProviderIds, createCalendarEvent,
-  // updateCalendarEvent, readSeriesExclusions) exist. For now, the user
-  // clicks `Ververs nu` on Settings to populate events.
   return NextResponse.json(
-    { ok: true, included_calendar_ids: ids },
+    {
+      ok: true,
+      included_calendar_ids: newIds,
+      removed_calendar_ids: removedCalendarIds,
+      events_deleted: eventsDeleted,
+    },
     { status: 200 },
   );
 }

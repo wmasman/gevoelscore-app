@@ -44,6 +44,15 @@ export type DirectusCalendarEventRow = {
   connection_id: string;
   provider: 'google';
   provider_event_id: string;
+  /**
+   * The provider-side calendar this event came from. v1.6.1 addition;
+   * NULL for events imported by code that predates v1.6.1 (the initial
+   * smoke + first historical backfill). Future syncs populate it on
+   * every upsert (mapToPatch + mapToRow both include it). Used by the
+   * choose-calendars POST to delete events of a calendar the user
+   * just removed from the include list.
+   */
+  source_calendar_id: string | null;
   recurrence_id: string | null;
   start_at: string;
   end_at: string;
@@ -511,6 +520,82 @@ export async function patchCalendarEventsBulk(
       updateItems('calendar_events', ids, patch),
     );
     return { ok: true, value: undefined };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Delete every event whose source_calendar_id is in `sourceCalendarIds`
+ * for the given connection. Used by the choose-calendars POST when the
+ * user removes calendars from the include list AND confirms they want
+ * the existing events of those calendars removed. NULL source_calendar_id
+ * (pre-v1.6.1 events) is NOT matched here; those are handled by a one-off
+ * cleanup script, not by everyday exclude actions.
+ *
+ * Returns the count of rows deleted. Two-step (read ids, then deleteItems
+ * one at a time) because the Directus SDK doesn't expose a filtered bulk
+ * delete; the SDK's deleteItems takes an explicit id list.
+ */
+export async function deleteEventsBySourceCalendarIds(
+  accessToken: string,
+  connectionId: string,
+  sourceCalendarIds: string[],
+): Promise<Result<number, CalendarsError>> {
+  if (sourceCalendarIds.length === 0) {
+    return { ok: true, value: 0 };
+  }
+  try {
+    const client = makeClient(accessToken);
+    const rows = (await client.request(
+      readItems('calendar_events', {
+        filter: {
+          _and: [
+            { connection_id: { _eq: connectionId } },
+            { source_calendar_id: { _in: sourceCalendarIds } },
+          ],
+        },
+        fields: ['id'],
+        limit: -1,
+      } as never),
+    )) as Array<{ id: string }>;
+    if (rows.length === 0) {
+      return { ok: true, value: 0 };
+    }
+    for (const r of rows) {
+      await client.request(deleteItem('calendar_events', r.id));
+    }
+    return { ok: true, value: rows.length };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Count events per source_calendar_id for a connection. Used by the
+ * choose-calendars GET so the form can show the user how many events
+ * would be removed if they exclude a given calendar. NULL
+ * source_calendar_id is folded into a single "(unknown)" bucket so the
+ * total still matches the calendar_events row count.
+ */
+export async function countEventsBySourceCalendar(
+  accessToken: string,
+  connectionId: string,
+): Promise<Result<Record<string, number>, CalendarsError>> {
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('calendar_events', {
+        filter: { connection_id: { _eq: connectionId } },
+        fields: ['source_calendar_id'],
+        limit: -1,
+      } as never),
+    )) as Array<{ source_calendar_id: string | null }>;
+    const counts: Record<string, number> = {};
+    for (const r of rows) {
+      const key = r.source_calendar_id ?? '(unknown)';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return { ok: true, value: counts };
   } catch (e) {
     return { ok: false, error: classifyError(e) };
   }

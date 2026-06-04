@@ -61,6 +61,9 @@ const expectations = [
   ['calendar_events', 'connection_id', 'uuid', 'uuid', { is_nullable: false }],
   ['calendar_events', 'provider', 'string', 'character varying', { is_nullable: false }],
   ['calendar_events', 'provider_event_id', 'string', 'character varying', { is_nullable: false }],
+  // v1.6.1 — the provider-side calendar this event came from (nullable so
+  // pre-v1.6.1 rows survive the migration; new syncs populate it).
+  ['calendar_events', 'source_calendar_id', 'string', 'character varying', { is_nullable: true }],
   ['calendar_events', 'recurrence_id', 'string', 'character varying', { is_nullable: true }],
   ['calendar_events', 'start_at', 'timestamp', 'timestamp with time zone', { is_nullable: false }],
   ['calendar_events', 'end_at', 'timestamp', 'timestamp with time zone', { is_nullable: false }],

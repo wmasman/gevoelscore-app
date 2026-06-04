@@ -9,6 +9,7 @@ import type { CalendarEvent } from '@/lib/integrations/calendar-provider';
 function baseEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
   return {
     providerEventId: 'evt-default',
+    sourceCalendarId: 'cal-primary@gmail.com',
     recurrenceId: null,
     startAt: new Date('2026-06-04T10:00:00Z'),
     endAt: new Date('2026-06-04T11:00:00Z'),

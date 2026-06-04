@@ -39,6 +39,7 @@ function makeConnection(
 function makeProviderEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
   return {
     providerEventId: 'evt-1',
+    sourceCalendarId: 'cal-primary@gmail.com',
     recurrenceId: null,
     startAt: new Date('2026-06-04T10:00:00Z'),
     endAt: new Date('2026-06-04T11:00:00Z'),
@@ -255,6 +256,7 @@ describe('calendar-sync', () => {
         connection_id: 'conn-1',
         provider: 'google',
         provider_event_id: 'evt-1',
+        source_calendar_id: 'cal-primary@gmail.com',
         recurrence_id: null,
         start_at: '2026-06-04T10:00:00Z',
         end_at: '2026-06-04T11:00:00Z',

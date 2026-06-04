@@ -189,4 +189,199 @@ describe('ChooseCalendarsForm', () => {
       expect(screen.getByRole('button', { name: 'Verbinden' })).toBeInTheDocument();
     });
   });
+
+  describe('v1.6.1: pre-checked from server + exclude-delete confirm flow', () => {
+    it('pre-checks only the calendars in included_calendar_ids when the server returns them', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          event_counts_by_calendar_id: {},
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+
+      await waitFor(() =>
+        expect(screen.getByLabelText(/wmasman@gmail\.com/)).toBeChecked(),
+      );
+      expect(screen.getByLabelText(/^Family/)).toBeChecked();
+      expect(screen.getByLabelText(/^Work/)).not.toBeChecked();
+    });
+
+    it('submitting WITHOUT removing any included calendar POSTs directly with delete_excluded_calendar_events=false', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['wmasman@gmail.com'],
+          event_counts_by_calendar_id: { 'wmasman@gmail.com': 312 },
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+      await screen.findByLabelText(/wmasman@gmail\.com/);
+
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) });
+      await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      const init = fetchMock.mock.calls[1]![1] as RequestInit;
+      const body = JSON.parse(init.body as string) as {
+        included_calendar_ids: string[];
+        delete_excluded_calendar_events: boolean;
+      };
+      expect(body.delete_excluded_calendar_events).toBe(false);
+      // No confirm dialog should have appeared
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    });
+
+    it('unchecking an INCLUDED calendar that has events shows the exclude-confirm dialog before posting', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          event_counts_by_calendar_id: {
+            'wmasman@gmail.com': 312,
+            'family-cal-id': 42,
+          },
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+      const familyCb = await screen.findByLabelText(/^Family/);
+
+      await userEvent.click(familyCb);
+      await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
+
+      const dialog = await screen.findByRole('alertdialog');
+      expect(dialog).toBeInTheDocument();
+      // Counts surface in the dialog
+      expect(screen.getByText(/Family: 42 events/)).toBeInTheDocument();
+      // Three buttons are present
+      expect(
+        screen.getByRole('button', { name: 'Ja, verwijder bestaande events' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Nee, alleen niet meer ophalen' }),
+      ).toBeInTheDocument();
+      // POST has NOT been sent yet — only the GET fired
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('picking "Ja, verwijder" POSTs with delete_excluded_calendar_events=true', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          event_counts_by_calendar_id: { 'family-cal-id': 42 },
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+      await userEvent.click(await screen.findByLabelText(/^Family/));
+      await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
+      await screen.findByRole('alertdialog');
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true, events_deleted: 42 }),
+      });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Ja, verwijder bestaande events' }),
+      );
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      const init = fetchMock.mock.calls[1]![1] as RequestInit;
+      const body = JSON.parse(init.body as string) as {
+        delete_excluded_calendar_events: boolean;
+      };
+      expect(body.delete_excluded_calendar_events).toBe(true);
+      await waitFor(() =>
+        expect(routerMocks.push).toHaveBeenCalledWith('/settings'),
+      );
+    });
+
+    it('picking "Nee, alleen niet meer ophalen" POSTs with delete_excluded_calendar_events=false', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          event_counts_by_calendar_id: { 'family-cal-id': 42 },
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+      await userEvent.click(await screen.findByLabelText(/^Family/));
+      await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
+      await screen.findByRole('alertdialog');
+
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Nee, alleen niet meer ophalen' }),
+      );
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      const init = fetchMock.mock.calls[1]![1] as RequestInit;
+      const body = JSON.parse(init.body as string) as {
+        delete_excluded_calendar_events: boolean;
+      };
+      expect(body.delete_excluded_calendar_events).toBe(false);
+    });
+
+    it('picking "Annuleren" in the confirm dialog returns to ready state without POSTing', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['family-cal-id'],
+          event_counts_by_calendar_id: { 'family-cal-id': 42 },
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+      await userEvent.click(await screen.findByLabelText(/^Family/));
+      await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
+      const dialog = await screen.findByRole('alertdialog');
+
+      // Pick the dialog's Annuleren, not the form's.
+      const within = await import('@testing-library/react').then((m) => m.within);
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Annuleren' }));
+
+      await waitFor(() =>
+        expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+      );
+      // Only the GET fired
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('unchecking an INCLUDED calendar with ZERO events does NOT show the confirm dialog', async () => {
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          calendars: SAMPLE_CALENDARS,
+          included_calendar_ids: ['wmasman@gmail.com', 'work-cal-id'],
+          event_counts_by_calendar_id: { 'wmasman@gmail.com': 312 }, // work-cal-id: implicit 0
+        }),
+      });
+
+      render(<ChooseCalendarsForm connectionId={CONN_ID} />);
+      await userEvent.click(await screen.findByLabelText(/^Work/));
+
+      fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) });
+      await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+      expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+      const init = fetchMock.mock.calls[1]![1] as RequestInit;
+      const body = JSON.parse(init.body as string) as {
+        delete_excluded_calendar_events: boolean;
+      };
+      expect(body.delete_excluded_calendar_events).toBe(false);
+    });
+  });
 });

@@ -200,7 +200,7 @@ function parseEventsListResponse(raw: unknown): GoogleEventsListResponse {
   };
 }
 
-function mapToCanonical(g: GoogleEvent): CalendarEvent {
+function mapToCanonical(g: GoogleEvent, sourceCalendarId: string): CalendarEvent {
   const isAllDay = g.start.date !== undefined && g.start.dateTime === undefined;
   const startAt = new Date(g.start.dateTime ?? `${g.start.date}T00:00:00Z`);
   const endAt = new Date(g.end.dateTime ?? `${g.end.date}T00:00:00Z`);
@@ -229,6 +229,7 @@ function mapToCanonical(g: GoogleEvent): CalendarEvent {
     organizerIsSelf: g.organizer?.self === true,
     iCalUid: g.iCalUID,
     htmlLink: g.htmlLink,
+    sourceCalendarId,
   };
 }
 
@@ -387,7 +388,7 @@ export function createGoogleCalendarProvider(
           }
           const parsed = parseEventsListResponse(data);
           for (const item of parsed.items) {
-            all.push(mapToCanonical(item));
+            all.push(mapToCanonical(item, calId));
           }
           pageToken = parsed.nextPageToken;
         } while (pageToken);

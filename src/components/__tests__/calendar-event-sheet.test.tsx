@@ -32,6 +32,7 @@ function makeEvent(
     connection_id: 'conn-1',
     provider: 'google',
     provider_event_id: 'evt-default',
+    source_calendar_id: 'cal-primary@gmail.com',
     recurrence_id: null,
     start_at: '2026-06-04T10:00:00Z',
     end_at: '2026-06-04T11:00:00Z',

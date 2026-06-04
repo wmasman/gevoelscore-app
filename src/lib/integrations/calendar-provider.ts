@@ -49,6 +49,13 @@ export type CalendarEvent = {
   organizerIsSelf: boolean;
   iCalUid: string | null;
   htmlLink: string | null;
+  /**
+   * The provider's calendar id this event came from (one Google account
+   * can have many calendars). Populated by the adapter during fetchEvents
+   * (which iterates per calendar). Used by the choose-calendars route
+   * to delete events from a now-excluded calendar.
+   */
+  sourceCalendarId: string;
 };
 
 /**

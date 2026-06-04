@@ -162,6 +162,17 @@ export function buildCollectionDefinitions() {
           meta: { interface: 'input', readonly: true },
         },
         {
+          // v1.6.1: the provider-side calendar this event came from.
+          // Nullable because pre-v1.6.1 imports (the initial smoke +
+          // first historical backfill) didn't carry it. New syncs fill
+          // it. Used by the choose-calendars POST to delete events of
+          // a now-excluded calendar.
+          field: 'source_calendar_id',
+          type: 'string',
+          schema: { is_nullable: true, max_length: 200 },
+          meta: { interface: 'input', readonly: true },
+        },
+        {
           field: 'recurrence_id',
           type: 'string',
           schema: { is_nullable: true, max_length: 200 },

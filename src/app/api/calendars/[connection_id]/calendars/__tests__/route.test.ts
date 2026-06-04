@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   writeCheck: vi.fn(),
   readConnectionById: vi.fn(),
   patchConnection: vi.fn(),
+  countEventsBySourceCalendar: vi.fn(),
+  deleteEventsBySourceCalendarIds: vi.fn(),
   decrypt: vi.fn(),
   getGoogleProvider: vi.fn(),
 }));
@@ -31,6 +33,8 @@ vi.mock('@/lib/auth/stores', async () => {
 vi.mock('@/lib/api/calendars', () => ({
   readConnectionById: mocks.readConnectionById,
   patchConnection: mocks.patchConnection,
+  countEventsBySourceCalendar: mocks.countEventsBySourceCalendar,
+  deleteEventsBySourceCalendarIds: mocks.deleteEventsBySourceCalendarIds,
 }));
 
 vi.mock('@/lib/auth/envelope-encryption', () => ({
@@ -99,6 +103,8 @@ beforeEach(() => {
   mocks.writeCheck.mockReset();
   mocks.readConnectionById.mockReset();
   mocks.patchConnection.mockReset();
+  mocks.countEventsBySourceCalendar.mockReset();
+  mocks.deleteEventsBySourceCalendarIds.mockReset();
   mocks.decrypt.mockReset();
   mocks.getGoogleProvider.mockReset();
 
@@ -125,6 +131,8 @@ beforeEach(() => {
     },
   });
   mocks.patchConnection.mockResolvedValue({ ok: true, value: undefined });
+  mocks.countEventsBySourceCalendar.mockResolvedValue({ ok: true, value: {} });
+  mocks.deleteEventsBySourceCalendarIds.mockResolvedValue({ ok: true, value: 0 });
   mocks.decrypt.mockReturnValue('plain-refresh-token');
   mocks.getGoogleProvider.mockReturnValue({
     id: 'google',
@@ -175,6 +183,40 @@ describe('GET /api/calendars/[connection_id]/calendars', () => {
     };
     expect(body.calendars).toHaveLength(2);
     expect(body.calendars[0]!.isPrimary).toBe(true);
+  });
+
+  it('test 52b (v1.6.1): GET includes included_calendar_ids + event_counts_by_calendar_id', async () => {
+    mocks.readConnectionById.mockResolvedValue({
+      ok: true,
+      value: {
+        id: CONN_ID,
+        user_id: USER_ID,
+        provider: 'google',
+        provider_account_email: 'wmasman@gmail.com',
+        refresh_token_encrypted: 'v1.iv.ct.tag',
+        scope: 'calendar.readonly',
+        connected_at: '2026-06-04T12:00:00Z',
+        last_synced_at: null,
+        last_sync_error: null,
+        status: 'active',
+        included_calendar_ids: ['wmasman@gmail.com'],
+      },
+    });
+    mocks.countEventsBySourceCalendar.mockResolvedValue({
+      ok: true,
+      value: { 'wmasman@gmail.com': 312, 'work-cal': 0, '(unknown)': 68 },
+    });
+
+    const { request, context } = makeGetReq({ cookie: 'gs_session=s-1' });
+    const res = await GET(request, context);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      included_calendar_ids: string[];
+      event_counts_by_calendar_id: Record<string, number>;
+    };
+    expect(body.included_calendar_ids).toEqual(['wmasman@gmail.com']);
+    expect(body.event_counts_by_calendar_id['wmasman@gmail.com']).toBe(312);
+    expect(body.event_counts_by_calendar_id['(unknown)']).toBe(68);
   });
 });
 
@@ -230,5 +272,170 @@ describe('POST /api/calendars/[connection_id]/calendars', () => {
     expect(res.status).toBe(200);
     // patchConnection is the ONLY mock that should be called for writes.
     expect(mocks.patchConnection).toHaveBeenCalledTimes(1);
+  });
+
+  describe('v1.6.1 exclude-delete semantic', () => {
+    it('test 57: POST without delete flag does NOT delete events even when calendars were removed', async () => {
+      mocks.readConnectionById.mockResolvedValue({
+        ok: true,
+        value: {
+          id: CONN_ID,
+          user_id: USER_ID,
+          provider: 'google',
+          provider_account_email: 'wmasman@gmail.com',
+          refresh_token_encrypted: 'v1.iv.ct.tag',
+          scope: 's',
+          connected_at: '2026-06-04T12:00:00Z',
+          last_synced_at: null,
+          last_sync_error: null,
+          status: 'active',
+          included_calendar_ids: ['cal-a', 'cal-b', 'cal-c'],
+        },
+      });
+
+      const { request, context } = makePostReq(
+        { included_calendar_ids: ['cal-a'] },
+        { cookie: 'gs_session=s-1' },
+      );
+
+      const res = await POST(request, context);
+
+      expect(res.status).toBe(200);
+      expect(mocks.deleteEventsBySourceCalendarIds).not.toHaveBeenCalled();
+      const body = (await res.json()) as {
+        removed_calendar_ids: string[];
+        events_deleted: number;
+      };
+      expect(body.removed_calendar_ids.sort()).toEqual(['cal-b', 'cal-c']);
+      expect(body.events_deleted).toBe(0);
+    });
+
+    it('test 58: POST with delete_excluded_calendar_events=true deletes events of the removed calendars', async () => {
+      mocks.readConnectionById.mockResolvedValue({
+        ok: true,
+        value: {
+          id: CONN_ID,
+          user_id: USER_ID,
+          provider: 'google',
+          provider_account_email: 'wmasman@gmail.com',
+          refresh_token_encrypted: 'v1.iv.ct.tag',
+          scope: 's',
+          connected_at: '2026-06-04T12:00:00Z',
+          last_synced_at: null,
+          last_sync_error: null,
+          status: 'active',
+          included_calendar_ids: ['cal-a', 'cal-b'],
+        },
+      });
+      mocks.deleteEventsBySourceCalendarIds.mockResolvedValue({
+        ok: true,
+        value: 17,
+      });
+
+      const { request, context } = makePostReq(
+        {
+          included_calendar_ids: ['cal-a'],
+          delete_excluded_calendar_events: true,
+        },
+        { cookie: 'gs_session=s-1' },
+      );
+
+      const res = await POST(request, context);
+
+      expect(res.status).toBe(200);
+      expect(mocks.deleteEventsBySourceCalendarIds).toHaveBeenCalledWith(
+        'at',
+        CONN_ID,
+        ['cal-b'],
+      );
+      const body = (await res.json()) as {
+        removed_calendar_ids: string[];
+        events_deleted: number;
+      };
+      expect(body.removed_calendar_ids).toEqual(['cal-b']);
+      expect(body.events_deleted).toBe(17);
+    });
+
+    it('test 59: POST with delete flag but no removals does NOT call delete', async () => {
+      mocks.readConnectionById.mockResolvedValue({
+        ok: true,
+        value: {
+          id: CONN_ID,
+          user_id: USER_ID,
+          provider: 'google',
+          provider_account_email: 'wmasman@gmail.com',
+          refresh_token_encrypted: 'v1.iv.ct.tag',
+          scope: 's',
+          connected_at: '2026-06-04T12:00:00Z',
+          last_synced_at: null,
+          last_sync_error: null,
+          status: 'active',
+          included_calendar_ids: ['cal-a'],
+        },
+      });
+
+      const { request, context } = makePostReq(
+        {
+          included_calendar_ids: ['cal-a', 'cal-b'],
+          delete_excluded_calendar_events: true,
+        },
+        { cookie: 'gs_session=s-1' },
+      );
+
+      const res = await POST(request, context);
+
+      expect(res.status).toBe(200);
+      expect(mocks.deleteEventsBySourceCalendarIds).not.toHaveBeenCalled();
+    });
+
+    it('test 60: non-boolean delete_excluded_calendar_events → 400 malformed_body', async () => {
+      const { request, context } = makePostReq(
+        {
+          included_calendar_ids: ['cal-a'],
+          delete_excluded_calendar_events: 'yes',
+        },
+        { cookie: 'gs_session=s-1' },
+      );
+
+      const res = await POST(request, context);
+      expect(res.status).toBe(400);
+    });
+
+    it('test 61: delete returns ok:false → 502 directus_error, no partial state', async () => {
+      mocks.readConnectionById.mockResolvedValue({
+        ok: true,
+        value: {
+          id: CONN_ID,
+          user_id: USER_ID,
+          provider: 'google',
+          provider_account_email: 'wmasman@gmail.com',
+          refresh_token_encrypted: 'v1.iv.ct.tag',
+          scope: 's',
+          connected_at: '2026-06-04T12:00:00Z',
+          last_synced_at: null,
+          last_sync_error: null,
+          status: 'active',
+          included_calendar_ids: ['cal-a', 'cal-b'],
+        },
+      });
+      mocks.deleteEventsBySourceCalendarIds.mockResolvedValue({
+        ok: false,
+        error: 'directus_error',
+      });
+
+      const { request, context } = makePostReq(
+        {
+          included_calendar_ids: ['cal-a'],
+          delete_excluded_calendar_events: true,
+        },
+        { cookie: 'gs_session=s-1' },
+      );
+
+      const res = await POST(request, context);
+      expect(res.status).toBe(502);
+      // patchConnection MUST NOT be called when the delete failed —
+      // otherwise we'd have orphan events outside the include list.
+      expect(mocks.patchConnection).not.toHaveBeenCalled();
+    });
   });
 });

@@ -40,9 +40,10 @@ describe('calendar-provider', () => {
   });
 
   describe('CalendarEvent canonical shape (AC0.2)', () => {
-    it('given a CalendarEvent object, when its keys are inspected, then has exactly the 15 canonical fields', () => {
+    it('given a CalendarEvent object, when its keys are inspected, then has exactly the 16 canonical fields', () => {
       const event: CalendarEvent = {
         providerEventId: 'evt-1',
+        sourceCalendarId: 'cal-primary@gmail.com',
         recurrenceId: null,
         startAt: new Date('2026-06-04T10:00:00Z'),
         endAt: new Date('2026-06-04T11:00:00Z'),
@@ -73,6 +74,7 @@ describe('calendar-provider', () => {
         'organizerIsSelf',
         'providerEventId',
         'recurrenceId',
+        'sourceCalendarId',
         'startAt',
         'status',
         'title',
@@ -83,6 +85,7 @@ describe('calendar-provider', () => {
     it('given a CalendarEvent with null-able fields nulled, when typed, then the optional fields accept null', () => {
       const event: CalendarEvent = {
         providerEventId: 'evt-2',
+        sourceCalendarId: 'cal-primary@gmail.com',
         recurrenceId: null,
         startAt: new Date('2026-06-04T10:00:00Z'),
         endAt: new Date('2026-06-04T11:00:00Z'),

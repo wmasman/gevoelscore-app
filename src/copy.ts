@@ -298,6 +298,27 @@ export const copy = {
         submitting: 'Bezig...',
         cancel: 'Annuleren',
         submitError: 'Opslaan lukte niet. Probeer opnieuw.',
+        // v1.6.1: when the user excludes a previously-included calendar
+        // and we know it has existing events, ask explicitly whether to
+        // remove those. Two-option confirm, defaulting to keep (data-
+        // preserving). Counts are inserted as plain digits.
+        excludeConfirm: {
+          // (n) — total events about to be removed across all excluded calendars
+          title: (n: number): string =>
+            n === 1
+              ? '1 event van een uitgesloten kalender'
+              : `${n} events van uitgesloten kalenders`,
+          body:
+            'Je hebt kalenders uitgevinkt. Wil je de bestaande events van die kalenders verwijderen? Toekomstige syncs halen ze sowieso niet meer op.',
+          // (name, n)
+          row: (name: string, n: number): string =>
+            n === 1 ? `${name}: 1 event` : `${name}: ${n} events`,
+          rowUnknown: (n: number): string =>
+            `Onbekende kalenders (oudere import): ${n} event${n === 1 ? '' : 's'}`,
+          deleteButton: 'Ja, verwijder bestaande events',
+          keepButton: 'Nee, alleen niet meer ophalen',
+          cancelButton: 'Annuleren',
+        },
       },
     },
     // Step v1.5b — tag-management surface inside /settings, between

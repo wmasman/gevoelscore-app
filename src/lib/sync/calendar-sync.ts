@@ -65,6 +65,7 @@ function mapToRow(
     connection_id: connectionId,
     provider: 'google',
     provider_event_id: event.providerEventId,
+    source_calendar_id: event.sourceCalendarId,
     recurrence_id: event.recurrenceId,
     start_at: event.startAt.toISOString(),
     end_at: event.endAt.toISOString(),
@@ -88,11 +89,13 @@ function mapToRow(
 
 // Patch payload for an existing event. Excludes user_decision (preserved
 // across syncs) + linked_tag_id / linked_episode_id (user-set, never
-// rewritten by sync).
+// rewritten by sync). source_calendar_id IS in the patch so back-fill
+// runs of code that predates v1.6.1 fill in the field on existing rows.
 function mapToPatch(
   event: CalendarEvent,
 ): Partial<DirectusCalendarEventRow> {
   return {
+    source_calendar_id: event.sourceCalendarId,
     recurrence_id: event.recurrenceId,
     start_at: event.startAt.toISOString(),
     end_at: event.endAt.toISOString(),
