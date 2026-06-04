@@ -592,6 +592,48 @@ The bugs were all in the **glue between layers** (cookies, tokens, URLs) — not
 
 ---
 
+## Lessons learned during 1.E + 1.F + post-deploy (2026-06-04, second pass)
+
+Phase 1.E (the UI layer — CalendarsSection, ChooseCalendarsForm, CalendarEventSheet, ContextEventsSection) and Phase 1.F (source_calendar_id + exclude-delete confirm) shipped backed by green tests. **Three new bugs surfaced AFTER deploy, in production browser soak, that `npm run verify` could not see.** Documenting because the class of bug is recurring and the fix is structural.
+
+### The 3 post-deploy bugs
+
+1. **React #418 hydration mismatch (215+ console occurrences on /settings).** `CalendarsSection` rendered relative timestamps with `const currentNow = now ?? new Date()` inside a `'use client'` component. During SSR `new Date()` reads the server's clock; during client hydration it reads the client's clock. Any threshold crossing inside `relativeDutchTime` between those two reads — "Net" → "1 minuut geleden", "4 min" → "5 min" — produced different rendered text and a hydration mismatch. Every `router.refresh()` (after Ververs/disconnect/connect) re-triggered it. Fix: snapshot `now = new Date()` once in [app/settings/page.tsx](../../../src/app/settings/page.tsx) (a server component), pass through `SettingsView` to `CalendarsSection`. Commit `0cdb30b`.
+
+2. **`/manifest.webmanifest` 307-redirecting to `/login`.** The middleware matcher protected EVERY path except a hand-list of exclusions; static assets in `/public` weren't in the list. Unauthenticated browsers got `307 → /login` for the manifest, then tried to parse `/login` HTML as JSON → "Manifest: Line 1, column 1, Syntax error" (10× per page load). Fix: extend the matcher's negative-lookahead with `.*\.[a-zA-Z0-9]+$` to skip any path with a file extension (manifest today, future sw.js / icons / robots.txt). Commit `1a36a20`.
+
+3. **PowerShell `Invoke-WebRequest` mangles Cookie headers — caused a phantom "session broken" debug arc.** The Node-side historical backfill kept returning 401 even with what looked like a valid `gs_session` cookie. We dug into the session store, refreshed the cookie 3 times, queried `frontend_sessions` directly, and confirmed the session was alive in Directus with a valid expiry. The cookie value in `.env.local` was structurally correct. Yet `Invoke-WebRequest` got 401. Eventually swapped to `curl.exe` with the same cookie and got 200 across all routes — the historical backfill then completed cleanly (46/46 chunks, 1762 events, 99.8% source_calendar_id coverage). **Not a production bug**, but the false negative cost ~30 minutes of debugging server-side code that was working correctly. Captured the working probe at [scripts/probe-session-curl.ps1](../../../scripts/probe-session-curl.ps1).
+
+### What's structurally different about these 3 vs the 5 before
+
+The first 5 bugs (in the section above) were all server-side glue between layers — fixable by editing code. These 3 are different:
+- **#1 and #2 only fire in a real browser running SSR + hydration.** Unit tests with jsdom never see them. `npm run verify` (lint + typecheck + vitest) never sees them.
+- **#3 was a tooling artifact, not a code bug.** Diagnostic tools mis-reported reality.
+
+The verify gate cannot catch this class. We need a **post-build, pre-deploy gate that loads pages in a real browser.**
+
+### The structural fix: `npm run predeploy`
+
+New e2e spec [tests/e2e/no-console-errors.spec.ts](../../../tests/e2e/no-console-errors.spec.ts) loads `/login`, `/over`, `/manifest.webmanifest` in headless chromium and asserts:
+- No `console.error` or `pageerror` during first paint + 500ms post-hydration settle
+- Manifest serves as JSON, not HTML
+
+Wired into `npm run predeploy` (3.4 seconds). Memory entry [[feedback-predeploy-e2e]] establishes "before `fly deploy` for any frontend change, run `npm run predeploy`."
+
+Would have caught both #1 and #2 retroactively. The smoke is scoped to public surfaces because the test suite runs without a session; extending to authed routes (`/`, `/settings`, `/timeline`) is a follow-up that needs a test-user seeding flow.
+
+### Reusable conventions distilled
+
+- **Client components MUST NOT compute `new Date()` / `Date.now()` / `Math.random()` during render.** Receive as a prop from a server component, or compute inside `useEffect`. The fallback to `new Date()` in [src/components/calendars-section.tsx](../../../src/components/calendars-section.tsx) is preserved for tests + standalone use but the production path now always passes a server-snapshot. Same shape that fixes #1 here will fix any future variant.
+
+- **The middleware matcher should exclude file-extension paths.** Public assets in `/public` have no auth concept; intercepting them with auth redirects breaks browser parsers. The pattern `.*\.[a-zA-Z0-9]+$` is safe because no `/api/*` path in this codebase contains a dot.
+
+- **Cookie-based probes from Windows MUST use `curl.exe`, not `Invoke-WebRequest`.** IWR mangles the Cookie header in a way that produces false 401s. Memory [[reference-curl-for-cookie-probes]] captures this; the canonical script is [scripts/probe-session-curl.ps1](../../../scripts/probe-session-curl.ps1).
+
+- **When a prop has `?? fallback`, write a test that exercises the fallback path.** Phase 1.E tests for `CalendarsSection` all passed `now={NOW}` explicitly. The production code path (which omits `now`) was never tested. A single test `render(<CalendarsSection connections={[conn()]} />)` (no `now`) — combined with a render-twice / compare assertion — would have failed on the SSR-snapshot vs client-mount delta. Adding this rule to the testing doctrine is a deferred follow-up.
+
+---
+
 ## What this step does NOT do
 
 - **No daily cron.** No GHA workflow, no automated daily sync. Only the manual `Ververs nu` path is wired. Cron lands in step-2.
