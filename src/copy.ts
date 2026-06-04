@@ -254,6 +254,20 @@ export const copy = {
       disconnectError: 'Ontkoppelen lukte niet. Probeer opnieuw.',
       revokeFailedWarning:
         'Lokaal verwijderd, maar intrekken bij Google lukte niet. Trek de toegang handmatig in via myaccount.google.com.',
+      // /settings/kalenders/choose screen — post-OAuth calendar selection.
+      choose: {
+        title: 'Kies kalenders',
+        intro:
+          'Vink aan welke kalenders meegenomen moeten worden als context. Je kunt dit later altijd aanpassen.',
+        loading: 'Kalenders laden...',
+        loadError: 'Kalenders ophalen lukte niet. Probeer opnieuw.',
+        retryLoad: 'Opnieuw laden',
+        primaryBadge: 'Hoofd',
+        submit: 'Verbinden',
+        submitting: 'Bezig...',
+        cancel: 'Annuleren',
+        submitError: 'Opslaan lukte niet. Probeer opnieuw.',
+      },
     },
     // Step v1.5b — tag-management surface inside /settings, between
     // Account and Data. Drill-down via TagFormSheet (BottomSheet).
