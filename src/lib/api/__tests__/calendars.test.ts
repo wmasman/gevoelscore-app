@@ -2,7 +2,7 @@
 // Directus SDK. Established in step-0 so step-2 health endpoint has a
 // foundation to read from.
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),
@@ -53,6 +53,7 @@ vi.mock('@directus/sdk', () => ({
 import {
   getCronMonitorJob,
   readConnectionById,
+  recordCronRun,
   upsertConnection,
   readEventsByProviderIds,
   readEventsByRecurrenceId,
@@ -114,6 +115,151 @@ describe('calendars (Directus wrapper)', () => {
       const result = await getCronMonitorJob('fake-token', 'daily_calendar_sync');
 
       expect(result).toEqual({ ok: false, error: 'directus_error' });
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // cron_monitor write (step-2 Phase 2.A)
+  // ─────────────────────────────────────────────────────────────────
+
+  describe('recordCronRun (AC2.1-2.5)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-06-04T12:34:56.000Z'));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('given a success result, when called, then reads the row by job_name then PATCHes it by id (AC2.1)', async () => {
+      mocks.request.mockResolvedValueOnce([
+        { id: 'cm-1', job_name: 'daily_calendar_sync' },
+      ]);
+      mocks.request.mockResolvedValueOnce({});
+
+      await recordCronRun('admin-token', 'daily_calendar_sync', {
+        ok: true,
+        details: {
+          connections: 1,
+          events_pulled: 0,
+          events_upserted: 0,
+          events_excluded_by_series: 0,
+        },
+      });
+
+      expect(mocks.request).toHaveBeenCalledTimes(2);
+      const readCall = mocks.request.mock.calls[0]![0] as {
+        kind: string;
+        collection: string;
+        opts: { filter: unknown };
+      };
+      expect(readCall.kind).toBe('readItems');
+      expect(readCall.collection).toBe('cron_monitor');
+      expect(readCall.opts.filter).toEqual({
+        job_name: { _eq: 'daily_calendar_sync' },
+      });
+      const patchCall = mocks.request.mock.calls[1]![0] as {
+        kind: string;
+        collection: string;
+        id: string;
+      };
+      expect(patchCall.kind).toBe('updateItem');
+      expect(patchCall.collection).toBe('cron_monitor');
+      expect(patchCall.id).toBe('cm-1');
+    });
+
+    it('sets last_run_at to now in the PATCH (AC2.1)', async () => {
+      mocks.request.mockResolvedValueOnce([{ id: 'cm-1' }]);
+      mocks.request.mockResolvedValueOnce({});
+
+      await recordCronRun('admin-token', 'daily_calendar_sync', {
+        ok: true,
+        details: { connections: 1 },
+      });
+
+      const patchCall = mocks.request.mock.calls[1]![0] as {
+        patch: { last_run_at: string };
+      };
+      expect(patchCall.patch.last_run_at).toBe('2026-06-04T12:34:56.000Z');
+    });
+
+    it('sets last_result to JSON-encoded success body, counts only (AC2.1, AC2.2)', async () => {
+      mocks.request.mockResolvedValueOnce([{ id: 'cm-1' }]);
+      mocks.request.mockResolvedValueOnce({});
+
+      const details = {
+        connections: 1,
+        events_pulled: 42,
+        events_upserted: 40,
+        events_excluded_by_series: 2,
+      };
+      await recordCronRun('admin-token', 'daily_calendar_sync', {
+        ok: true,
+        details,
+      });
+
+      const patchCall = mocks.request.mock.calls[1]![0] as {
+        patch: { last_result: string };
+      };
+      expect(JSON.parse(patchCall.patch.last_result)).toEqual({
+        ok: true,
+        details,
+      });
+    });
+
+    it('truncates last_result to 1000 chars hard cap (AC2.1)', async () => {
+      mocks.request.mockResolvedValueOnce([{ id: 'cm-1' }]);
+      mocks.request.mockResolvedValueOnce({});
+
+      // Force the JSON body well over 1000 chars so the cap activates
+      // regardless of small wording shifts in the wrapper.
+      const huge: Record<string, number> = {};
+      for (let i = 0; i < 200; i++) huge[`metric_${i}`] = i;
+
+      await recordCronRun('admin-token', 'daily_calendar_sync', {
+        ok: true,
+        details: huge,
+      });
+
+      const patchCall = mocks.request.mock.calls[1]![0] as {
+        patch: { last_result: string };
+      };
+      expect(patchCall.patch.last_result).toHaveLength(1000);
+    });
+
+    it('given a failure result, when called, then stores { ok: false, error: code } only (AC2.3)', async () => {
+      mocks.request.mockResolvedValueOnce([{ id: 'cm-1' }]);
+      mocks.request.mockResolvedValueOnce({});
+
+      await recordCronRun('admin-token', 'daily_calendar_sync', {
+        ok: false,
+        error: 'refresh_token_invalid',
+      });
+
+      const patchCall = mocks.request.mock.calls[1]![0] as {
+        patch: { last_result: string };
+      };
+      expect(JSON.parse(patchCall.patch.last_result)).toEqual({
+        ok: false,
+        error: 'refresh_token_invalid',
+      });
+    });
+
+    it('when the read or PATCH throws (Directus unreachable), then does NOT propagate, logs, and resolves (AC2.5)', async () => {
+      mocks.request.mockRejectedValue(
+        new TypeError('fetch failed: ECONNREFUSED'),
+      );
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await expect(
+        recordCronRun('admin-token', 'daily_calendar_sync', {
+          ok: true,
+          details: { connections: 0 },
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(errSpy).toHaveBeenCalled();
+      errSpy.mockRestore();
     });
   });
 

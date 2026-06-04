@@ -159,8 +159,60 @@ function makeClient(accessToken: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// cron_monitor read
+// cron_monitor read + write
 // ─────────────────────────────────────────────────────────────────
+
+export type CronRunResult =
+  | { ok: true; details: object }
+  | { ok: false; error: string };
+
+/**
+ * PATCH the cron_monitor row matching `jobName` with `last_run_at = now`
+ * and `last_result = JSON.stringify(result).slice(0, 1000)`. Defensive
+ * by design (AC2.5): never throws. A failure to write the monitor row
+ * must not break the sync route's own 200 response — the monitor is a
+ * staleness signal, not a critical-path write.
+ *
+ * The 1000-char cap (AC2.1) prevents accidental log-equivalent
+ * disclosure if a future error message ever leaks into what should be
+ * a code-only field. Caller is responsible for supplying counts-only
+ * success details (AC2.2) and short error codes (AC2.3) — this
+ * function does not enforce shape beyond the type signature.
+ *
+ * step-2 Phase 2.A.
+ */
+export async function recordCronRun(
+  adminToken: string,
+  jobName: string,
+  result: CronRunResult,
+): Promise<void> {
+  try {
+    const client = makeClient(adminToken);
+    const rows = (await client.request(
+      readItems('cron_monitor', {
+        filter: { job_name: { _eq: jobName } },
+        limit: 1,
+      } as never),
+    )) as DirectusCronMonitorRow[];
+    const row = rows[0];
+    if (!row) {
+      console.error(
+        `[calendars] recordCronRun: no cron_monitor row for ${jobName}`,
+      );
+      return;
+    }
+    await client.request(
+      updateItem('cron_monitor', row.id, {
+        last_run_at: new Date().toISOString(),
+        last_result: JSON.stringify(result).slice(0, 1000),
+      }),
+    );
+  } catch (e) {
+    const msg =
+      e instanceof Error ? e.message.slice(0, 200) : 'unknown';
+    console.error(`[calendars] recordCronRun failed: ${msg}`);
+  }
+}
 
 export async function getCronMonitorJob(
   accessToken: string,
