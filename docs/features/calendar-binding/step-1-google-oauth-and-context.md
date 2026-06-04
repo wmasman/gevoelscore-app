@@ -542,6 +542,43 @@ the middle of the run).
 
 ---
 
+## Lessons learned during build (2026-06-04)
+
+The backend of step-1 (Phases 1.A through 1.D) built RED→GREEN cleanly across 5 commits with 117 new tests. **The full integration broke in 5 different ways in production before yielding 68 events from 5 real Google calendars.** Each bug was independently obvious in hindsight; together they made for a long debug arc. Documenting so the next OAuth-style feature in this project (Outlook, Apple, Microsoft 365, etc. — see step-5) can avoid the same dance.
+
+### The 5 bugs, in the order we hit them
+
+1. **`redirect_uri=https://0.0.0.0:3000/...` sent to Google.** Inside Fly, Node sees `request.url` as the internal listen address, not the public domain. Google rejected with "Fout 400: invalid_request" because the URL didn't match the registered redirect. Fix: derive the public origin from the `host` header. Helper at [src/lib/auth/public-origin.ts](../../../src/lib/auth/public-origin.ts). Commit `6953085`. **Reusable rule:** memory [[reference-public-origin-on-fly]].
+
+2. **`gs_session` cookie blocked on OAuth callback (SameSite=Strict).** The session cookie was Strict, which prevents browsers from sending it on top-level cross-site GET navigation. Google's `302 → /api/calendars/google/callback` is exactly that. Callback returned 401 unauthenticated. Fix: change session cookie to `SameSite=Lax`. CSRF protection still holds via the explicit `validateOrigin` check on POST routes. Commit `1a95d2b`. **Reusable rule:** memory [[reference-session-cookie-samesite-lax]].
+
+3. **Smoke script POSTed `/connect` from Node — state cookie lost.** Node's fetch doesn't have a cookie jar. The `Set-Cookie: cal_oauth_state=...` response from connect went into the Node process, NOT the user's browser. When Google redirected back, the browser had no state cookie → callback returned `state_missing`. Fix: smoke script no longer calls connect; user initiates from a browser devtools console snippet so the Set-Cookie lands in the browser. Commit `0ae4b43`.
+
+4. **Permissions drift — new collections not granted to the frontend role.** Step-0 created `calendar_connections`, `calendar_series_exclusions`, `cron_monitor` via `setup-calendar-collections.mjs`. But `setup-permissions.mjs` (which manages the `gevoelscore-frontend-policy` permission list) wasn't updated. The user's Directus token (per `session.accessToken`) had no access to the new collections. Callback's `upsertConnection` returned `directus_error` → 502. Fix: add new collections to `FRONTEND_CRUD_COLLECTIONS` and re-run `setup-permissions.mjs`. Permissions-only fix (no code redeploy). **Reusable rule:** memory [[reference-setup-permissions-drift]].
+
+5. **Routes used the wrong Directus token (DIRECTUS_TOKEN env var instead of session.accessToken).** When I wired Phase 1.C/1.D I assumed `DIRECTUS_TOKEN` was the admin token (which it is on local `.env.local`). On Fly it's the **scoped sessions-only** token from the S-H1 hardening — CRUD on `frontend_sessions` only. After granting calendar permissions to the `frontend-api` policy (bug 4), the routes still failed because they used the wrong token. Fix: every user-action calendar route uses `session.accessToken`, like the existing tags/episodes/day-entries routes. Commit `fbcb4f8`. **Reusable rule:** memory [[reference-user-routes-use-session-accesstoken]].
+
+### What we'd do differently next OAuth integration
+
+- **Step-0 of any feature that adds Directus collections** must include a permissions-grant sub-task (`add collection X to FRONTEND_CRUD_COLLECTIONS in setup-permissions.mjs; re-run`). I'm updating future `/plan-feature` outputs to include this in the schema-setup checklist.
+- **Any route that returns a URL to the outside world** (OAuth `redirect_uri`, server-emitted redirects, email magic links, payment callbacks, share URLs) must use `getPublicOrigin(request)`, not `new URL(request.url).origin`. Add a lint rule? Tracked as a deferred hardening task.
+- **Smoke scripts that test OAuth flows** should never POST to the connect endpoint from Node. Always have the user (or a browser-automation tool like Playwright) initiate from the browser. Document this pattern in any future smoke for an OAuth-style feature.
+- **Token architecture cheat sheet**: `DIRECTUS_TOKEN` env var = scoped sessions-only (for the session store + nothing else). `session.accessToken` = per-request user token (for all user-action routes). System-action routes (cron) need a third token; deferred to step-2.
+- **Wrapper error logging**: the `classifyError` pattern that swallows the SDK's structured error into a generic `directus_error` cost diagnosis time. Keep the diagnostic logging in place (we'll remove the verbose dump but log the SDK's `errors[0].extensions.code` once per failure to surface FORBIDDEN/etc. early).
+
+### What did work first-try
+
+For balance:
+- The OAuth Cloud Console setup (consent screen + scopes + redirect URIs) was right on the first attempt.
+- AES-GCM envelope encryption of the refresh token worked end-to-end with no diagnosis needed.
+- The smart-default rules (3 rules + series-exclusion override) applied cleanly to 68 real events without surfacing any edge cases.
+- The provider abstraction (canonical `CalendarEvent` + Google adapter mapping) absorbed Google's various event shapes without modification.
+- Multi-day spans, recurring events, declined RSVPs, all-day events all flowed through correctly on the first successful sync.
+
+The bugs were all in the **glue between layers** (cookies, tokens, URLs) — not in the layers themselves. Good signal that the layer boundaries were sound; the glue conventions needed documenting.
+
+---
+
 ## What this step does NOT do
 
 - **No daily cron.** No GHA workflow, no automated daily sync. Only the manual `Ververs nu` path is wired. Cron lands in step-2.
