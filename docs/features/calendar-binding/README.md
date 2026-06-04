@@ -712,6 +712,16 @@ export interface DirectusCronMonitorRow {
 
 ---
 
+## Design insight: noise/signal is per-user, not algorithmic (2026-06-04)
+
+During the pre-backfill curation step (after step-1 deploy, before the historical pull), the user reviewed 10 recurring series from the initial 37-day sample and elected to exclude ALL of them. The titles were a mix of single letters (`JM`, `W`), labelled appointments (`Datenight`, `Bestuurseten`), and Google auto-birthdays. There was no clean rule — in the user's own words:
+
+> "this is not a clear pattern why, it is just calendar noise that i choose to ignore"
+
+This validates the v1.6 design's choice to make exclusion a **manual per-series action** rather than a learned-rule or keyword-matched one. What looks like noise to one person ("birthday auto-reminders for distant contacts I haven't seen in a decade") may look like context to another ("social-connection density matters to my recovery"). The v1.6 design ships single-tap series exclusion in the UI; v2 may layer learned-rules on top of the captured `user_decision` signal, but the human's per-event call stays canonical. v1.6.x keyword rules (in the roadmap) are an opt-in shortcut for repeating patterns, not a replacement for the manual override.
+
+A corollary: the `user_decision` field we ship in v1.6 ('auto' | 'user_included' | 'user_excluded') is doing more than tracking state. Every flip is a signal that future learned-rules (v2) could leverage, but the absence of a flip is ALSO signal — "the user left this alone" might mean "good enough" or "I haven't looked yet." Don't over-read either direction; the UI should make explicit decisions easy and forgiving.
+
 ## History
 
 - 2026-06-03: Feature folder created. Four design conversations resolved:
