@@ -254,6 +254,29 @@ export const copy = {
       disconnectError: 'Ontkoppelen lukte niet. Probeer opnieuw.',
       revokeFailedWarning:
         'Lokaal verwijderd, maar intrekken bij Google lukte niet. Trek de toegang handmatig in via myaccount.google.com.',
+      // Per-event detail sheet (opened from Context tab + Today card).
+      eventSheet: {
+        sheetAriaLabel: 'Event details',
+        close: 'Sluit',
+        allDayLabel: 'Hele dag',
+        timeRangeSeparator: '–', // en-dash for time ranges, NOT em-dash
+        recurringBadge: 'Herhalend',
+        linkTagButton: 'Koppel aan tag',
+        linkedTagLabel: (label: string): string => `Tag: ${label}`,
+        linkEpisodeButton: 'Koppel aan periode',
+        linkedEpisodeLabel: (label: string): string => `Periode: ${label}`,
+        excludeButton: 'Sluit uit als context',
+        excludeRecurringButton: 'Sluit hele serie uit',
+        reincludeButton: 'Weer meenemen',
+        reincludeSeriesButton: 'Voeg hele serie weer toe',
+        tagPickerTitle: 'Kies een tag',
+        episodePickerTitle: 'Kies een periode',
+        pickerBack: 'Terug',
+        pickerNone: 'Geen',
+        pickerEmptyTags: 'Geen tags beschikbaar.',
+        pickerEmptyEpisodes: 'Geen periodes beschikbaar.',
+        actionError: 'Actie lukte niet. Probeer opnieuw.',
+      },
       // /settings/kalenders/choose screen — post-OAuth calendar selection.
       choose: {
         title: 'Kies kalenders',
