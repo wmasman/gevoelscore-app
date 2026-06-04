@@ -19,6 +19,7 @@ import {
   rest,
   staticToken,
   updateItem,
+  updateItems,
 } from '@directus/sdk';
 import type { Result } from './result';
 
@@ -303,6 +304,228 @@ export async function deleteConnection(
   try {
     await makeClient(accessToken).request(
       deleteItem('calendar_connections', id),
+    );
+    return { ok: true, value: undefined };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// calendar_events CRUD (Phase 1.D)
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Read a single event by id. Returns null if not found.
+ */
+export async function readCalendarEventById(
+  accessToken: string,
+  id: string,
+): Promise<Result<DirectusCalendarEventRow | null, CalendarsError>> {
+  try {
+    const row = (await makeClient(accessToken).request(
+      readItem('calendar_events', id),
+    )) as DirectusCalendarEventRow;
+    return { ok: true, value: row };
+  } catch (e) {
+    const msg = String((e as { message?: string }).message ?? '');
+    if (msg.includes('404') || msg.includes('FORBIDDEN')) {
+      return { ok: true, value: null };
+    }
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Read existing event rows for the given (connection_id, provider_event_id)
+ * tuples. Used by the sync orchestrator to diff fetched events against
+ * what's already stored.
+ */
+export async function readEventsByProviderIds(
+  accessToken: string,
+  connectionId: string,
+  providerEventIds: string[],
+): Promise<Result<DirectusCalendarEventRow[], CalendarsError>> {
+  if (providerEventIds.length === 0) {
+    return { ok: true, value: [] };
+  }
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('calendar_events', {
+        filter: {
+          _and: [
+            { connection_id: { _eq: connectionId } },
+            { provider_event_id: { _in: providerEventIds } },
+          ],
+        },
+        limit: -1,
+      } as never),
+    )) as DirectusCalendarEventRow[];
+    return { ok: true, value: rows };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Read all events sharing a recurrence_id within a connection. Used by
+ * the include-series + sluit-uit-recurring routes to apply a bulk
+ * status flip across an entire series.
+ */
+export async function readEventsByRecurrenceId(
+  accessToken: string,
+  connectionId: string,
+  recurrenceId: string,
+): Promise<Result<DirectusCalendarEventRow[], CalendarsError>> {
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('calendar_events', {
+        filter: {
+          _and: [
+            { connection_id: { _eq: connectionId } },
+            { recurrence_id: { _eq: recurrenceId } },
+          ],
+        },
+        limit: -1,
+      } as never),
+    )) as DirectusCalendarEventRow[];
+    return { ok: true, value: rows };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+export async function createCalendarEvent(
+  accessToken: string,
+  row: Omit<DirectusCalendarEventRow, 'id' | 'created_at' | 'updated_at'>,
+): Promise<Result<string, CalendarsError>> {
+  try {
+    const created = (await makeClient(accessToken).request(
+      createItem('calendar_events', row),
+    )) as DirectusCalendarEventRow;
+    return { ok: true, value: created.id };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+export async function patchCalendarEvent(
+  accessToken: string,
+  id: string,
+  patch: Partial<DirectusCalendarEventRow>,
+): Promise<Result<void, CalendarsError>> {
+  try {
+    await makeClient(accessToken).request(
+      updateItem('calendar_events', id, patch),
+    );
+    return { ok: true, value: undefined };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Patch multiple events with the same payload in a single SDK call.
+ * Used by the recurring-event sluit-uit / include-series routes.
+ */
+export async function patchCalendarEventsBulk(
+  accessToken: string,
+  ids: string[],
+  patch: Partial<DirectusCalendarEventRow>,
+): Promise<Result<void, CalendarsError>> {
+  if (ids.length === 0) {
+    return { ok: true, value: undefined };
+  }
+  try {
+    await makeClient(accessToken).request(
+      updateItems('calendar_events', ids, patch),
+    );
+    return { ok: true, value: undefined };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// calendar_series_exclusions CRUD (Phase 1.D)
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * Read all series exclusions for a connection. Returns recurrence_ids
+ * only (the orchestrator builds a Set from them).
+ */
+export async function readSeriesExclusionRecurrenceIds(
+  accessToken: string,
+  connectionId: string,
+): Promise<Result<string[], CalendarsError>> {
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('calendar_series_exclusions', {
+        filter: { connection_id: { _eq: connectionId } },
+        fields: ['recurrence_id'],
+        limit: -1,
+      } as never),
+    )) as DirectusCalendarSeriesExclusionRow[];
+    return { ok: true, value: rows.map((r) => r.recurrence_id) };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Insert a series exclusion. Idempotent on UNIQUE(connection_id,
+ * recurrence_id) — a Directus duplicate-key error is treated as success.
+ */
+export async function insertSeriesExclusion(
+  accessToken: string,
+  connectionId: string,
+  recurrenceId: string,
+  excludedAt: string,
+): Promise<Result<void, CalendarsError>> {
+  try {
+    await makeClient(accessToken).request(
+      createItem('calendar_series_exclusions', {
+        connection_id: connectionId,
+        recurrence_id: recurrenceId,
+        excluded_at: excludedAt,
+      }),
+    );
+    return { ok: true, value: undefined };
+  } catch (e) {
+    // UNIQUE violation = already excluded = idempotent success
+    const msg = String((e as { message?: string }).message ?? '');
+    if (msg.includes('RECORD_NOT_UNIQUE') || msg.includes('duplicate') || msg.includes('UNIQUE')) {
+      return { ok: true, value: undefined };
+    }
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
+/**
+ * Delete a series exclusion (for the symmetric coarse re-include action).
+ * Idempotent — already-absent is treated as success.
+ */
+export async function deleteSeriesExclusion(
+  accessToken: string,
+  connectionId: string,
+  recurrenceId: string,
+): Promise<Result<void, CalendarsError>> {
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('calendar_series_exclusions', {
+        filter: {
+          _and: [
+            { connection_id: { _eq: connectionId } },
+            { recurrence_id: { _eq: recurrenceId } },
+          ],
+        },
+        limit: 1,
+      } as never),
+    )) as DirectusCalendarSeriesExclusionRow[];
+    const row = rows[0];
+    if (!row) return { ok: true, value: undefined };
+    await makeClient(accessToken).request(
+      deleteItem('calendar_series_exclusions', row.id),
     );
     return { ok: true, value: undefined };
   } catch (e) {

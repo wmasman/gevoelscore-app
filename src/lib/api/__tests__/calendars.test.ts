@@ -37,6 +37,12 @@ vi.mock('@directus/sdk', () => ({
     id,
     patch,
   }),
+  updateItems: (collection: string, ids: string[], patch: unknown) => ({
+    kind: 'updateItems',
+    collection,
+    ids,
+    patch,
+  }),
   deleteItem: (collection: string, id: string) => ({
     kind: 'deleteItem',
     collection,
@@ -48,6 +54,12 @@ import {
   getCronMonitorJob,
   readConnectionById,
   upsertConnection,
+  readEventsByProviderIds,
+  readEventsByRecurrenceId,
+  patchCalendarEventsBulk,
+  readSeriesExclusionRecurrenceIds,
+  insertSeriesExclusion,
+  deleteSeriesExclusion,
 } from '../calendars';
 
 describe('calendars (Directus wrapper)', () => {
@@ -191,6 +203,133 @@ describe('calendars (Directus wrapper)', () => {
       );
       expect(secondCall.patch.status).toBe('active');
       expect(secondCall.patch.last_sync_error).toBeNull();
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // calendar_events + calendar_series_exclusions CRUD (Phase 1.D)
+  // ─────────────────────────────────────────────────────────────────
+
+  describe('readEventsByProviderIds', () => {
+    it('given an empty providerEventIds array, when called, then returns empty array without a wire call', async () => {
+      const result = await readEventsByProviderIds('at', 'conn-1', []);
+
+      expect(result).toEqual({ ok: true, value: [] });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('given a non-empty array, when called, then queries with the _in filter', async () => {
+      mocks.request.mockResolvedValue([{ id: 'evt-row-1', provider_event_id: 'evt-1' }]);
+
+      const result = await readEventsByProviderIds('at', 'conn-1', ['evt-1', 'evt-2']);
+
+      expect(result.ok).toBe(true);
+      const call = mocks.request.mock.calls[0]![0] as { opts: { filter: unknown } };
+      expect(call.opts.filter).toMatchObject({
+        _and: expect.any(Array),
+      });
+    });
+  });
+
+  describe('readEventsByRecurrenceId', () => {
+    it('given a recurrence_id, when called, then queries with both connection_id and recurrence_id filters', async () => {
+      mocks.request.mockResolvedValue([
+        { id: 'evt-1', recurrence_id: 'rec-yoga' },
+        { id: 'evt-2', recurrence_id: 'rec-yoga' },
+      ]);
+
+      const result = await readEventsByRecurrenceId('at', 'conn-1', 'rec-yoga');
+
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.value).toHaveLength(2);
+    });
+  });
+
+  describe('patchCalendarEventsBulk', () => {
+    it('given an empty ids array, when called, then no wire call is made', async () => {
+      const result = await patchCalendarEventsBulk('at', [], { included_as_context: false });
+
+      expect(result).toEqual({ ok: true, value: undefined });
+      expect(mocks.request).not.toHaveBeenCalled();
+    });
+
+    it('given a non-empty ids array, when called, then one updateItems call with the patch', async () => {
+      mocks.request.mockResolvedValue([{}]);
+
+      const result = await patchCalendarEventsBulk('at', ['evt-1', 'evt-2'], {
+        included_as_context: false,
+        user_decision: 'user_excluded',
+      });
+
+      expect(result.ok).toBe(true);
+      const call = mocks.request.mock.calls[0]![0] as { kind: string; ids: string[] };
+      expect(call.kind).toBe('updateItems');
+      expect(call.ids).toEqual(['evt-1', 'evt-2']);
+    });
+  });
+
+  describe('readSeriesExclusionRecurrenceIds', () => {
+    it('given a connection_id, when called, then returns the recurrence_id strings only', async () => {
+      mocks.request.mockResolvedValue([
+        { recurrence_id: 'rec-yoga' },
+        { recurrence_id: 'rec-standup' },
+      ]);
+
+      const result = await readSeriesExclusionRecurrenceIds('at', 'conn-1');
+
+      expect(result).toEqual({
+        ok: true,
+        value: ['rec-yoga', 'rec-standup'],
+      });
+    });
+  });
+
+  describe('insertSeriesExclusion', () => {
+    it('given a fresh recurrence_id, when inserted, then createItem is called and returns ok', async () => {
+      mocks.request.mockResolvedValue({ id: 'new-exclusion' });
+
+      const result = await insertSeriesExclusion(
+        'at',
+        'conn-1',
+        'rec-yoga',
+        '2026-06-04T12:00:00Z',
+      );
+
+      expect(result).toEqual({ ok: true, value: undefined });
+    });
+
+    it('given a UNIQUE violation (already excluded), when inserted, then treats as idempotent success', async () => {
+      mocks.request.mockRejectedValue(new Error('RECORD_NOT_UNIQUE'));
+
+      const result = await insertSeriesExclusion(
+        'at',
+        'conn-1',
+        'rec-yoga',
+        '2026-06-04T12:00:00Z',
+      );
+
+      expect(result).toEqual({ ok: true, value: undefined });
+    });
+  });
+
+  describe('deleteSeriesExclusion', () => {
+    it('given an existing exclusion, when deleted, then 2 calls (readItems lookup + deleteItem)', async () => {
+      mocks.request.mockResolvedValueOnce([{ id: 'excl-1' }]);
+      mocks.request.mockResolvedValueOnce({});
+
+      const result = await deleteSeriesExclusion('at', 'conn-1', 'rec-yoga');
+
+      expect(result).toEqual({ ok: true, value: undefined });
+      expect(mocks.request).toHaveBeenCalledTimes(2);
+    });
+
+    it('given no matching row, when deleted, then no-op success (1 read call, no delete)', async () => {
+      mocks.request.mockResolvedValueOnce([]);
+
+      const result = await deleteSeriesExclusion('at', 'conn-1', 'rec-yoga');
+
+      expect(result).toEqual({ ok: true, value: undefined });
+      expect(mocks.request).toHaveBeenCalledTimes(1);
     });
   });
 });

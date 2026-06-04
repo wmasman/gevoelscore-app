@@ -1,0 +1,203 @@
+// Step-1 Phase 1.D — POST /api/calendars/sync tests.
+
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  getValidatedSession: vi.fn(),
+  writeCheck: vi.fn(),
+  readActiveConnectionsForUser: vi.fn(),
+  readAllActiveConnections: vi.fn(),
+  syncConnection: vi.fn(),
+  getGoogleProvider: vi.fn(),
+  decrypt: vi.fn(),
+  readSeriesExclusionRecurrenceIds: vi.fn(),
+  readEventsByProviderIds: vi.fn(),
+  createCalendarEvent: vi.fn(),
+  patchCalendarEvent: vi.fn(),
+  patchConnection: vi.fn(),
+}));
+
+vi.mock('@/lib/auth/get-validated-session', () => ({
+  getValidatedSession: mocks.getValidatedSession,
+}));
+
+vi.mock('@/lib/auth/stores', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/auth/stores')>(
+    '@/lib/auth/stores',
+  );
+  return {
+    ...actual,
+    calendarWriteRateLimiter: {
+      check: mocks.writeCheck,
+      sweep: () => undefined,
+    },
+  };
+});
+
+vi.mock('@/lib/api/calendars', () => ({
+  readActiveConnectionsForUser: mocks.readActiveConnectionsForUser,
+  readAllActiveConnections: mocks.readAllActiveConnections,
+  readSeriesExclusionRecurrenceIds: mocks.readSeriesExclusionRecurrenceIds,
+  readEventsByProviderIds: mocks.readEventsByProviderIds,
+  createCalendarEvent: mocks.createCalendarEvent,
+  patchCalendarEvent: mocks.patchCalendarEvent,
+  patchConnection: mocks.patchConnection,
+}));
+
+vi.mock('@/lib/sync/calendar-sync', () => ({
+  syncConnection: mocks.syncConnection,
+}));
+
+vi.mock('@/lib/integrations/google/get-provider', () => ({
+  getGoogleProvider: mocks.getGoogleProvider,
+}));
+
+vi.mock('@/lib/auth/envelope-encryption', () => ({
+  decrypt: mocks.decrypt,
+}));
+
+import { POST } from '../route';
+
+const USER_ID = '16f6f68b-e683-4dc9-8afc-e80695c4259d';
+
+function makePost(opts: {
+  cookie?: string;
+  origin?: string;
+  authHeader?: string;
+} = {}): Request {
+  const headers: Record<string, string> = {
+    origin: opts.origin ?? 'http://localhost:3000',
+    'content-type': 'application/json',
+  };
+  if (opts.cookie !== undefined) headers.cookie = opts.cookie;
+  if (opts.authHeader !== undefined) headers.authorization = opts.authHeader;
+  return new Request('http://localhost:3000/api/calendars/sync', {
+    method: 'POST',
+    headers,
+  });
+}
+
+beforeEach(() => {
+  vi.unstubAllEnvs();
+  vi.stubEnv('WILLEM_USER_ID', USER_ID);
+  vi.stubEnv('CALENDAR_KEK', 'test-kek');
+  vi.stubEnv('DIRECTUS_TOKEN', 'admin-token');
+  vi.stubEnv('CALENDAR_SYNC_SECRET', 'bearer-secret-32-bytes-base64-here==');
+
+  mocks.getValidatedSession.mockReset();
+  mocks.writeCheck.mockReset();
+  mocks.readActiveConnectionsForUser.mockReset();
+  mocks.readAllActiveConnections.mockReset();
+  mocks.syncConnection.mockReset();
+  mocks.getGoogleProvider.mockReset();
+
+  mocks.getValidatedSession.mockResolvedValue({
+    accessToken: 'at',
+    refreshToken: 'rt',
+    expiresAt: Date.now() + 60_000,
+  });
+  mocks.writeCheck.mockReturnValue({ allowed: true });
+  mocks.readActiveConnectionsForUser.mockResolvedValue({
+    ok: true,
+    value: [
+      {
+        id: 'conn-1',
+        user_id: USER_ID,
+        provider: 'google',
+        refresh_token_encrypted: 'enc',
+        included_calendar_ids: ['cal-a'],
+        status: 'active',
+      },
+    ],
+  });
+  mocks.readAllActiveConnections.mockResolvedValue({
+    ok: true,
+    value: [
+      { id: 'conn-1', user_id: USER_ID, provider: 'google', status: 'active' },
+    ],
+  });
+  mocks.syncConnection.mockResolvedValue({
+    connectionId: 'conn-1',
+    eventsPulled: 5,
+    eventsUpserted: 5,
+    eventsExcludedBySeries: 0,
+    errors: [],
+  });
+  mocks.getGoogleProvider.mockReturnValue({});
+});
+
+describe('POST /api/calendars/sync', () => {
+  it('test 57: bad origin (no bearer) → 403 forbidden', async () => {
+    const res = await POST(makePost({ origin: 'https://evil.example' }));
+
+    expect(res.status).toBe(403);
+  });
+
+  it('test 58: no session and no bearer → 401', async () => {
+    const res = await POST(makePost());
+
+    expect(res.status).toBe(401);
+  });
+
+  it('test 59: invalid bearer (wrong secret) → falls through to session gate → 401', async () => {
+    const res = await POST(makePost({ authHeader: 'Bearer wrong-secret' }));
+
+    expect(res.status).toBe(401);
+  });
+
+  it('test 60: session path → 200 + aggregate result; readActiveConnectionsForUser called', async () => {
+    const res = await POST(makePost({ cookie: 'gs_session=s-1' }));
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      ok: boolean;
+      scope: string;
+      connections: number;
+      events_pulled: number;
+    };
+    expect(body.ok).toBe(true);
+    expect(body.scope).toBe('session');
+    expect(body.connections).toBe(1);
+    expect(body.events_pulled).toBe(5);
+    expect(mocks.readActiveConnectionsForUser).toHaveBeenCalled();
+    expect(mocks.readAllActiveConnections).not.toHaveBeenCalled();
+  });
+
+  it('test 61: bearer path → 200 + readAllActiveConnections called (system scope)', async () => {
+    const res = await POST(
+      makePost({
+        authHeader: 'Bearer bearer-secret-32-bytes-base64-here==',
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { scope: string };
+    expect(body.scope).toBe('bearer');
+    expect(mocks.readAllActiveConnections).toHaveBeenCalled();
+    expect(mocks.readActiveConnectionsForUser).not.toHaveBeenCalled();
+  });
+
+  it('test 62: per-connection error is captured in result.errors but route still returns 200', async () => {
+    mocks.syncConnection.mockResolvedValue({
+      connectionId: 'conn-1',
+      eventsPulled: 0,
+      eventsUpserted: 0,
+      eventsExcludedBySeries: 0,
+      errors: ['refresh_token_invalid'],
+    });
+
+    const res = await POST(makePost({ cookie: 'gs_session=s-1' }));
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { errors: string[] };
+    expect(body.errors).toContain('refresh_token_invalid');
+  });
+
+  it('test 63: bearer-gate uses constant-time comparison (matching length wrong content → falls through to session)', async () => {
+    // Same length as the valid secret, but content differs.
+    const samelen = 'X'.repeat('bearer-secret-32-bytes-base64-here=='.length);
+    const res = await POST(makePost({ authHeader: `Bearer ${samelen}` }));
+
+    expect(res.status).toBe(401); // falls through, no session → 401
+  });
+});
