@@ -11,10 +11,11 @@ This doc supplements [REQUIREMENTS.md](REQUIREMENTS.md) and [app_brief_gevoelsco
 | Item | Detail | Notes |
 |---|---|---|
 | Soak-test mode (v1 → v1.5c) | [memory: project-soak-test-mode](../../.claude/projects/c--Users-Gebruiker-Documents-gevoelscore-app/memory/project_soak_test_mode.md) | iOS PWA usage gathering friction signal. All v1 + v1.5 + v1.5a/b/c live; tag-merge soak (UI + brainfog-sensitive confirm flow) in progress on the user's iPhone PWA. |
+| Calendar binding (v1.6) | [features/calendar-binding/](features/calendar-binding/) | Planning complete 2026-06-03. Feature folder + README + 4 step files (step-0 data model + step-1 OAuth/Settings/Context + step-2 cron/Today + step-3 timeline overlay) + 3 defer markers (step-4 v2 learned rules; step-5 v2 second provider; step-6 v1.6.1 calendar-bound episodes). Resolved 7 design decisions across 4 brainstorm conversations + 1 in-plan decision (Shape A event-side linking ships v1.6; Shape B episode-side binding deferred v1.6.1). Step-0 ready to build next. |
 
 ## Ready to plan (next)
 
-_Empty — the nearest in-flight surface is the tag-merge iOS soak above. The Vision section below has the next-likeliest candidates once new work needs a queue._
+_Empty. Calendar-binding moved to In flight after `/plan-feature` produced the folder. After calendar-binding step-0 builds, the next candidates are in the Vision section below._
 
 ## Designed (architecture set, larger design still needed)
 
@@ -29,8 +30,11 @@ Items here are coherent enough to name but need a deeper conversation about trad
 | Item | Doc | Likely version |
 |---|---|---|
 | **Historical CSV backfill** — parse the user's 1.363-day Google Sheet export into `day_entries`. Domain parser is scoped; the import-driving UI + dedup-against-existing-days are not. Backlogged because new entries flow in via the app now, but trends + streak counter remain blank for everything pre-2026-05-28 until this lands. | [features/csv-import/](features/csv-import/) (parser plan) | v1.6 |
-| Calendar binding (Google Calendar → episode) | sub-section in [features/verloop-and-episodes/](features/verloop-and-episodes/) §Out of scope | v1.6 |
+| Calendar-bound episodes (Shape B) — promote a recurring calendar series to an episode that auto-tracks it. Defer marker; trigger = v1.6 soak shows the user repeatedly linking many events to a single episode. | [features/calendar-binding/step-6-v1.6.1-calendar-bound-episodes.md](features/calendar-binding/step-6-v1.6.1-calendar-bound-episodes.md) | v1.6.1 |
+| User-defined keyword exclusion rules — Settings → Kalenders → Regels. Trigger = v1.6 soak shows > 5 per-event exclusions/week with recognisable patterns. | sub-section in [features/calendar-binding/](features/calendar-binding/) §Future considerations | v1.6.x |
 | Tag intelligence — LLM note-inference, correlation surfacing, merge/consolidate | [features/tag-intelligence/](features/tag-intelligence/) | v2 |
+| Learned calendar suggestion rules — pattern-match `calendar_events.user_decision` to surface "suggest excluding this series" prompts. Trigger = v1.6.x soak data. | [features/calendar-binding/step-4-v2-learned-rules.md](features/calendar-binding/step-4-v2-learned-rules.md) | v2 |
+| Second calendar provider (Outlook / Apple) — additional `CalendarProvider` implementations exercising the v1.6 interface. Trigger = user asks. | [features/calendar-binding/step-5-v2-second-provider.md](features/calendar-binding/step-5-v2-second-provider.md) | v2 |
 | Garmin integration (continuous-stream layer on timeline) | not yet documented | v2 |
 | Multi-user / per-user data scoping (schema migration: `user_owner` on `tags`, `day_entries`) | not yet documented | v2 |
 | **Data export (CSV / JSON)** — promised on `/over` but **deferred until multi-user lands** (single-user, single-admin: Directus admin export is sufficient; the `binnenkort` stub in Settings remains aspirational). | _to be written_: `features/data-export/` | v2 (blocked on multi-user) |
