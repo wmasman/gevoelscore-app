@@ -33,5 +33,14 @@ export const config = {
   //   /api/health                — Fly.io health check, no auth
   //   /_next/static, /_next/image — static assets
   //   /favicon.ico               — root favicon
-  matcher: ['/((?!api/auth|api/health|_next/static|_next/image|favicon\\.ico|login|over).*)'],
+  //   any path ending in .ext    — public static assets like
+  //                                /manifest.webmanifest, future /sw.js,
+  //                                icons, etc. Without this, the PWA
+  //                                manifest gets 307-redirected to /login
+  //                                for unauthenticated visitors and the
+  //                                browser tries to parse HTML as JSON
+  //                                (Manifest: Line 1, column 1, Syntax error).
+  //                                Our API routes have no dots in their
+  //                                paths, so this is safe.
+  matcher: ['/((?!api/auth|api/health|_next/static|_next/image|favicon\\.ico|login|over|.*\\.[a-zA-Z0-9]+$).*)'],
 };
