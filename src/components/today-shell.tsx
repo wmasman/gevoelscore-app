@@ -37,6 +37,7 @@ import {
 } from '@/components/save-status-context';
 import { TimelineView } from '@/components/timeline-view';
 import { copy } from '@/copy';
+import type { DirectusCalendarEventRow } from '@/lib/api/calendars';
 import type { DayEntry } from '@/lib/domain/day-entry';
 import { formatDateDutch } from '@/lib/domain/date';
 import type { Episode } from '@/lib/domain/episode';
@@ -56,6 +57,12 @@ type Props = {
    * only the Context tab branch reads the prop.
    */
   episodes?: Episode[];
+  /**
+   * v1.6 Phase 1.E.4: calendar events overlapping `date`, rendered in
+   * the Context tab's Activiteiten section. Optional default-empty
+   * keeps existing tests + first-paint safety.
+   */
+  calendarEvents?: DirectusCalendarEventRow[];
 };
 
 type Tab = 'context' | 'today' | 'timeline';
@@ -71,6 +78,7 @@ export function TodayShell({
   allTags,
   timelineEntries,
   episodes = [],
+  calendarEvents = [],
 }: Props) {
   return (
     <SaveStatusProvider>
@@ -80,6 +88,7 @@ export function TodayShell({
         allTags={allTags}
         timelineEntries={timelineEntries}
         episodes={episodes}
+        calendarEvents={calendarEvents}
       />
     </SaveStatusProvider>
   );
@@ -91,6 +100,7 @@ function TodayShellInner({
   allTags,
   timelineEntries,
   episodes = [],
+  calendarEvents = [],
 }: Props) {
   const [tab, setTab] = useState<Tab>('today');
   const merged = useMergedSaveStatus();
@@ -212,7 +222,12 @@ function TodayShellInner({
       </header>
 
       {tab === 'context' ? (
-        <ContextView episodes={episodes} today={date} tags={allTags} />
+        <ContextView
+          episodes={episodes}
+          today={date}
+          tags={allTags}
+          calendarEvents={calendarEvents}
+        />
       ) : tab === 'today' ? (
         <div className="flex flex-col gap-6">
           <TodayCard

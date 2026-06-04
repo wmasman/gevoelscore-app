@@ -379,6 +379,38 @@ export async function readCalendarEventById(
  * tuples. Used by the sync orchestrator to diff fetched events against
  * what's already stored.
  */
+
+/**
+ * Read events overlapping a date range. Used by the Context tab to
+ * render the per-day Activiteiten list, and by the Today card.
+ * Filters to events where start_at < toIso AND end_at > fromIso
+ * (standard overlap check). Caller passes ISO strings — typically the
+ * start-of-day and end-of-day for the selected date.
+ */
+export async function readCalendarEventsInRange(
+  accessToken: string,
+  fromIso: string,
+  toIso: string,
+): Promise<Result<DirectusCalendarEventRow[], CalendarsError>> {
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('calendar_events', {
+        filter: {
+          _and: [
+            { start_at: { _lt: toIso } },
+            { end_at: { _gt: fromIso } },
+          ],
+        },
+        limit: -1,
+        sort: ['start_at'],
+      } as never),
+    )) as DirectusCalendarEventRow[];
+    return { ok: true, value: rows };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
 export async function readEventsByProviderIds(
   accessToken: string,
   connectionId: string,

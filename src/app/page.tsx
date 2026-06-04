@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { TodayShell } from '@/components/today-shell';
+import { readCalendarEventsInRange } from '@/lib/api/calendars';
+import type { DirectusCalendarEventRow } from '@/lib/api/calendars';
 import { readDayEntriesInRange, readDayEntryByDate } from '@/lib/api/day-entries';
 import { readAllEpisodes } from '@/lib/api/episodes';
 import { readAllTags } from '@/lib/api/tags';
@@ -57,8 +59,21 @@ export default async function HomePage() {
   let allTags: Tag[] = [];
   let timelineEntries: DayEntry[] = [];
   let episodes: Episode[] = [];
+  let calendarEvents: DirectusCalendarEventRow[] = [];
   const from = shiftDate(today, -(TIMELINE_DAYS - 1));
-  const [entryResult, tagsResult, rangeResult, episodesResult] = await Promise.all([
+  // v1.6 Phase 1.E.4: calendar events overlapping `today` for the
+  // Context tab's Activiteiten section. The Z-suffix makes these
+  // unambiguous UTC instants; events stored in calendar_events use
+  // timestamptz so the overlap check is timezone-safe.
+  const todayStartIso = `${today}T00:00:00Z`;
+  const todayEndIso = `${today}T23:59:59Z`;
+  const [
+    entryResult,
+    tagsResult,
+    rangeResult,
+    episodesResult,
+    calendarEventsResult,
+  ] = await Promise.all([
     readDayEntryByDate(session.accessToken, today),
     readAllTags(session.accessToken),
     readDayEntriesInRange(session.accessToken, from, today),
@@ -67,11 +82,13 @@ export default async function HomePage() {
     // Periodes tab shows its empty state. Same fail-soft posture as
     // the other reads above.
     readAllEpisodes(session.accessToken),
+    readCalendarEventsInRange(session.accessToken, todayStartIso, todayEndIso),
   ]);
   if (entryResult.ok) entry = entryResult.value;
   if (tagsResult.ok) allTags = tagsResult.value;
   if (rangeResult.ok) timelineEntries = rangeResult.value;
   if (episodesResult.ok) episodes = episodesResult.value;
+  if (calendarEventsResult.ok) calendarEvents = calendarEventsResult.value;
 
   return (
     <TodayShell
@@ -80,6 +97,7 @@ export default async function HomePage() {
       allTags={allTags}
       timelineEntries={timelineEntries}
       episodes={episodes}
+      calendarEvents={calendarEvents}
     />
   );
 }

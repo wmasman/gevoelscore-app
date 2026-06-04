@@ -254,6 +254,14 @@ export const copy = {
       disconnectError: 'Ontkoppelen lukte niet. Probeer opnieuw.',
       revokeFailedWarning:
         'Lokaal verwijderd, maar intrekken bij Google lukte niet. Trek de toegang handmatig in via myaccount.google.com.',
+      // Context-tab events section (the list above Periodes).
+      contextSection: {
+        heading: 'Activiteiten',
+        showExcluded: 'Toon overgeslagen events',
+        excludedSuffix: '(overgeslagen)',
+        allDayLabel: 'Hele dag',
+        emptyAriaLabel: 'Geen activiteiten op deze dag',
+      },
       // Per-event detail sheet (opened from Context tab + Today card).
       eventSheet: {
         sheetAriaLabel: 'Event details',

@@ -29,8 +29,10 @@
 // h2 sibling next to Periodes.
 
 import { useState } from 'react';
+import { ContextEventsSection } from '@/components/context-events-section';
 import { EpisodeFormSheet } from '@/components/episode-form-sheet';
 import { copy } from '@/copy';
+import type { DirectusCalendarEventRow } from '@/lib/api/calendars';
 import { formatDateDutch } from '@/lib/domain/date';
 import type { Episode } from '@/lib/domain/episode';
 import type { EpisodeCategory } from '@/lib/domain/episode-category';
@@ -43,6 +45,9 @@ type Props = {
   /** Step-5: full tag corpus, threaded into EpisodeFormSheet for the
    *  LinkedTagsSection + TagPickerSheet integration. */
   tags?: Tag[];
+  /** v1.6 Phase 1.E.4: calendar events overlapping the selected date,
+   *  rendered above Periodes via ContextEventsSection. */
+  calendarEvents?: DirectusCalendarEventRow[];
 };
 
 type SheetState =
@@ -60,7 +65,12 @@ type SheetState =
       initialEpisode: Episode;
     };
 
-export function ContextView({ episodes, today, tags = [] }: Props) {
+export function ContextView({
+  episodes,
+  today,
+  tags = [],
+  calendarEvents = [],
+}: Props) {
   const [sheet, setSheet] = useState<SheetState>({ open: false });
 
   function openCreate(category: EpisodeCategory): void {
@@ -83,13 +93,19 @@ export function ContextView({ episodes, today, tags = [] }: Props) {
       aria-label={copy.context.ariaLabel}
       className="flex flex-col gap-8"
     >
+      {/* v1.6 Phase 1.E.4: Activiteiten (calendar events) above Periodes */}
+      <ContextEventsSection
+        events={calendarEvents}
+        tags={tags}
+        episodes={episodes}
+      />
+
       <PeriodesSection
         episodes={episodes}
         today={today}
         onLaunchCreate={openCreate}
         onTapEpisode={openEdit}
       />
-      {/* v1.6: <CalendarBindingsSection /> goes here */}
       {/* v2:   <ProjectsSection /> + <PatronenSection /> follow */}
 
       {/* Sheet state lifted into ContextView so the close/refresh cycle
