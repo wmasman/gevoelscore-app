@@ -272,6 +272,19 @@ Things deliberately deferred. Each marked with trigger signals + proposed approa
 - **Trigger signal:** User asks for it. (Single user; no abstract demand to model.)
 - **Proposed approach:** New `OutlookCalendarProvider` / `AppleCalendarProvider` implementations of the `CalendarProvider` interface. Provider-specific OAuth flow + event-fetching; the canonical `CalendarEvent` shape stays identical; downstream (sync orchestrator, smart-default rules, UI) is provider-agnostic.
 
+### v2 — Historical backfill as an onboarding action ("Importeer geschiedenis")
+
+- **What:** Productize the admin-only `scripts/calendar-historical-backfill.mjs` into a user-facing onboarding step on `/settings/kalenders/choose` (right after first OAuth + calendar selection). User picks a start date ("Hoe ver terug wil je je agenda meenemen?"), the server runs chunked syncs against the user's connection (re-uses the existing `/api/calendars/sync?from=&to=` window override), and a progress UI streams ("46 van 92 maanden verwerkt..."). When the backfill ships in v2 alongside multi-user, also wire it as the default action on a fresh OAuth connect so the Context tab feels populated from day one.
+- **Why it matters:** Solves the new-user cold-start problem. The author's own 1788-event backfill (2022-09 → 2026-06) was the difference between a Context tab that looks "empty / broken" and one that immediately reflects months of patterns. For a Long COVID app where pattern discovery IS the value proposition, an empty Context tab on day one suppresses the very signal the user came for.
+- **Trigger signal:** Multi-user rollout (the app starts being served to others). Until then the admin script is sufficient — the author backfills their own history once.
+- **Proposed approach:**
+  - New route `POST /api/calendars/[connection_id]/backfill` taking `{ from: 'YYYY-MM-DD' }`. Server-side chunks the range into 30-day windows (same logic as the script). Background-queue or streaming-response — likely the latter for v2 simplicity (Server-Sent Events with chunk-progress messages).
+  - UI: a single date field + a primary `[Importeer]` button. Brainfog-friendly: no multi-step wizard, no "are you sure" — the action is reversible (re-running with a shorter range doesn't delete data, and `Ontkoppel` cascades).
+  - Default start date: maybe 1 year back. Configurable. Cap at 5 years to keep Google API quota predictable.
+  - Privacy: same as live sync — events flow only between Google and the user's own Directus.
+  - Rate-limit / quota: piggyback the existing `calendarWriteRateLimiter` per-IP, plus a per-connection quota counter so a single user's backfill can't starve other users' live syncs.
+- **Open questions:** Whether to surface the backfill action AGAIN later (e.g. "I started 6 months ago, now I want to import 2 more years"), or make it one-shot at connect. Soak with the first non-author users will answer that.
+
 ### Out of scope (won't ship)
 
 - **Write back to calendar.** Read-only is a hard line. We are not a calendar app.
