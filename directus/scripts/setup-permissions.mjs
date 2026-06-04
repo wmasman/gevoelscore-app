@@ -35,6 +35,20 @@ const FRONTEND_CRUD_COLLECTIONS = [
   // only). Consistency with the other user-data collections wins over a
   // narrow service-token permission set.
   'episodes',
+  // v1.6 calendar-binding (step-1). The 3 new collections need scoped-role
+  // access so the callback + sync + per-event routes can read/write them
+  // using DIRECTUS_TOKEN (which on Fly is the scoped service token, not
+  // admin). Field-level restriction on calendar_connections.refresh_token_
+  // encrypted is deferred to a v1.6.x hardening pass — refresh tokens are
+  // already AES-GCM encrypted at rest with CALENDAR_KEK, so the scoped
+  // token reading them yields ciphertext only.
+  'calendar_connections',
+  'calendar_series_exclusions',
+  // cron_monitor is shared infra. The frontend role needs read for the
+  // /api/health/cron endpoint (step-2) and write for the sync route that
+  // records each cron run (also step-2). Including it here in step-1 so
+  // the schema permissions are settled before step-2 wires the cron flow.
+  'cron_monitor',
 ];
 
 const ACTIONS = ['create', 'read', 'update', 'delete'];
