@@ -35,7 +35,7 @@
     "*.{ts,tsx,mjs,js}": "eslint --max-warnings 0 --no-warn-ignored"
   },
   "dependencies": {
-    "@directus/sdk": "^18.0.3",
+    "@directus/sdk": "^21.3.0",
     "clsx": "^2.1.1",
     "next": "^15.1.0",
     "react": "^19.0.0",
