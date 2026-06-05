@@ -36,6 +36,7 @@ import {
   useMergedSaveStatus,
 } from '@/components/save-status-context';
 import { TimelineView } from '@/components/timeline-view';
+import { TodayEventsRegion } from '@/components/today-events-region';
 import { copy } from '@/copy';
 import type { DirectusCalendarEventRow } from '@/lib/api/calendars';
 import type { DayEntry } from '@/lib/domain/day-entry';
@@ -237,6 +238,8 @@ function TodayShellInner({
             onTapRegion={(step) =>
               openSheetFor({ date, entry, isPastDay: false }, step)
             }
+            todayEvents={calendarEvents}
+            episodes={episodes}
             ongoingEpisodes={episodes.filter(
               (e) =>
                 e.archived_at === null &&
@@ -398,6 +401,19 @@ type TodayCardProps = {
   pulsing: boolean;
   onTapRegion: (step: Step) => void;
   /**
+   * Step-2 today-card events (2026-06-05). Events overlapping today
+   * (server-pre-filtered by date overlap in page.tsx via
+   * readCalendarEventsInRange). The TodayEventsRegion further filters
+   * to included_as_context=true and renders nothing when empty.
+   */
+  todayEvents?: DirectusCalendarEventRow[];
+  /**
+   * Full episodes corpus for the CalendarEventSheet's episode-picker
+   * surface. Independent of `ongoingEpisodes` which is the filtered
+   * subset that drives the OngoingEpisodesRegion list itself.
+   */
+  episodes?: Episode[];
+  /**
    * Step-1 today-card ongoing-episodes (2026-06-02). Pre-filtered list
    * of episodes where end_date is null AND archived_at is null. The
    * region only renders when this is non-empty.
@@ -417,6 +433,8 @@ function TodayCard({
   allTags,
   pulsing,
   onTapRegion,
+  todayEvents = [],
+  episodes = [],
   ongoingEpisodes = [],
   onEpisodeTap,
 }: TodayCardProps) {
@@ -439,6 +457,11 @@ function TodayCard({
         tagIds={entry?.tag_ids ?? []}
         allTags={allTags}
         onClick={() => onTapRegion('tags')}
+      />
+      <TodayEventsRegion
+        events={todayEvents}
+        tags={allTags}
+        episodes={episodes}
       />
       {ongoingEpisodes.length > 0 && onEpisodeTap !== undefined && (
         <OngoingEpisodesRegion
