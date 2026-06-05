@@ -65,6 +65,16 @@ export const copy = {
     ongoingRegionLabel: 'Loopt nu',
     ongoingEditAriaLabel: (label: string): string =>
       `${label}, tik om te bewerken`,
+    // Step-2 Phase 2.D today-card events region (2026-06-05). Renders
+    // between Tags and OngoingEpisodes when there are events overlapping
+    // today with included_as_context=true. Heading mirrors the Context
+    // tab's "Activiteiten" for the same surface naming across views.
+    todayEvents: {
+      regionLabel: 'Activiteiten',
+      allDayLabel: 'Hele dag',
+      expandMore: (n: number): string => `+ ${n} meer`,
+      collapseLess: 'Minder',
+    },
   },
   context: {
     // Tab label + view aria-label for the v1.5 Context surface — the
