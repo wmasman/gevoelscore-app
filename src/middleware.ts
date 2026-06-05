@@ -30,7 +30,15 @@ export const config = {
   //   /login, /login/*           — login + verify UI (would loop otherwise)
   //   /over, /over/*             — public landing / backer-recruitment page
   //   /api/auth/*                — auth endpoints handle their own auth flow
-  //   /api/health                — Fly.io health check, no auth
+  //   /api/health                — Fly.io health check, no auth (matches
+  //                                /api/health AND /api/health/cron via prefix)
+  //   /api/calendars/sync        — bearer-gated cron endpoint (step-2). Auth
+  //                                lives in the route handler (constant-time
+  //                                compare against CALENDAR_SYNC_SECRET). The
+  //                                middleware presence-check would 401 the
+  //                                cron's cookieless POST before the route
+  //                                ran, which is exactly what bit step-2's
+  //                                smoke until this exclusion landed.
   //   /_next/static, /_next/image — static assets
   //   /favicon.ico               — root favicon
   //   any path ending in .ext    — public static assets like
@@ -42,5 +50,5 @@ export const config = {
   //                                (Manifest: Line 1, column 1, Syntax error).
   //                                Our API routes have no dots in their
   //                                paths, so this is safe.
-  matcher: ['/((?!api/auth|api/health|_next/static|_next/image|favicon\\.ico|login|over|.*\\.[a-zA-Z0-9]+$).*)'],
+  matcher: ['/((?!api/auth|api/health|api/calendars/sync|_next/static|_next/image|favicon\\.ico|login|over|.*\\.[a-zA-Z0-9]+$).*)'],
 };

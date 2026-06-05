@@ -83,18 +83,6 @@ export async function POST(request: Request) {
   let userId: string | null = null;
 
   const authHeader = request.headers.get('authorization');
-  // TEMP DIAG (remove after step-2.smoke green): why bearer 401?
-  {
-    const hdrTokenLen = authHeader
-      ? (/^Bearer\s+(.+)$/.exec(authHeader)?.[1]?.length ?? -1)
-      : -2;
-    const secLen = syncSecret ? syncSecret.length : -1;
-    const matches =
-      authHeader && syncSecret ? bearerMatches(authHeader, syncSecret) : false;
-    console.log(
-      `[sync-diag] hdr_token_len=${hdrTokenLen} secret_len=${secLen} bearer_matches=${matches}`,
-    );
-  }
   if (authHeader && syncSecret && bearerMatches(authHeader, syncSecret)) {
     scope = 'bearer';
     const bearerToken = process.env.CALENDAR_CRON_DIRECTUS_TOKEN;
