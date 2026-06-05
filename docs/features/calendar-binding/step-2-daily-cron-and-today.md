@@ -292,18 +292,72 @@ GHA dispatch round-trip 8/8 against gevoelscore-frontend.fly.dev.
 
 ---
 
-## Done (filled in during `/build-step`)
+## Done (2026-06-05)
 
-- [ ] AC2.1-2.33: per test file mapping
-- [ ] RED captured: ...
-- [ ] GREEN captured: ...
-- [ ] Type / lint / verify clean
-- [ ] `CALENDAR_SYNC_SECRET` set on Fly + GHA
-- [ ] daily-calendar-sync.yml fires on dispatch
-- [ ] cron-health-check.yml passes initial run
-- [ ] Smoke 8/8
-- [ ] No new HIGH gate findings
-- [ ] Refactor: ...
+- [x] **AC2.1-2.33** all green. Per file:
+  - AC2.1-2.5 → [src/lib/api/__tests__/calendars.test.ts](../../../src/lib/api/__tests__/calendars.test.ts) (6 tests, "recordCronRun" describe block) + [src/app/api/calendars/sync/__tests__/route.test.ts](../../../src/app/api/calendars/sync/__tests__/route.test.ts) (tests 64-67)
+  - AC2.6-2.12 → [src/app/api/health/cron/__tests__/route.test.ts](../../../src/app/api/health/cron/__tests__/route.test.ts) (11 tests)
+  - AC2.13-2.18 → [.github/workflows/daily-calendar-sync.yml](../../../.github/workflows/daily-calendar-sync.yml) (workflow_dispatch verified)
+  - AC2.19-2.23 → [.github/workflows/cron-health-check.yml](../../../.github/workflows/cron-health-check.yml) (workflow_dispatch verified)
+  - AC2.24-2.30 → [src/components/__tests__/today-events-region.test.tsx](../../../src/components/__tests__/today-events-region.test.tsx) (11 tests) + wiring in [src/components/today-shell.tsx](../../../src/components/today-shell.tsx)
+  - AC2.31-2.33 → cross-cutting; covered by full-suite green + manual Ververs-nu still working + cron+manual writing the same cron_monitor row
+- [x] **RED captured** per phase via stub-throws-not_implemented or stub-returns-null; 4 phases (2.A/2.B/2.C/2.D) followed strict RED→GREEN.
+- [x] **GREEN captured** end of each phase; full suite 1518/1518 at every checkpoint.
+- [x] **Type / lint / verify clean** — `npm run verify` (lint + tsc --noEmit + Vitest) green. `npm run predeploy` (chromium console-cleanliness on /login, /over, /manifest.webmanifest) 3/3.
+- [x] **verify-schema.mjs GREEN** — 108/108. Step-2 made no schema changes; the existing step-0 collections covered everything.
+- [x] **`CALENDAR_SYNC_SECRET` set on Fly + GHA** — same 44-char value in both stores. Rotation harness at [scripts/rotate-calendar-sync-secret.ps1](../../../scripts/rotate-calendar-sync-secret.ps1).
+- [x] **`CALENDAR_CRON_DIRECTUS_TOKEN` set on Fly** — provisioned in step-2.0a, deployed in step-2 final deploy. Rotation harness at [scripts/rotate-cron-token.ps1](../../../scripts/rotate-cron-token.ps1).
+- [x] **daily-calendar-sync.yml fires on dispatch** — run 27003879503 (2026-06-05T08:18:41Z) succeeded in 15s. Pulled 66 events from 1 connection, upserted 66, excluded 25 by series. `cron_monitor.daily_calendar_sync.last_result` = `{"ok":true,"details":{"connections":1,"events_pulled":66,"events_upserted":66,"events_excluded_by_series":25}}`.
+- [x] **cron-health-check.yml passes initial run** — run 27004012879 (2026-06-05T08:21:44Z) succeeded in 7s. Overall status `ok`, daily_calendar_sync hoursSinceRun 0.
+- [ ] **Smoke 8/8** — partial. The README's full 8-step harness (which mutates `cron_monitor.last_run_at` to 30h ago via Directus admin to verify the stale-detection path, then resets) is NOT scripted yet. What's verified manually: GHA dispatch → row writes → health endpoint reads → overall `ok`. Stale-path branch is unit-tested in [src/app/api/health/cron/__tests__/route.test.ts](../../../src/app/api/health/cron/__tests__/route.test.ts) (tests 72-75). Writing `scripts/calendar-cron-smoke.mjs` as an automated harness is captured as a follow-up.
+- [x] **No new HIGH gate findings** — bearer route is constant-time-compared, health endpoint is PII-safe by construction (counts + error codes only), `recordCronRun` is no-throw, middleware exclusion is the minimum required for the cron path.
+- [x] **Refactor** — none needed. The Directus wrapper layer extended cleanly (one new function each in Phase 2.A and 2.C); the route extension was additive; the component followed the ContextEventsSection pattern. No common helper extraction earned its keep.
+
+### Commit map
+
+| Sub-step | Commit | What |
+|---|---|---|
+| 2.0a | `55775ba` | Cron Directus service token + sync route bearer-path fix |
+| 2.0b | `5b85807` | CALENDAR_SYNC_SECRET rotation wrapper |
+| 2.A | `a40ba03` | `recordCronRun` cron_monitor write wrapper |
+| 2.B | `b3c0c0d` | Sync route writes cron_monitor on both paths |
+| 2.C | `bbd0e83` | `GET /api/health/cron` staleness probe |
+| 2.D | `38fd145` | `TodayEventsRegion` component |
+| 2.E | `f736266` | Wire `TodayEventsRegion` into today-card |
+| 2.F | `296406f` | GHA `daily-calendar-sync.yml` + `cron-health-check.yml` |
+| smoke fix | `4438a91` | Middleware exclusion for `/api/calendars/sync` (also reverts the 2 temp diag commits) |
+
+Two transient commits on main during smoke diagnosis (`02fd861`, `5055782`) were reverted by `4438a91`; the diff against main as-of step-1-final is clean.
+
+---
+
+## Lessons learned during build (2026-06-05)
+
+Step-2's six code phases (2.A-2.F) built RED→GREEN cleanly across 6 commits with ~30 new tests, mirroring step-1's pattern. **The integration broke in two ways at smoke time, both at infrastructure-layer boundaries we hadn't explicitly thought about.** Documenting because both classes recur for any feature that adds a non-cookie-authed route + any feature that rotates a shared secret across multiple stores.
+
+### The 2 smoke-time bugs
+
+1. **Middleware presence-gate blocked the bearer-only route.** [src/middleware.ts:19-21](../../../src/middleware.ts#L19-L21) returns `{"error":"unauthenticated"}` for any `/api/*` request without a session cookie. The daily-calendar-sync GHA workflow sends an `Authorization: Bearer ...` header but NO cookie, so middleware short-circuited 401 before the route handler ran. Symptom: the 401 body was exactly the middleware string, but the diagnosis took an hour because I assumed the route had run and the bearer compare had failed. Diagnostic detour: dumped the secret length, the secret edges, the secret sha256 — confirmed Fly and GHA had byte-identical values — only then realized the route wasn't being reached. Fix: add `api/calendars/sync` to the matcher's negative-lookahead exclusion list, alongside the existing `api/auth` and `api/health`. Commit `4438a91`. **Reusable rule:** memory [[feedback-bearer-routes-need-middleware-exclusion]].
+
+2. **PowerShell pipes appended a trailing newline to the GHA secret.** First version of [scripts/rotate-calendar-sync-secret.ps1](../../../scripts/rotate-calendar-sync-secret.ps1) wrote the Fly secret via `"KEY=VALUE" | fly secrets import` (fly trims trailing whitespace per line — clean) and the GHA secret via `$secret | gh secret set NAME` (PowerShell auto-appends `\n` when piping to a native exe — gh stored it verbatim). Net result: Fly had 44 chars, GHA had 45 chars, bearer compare would have failed silently with no shape difference except length. This wasn't the direct cause of the smoke 401 — the middleware bug above blocked the request earlier — but it WAS lurking in the very first run before I fixed it. The two stores were briefly out of sync. Fix: switch to `gh secret set --env-file <tmp>` where the tmp file is written with `[System.IO.File]::WriteAllText` (no trailing newline). Same script also rolls back cleanly if the gh step fails after the Fly stage step. **Reusable rule:** memory [[reference-powershell-pipes-add-trailing-newline]].
+
+### What we'd do differently next time
+
+- **Any new `/api/*` route gated by `Authorization`, basic-auth, or any non-cookie scheme** must update [src/middleware.ts](../../../src/middleware.ts)'s matcher exclusion list in the SAME commit that adds the route. Treat it as the route's third file (handler + tests + middleware exclusion). For step-2 this would have been a 1-line addition in `2.F` and would have caught the 401 against the local dev server before deploy.
+- **Diagnostic short-circuit on 401 from an `/api/*` bearer route**: if the response body is exactly `{"error":"unauthenticated"}` (5 chars longer than the JSON-serialized version with the trailing `}`), check middleware first. Don't dig into the route handler, the secret values, or the token compare logic until middleware is ruled out — those tools are slow.
+- **Any rotation script that ships a shared secret to two stores** should write to a temp file with `WriteAllText` and use `--env-file` / `--from-file -` semantics on both sides. Never pipe directly. The convention is captured in `scripts/rotate-calendar-sync-secret.ps1`; mirror it for any future `KEY+something` secret pair.
+- **Production smoke harness**: deferred writing the full `scripts/calendar-cron-smoke.mjs` 8-step script (mutate-to-stale-and-back). The unit tests for the stale branch are tight, but they don't catch a wire-level regression where the route returns the right shape under fake timers but breaks in production for some other reason. Worth doing as a follow-up before step-3 lands more cron-adjacent code.
+
+### What did work first-try
+
+For balance:
+- The `recordCronRun` defensive contract (never throws, even if the wrapper bug-of-bugs throws) was right on the first attempt and the route's `.catch(() => undefined)` belt-and-braces never had to engage.
+- The 1000-char cap on `last_result` triggered zero edge cases — counts-only success bodies serialize to ~120 chars; the cap exists purely as defensive depth.
+- Test 66's "still 200 even if recordCronRun rejects" caught one of its own kind early: the initial test passed vacuously because the route didn't call recordCronRun yet, and I had to strengthen it with an explicit `toHaveBeenCalledTimes(1)` assertion. Worth keeping as a pattern: any "X still happens even if Y fails" test must ALSO assert Y was attempted.
+- The fly secret + GHA secret rotation script worked perfectly on the second-run-with-fix, including the deploy + workflow_dispatch + smoke chain. The rotation is now a one-command, no-echo, history-clean operation.
+- The cron_monitor row from a real sync (`{"connections":1,"events_pulled":66,"events_upserted":66,"events_excluded_by_series":25}`) reads exactly like the test fixtures — no surprises in the real-world shape.
+
+The smoke bugs were both in the **glue between layers** (middleware vs. route handler, PS pipe vs. gh CLI) — not in the route logic itself. Same pattern as step-1: the layers were sound; the inter-layer conventions needed documenting.
 
 ---
 
