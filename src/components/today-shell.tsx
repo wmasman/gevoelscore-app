@@ -64,6 +64,13 @@ type Props = {
    * keeps existing tests + first-paint safety.
    */
   calendarEvents?: DirectusCalendarEventRow[];
+  /**
+   * Step-3 Phase 3.C: events overlapping the 30-day timeline range,
+   * forwarded into TimelineView for the TimelineEventMarkers SVG
+   * overlay. Distinct from `calendarEvents` (today-only) so the
+   * Context tab + Today card don't have to learn date-filtering.
+   */
+  timelineCalendarEvents?: DirectusCalendarEventRow[];
 };
 
 type Tab = 'context' | 'today' | 'timeline';
@@ -80,6 +87,7 @@ export function TodayShell({
   timelineEntries,
   episodes = [],
   calendarEvents = [],
+  timelineCalendarEvents = [],
 }: Props) {
   return (
     <SaveStatusProvider>
@@ -90,6 +98,7 @@ export function TodayShell({
         timelineEntries={timelineEntries}
         episodes={episodes}
         calendarEvents={calendarEvents}
+        timelineCalendarEvents={timelineCalendarEvents}
       />
     </SaveStatusProvider>
   );
@@ -102,6 +111,7 @@ function TodayShellInner({
   timelineEntries,
   episodes = [],
   calendarEvents = [],
+  timelineCalendarEvents = [],
 }: Props) {
   const [tab, setTab] = useState<Tab>('today');
   const merged = useMergedSaveStatus();
@@ -318,6 +328,7 @@ function TodayShellInner({
           allTags={allTags}
           recencyByTagId={recencyByTagId}
           episodes={episodes}
+          calendarEvents={timelineCalendarEvents}
         />
       )}
 

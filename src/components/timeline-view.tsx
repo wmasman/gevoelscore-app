@@ -23,10 +23,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { QuickEntryFlow } from '@/components/lab/quick-entry-flow';
 import { ScoreChart } from '@/components/score-chart';
 import { ScoreHeatmap } from '@/components/score-heatmap';
+import { TimelineEventMarkers } from '@/components/timeline-event-markers';
 import { useMergedSaveStatus } from '@/components/save-status-context';
 import { copy } from '@/copy';
+import type { DirectusCalendarEventRow } from '@/lib/api/calendars';
 import { currentStreak } from '@/lib/domain/streak';
 import type { DayEntry } from '@/lib/domain/day-entry';
+import { buildEventOverlayLayout } from '@/lib/domain/event-overlay-layout';
 import type { Tag } from '@/lib/domain/tag';
 import { EpisodeFormSheet } from '@/components/episode-form-sheet';
 import type { Episode } from '@/lib/domain/episode';
@@ -54,7 +57,19 @@ type Props = {
    * existing tests + the pre-overlay call sites safe.
    */
   episodes?: Episode[];
+  /**
+   * Step-3 Phase 3.C: events overlapping the 30-day timeline range,
+   * used to compute the TimelineEventMarkers SVG overlay (ticks +
+   * spans). Optional default-empty keeps existing tests safe. Layout
+   * is recomputed via useMemo per (events, range) — see
+   * buildEventOverlayLayout. For the 90-day range view, markers
+   * still draw from the same 30-day events array; older markers are
+   * a v1.6.x follow-up once a per-range client-fetch exists.
+   */
+  calendarEvents?: DirectusCalendarEventRow[];
 };
+
+const USER_TIMEZONE = 'Europe/Amsterdam';
 
 function shiftDate(date: string, days: number): string {
   const parsed = new Date(`${date}T12:00:00Z`);
@@ -71,6 +86,7 @@ export function TimelineView({
   allTags,
   recencyByTagId = {},
   episodes = [],
+  calendarEvents = [],
 }: Props) {
   const [range, setRange] = useState<Range>(30);
   const [view, setView] = useState<View>('chart');
@@ -141,6 +157,24 @@ export function TimelineView({
     selectedDate === null
       ? null
       : (entries.find((e) => e.date === selectedDate) ?? null);
+
+  // Step-3 Phase 3.C: derive the event-overlay layout for the current
+  // range. Layout is cheap (~5ms at 200 events / 90 days per Phase 3.A
+  // benchmark); useMemo keeps it stable across renders that don't
+  // change events or range. Range bounds are local-midnight in
+  // Amsterdam so a 30-day "today is 2026-06-05" window covers
+  // 2026-05-07 00:00 local → 2026-06-06 00:00 local.
+  const eventLayout = useMemo(() => {
+    const rangeStartIso = `${fromForRange[range]}T00:00:00+02:00`;
+    // rangeEnd exclusive at end-of-today + 1 day's midnight.
+    const rangeEndIso = `${today}T23:59:59+02:00`;
+    return buildEventOverlayLayout(
+      calendarEvents,
+      new Date(rangeStartIso),
+      new Date(rangeEndIso),
+      USER_TIMEZONE,
+    );
+  }, [calendarEvents, fromForRange, range, today]);
 
   return (
     <section
@@ -265,16 +299,48 @@ export function TimelineView({
 
       {view === 'chart' ? (
         <>
-          <ScoreChart
-            entries={entries}
-            from={fromForRange[range]}
-            to={today}
-            onPointTap={(date) => setSelectedDate(date)}
-            episodes={episodes}
-            allTags={allTags}
-            categoriesVisible={categoriesVisible}
-            onEpisodeTap={(ep) => setBandEditTarget(ep)}
-          />
+          {/* Step-3 Phase 3.C: chart + event-markers overlay share a
+              relative container. ScoreChart owns the visual; markers
+              SVG layers absolute on top (ticks at top edge, faint
+              span bars behind the score line via SVG paint order
+              inside the marker component). The inset matches
+              ScoreChart's internal PADDING_LEFT/RIGHT so marker x's
+              align with the score points; height is the SCORE_PLOT
+              area only (the episode-band strip below is not in
+              scope). Visual baseline review (Phase 3.D) iterates the
+              exact opacity / tick size. */}
+          <div className="relative">
+            <ScoreChart
+              entries={entries}
+              from={fromForRange[range]}
+              to={today}
+              onPointTap={(date) => setSelectedDate(date)}
+              episodes={episodes}
+              allTags={allTags}
+              categoriesVisible={categoriesVisible}
+              onEpisodeTap={(ep) => setBandEditTarget(ep)}
+            />
+            {(eventLayout.markerDays.size > 0 ||
+              eventLayout.spans.length > 0) && (
+              <div
+                aria-hidden="false"
+                className="pointer-events-none absolute inset-0"
+                style={{ paddingLeft: '4.67%', paddingRight: '2%' }}
+              >
+                <div className="pointer-events-auto h-full w-full">
+                  <TimelineEventMarkers
+                    markerDays={eventLayout.markerDays}
+                    spans={eventLayout.spans}
+                    fromDate={fromForRange[range]}
+                    toDate={today}
+                    width={560}
+                    height={200}
+                    onDateSelect={(date) => setSelectedDate(date)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           <p className="text-xs text-fg-subtle">{copy.timeline.maSubtitle}</p>
         </>
       ) : (

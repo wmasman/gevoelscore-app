@@ -86,9 +86,12 @@ export function TimelineEventMarkers({
 
   const t = copy.timeline.eventMarkers;
   const numDays = daysBetween(fromDate, toDate);
-  const slotWidth = width / numDays;
+  // Match ScoreChart's x-mapping (edge-anchored): day 0 at x=0,
+  // day (numDays-1) at x=width. Otherwise markers wouldn't sit
+  // under the score points they belong to.
+  const stepX = numDays > 1 ? width / (numDays - 1) : width;
   const centerOf = (date: string): number =>
-    dayIndex(date, fromDate) * slotWidth + slotWidth / 2;
+    numDays > 1 ? dayIndex(date, fromDate) * stepX : width / 2;
 
   const totalSvgHeight = TICK_STRIP_HEIGHT + height;
   // Span bar height = a fraction of the chart so the line still dominates.
@@ -99,6 +102,8 @@ export function TimelineEventMarkers({
     <svg
       width={width}
       height={totalSvgHeight}
+      viewBox={`0 0 ${width} ${totalSvgHeight}`}
+      preserveAspectRatio="none"
       role="presentation"
       style={{ overflow: 'visible' }}
     >

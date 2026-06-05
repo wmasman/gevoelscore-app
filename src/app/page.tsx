@@ -60,6 +60,7 @@ export default async function HomePage() {
   let timelineEntries: DayEntry[] = [];
   let episodes: Episode[] = [];
   let calendarEvents: DirectusCalendarEventRow[] = [];
+  let timelineCalendarEvents: DirectusCalendarEventRow[] = [];
   const from = shiftDate(today, -(TIMELINE_DAYS - 1));
   // v1.6 Phase 1.E.4: calendar events overlapping `today` for the
   // Context tab's Activiteiten section. The Z-suffix makes these
@@ -67,12 +68,22 @@ export default async function HomePage() {
   // timestamptz so the overlap check is timezone-safe.
   const todayStartIso = `${today}T00:00:00Z`;
   const todayEndIso = `${today}T23:59:59Z`;
+  // step-3 Phase 3.C: events overlapping the 30-day timeline range
+  // for the TimelineEventMarkers SVG overlay. Separate query from
+  // today's so the Context tab + Today card stay scoped to today
+  // (avoids the date-filter refactor that consolidating would need).
+  // 90-day range toggle inside TimelineView shows markers for the
+  // 30-day chunk only; the 60-day-back markers are a v1.6.x follow-up
+  // once a per-range client-fetch endpoint exists.
+  const timelineFromIso = `${from}T00:00:00Z`;
+  const timelineToIso = todayEndIso;
   const [
     entryResult,
     tagsResult,
     rangeResult,
     episodesResult,
     calendarEventsResult,
+    timelineCalendarEventsResult,
   ] = await Promise.all([
     readDayEntryByDate(session.accessToken, today),
     readAllTags(session.accessToken),
@@ -83,12 +94,16 @@ export default async function HomePage() {
     // the other reads above.
     readAllEpisodes(session.accessToken),
     readCalendarEventsInRange(session.accessToken, todayStartIso, todayEndIso),
+    readCalendarEventsInRange(session.accessToken, timelineFromIso, timelineToIso),
   ]);
   if (entryResult.ok) entry = entryResult.value;
   if (tagsResult.ok) allTags = tagsResult.value;
   if (rangeResult.ok) timelineEntries = rangeResult.value;
   if (episodesResult.ok) episodes = episodesResult.value;
   if (calendarEventsResult.ok) calendarEvents = calendarEventsResult.value;
+  if (timelineCalendarEventsResult.ok) {
+    timelineCalendarEvents = timelineCalendarEventsResult.value;
+  }
 
   return (
     <TodayShell
@@ -98,6 +113,7 @@ export default async function HomePage() {
       timelineEntries={timelineEntries}
       episodes={episodes}
       calendarEvents={calendarEvents}
+      timelineCalendarEvents={timelineCalendarEvents}
     />
   );
 }
