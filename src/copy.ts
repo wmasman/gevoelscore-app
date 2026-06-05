@@ -219,6 +219,16 @@ export const copy = {
       interventies: 'Interventies',
       periodes: 'Periodes',
     },
+    // Step-3 timeline-event-markers: tick + span overlay on the chart.
+    // Aria labels are functional, not chrome — they let screen-reader
+    // users hit the same tap targets a sighted user reaches via the
+    // tiny visual ticks.
+    eventMarkers: {
+      tickAriaLabel: (date: string): string =>
+        `Activiteit op ${date}, tik om te openen`,
+      spanAriaLabel: (startDate: string, endDate: string): string =>
+        `Meerdaagse activiteit van ${startDate} tot ${endDate}, tik om te openen`,
+    },
   },
   settings: {
     title: 'Instellingen',
