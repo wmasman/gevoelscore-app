@@ -1,0 +1,75 @@
+name: Cron Health Check
+
+# Polls /api/health/cron every 6 hours. Fails the workflow when any
+# job is stale or never_run, or when the endpoint is unreachable.
+# GitHub Actions email-on-failure is the entire alerting stack
+# (single-user app per the step-2 spec; no SMS/Slack/PagerDuty/banner).
+#
+# This is the active alerting layer that catches:
+#   - daily-calendar-sync.yml didn't fire at all (cron_monitor stays
+#     stale)
+#   - Sync route is erroring on every run (last_run_at advances but
+#     last_result keeps showing ok:false — the maintainer sees that
+#     in the per-job summary below)
+#   - /api/health/cron itself is unreachable (Directus down or Fly
+#     down)
+#
+# Endpoint is unauthenticated by design (AC2.6) — PII-safe by
+# construction since cron_monitor.last_result is counts-or-error-code
+# only (AC2.2/2.3).
+
+on:
+  schedule:
+    # Every 6 hours. With expected_interval_hours = 26 on
+    # daily_calendar_sync, a missed daily sync surfaces within 6h of
+    # the 26h window closing -- worst case ~32h from the last
+    # successful run.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Poll /api/health/cron
+        run: |
+          set -e
+          URL="https://gevoelscore-frontend.fly.dev/api/health/cron"
+          echo "GET $URL"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" "$URL")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response:"
+          echo "$BODY" | jq .
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Cron health endpoint returned HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          STATUS=$(echo "$BODY" | jq -r '.status')
+
+          {
+            echo "## Cron Health: \`$STATUS\`"
+            echo ""
+            echo "| Job | Status | Last Run | Hours Ago | Last Result |"
+            echo "|-----|--------|----------|-----------|-------------|"
+            echo "$BODY" | jq -r '.jobs[] | "| \(.jobName) | \(.status) | \(.lastRunAt // "never") | \(.hoursSinceRun // "n/a") | \(.lastResult // "n/a") |"'
+          } >> $GITHUB_STEP_SUMMARY
+
+          STALE_OR_NEVER=$(echo "$BODY" | jq -r '[.jobs[] | select(.status == "stale" or .status == "never_run") | .jobName] | join(", ")')
+
+          if [ -n "$STALE_OR_NEVER" ]; then
+            echo "::error::Stale or never-run cron jobs detected: $STALE_OR_NEVER"
+            {
+              echo ""
+              echo "**ALERT**: \`$STALE_OR_NEVER\` -- investigate Fly logs and Directus."
+            } >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "All cron jobs healthy."

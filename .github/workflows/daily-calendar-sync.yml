@@ -1,0 +1,75 @@
+name: Daily Calendar Sync
+
+# Fires once a day at 03:00 UTC (04:00 CET / 05:00 CEST). POSTs to
+# the bearer-gated /api/calendars/sync on the Fly app. The route pulls
+# events for all active calendar_connections, upserts new/changed
+# events, then writes the run outcome to cron_monitor (counts only,
+# no PII, 1000-char cap — see AC2.2/2.3 in step-2).
+#
+# Workflow failure -> GitHub auto-emails the maintainer. This is the
+# entire alerting stack for the daily cron path. The companion
+# cron-health-check.yml covers the "workflow didn't fire at all" case
+# by polling /api/health/cron.
+#
+# CALENDAR_SYNC_SECRET is set on the repo via scripts/rotate-calendar-
+# sync-secret.ps1, which ships the same value to Fly + GHA in one
+# shot. Constant-time-compared on the route side.
+
+on:
+  schedule:
+    # 03:00 UTC, fixed regardless of CET/CEST DST shifts.
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: POST /api/calendars/sync
+        run: |
+          set -e
+          URL="https://gevoelscore-frontend.fly.dev/api/calendars/sync"
+          echo "POST $URL"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "$URL" \
+            -H "Authorization: Bearer ${{ secrets.CALENDAR_SYNC_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response:"
+          echo "$BODY" | jq .
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Daily calendar sync failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          CONNECTIONS=$(echo "$BODY" | jq -r '.connections // 0')
+          PULLED=$(echo "$BODY" | jq -r '.events_pulled // 0')
+          UPSERTED=$(echo "$BODY" | jq -r '.events_upserted // 0')
+          EXCLUDED=$(echo "$BODY" | jq -r '.events_excluded_by_series // 0')
+          ERRORS=$(echo "$BODY" | jq -r '.errors | length')
+
+          {
+            echo "## Daily Calendar Sync"
+            echo ""
+            echo "| Metric | Value |"
+            echo "|--------|-------|"
+            echo "| Connections | $CONNECTIONS |"
+            echo "| Events pulled | $PULLED |"
+            echo "| Events upserted | $UPSERTED |"
+            echo "| Events excluded by series | $EXCLUDED |"
+            echo "| Per-connection errors | $ERRORS |"
+          } >> $GITHUB_STEP_SUMMARY
+
+          # Per-connection errors don't fail the workflow (the sync
+          # route already wrote them to cron_monitor.last_result for
+          # the watchdog to detect via the never-advancing last_run_at
+          # pattern). They surface in the summary so the maintainer
+          # sees them on each run.
