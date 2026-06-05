@@ -231,6 +231,24 @@ export async function getCronMonitorJob(
   }
 }
 
+/**
+ * Read all cron_monitor rows. Used by GET /api/health/cron (step-2)
+ * to surface per-job staleness. Rows are small (no joins, no large
+ * fields) so we read everything rather than paginate or filter.
+ */
+export async function readAllCronMonitorJobs(
+  accessToken: string,
+): Promise<Result<DirectusCronMonitorRow[], CalendarsError>> {
+  try {
+    const rows = (await makeClient(accessToken).request(
+      readItems('cron_monitor', { limit: -1 } as never),
+    )) as DirectusCronMonitorRow[];
+    return { ok: true, value: rows };
+  } catch (e) {
+    return { ok: false, error: classifyError(e) };
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────
 // calendar_connections CRUD (Phase 1.C)
 // ─────────────────────────────────────────────────────────────────
