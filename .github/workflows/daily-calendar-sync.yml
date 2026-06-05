@@ -26,16 +26,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Debug secret shape (length + edges only; remove after diagnosis)
+      - name: Debug secret shape (sha256 only; remove after diagnosis)
         env:
           S: ${{ secrets.CALENDAR_SYNC_SECRET }}
         run: |
           printf 'gha_len=%d\n' "${#S}"
-          printf 'gha_starts=%s\n' "${S:0:2}"
-          printf 'gha_ends=%s\n' "${S: -2}"
-          # Check for trailing newline by length comparison after stripping
-          STRIPPED=$(printf '%s' "$S")
-          printf 'gha_stripped_len=%d\n' "${#STRIPPED}"
+          printf 'gha_sha256='
+          printf '%s' "$S" | sha256sum | cut -d' ' -f1
 
       - name: POST /api/calendars/sync
         run: |
