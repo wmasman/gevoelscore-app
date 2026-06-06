@@ -5,6 +5,27 @@ gevoelscore_analyse.*
 /private/
 /data/
 
+# Research folder — methodology (.md / .py / .mjs) public; raw and
+# derived data + charts stay local. Verbatim-note files (names,
+# dated narratives) are explicitly excluded by path.
+docs/research/**/*.csv
+docs/research/**/*.json
+docs/research/**/*.png
+docs/research/**/*.jpg
+docs/research/**/*.txt
+docs/research/screenshots/
+docs/research/notes/02-categorize-clauses/verification.md
+docs/research/notes/02-categorize-clauses/verification-late-positive.md
+docs/research/notes/02-categorize-clauses/prompts/*.yaml
+docs/research/garmin/hypotheses/H02b-stress-spikes/specificity-check.md
+docs/research/notes/02-categorize-clauses/category_dictionary.md
+docs/research/notes/02-categorize-clauses/category_dictionary_v2.md
+docs/research/notes/01-language-around-crashes/notes-summary.md
+
+# Python bytecode
+**/__pycache__/
+*.pyc
+
 # OS
 .DS_Store
 Thumbs.db
