@@ -120,7 +120,7 @@ beforeEach(() => {
       id: CONN_ID,
       user_id: USER_ID,
       provider: 'google',
-      provider_account_email: 'wmasman@gmail.com',
+      provider_account_email: 'user@example.com',
       refresh_token_encrypted: 'v1.iv.ct.tag',
       scope: 'calendar.readonly',
       connected_at: '2026-06-04T12:00:00Z',
@@ -141,7 +141,7 @@ beforeEach(() => {
       expiresAt: new Date(Date.now() + 3600_000),
     }),
     listCalendars: async () => [
-      { id: 'wmasman@gmail.com', displayName: 'wmasman@gmail.com', isPrimary: true },
+      { id: 'user@example.com', displayName: 'user@example.com', isPrimary: true },
       { id: 'work-cal', displayName: 'Work', isPrimary: false },
     ],
   });
@@ -192,19 +192,19 @@ describe('GET /api/calendars/[connection_id]/calendars', () => {
         id: CONN_ID,
         user_id: USER_ID,
         provider: 'google',
-        provider_account_email: 'wmasman@gmail.com',
+        provider_account_email: 'user@example.com',
         refresh_token_encrypted: 'v1.iv.ct.tag',
         scope: 'calendar.readonly',
         connected_at: '2026-06-04T12:00:00Z',
         last_synced_at: null,
         last_sync_error: null,
         status: 'active',
-        included_calendar_ids: ['wmasman@gmail.com'],
+        included_calendar_ids: ['user@example.com'],
       },
     });
     mocks.countEventsBySourceCalendar.mockResolvedValue({
       ok: true,
-      value: { 'wmasman@gmail.com': 312, 'work-cal': 0, '(unknown)': 68 },
+      value: { 'user@example.com': 312, 'work-cal': 0, '(unknown)': 68 },
     });
 
     const { request, context } = makeGetReq({ cookie: 'gs_session=s-1' });
@@ -214,8 +214,8 @@ describe('GET /api/calendars/[connection_id]/calendars', () => {
       included_calendar_ids: string[];
       event_counts_by_calendar_id: Record<string, number>;
     };
-    expect(body.included_calendar_ids).toEqual(['wmasman@gmail.com']);
-    expect(body.event_counts_by_calendar_id['wmasman@gmail.com']).toBe(312);
+    expect(body.included_calendar_ids).toEqual(['user@example.com']);
+    expect(body.event_counts_by_calendar_id['user@example.com']).toBe(312);
     expect(body.event_counts_by_calendar_id['(unknown)']).toBe(68);
   });
 });
@@ -282,7 +282,7 @@ describe('POST /api/calendars/[connection_id]/calendars', () => {
           id: CONN_ID,
           user_id: USER_ID,
           provider: 'google',
-          provider_account_email: 'wmasman@gmail.com',
+          provider_account_email: 'user@example.com',
           refresh_token_encrypted: 'v1.iv.ct.tag',
           scope: 's',
           connected_at: '2026-06-04T12:00:00Z',
@@ -317,7 +317,7 @@ describe('POST /api/calendars/[connection_id]/calendars', () => {
           id: CONN_ID,
           user_id: USER_ID,
           provider: 'google',
-          provider_account_email: 'wmasman@gmail.com',
+          provider_account_email: 'user@example.com',
           refresh_token_encrypted: 'v1.iv.ct.tag',
           scope: 's',
           connected_at: '2026-06-04T12:00:00Z',
@@ -363,7 +363,7 @@ describe('POST /api/calendars/[connection_id]/calendars', () => {
           id: CONN_ID,
           user_id: USER_ID,
           provider: 'google',
-          provider_account_email: 'wmasman@gmail.com',
+          provider_account_email: 'user@example.com',
           refresh_token_encrypted: 'v1.iv.ct.tag',
           scope: 's',
           connected_at: '2026-06-04T12:00:00Z',
@@ -408,7 +408,7 @@ describe('POST /api/calendars/[connection_id]/calendars', () => {
           id: CONN_ID,
           user_id: USER_ID,
           provider: 'google',
-          provider_account_email: 'wmasman@gmail.com',
+          provider_account_email: 'user@example.com',
           refresh_token_encrypted: 'v1.iv.ct.tag',
           scope: 's',
           connected_at: '2026-06-04T12:00:00Z',

@@ -27,7 +27,7 @@ foreach ($line in Get-Content $envFile) {
 if (-not $env:WILLEM_EMAIL -or -not $env:WILLEM_PASSWORD) {
   Write-Host 'ERROR: WILLEM_EMAIL and WILLEM_PASSWORD not found in .env.local.'
   Write-Host 'Add the lines:'
-  Write-Host '  WILLEM_EMAIL=wmasman@gmail.com'
+  Write-Host '  WILLEM_EMAIL=user@example.com'
   Write-Host '  WILLEM_PASSWORD=<your-password>'
   exit 2
 }

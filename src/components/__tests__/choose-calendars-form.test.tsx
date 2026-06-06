@@ -20,7 +20,7 @@ import { ChooseCalendarsForm } from '../choose-calendars-form';
 const CONN_ID = 'fa049661-9119-4d00-8871-9b1c5e262adc';
 
 const SAMPLE_CALENDARS = [
-  { id: 'wmasman@gmail.com', displayName: 'wmasman@gmail.com', isPrimary: true },
+  { id: 'user@example.com', displayName: 'user@example.com', isPrimary: true },
   { id: 'family-cal-id', displayName: 'Family', isPrimary: false },
   { id: 'work-cal-id', displayName: 'Work', isPrimary: false },
 ];
@@ -51,7 +51,7 @@ describe('ChooseCalendarsForm', () => {
       render(<ChooseCalendarsForm connectionId={CONN_ID} />);
 
       await waitFor(() =>
-        expect(screen.getByLabelText(/wmasman@gmail\.com/)).toBeInTheDocument(),
+        expect(screen.getByLabelText(/user@example\.com/)).toBeInTheDocument(),
       );
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes).toHaveLength(3);
@@ -150,7 +150,7 @@ describe('ChooseCalendarsForm', () => {
       const body = JSON.parse((init as RequestInit).body as string) as {
         included_calendar_ids: string[];
       };
-      expect(body.included_calendar_ids).toEqual(['wmasman@gmail.com', 'family-cal-id']);
+      expect(body.included_calendar_ids).toEqual(['user@example.com', 'family-cal-id']);
       await waitFor(() => expect(routerMocks.push).toHaveBeenCalledWith('/settings'));
     });
 
@@ -196,7 +196,7 @@ describe('ChooseCalendarsForm', () => {
         ok: true,
         json: async () => ({
           calendars: SAMPLE_CALENDARS,
-          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          included_calendar_ids: ['user@example.com', 'family-cal-id'],
           event_counts_by_calendar_id: {},
         }),
       });
@@ -204,7 +204,7 @@ describe('ChooseCalendarsForm', () => {
       render(<ChooseCalendarsForm connectionId={CONN_ID} />);
 
       await waitFor(() =>
-        expect(screen.getByLabelText(/wmasman@gmail\.com/)).toBeChecked(),
+        expect(screen.getByLabelText(/user@example\.com/)).toBeChecked(),
       );
       expect(screen.getByLabelText(/^Family/)).toBeChecked();
       expect(screen.getByLabelText(/^Work/)).not.toBeChecked();
@@ -215,13 +215,13 @@ describe('ChooseCalendarsForm', () => {
         ok: true,
         json: async () => ({
           calendars: SAMPLE_CALENDARS,
-          included_calendar_ids: ['wmasman@gmail.com'],
-          event_counts_by_calendar_id: { 'wmasman@gmail.com': 312 },
+          included_calendar_ids: ['user@example.com'],
+          event_counts_by_calendar_id: { 'user@example.com': 312 },
         }),
       });
 
       render(<ChooseCalendarsForm connectionId={CONN_ID} />);
-      await screen.findByLabelText(/wmasman@gmail\.com/);
+      await screen.findByLabelText(/user@example\.com/);
 
       fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true }) });
       await userEvent.click(screen.getByRole('button', { name: 'Verbinden' }));
@@ -242,9 +242,9 @@ describe('ChooseCalendarsForm', () => {
         ok: true,
         json: async () => ({
           calendars: SAMPLE_CALENDARS,
-          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          included_calendar_ids: ['user@example.com', 'family-cal-id'],
           event_counts_by_calendar_id: {
-            'wmasman@gmail.com': 312,
+            'user@example.com': 312,
             'family-cal-id': 42,
           },
         }),
@@ -276,7 +276,7 @@ describe('ChooseCalendarsForm', () => {
         ok: true,
         json: async () => ({
           calendars: SAMPLE_CALENDARS,
-          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          included_calendar_ids: ['user@example.com', 'family-cal-id'],
           event_counts_by_calendar_id: { 'family-cal-id': 42 },
         }),
       });
@@ -310,7 +310,7 @@ describe('ChooseCalendarsForm', () => {
         ok: true,
         json: async () => ({
           calendars: SAMPLE_CALENDARS,
-          included_calendar_ids: ['wmasman@gmail.com', 'family-cal-id'],
+          included_calendar_ids: ['user@example.com', 'family-cal-id'],
           event_counts_by_calendar_id: { 'family-cal-id': 42 },
         }),
       });
@@ -364,8 +364,8 @@ describe('ChooseCalendarsForm', () => {
         ok: true,
         json: async () => ({
           calendars: SAMPLE_CALENDARS,
-          included_calendar_ids: ['wmasman@gmail.com', 'work-cal-id'],
-          event_counts_by_calendar_id: { 'wmasman@gmail.com': 312 }, // work-cal-id: implicit 0
+          included_calendar_ids: ['user@example.com', 'work-cal-id'],
+          event_counts_by_calendar_id: { 'user@example.com': 312 }, // work-cal-id: implicit 0
         }),
       });
 

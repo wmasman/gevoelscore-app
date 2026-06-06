@@ -24,14 +24,14 @@ function makeConnection(
     id: 'conn-1',
     user_id: 'user-1',
     provider: 'google',
-    provider_account_email: 'wmasman@gmail.com',
+    provider_account_email: 'user@example.com',
     refresh_token_encrypted: 'v1.iv.ct.tag',
     scope: 'https://www.googleapis.com/auth/calendar.readonly',
     connected_at: '2026-06-01T00:00:00Z',
     last_synced_at: null,
     last_sync_error: null,
     status: 'active',
-    included_calendar_ids: ['wmasman@gmail.com', 'work-cal'],
+    included_calendar_ids: ['user@example.com', 'work-cal'],
     ...overrides,
   };
 }

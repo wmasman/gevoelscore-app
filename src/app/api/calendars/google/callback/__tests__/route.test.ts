@@ -65,7 +65,7 @@ beforeEach(() => {
       refreshToken: 'fake-refresh',
       accessToken: 'fake-access',
       expiresAt: new Date(Date.now() + 3600_000),
-      accountEmail: 'wmasman@gmail.com',
+      accountEmail: 'user@example.com',
     }),
   });
 });
@@ -146,7 +146,7 @@ describe('GET /api/calendars/google/callback', () => {
       expect.objectContaining({
         user_id: '16f6f68b-e683-4dc9-8afc-e80695c4259d',
         provider: 'google',
-        provider_account_email: 'wmasman@gmail.com',
+        provider_account_email: 'user@example.com',
         refresh_token_encrypted: 'v1.iv.ct.tag',
       }),
     );

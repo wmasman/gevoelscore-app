@@ -25,14 +25,14 @@ function conn(overrides: Partial<DirectusCalendarConnectionRow> = {}): DirectusC
     id: 'conn-1',
     user_id: 'user-1',
     provider: 'google',
-    provider_account_email: 'wmasman@gmail.com',
+    provider_account_email: 'user@example.com',
     refresh_token_encrypted: 'v1.iv.ct.tag',
     scope: 'https://www.googleapis.com/auth/calendar.readonly',
     connected_at: '2026-06-04T08:00:00.000Z',
     last_synced_at: '2026-06-04T10:00:00.000Z',
     last_sync_error: null,
     status: 'active',
-    included_calendar_ids: ['wmasman@gmail.com'],
+    included_calendar_ids: ['user@example.com'],
     ...overrides,
   };
 }
@@ -119,7 +119,7 @@ describe('CalendarsSection', () => {
     it('renders email, status, relative last-sync time, and refresh + disconnect buttons', () => {
       render(<CalendarsSection connections={[conn()]} now={NOW} />);
 
-      expect(screen.getByText('wmasman@gmail.com')).toBeInTheDocument();
+      expect(screen.getByText('user@example.com')).toBeInTheDocument();
       expect(screen.getByText(/Verbonden/)).toBeInTheDocument();
       expect(screen.getByText(/2 uur geleden/)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Ververs nu' })).toBeInTheDocument();

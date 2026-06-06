@@ -35,7 +35,7 @@ Run this before pushing any auth-touching change, and after any Fly secret swap 
 Add to `.env.local` (gitignored):
 
 ```
-WILLEM_EMAIL=wmasman@gmail.com
+WILLEM_EMAIL=user@example.com
 WILLEM_PASSWORD=<your password>
 ```
 

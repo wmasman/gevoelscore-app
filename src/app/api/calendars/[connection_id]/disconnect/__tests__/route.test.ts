@@ -92,7 +92,7 @@ beforeEach(() => {
       id: CONN_ID,
       user_id: USER_ID,
       provider: 'google',
-      provider_account_email: 'wmasman@gmail.com',
+      provider_account_email: 'user@example.com',
       refresh_token_encrypted: 'v1.iv.ct.tag',
       scope: 'calendar.readonly',
       connected_at: '2026-06-04T12:00:00Z',

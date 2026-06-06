@@ -8,14 +8,14 @@ The `.gitignore` at the repo root excludes `.env*` (with `.env.example` whitelis
 
 ## Fly.io account
 
-- **Login**: `fly auth login` (browser flow) → authenticated as `wmasman@gmail.com`
+- **Login**: `fly auth login` (browser flow) → authenticated as `user@example.com`
 - **Token location**: stored by `flyctl` in `~/.fly/config.yml`. Never read or modify by hand.
 - **Used for**: provisioning + deploying Fly apps; managing secrets; reading logs.
 - **Rotation**: `fly auth logout` then `fly auth login`. Or revoke at https://fly.io/user/personal_access_tokens.
 
 ## Neon account
 
-- **Login**: `neonctl me` (browser flow) → authenticated as `wmasman@gmail.com`
+- **Login**: `neonctl me` (browser flow) → authenticated as `user@example.com`
 - **Token location**: stored by `neonctl` in `~/.config/neonctl/` (varies by platform). Never read or modify by hand.
 - **Used for**: provisioning + managing Neon projects, branches, roles, passwords.
 - **Rotation**: `neonctl auth logout` then `neonctl me` (login flow).
@@ -24,13 +24,13 @@ The `.gitignore` at the repo root excludes `.env*` (with `.env.example` whitelis
 
 | Item | Where it lives | Notes |
 |------|---------------|-------|
-| `ADMIN_EMAIL` | Fly secret on `gevoelscore-backend` | `wmasman@gmail.com`. Used by Directus only on bootstrap. |
+| `ADMIN_EMAIL` | Fly secret on `gevoelscore-backend` | `user@example.com`. Used by Directus only on bootstrap. |
 | **Admin password** | Inside Directus (`directus_users.password`, bcrypt-hashed) | The bootstrap `ADMIN_PASSWORD` secret on Fly **should be unset** after first login. Verify with `fly secrets list --app gevoelscore-backend` — `ADMIN_PASSWORD` shouldn't appear. |
 | **2FA TOTP secret** | Inside Directus (`directus_users.tfa_secret`, encrypted) | Tied to the admin user. To reset: log in via recovery, generate new QR in profile. |
 
 **Rotating the admin password**: log into Directus admin UI → user profile → Password → change. No Fly secret update needed.
 
-**Lost-2FA recovery**: if you lose your authenticator and don't have recovery codes saved, the only path back in is to clear `tfa_secret` directly in Postgres (via Neon SQL editor) — `UPDATE directus_users SET tfa_secret = NULL WHERE email = 'wmasman@gmail.com';` — then re-pair 2FA on next login.
+**Lost-2FA recovery**: if you lose your authenticator and don't have recovery codes saved, the only path back in is to clear `tfa_secret` directly in Postgres (via Neon SQL editor) — `UPDATE directus_users SET tfa_secret = NULL WHERE email = 'user@example.com';` — then re-pair 2FA on next login.
 
 ## Directus static token (the one used by scripts)
 
@@ -74,7 +74,7 @@ Will be created manually via admin UI when wiring up the Next.js frontend. See [
 
 Credentials at that point:
 
-- Email: separate from `wmasman@gmail.com` (e.g. `gevoelscore-frontend@yourdomain` or `wmasman+frontend@gmail.com` for Gmail aliasing)
+- Email: separate from `user@example.com` (e.g. `gevoelscore-frontend@yourdomain` or `user+frontend@example.com` for Gmail aliasing)
 - Password: random, store in password manager
 - 2FA: enabled, store recovery codes in password manager
 - Role: `gevoelscore-frontend-api` (already exists, see `current-state.md`)

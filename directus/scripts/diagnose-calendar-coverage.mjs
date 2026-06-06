@@ -126,6 +126,6 @@ if (daysSinceLast > 60) {
   console.log('       b) Some silent fetch failure for the recent date range.');
   console.log('');
   console.log('  Easy check: open Google Calendar in a browser, look at recent');
-  console.log('  weeks across Family / Parro / Willem en Jantine / wmasman@gmail.com.');
+  console.log('  weeks across Family / Parro / Willem en Jantine / user@example.com.');
   console.log('  If events are visible there but not here, that\'s a bug to fix.');
 }

@@ -10,7 +10,7 @@
 // WILLEM_USER_ID. ~3 s round-trip against prod.
 //
 // Credentials are read from .env.local (gitignored, never committed):
-//   WILLEM_EMAIL=wmasman@gmail.com
+//   WILLEM_EMAIL=user@example.com
 //   WILLEM_PASSWORD=<your password>
 //
 // Run via the PowerShell wrapper that sources .env.local:

@@ -107,8 +107,8 @@ describe('google-provider', () => {
         mockJsonResponse(200, {
           items: [
             {
-              id: 'wmasman@gmail.com',
-              summary: 'wmasman@gmail.com',
+              id: 'user@example.com',
+              summary: 'user@example.com',
               primary: true,
             },
           ],
@@ -146,8 +146,8 @@ describe('google-provider', () => {
         mockJsonResponse(200, {
           items: [
             {
-              id: 'wmasman@gmail.com',
-              summary: 'wmasman@gmail.com',
+              id: 'user@example.com',
+              summary: 'user@example.com',
               primary: true,
             },
             { id: 'addressbook#contacts@group.v.calendar.google.com', summary: 'Contacts' },
@@ -163,7 +163,7 @@ describe('google-provider', () => {
 
       expect(result.refreshToken).toBe('refresh-xyz');
       expect(result.accessToken).toBe('access-abc');
-      expect(result.accountEmail).toBe('wmasman@gmail.com');
+      expect(result.accountEmail).toBe('user@example.com');
       expect(result.expiresAt).toBeInstanceOf(Date);
       // expiresAt is in the future
       expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
@@ -286,7 +286,7 @@ describe('google-provider', () => {
       mockFetch.mockResolvedValueOnce(
         mockJsonResponse(200, {
           items: [
-            { id: 'wmasman@gmail.com', summary: 'wmasman@gmail.com', primary: true },
+            { id: 'user@example.com', summary: 'user@example.com', primary: true },
             { id: 'work-cal', summary: 'Work' },
             {
               id: 'addressbook#contacts@group.v.calendar.google.com',
@@ -305,8 +305,8 @@ describe('google-provider', () => {
 
       expect(result).toHaveLength(4);
       expect(result[0]).toEqual({
-        id: 'wmasman@gmail.com',
-        displayName: 'wmasman@gmail.com',
+        id: 'user@example.com',
+        displayName: 'user@example.com',
         isPrimary: true,
       });
       expect(result[1]).toEqual({
