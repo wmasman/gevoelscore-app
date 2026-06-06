@@ -2,7 +2,7 @@
 
 **Feature:** Connect external calendars (Google first, design extensible to Outlook / Apple) so that events surface as **context** alongside the daily score. The user sees how the score fluctuates in the context of events and interventies. NOT a calendar app — context only.
 **Version:** v1.6 (Shape A only — event-side linking; episode-side binding deferred to v1.6.1; see [Future considerations](#future-considerations))
-**Status:** Steps 0-2 shipped (2026-06-05). Step 3 (timeline overlay) next; steps 4-6 deferred to v2 / v1.6.1 per [Future considerations](#future-considerations).
+**Status:** Steps 0-3 shipped (2026-06-06). v1.6 feature-complete; steps 4-6 deferred to v2 / v1.6.1 per [Future considerations](#future-considerations). Visual baseline + full-UI overhaul tracked separately.
 **Parent docs:** [REQUIREMENTS.md](../../REQUIREMENTS.md) (line 114 — `calendar_events` placeholder collection; line 124 — `src/lib/integrations/` interface; line 132 — `calendar.readonly` only) · [app_brief_gevoelscore.md](../../app_brief_gevoelscore.md) (Google Calendar sync v1.5+) · [technisch_document.md](../../technisch_document.md) (passive context, OAuth scopes) · [ADR 0002](../../decisions/0002-pwa-with-directus-backend.md) (online-first, self-hosted Directus)
 
 ---

@@ -190,15 +190,57 @@ suite GREEN.
 
 ---
 
-## Done (filled in during `/build-step`)
+## Done (2026-06-06)
 
-- [ ] AC3.1-3.22
-- [ ] RED + GREEN
-- [ ] Type / lint / verify clean
-- [ ] Visual baselines: 3 captured + reviewed
-- [ ] Brainfog walkthrough: tick + span tap hit on first attempt
-- [ ] No new HIGH gate findings
-- [ ] Refactor: ...
+- [x] **AC3.1-3.16 GREEN; AC3.17-3.22 covered by wire-up + manual walkthrough.** Per file:
+  - AC3.1-3.7 (domain) → [src/lib/domain/__tests__/event-overlay-layout.test.ts](../../../src/lib/domain/__tests__/event-overlay-layout.test.ts) (12 tests)
+  - AC3.8-3.16 (component) → [src/components/__tests__/timeline-event-markers.test.tsx](../../../src/components/__tests__/timeline-event-markers.test.tsx) (8 tests)
+  - AC3.17-3.19 (integration / z-order) → [src/components/timeline-view.tsx](../../../src/components/timeline-view.tsx) wire-up; SVG paint order verified by test 105
+  - AC3.20-3.22 (cross-feature integrity) → existing TimelineView/Context tests stayed GREEN end-to-end (no regression at 1538)
+- [x] **RED + GREEN** captured per phase via stub-throws / stub-returns-null; 2 phases (3.A, 3.B) followed strict RED → GREEN.
+- [x] **Type / lint / verify clean** — `npm run verify` GREEN; `npm run predeploy` 3/3.
+- [x] **Visual baselines: 3 captured + reviewed** — DEFERRED to the planned full-UI overhaul. User signed off on the current visual as "good for now"; the snapshot harness is not wired in this repo and the brief's "restrained motion / no alarm color" rules were satisfied by the data-visual-mark color test (test 109 asserts `--color-fg-subtle`, NOT warm-orange / alarm-red).
+- [x] **Brainfog walkthrough: tick + span tap hit on first attempt** — confirmed against the live deploy.
+- [x] **No new HIGH gate findings** — pure data function + presentational SVG; no new auth surface, no new env var, no new dep.
+- [x] **Refactor** — none needed. The x-mapping inside TimelineEventMarkers was adjusted once during 3.C wire-up (slot-based → edge-anchored, matching ScoreChart's `(numDays-1)` basis) but that was discovered during integration, not a post-implementation cleanup.
+
+### Commit map
+
+| Sub-step | Commit | What |
+|---|---|---|
+| 3.A | `ba3650d` | `buildEventOverlayLayout` pure derivation (Set<markerDays> + spans) |
+| 3.B | `1c12e0f` | `TimelineEventMarkers` SVG component (ticks + bars + 44×44 tap zones) |
+| 3.C | `b741ece` | Wire into TimelineView + page.tsx (data fetch + prop drill + relative-positioned overlay) |
+
+---
+
+## Lessons learned during build (2026-06-06)
+
+Step-3 was the smallest feature step (~50 min, 3 commits, 20 tests, no production debug arc). Documenting two micro-lessons that are worth capturing because they recur for any "visual overlay on an existing chart" feature.
+
+### Three small judgment calls worth flagging
+
+1. **Slot-based vs edge-anchored x-mapping.** First-pass TimelineEventMarkers used slot-based mapping (`slotWidth = width / numDays`, center at `slotWidth/2`) — natural for tick layout. But ScoreChart uses edge-anchored (`stepX = chartW / (numDays - 1)`, day 0 at `x=0`, day N-1 at `x=chartW`). Misaligned markers would have sat offset from their score points. Caught during wire-up (3.C) by reading ScoreChart's constants. **Reusable rule:** any new visual layer that overlays an existing chart must match the existing chart's x-mapping basis; don't pick the mathematically "nicer" slot-based mapping without checking.
+
+2. **Marker-tap behavior — spec vs existing UX.** AC3.11/3.12 read literally as "tap a tick → opens the Context tab for that date" with a parenthetical "matches the existing tap-a-day pattern". The existing tap-a-day pattern on the chart opens the **QuickEntryFlow popout**, not the Context tab — so the two phrases pointed at different surfaces. Surfaced to the user via AskUserQuestion; they picked "match existing pattern". The Context-tab read would have required cross-tab state + a ContextView refactor for date-specific events (currently today-only). **Reusable rule (already in memory as [[feedback-flag-contradictions]]):** when a spec's literal wording conflicts with a parenthetical "matches existing X", flag it during build rather than picking silently.
+
+3. **30-day server load vs lazy-fetched 90-day.** TimelineView's existing 90-day toggle lazy-fetches via `range90Entries`. The equivalent for calendar events would need a `/api/calendars/events?from=&to=` GET endpoint — out of scope for step-3. Decision: ship 30-day server load; 90-day toggle shows markers for the 30-day chunk only; document as v1.6.x follow-up. The brief argument for "ship 90 days server-side" was payload size (~200KB at 200 events) which is fine for single-user but precedent-bad for v2 multi-user; the lazy-fetch precedent (`range90Entries`) wins.
+
+### What did work first-try
+
+- The Intl.DateTimeFormat-hoist optimization (build the formatter once, reuse per event) in `buildEventOverlayLayout` was needed from the start — first naive implementation constructed one per event and the 200-event benchmark would have crawled. Caught by noticing the per-event cost during the bench and hoisting before commit.
+- Test 105's DOM-order assertion for paint z-order (`spans` group rendered before `ticks` group in SVG) was clean and avoided faking a real visual stack. SVG paint order = DOM order; no need for CSS z-index gymnastics.
+- The "44×44 tap zone independent of visible mark size" pattern (invisible rect overlaying a smaller visible rect) translates 1:1 from this component to any future small-visual / large-tap-target SVG component.
+
+### What's left for the future
+
+- **Visual baseline snapshots** — deferred per the planned full-UI overhaul. When that lands, capture the 3 baselines mentioned in the test plan as part of the overhaul's regression suite.
+- **90-day-back markers** — needs a `/api/calendars/events` GET endpoint mirroring the day-entries one. v1.6.x.
+- **Color-by-recurrence span tints** — explicitly out of scope per "What this step does NOT do". v2 candidate.
+
+---
+
+## What this step does NOT do
 
 ---
 
