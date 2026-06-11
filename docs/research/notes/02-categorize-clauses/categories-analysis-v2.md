@@ -42,10 +42,11 @@ For each category: presence (any clause), positive-polarity presence, negative-p
 | belasting_fysiek | 0.07 | 0.00 | 0.00 | 0.16 | 0.00 | 0.00 | 0.12 |
 | belasting_gezin | 0.12 | 0.02 | 0.00 | 0.22 | 0.00 | 0.02 | 0.20 |
 | belasting_sociaal | 0.03 | 0.00 | 0.00 | 0.04 | 0.00 | 0.00 | 0.05 |
+| medicatie | 0.02 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.05 |
 | recovery_actie | 0.10 | 0.00 | 0.00 | 0.18 | 0.04 | 0.00 | 0.19 |
 | symptoom_cognitief | 0.19 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.06 |
 | symptoom_emotioneel | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
-| symptoom_fysiek | 0.92 | 0.19 | 0.03 | 0.53 | 0.16 | 0.07 | 0.68 |
+| symptoom_fysiek | 0.92 | 0.19 | 0.03 | 0.56 | 0.16 | 0.07 | 0.68 |
 | triggers_extern | 0.05 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |
 
 ## Era comparison: crash-day polarity-split shifts
@@ -59,6 +60,7 @@ Looking at categories where polarity changes the story between early-era and lat
 | belasting_fysiek | 0.00 | 0.00 | +0.00 | 0.00 | 0.00 | +0.00 |
 | belasting_gezin | 0.00 | 0.03 | +0.03 | 0.00 | 0.00 | +0.00 |
 | belasting_sociaal | 0.00 | 0.00 | +0.00 | 0.00 | 0.00 | +0.00 |
+| medicatie | 0.00 | 0.00 | +0.00 | 0.00 | 0.00 | +0.00 |
 | recovery_actie | 0.00 | 0.00 | +0.00 | 0.00 | 0.00 | +0.00 |
 | symptoom_cognitief | 0.00 | 0.00 | +0.00 | 0.00 | 0.00 | +0.00 |
 | symptoom_emotioneel | 0.00 | 0.00 | +0.00 | 0.00 | 0.00 | +0.00 |
@@ -73,9 +75,9 @@ v2 separates by state (absent / mild / present / severe). The day's symptom_fysi
 | group | absent | mild | present | severe | total mentioned |
 |-------|------:|----:|-------:|------:|--------------:|
 | crash (n=59) | 0.03 | 0.00 | 0.75 | 0.14 | 0.92 |
-| lead-up (n=45) | 0.02 | 0.00 | 0.44 | 0.07 | 0.53 |
+| lead-up (n=45) | 0.02 | 0.00 | 0.47 | 0.07 | 0.56 |
 | non-crash (n=582) | 0.02 | 0.02 | 0.56 | 0.07 | 0.68 |
-| all (n=686) | 0.02 | 0.02 | 0.57 | 0.08 | 0.69 |
+| all (n=686) | 0.02 | 0.02 | 0.57 | 0.08 | 0.70 |
 
 ## Era comparison: symptoom_fysiek state shifts on crash days
 

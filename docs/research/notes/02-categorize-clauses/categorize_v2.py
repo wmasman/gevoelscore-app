@@ -46,11 +46,12 @@ CLAUSE_SPLIT_RE = re.compile(
 )
 
 # Names that distinguish layers (must match the ### headings in dictionary v2)
+# v2.1 additions 2026-06-10: added `medicatie` for naproxen et al.
 CATEGORY_NAMES = {
     "belasting_fysiek", "belasting_cognitief", "belasting_emotioneel",
     "belasting_sociaal", "belasting_gezin",
     "symptoom_fysiek", "symptoom_cognitief", "symptoom_emotioneel",
-    "recovery_actie", "triggers_extern", "context_neutraal",
+    "recovery_actie", "triggers_extern", "medicatie", "context_neutraal",
 }
 SYMPTOM_CATEGORIES = {"symptoom_fysiek", "symptoom_cognitief", "symptoom_emotioneel"}
 MODIFIER_NAMES = {"negation", "severity_mild", "severity_severe"}
