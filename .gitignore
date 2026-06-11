@@ -10,17 +10,22 @@ gevoelscore_analyse.*
 # dated narratives) are explicitly excluded by path.
 docs/research/**/*.csv
 docs/research/**/*.json
+docs/research/**/*.yaml
 docs/research/**/*.png
 docs/research/**/*.jpg
 docs/research/**/*.txt
+docs/research/**/*.xlsx
+docs/research/**/*.pdf
+docs/research/**/*.fit
+docs/research/**/*.parquet
 docs/research/screenshots/
 docs/research/notes/02-categorize-clauses/verification.md
 docs/research/notes/02-categorize-clauses/verification-late-positive.md
 docs/research/notes/02-categorize-clauses/prompts/*.yaml
-docs/research/garmin/hypotheses/H02b-stress-spikes/specificity-check.md
 docs/research/notes/02-categorize-clauses/category_dictionary.md
 docs/research/notes/02-categorize-clauses/category_dictionary_v2.md
 docs/research/notes/01-language-around-crashes/notes-summary.md
+docs/research/analyses/hypotheses/H02b-stress-spikes/specificity-check.md
 
 # Python bytecode
 **/__pycache__/
