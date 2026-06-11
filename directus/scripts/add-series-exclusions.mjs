@@ -36,13 +36,13 @@ const SERIES_TO_EXCLUDE = [
   { recurrence_id: 'gj9q4igmv6rfi36fqrvn5p0dss', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'JM (6×, weekly)' },
   { recurrence_id: '4j28a9ofq83cqmp66h8b52lh53', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'W (6×, weekly)' },
   { recurrence_id: 'lmmcbt3l6f0mt0ktvngsq3niug', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Datenight (willem)' },
-  { recurrence_id: 'i4jljihbjfa5ro8htn7gbp0nag', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Datenight (Jantine)' },
+  { recurrence_id: 'i4jljihbjfa5ro8htn7gbp0nag', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Datenight (partner)' },
   { recurrence_id: '0t0foa7ppa1aelvui25casd7jg_R20231201T170000', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Bestuurseten' },
   { recurrence_id: '8t6uscvq1d9nujtfjodf2flhnk_R20231201T160000', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Bestuurseten vrijdag of zaterdag' },
   { recurrence_id: 'fucfkunfdlsnckni3tgfq3sljc', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'reunistenborrel op de buis' },
-  { recurrence_id: 't2r4tsaa1gr86aik55bge5j658', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Willem Hans' },
+  { recurrence_id: 't2r4tsaa1gr86aik55bge5j658', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: '1-on-1 friend meetup' },
   { recurrence_id: 'tputjrbdlch8f9r1m1hllmeb4g', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Happy birthday! (Google auto-birthday)' },
-  { recurrence_id: '_64skcgi46sq42b9n8op4cb9k70s3cba28ks3gba174ojgd258d332chi8o', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: 'Willem Hans (duplicate / orphan)' },
+  { recurrence_id: '_64skcgi46sq42b9n8op4cb9k70s3cba28ks3gba174ojgd258d332chi8o', connection_id: 'fa049661-9119-4d00-8871-9b1c5e262adc', reason: '1-on-1 friend meetup (duplicate / orphan)' },
 ];
 
 if (SERIES_TO_EXCLUDE.length === 0) {

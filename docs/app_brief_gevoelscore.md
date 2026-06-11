@@ -125,7 +125,7 @@ Als er die dag iets bijzonders is, wil ik dat als context kunnen zien zonder het
 - Read-only sync met één of meer Google-agendas
 - Per dag: een lijstje events op die dag (titel + tijd), getoond bovenaan het dagscherm als referentie
 - Ik kan events markeren als "relevant voor mijn herstel" — dan blijven ze in de analyse meegenomen. Onbelangrijke events (terugkerend werkblok bv.) kan ik standaard verbergen of filteren op kalender
-- Optioneel: handmatig "iets speciaals" veld voor dingen die niet in de agenda staan ("avondvierdaagse afgerond", "Jantine weg")
+- Optioneel: handmatig "iets speciaals" veld voor dingen die niet in de agenda staan ("avondvierdaagse afgerond", "partner weg")
 
 Voorbeelden uit mijn data die hieruit relevant zouden zijn: kantoorbezoek, redactievergadering, weekendje weg, verjaardag, ziekenhuisbezoek, mediation-gesprek, Breinvoeding-afspraak.
 

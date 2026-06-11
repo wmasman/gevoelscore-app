@@ -423,7 +423,7 @@ End-to-end against production:
 
 **Operational state (after step-1 backend ship + verify):**
 - 1 calendar_connection (Willem ↔ Google), status=active
-- 4 calendars included (Family, Parro, Willem & Jantine, primary); Todoist excluded as noise per user judgment
+- 4 calendars included (Family, Parro, Couple shared, primary); Todoist excluded as noise per user judgment
 - 709 events in `calendar_events` (657 backfilled + 68 initial smoke + dedup overlap). 793-day gap 2024-03-23 → 2026-05-26 is REAL (user migrated scheduling to Todoist; the gap is the honest reflection of the included-calendar data shape).
 - 10 series exclusions pre-curated, 136 cumulative event rows flipped excluded by series rules across the full pull. ~21% noise filter rate.
 
