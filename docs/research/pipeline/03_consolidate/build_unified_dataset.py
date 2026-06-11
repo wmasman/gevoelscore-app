@@ -52,21 +52,19 @@ if not DATA_PATH or not DATA_PATH.exists():
         f"Tried: {DATA_PATH!r}"
     )
 
-# === Source paths (in-place; pre-Phase C reorganisation) ===
-REPO_RESEARCH = HERE.parent.parent  # docs/research/
-
-DAY_ENTRIES_JSON = REPO_RESEARCH / "notes/01-language-around-crashes/day_entries_with_notes.json"
-DAILY_UDS = REPO_RESEARCH / "garmin/activity-labels/output/daily_uds.csv"
-ACTIVITY_FEATURES = REPO_RESEARCH / "garmin/activity-labels/output/activity_features_daily.csv"
-SLEEP_STRESS = REPO_RESEARCH / "garmin/scripts/sleep_stress_extract/sleep_stress_nightly.csv"
-DAILY_MAX_SPIKE = REPO_RESEARCH / "garmin/hypotheses/H02b-stress-spikes/daily_max_spike.csv"
-LABELS_CRASH = REPO_RESEARCH / "garmin/hypotheses/crash_v2-definition/labels_crash_v2.csv"
-V24_CLAUSES = REPO_RESEARCH / "notes/02-categorize-clauses/notes-categorized-v24-clauses.csv"
-PER_DAY_INTENSITY = REPO_RESEARCH / "timeline/data/per_day_intensity.csv"
-SUB_THRESHOLD_DIPS = REPO_RESEARCH / "timeline/data/sub_threshold_dips.csv"
-TRIAGE_EVENTS = REPO_RESEARCH / "timeline/data/triage_events.csv"
-ANNOTATIONS = REPO_RESEARCH / "timeline/data/annotations.yaml"
-REINTEGRATION_HOURS = REPO_RESEARCH / "timeline/data/reintegration_hours_2022-2024.csv"
+# === Source paths (Phase C: all data lives in $GEVOELSCORE_DATA_PATH) ===
+DAY_ENTRIES_JSON = DATA_PATH / "raw/directus_exports/day_entries.json"
+DAILY_UDS = DATA_PATH / "processed/garmin/daily_uds.csv"
+ACTIVITY_FEATURES = DATA_PATH / "processed/garmin/activity_features_daily.csv"
+SLEEP_STRESS = DATA_PATH / "processed/garmin/sleep_stress_nightly.csv"
+DAILY_MAX_SPIKE = DATA_PATH / "processed/garmin/daily_max_spike.csv"
+LABELS_CRASH = DATA_PATH / "processed/crash_labels/labels_crash_v2.csv"
+V24_CLAUSES = DATA_PATH / "processed/notes/notes-categorized-v24-clauses.csv"
+PER_DAY_INTENSITY = DATA_PATH / "processed/manual_triage/per_day_intensity.csv"
+SUB_THRESHOLD_DIPS = DATA_PATH / "processed/crash_labels/sub_threshold_dips.csv"
+TRIAGE_EVENTS = DATA_PATH / "processed/manual_triage/triage_events.csv"
+ANNOTATIONS = DATA_PATH / "raw/directus_exports/annotations.yaml"
+REINTEGRATION_HOURS = DATA_PATH / "processed/pwc/reintegration_hours_2022-2024.csv"
 
 # === Output: in the external personal-data folder, NEVER in the repo ===
 OUTPUT = DATA_PATH / "unified" / "per_day_master.csv"
