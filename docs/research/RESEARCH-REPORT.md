@@ -2,7 +2,31 @@
 
 *A research report on the Garmin × gevoelscore × notes correlation analyses, written 2026-06-05.*
 
-> **Update:** an addendum covering work between 2026-06-06 and 2026-06-06 — the locking of a revised crash definition (crash_v2), a re-run of H02b against a new sub-threshold dip tier, a re-tagging of the original specificity check with crash_v2 labels, and a locked protocol for decoding the undocumented FIT message `unknown_233` — is published as a companion document at [RESEARCH-REPORT-ADDENDUM.md](RESEARCH-REPORT-ADDENDUM.md). The findings sharpen but do not contradict the conclusions below. The original report is preserved unchanged.
+> **Updates.** Two addenda extend this report:
+>
+> - **Addendum I** ([RESEARCH-REPORT-ADDENDUM.md](RESEARCH-REPORT-ADDENDUM.md))
+>   — initially 2026-06-06, then extended same-week through 2026-06-07
+>   to cover the activity-labels phase, HA01b + Theme A re-test, H02d,
+>   HA06/HA06b/HA10/HA11, the HRV-proxy substitute tests
+>   (HA07c/HA08c/HA07d), and the threshold-monotonicity v2 diagnostic
+>   round (HA01c v2 + the HA07d/HA10/HA11 RESCUE outcomes + HA06b
+>   permanent CLOSE). Covers the locking of crash_v2 (tier-2 dip
+>   category), the unknown_233 decode protocol, and an extensive
+>   discussion of the "kind of crash changed" theory now resting on
+>   nine directional findings.
+> - **Addendum II** ([RESEARCH-REPORT-ADDENDUM-II.md](RESEARCH-REPORT-ADDENDUM-II.md))
+>   — 2026-06-07, covering the S02 score-trajectory batch (S02
+>   descriptive + S02b daily-resolution lagged correlation REFUTED +
+>   S02c May 2026 channel-divergence descriptive), cross-document
+>   propagation of those findings, and the product-plan consolidation
+>   (merger of pacing-indicators piece + trajectory-events plan into
+>   a single active app-plan with the push-burden card deferred
+>   pending pre-registered participant-evaluation study). Adds two
+>   methodology constraints on how trajectory-level findings should
+>   be read going forward.
+>
+> The findings sharpen but do not contradict the conclusions below.
+> The original report is preserved unchanged.
 
 ---
 

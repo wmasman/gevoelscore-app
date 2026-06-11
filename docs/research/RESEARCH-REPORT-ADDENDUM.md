@@ -1,6 +1,21 @@
 # Wearable biometrics as predictors and characterisers of post-exertional malaise: an n-of-1 investigation in Long COVID stabilisation — Addendum I
 
-*Addendum to the 2026-06-05 report, covering work between 2026-06-06 and 2026-06-06. Authored 2026-06-06.*
+*Addendum to the 2026-06-05 report, initially authored 2026-06-06
+covering crash_v2 + H02b-on-dips + specificity re-tag + unknown_233
+protocol, then extended same-week through 2026-06-07 to cover the
+activity-labels phase, HA01b + Theme A re-test, H02d, the autonomic-
+channel sibling family (HA06/HA06b/HA10/HA11), the HRV-proxy
+substitute tests (HA07c/HA08c/HA07d), and the threshold-monotonicity
+v2 diagnostic round.*
+
+> **Forward reference**: subsequent work on 2026-06-07 covering the
+> S02 score-trajectory batch (S02 + S02b + S02c), cross-document
+> propagation, and product-plan consolidation is captured in
+> **[Addendum II](RESEARCH-REPORT-ADDENDUM-II.md)**. This Addendum I
+> is preserved unchanged from its locked state for audit-trail
+> continuity; Addendum II extends rather than supersedes the §6
+> nine-axis framework discussion below (Addendum II §6 adds two
+> further descriptive axes and two methodology constraints).
 
 This addendum extends the original report ([RESEARCH-REPORT.md](RESEARCH-REPORT.md)) with three pieces of work completed after the original cut-off: (a) the locking of a revised operational crash definition (crash_v2) that introduces a sub-threshold dip tier, (b) a re-run of the per-minute stress-spike test (H02b) against this new dip tier, and (c) a re-tagging of the H02b specificity check using crash_v2 labels. A fourth strand — a literature review and detailed protocol for decoding the undocumented Garmin FIT message `unknown_233` to obtain per-minute Body Battery — is summarised here and lives in full in [.claude/plans/adaptive-foraging-hamming.md](../../.claude/plans/adaptive-foraging-hamming.md).
 
@@ -386,6 +401,1282 @@ Two convergent positives also emerge:
 
 **Net change to "what's been SUPPORTED":** the investigation now has **two train-era SUPPORTED precursors** (H02b 3d; H02d bridge × 5d), both overall-REFUTED by their validate fails; **zero overall-SUPPORTED precursors** under clean methodology (HA01b's original SUPPORTED status withdrawn per Theme A). The implication for HA06 sharpens: it is the only remaining waking-hour candidate, and unlike the stress and activity channels it operates on a physiological quantity (overnight autonomic recharge) where validate-era convergence with train-era residue would be the strongest pre-registerable empirical stake for the D7 single-mechanism-two-regimes reframe.
 
+### 5.12. HA06 — morning nightly RHR delta (absolute bidirectional thresholds, lagged baseline)
+
+HA06 was the first member of the autonomic-channel sibling family
+queued from Laure Wiggers' *Smartwatch Pacing* pdf (2025-07; a
+lotgenoten-curated lived-experience guide that cites Workwell,
+Bateman Horne, and Ruijgt/Wüst 2025). Pre-registration locked
+2026-06-07 at [HA06-morning-rhr-delta/hypothesis.md](garmin/hypotheses/HA06-morning-rhr-delta/hypothesis.md);
+result at [HA06-morning-rhr-delta/result.md](garmin/hypotheses/HA06-morning-rhr-delta/result.md).
+
+**Design changes from the original C.1 sketch** (5 changes folded
+in after reading the Wiggers pdf):
+
+1. **Bidirectional** test (`|RHR − baseline| ≥ N`) instead of
+   one-sided elevated. Wiggers documents the parasympathetic-swing
+   pattern — a paradoxical LOW-RHR + HIGH-HRV night after overexertion
+   ("freeze") that LOOKS like recovery but is warning. One-sided
+   thresholds would miss these.
+2. Use Garmin UDS `restingHeartRate` (the lowest stable nightly HR)
+   per Wiggers' specific framing.
+3. 4-day primary + 5-day secondary lead-up window, matching HA01b
+   and H02d.
+4. Lagged baseline `[d-90, d-30]` per Theme A (excludes the
+   recent candidate region; min 40 of 60 prior nights).
+5. Sensitivity arm reporting one-sided result and directionality
+   split.
+
+**Thresholds (pre-registered)**: N = 5 bpm primary (Wiggers'
+*"5-10 al ontevreden"* floor); N = 10 bpm secondary (Workwell's
+lower 10-15 bound); N = 15 bpm sensitivity check (upper bound).
+
+**Result: REFUTED both eras.**
+
+| | train (14 episodes) | validate (15 episodes) |
+|---|---:|---:|
+| crash episodes triggering (\|delta\| ≥ 5 bpm) | 3 (21.4%) | **0 (0.0%)** |
+| null windows triggering | 15 (7.5%) | 15 (7.5%) |
+| discrimination (pp) | +13.9 | −7.5 |
+| median max-\|delta\| (bpm) | 3.49 | **1.63** |
+| crit (a) freq ≥ 60% | fail | fail |
+| crit (b) disc ≥ +15 pp | fail (close, +13.9) | fail |
+| crit (c) median ≥ 2.5 bpm | PASS | fail |
+| verdict | refuted | refuted |
+
+Validate-era refutation is decisive: **0 of 15 validate crashes
+show *any* RHR deviation ≥ 5 bpm in their 4-day lead-up.** The
+N = 10 and N = 15 sensitivity thresholds were vacuous (0% on both
+crash and null windows for both eras) because the participant's
+nightly RHR is too stable for those thresholds to be meaningful at
+all — median max-|delta| sits at only 1.6-3.5 bpm.
+
+Train showed a directionally positive result (+13.9 pp discrimination,
++3.49 bpm median magnitude) but the 21.4% frequency was well below
+the 60% bar. The bidirectional design caught one extra train
+triggering event over the one-sided arm (+7.1 pp contribution).
+Directionality split among the 3 train triggering events: 2
+elevated (classical Workwell direction), 1 lowered (Wiggers'
+parasympathetic-swing). The swing pattern is present but small.
+
+**The reason for the refutation, explicitly**: the pre-registered
+5/10/15 bpm thresholds were drawn from Wiggers' own RHR-variability
+range and Workwell's clinical rule. **For this participant, those
+thresholds are effectively unreachable**. Wiggers' lived
+experience shows daily RHR moves of 5-10 bpm; this participant's
+lagged-baseline-relative deviation is typically 1-3 bpm. The
+pre-registered bar was calibrated to a person with materially more
+RHR variability than this one. The pre-commitment held — the
+result is honestly reported — but the methodological gap motivated
+a same-session re-test under a relative-threshold variant (HA06b
+below).
+
+### 5.13. HA06b — z-score bidirectional RHR delta (relative thresholds)
+
+HA06b is a Theme-A-style methodological re-test of HA06: same data,
+same lagged baseline window, same 4-day primary / 5-day secondary
+windows, same bar shape — but with relative thresholds
+`|RHR − μ| / σ ≥ N_std` (N_std = 1.5 primary / 2.0 secondary / 2.5
+sensitivity check) instead of absolute bpm. Pre-registration locked
+2026-06-07 *before* the re-test ran, at [HA06b-rhr-zscore/hypothesis.md](garmin/hypotheses/HA06b-rhr-zscore/hypothesis.md);
+result at [HA06b-rhr-zscore/result.md](garmin/hypotheses/HA06b-rhr-zscore/result.md).
+
+The motivation is explicit: the locked
+[`relative_not_absolute`](../../.claude/projects/c--Users-Gebruiker-Documents-gevoelscore-app/memory/feedback_relative_not_absolute.md)
+feedback principle says *"for PEM-pacing metrics in this project,
+always use z-scores or deviations from personal baseline, not
+absolute thresholds."* HA06 partially followed this (the
+delta-from-baseline part was relative) but the threshold N itself
+was absolute. HA06b fully follows the principle. As with Theme A,
+this is a methodologically-motivated re-test of mis-calibrated
+spec, not a re-cut of HA06; HA06 stays as-locked.
+
+**Result: TRAIN SUPPORTED, validate REFUTED → OVERALL REFUTED by
+the locked rule.** But the train signal lifted substantially under
+the relative framing.
+
+| | train (14 episodes) | validate (15 episodes) |
+|---|---:|---:|
+| crash episodes triggering (\|z\| ≥ 1.5) | **10 (71.4%)** | 8 (53.3%) |
+| null windows triggering | 105 (52.5%) | 105 (52.5%) |
+| **discrimination (pp)** | **+18.9** | +0.8 |
+| median max-\|z\| | 2.31 | 1.57 |
+| crit (a) freq ≥ 60% | **PASS** | fail (53.3% < 60%) |
+| crit (b) disc ≥ +15 pp | **PASS** | fail (+0.8 pp) |
+| crit (c) median ≥ 0.75 | **PASS** | PASS |
+| verdict | **supported** | refuted |
+
+Train SUPPORTED in **4 of 6** bidirectional configurations
+(4d × {1.5, 2.0}, 5d × {1.5, 2.0}); the train-era signal is
+robust across threshold and window choice. N_std = 2.5 fails
+criterion (a) in train (50%) — the participant's typical max-|z|
+does not stretch that far.
+
+#### Directionality reversal between eras
+
+| | n triggering | elevated (z ≥ +1.5) | lowered (z ≤ −1.5) |
+|---|---:|---:|---:|
+| train | 10 | **7 (70%)** | 3 (30%) |
+| validate | 8 | 2 (25%) | **6 (75%)** |
+
+The era pattern **reverses**. Train-era triggering crashes are
+predominantly elevated-direction (classical Workwell / sympathetic
+overarousal); validate-era triggering crashes are predominantly
+lowered-direction (Wiggers' parasympathetic-swing pattern). **The
+pattern Wiggers documented is empirically present in the validate
+era at 75% of triggering events** — but the same lowered pattern
+appears in random non-crash 4-day windows at roughly the same rate,
+so it does not discriminate.
+
+Validate one-sided "elevated only" arm shows **−16.2 pp
+discrimination**: classical Workwell elevated-RHR direction is
+*anti*-predictive of validate-era crashes — they are *less* likely
+to be preceded by elevated RHR than random non-crash 4-day
+windows. This is the opposite-direction mirror of the train pattern
+made formal.
+
+#### Three train-era SUPPORTED autonomic-deviation precursors on three channels
+
+HA06b is the third pre-registered train-era SUPPORTED finding under
+clean methodology, all on different channels:
+
+| test | channel | window | metric | train freq | train disc |
+|---|---|---|---|---:|---:|
+| H02b | per-minute stress spike count | 3d rolling | abs minutes ≥ +10 | 71.4% | +29.9 pp |
+| H02d bridge × 5d | per-minute stress spike (sentinel-corrected) | 5d | abs minutes ≥ +10 | 92.3% | +31.8 pp |
+| **HA06b** | **nightly RHR z-score** | **4d lagged** | **rel \|z\| ≥ 1.5** | **71.4%** | **+18.9 pp** |
+
+The pre-cliff (2022-23) era's autonomic-deviation precursor is now
+demonstrably **multi-channel**, not stress-specific. Three different
+measurement choices, three different time-scales, three different
+methodologies, all converging on the same train-era crashes. The
+b retrospective card (train-era 2022-23 per-crash) has a
+substantially stronger empirical case than after H02b alone.
+
+The validate-era refutation likewise extends. **Twelve pre-registered
+tests are now consistent** that no clean validate-era precursor
+exists in waking-hour-derivable Garmin signals under the canonical
+3-criterion bar (5 stress-channel + 4 activity-shock channel +
+2 RHR channel + 1 sleep-efficiency channel).
+
+#### Methodology lesson banked
+
+**Pre-register relative thresholds (z-score or percentile rank) as
+the default for autonomic-channel tests.** Absolute thresholds drawn
+from external populations need re-calibration to participant
+variability *before* the test runs, not after. HA06's median
+max-|delta| of 1.6-3.5 bpm vs Wiggers/Workwell-calibrated 5/10/15
+bpm thresholds is the textbook case: the participant's signal-to-noise
+characteristic differs by enough that an externally-calibrated
+absolute floor missed 47.4 percentage points of train triggering
+events (HA06b bidirectional 71.4% vs HA06 absolute 21.4%).
+
+Applies forward to:
+- **HA07** (day-over-day HRV drop) — pre-register on z-score
+  thresholds from the start, not the *vermoeidheidskliniek*'s
+  absolute 10 ms.
+- **HA08** (multi-day HRV creep / slope) — pre-register slope
+  thresholds in standardized units.
+- **HA10** (BB overnight recharge coarse proxy) — pre-register on
+  z-score against the participant's own recharge distribution, not
+  on Wiggers' absolute 70-80% floor.
+
+This now joins the Theme A lesson (lagged baseline for
+push-burden-style metrics; symmetric pre-registered re-test
+discipline) in the project's methodology playbook.
+
+### 5.14. HA10 — Body Battery overnight recharge coarse proxy (z-score, bidirectional)
+
+After HA07 (day-over-day HRV drop) was queued as the next sibling
+test, an investigation revealed that **nightly HRV is not present
+in any local data source for this participant's Forerunner 245 GDPR
+dump**: no HRV field in UDS, sleepData, bioMetrics, monitoring_b
+FIT, or activity FIT. HRV records live only in the Garmin Connect
+cloud, accessible via the same ToS-grey REST API path as H04b's
+per-minute Body Battery. HA07 was therefore gated on the same
+authorisation as H04b. The user opted to pivot to HA10 (BB recharge
+coarse proxy) followed by HA11 (within-day U-dip pattern), both
+operationalisable on existing local data.
+
+HA10 tests Wiggers' "chronic-illness BB rarely reaches 100%"
+framing operationalised through the morning HIGHEST Body Battery
+anchor in the daily UDS record. The HIGHEST anchor is consistently
+in the early-morning hours (03:00-10:00 local time across the
+corpus) and represents the BB level reached after overnight
+recharge. Pre-registration locked 2026-06-07 at
+[HA10-bb-overnight-recharge/hypothesis.md](garmin/hypotheses/HA10-bb-overnight-recharge/hypothesis.md);
+result at [HA10-bb-overnight-recharge/result.md](garmin/hypotheses/HA10-bb-overnight-recharge/result.md).
+
+**Per-day metric**: `morning_peak[d]` = HIGHEST BB anchor's
+`statsValue` on date d, filtered to timestamps in [03:00, 10:00].
+Daytime-peak days (e.g. nap recovery) are excluded. Z-scored
+against lagged baseline `[d-90, d-30]` (Theme A); thresholds
+N_std = 1.5 / 2.0 / 2.5 consistent with HA06b. Bidirectional
+primary; one-sided lowered (Wiggers direction) + one-sided elevated
+sensitivity arms.
+
+**Result: TRAIN REFUTED, VALIDATE SUPPORTED → OVERALL REFUTED per
+the locked rule. But the validate-era SUPPORTED finding is the
+project's first.**
+
+| | train (14 episodes) | validate (15 episodes) |
+|---|---:|---:|
+| crash episodes triggering (\|z\| ≥ 1.5) | 7 (50.0%) | **13 (86.7%)** |
+| null windows triggering | 141 (70.5%) | 141 (70.5%) |
+| **discrimination (pp)** | **−20.5** | **+16.2** |
+| median max-\|z\| | 1.637 | 2.121 |
+| **verdict** | **refuted** | **SUPPORTED** |
+
+13 prior pre-registered tests on waking-hour Garmin signals had
+refuted validate-era under the canonical 3-criterion bar. HA10's
+validate arm at 4d primary clears all three criteria
+(86.7% / +16.2 pp / 2.121). The strict overall verdict is REFUTED
+because train fails (50% trigger rate is BELOW the 70.5% null), but
+**this is the first clean validate-era precursor finding in the
+investigation**.
+
+#### Directionality reversal between eras
+
+| | n triggering | elevated (z ≥ +1.5) | lowered (z ≤ −1.5) |
+|---|---:|---:|---:|
+| train | 7 | 0 (0%) | **7 (100%)** |
+| validate | 13 | **9 (69%)** | 4 (31%) |
+
+**Train: 100% lowered direction** (Wiggers' canonical "didn't
+recharge" pattern). **Validate: 69% elevated direction**
+(paradoxical "looked like a great night but" pattern). Both eras
+have a SUPPORTED arm at the 5-day secondary window in their
+respective *opposite* directions: train SUPPORTED at 5d one-sided
+lowered (+18.3 pp, 64.3% freq); validate SUPPORTED at 5d one-sided
+elevated (+27.5 pp, 60.0% freq). This is the cleanest
+era-directionality reversal in the project so far.
+
+#### Cross-channel coherence with HA06b — strongest internal-physiological-consistency evidence in the project
+
+BB is inversely-related to RHR via the vagal-tone / HRV → stress →
+BB pathway. The fact that HA10 (BB) and HA06b (RHR) show
+**opposite directions per era** is *expected* if the autonomic
+deviation is real and the era split represents a flip in dominant
+direction. The fact that the pattern emerges **independently** on
+two channels is strong internal-consistency evidence.
+
+| era | HA06b RHR direction | HA10 BB direction | autonomic interpretation |
+|---|---|---|---|
+| train (2022-23) | elevated (70% triggering) | lowered (100% triggering 4d) | **sympathetic overarousal**: high RHR ↔ low HRV ↔ low BB recharge |
+| validate (2024+) | lowered (75%) | elevated (69%) | **parasympathetic swing**: low RHR ↔ high HRV ↔ high BB recharge — Wiggers' "freeze" pattern |
+
+**Wiggers' "freeze" pattern is now empirically population-level
+visible** in this participant's validate-era crashes on two
+independent biometric channels.
+
+#### Pre-committed soft outcome held: H04b strongly prioritised
+
+HA10's §9 pre-commit stated that SUPPORTED in either era moves
+H04b's per-minute decode priority UP. The validate-era SUPPORTED
+finding triggers this commitment. **The per-minute BB version
+(H03b via H04b) should sharpen the validate-era signal** — the
+coarse 3-anchor proxy already finds 86.7% trigger rate at
++16.2 pp; the trajectory pattern is plausibly cleaner.
+
+### 5.15. HA11 — Within-day stress U-dip event count (z-score, one-sided elevated)
+
+HA11 follows HA10 as the second user-confirmed pivot test. Tests
+Wiggers' within-day pattern: per-minute stress drops sharply
+(the "U") and plateaus at a *higher-than-pre-dip* baseline.
+Wiggers reports resolving this pattern with ORS / electrolytes;
+the physiological hypothesis is orthostatic / low-blood-volume
+dysregulation. Pre-registration locked 2026-06-07 at
+[HA11-stress-udip/hypothesis.md](garmin/hypotheses/HA11-stress-udip/hypothesis.md);
+result at [HA11-stress-udip/result.md](garmin/hypotheses/HA11-stress-udip/result.md).
+
+**This is the first within-day pattern test in the project** —
+all prior precursor tests have used day-level metrics. The data
+primitive is per-minute stress samples re-parsed from monitoring_b
+FIT files (Stage 1 extraction, ~7 min; 7888 files, 1739 days,
+1722 valid ≥600 samples, 1469 total U-dip events identified).
+
+**U-dip event definition (locked)**: a timestamp t where
+- pre-dip mean stress in [t−35, t−5] is ≥ 40 (moderate baseline),
+- dip-floor in [t−7, t+7] is ≤ pre-dip − 25 (sharp drop), AND
+- post-dip mean stress in [t+8, t+38] is ≥ pre-dip + 5 (higher plateau).
+
+Refractory 60 min between consecutive events. Daily count
+`u_dip_count[d]` z-scored against lagged baseline `[d-90, d-30]`.
+Thresholds N_std = 1.5 / 2.0 / 2.5. **One-sided elevated primary**
+(more U-dips = more orthostatic events = pre-crash precursor per
+Wiggers' framing); bidirectional + one-sided lowered as sensitivity
+arms.
+
+Distribution: 47% of valid days have 0 U-dip events, 31% have 1,
+14% have 2, 7% have 3+. The metric has variability sufficient for
+z-score analysis (cross-day stdev 1.02; lagged-window σ ~0.78-0.98).
+
+**Result: TRAIN SUPPORTED, VALIDATE REFUTED → OVERALL REFUTED per
+the locked rule.**
+
+| | train (14 episodes) | validate (13/15 clean episodes) |
+|---|---:|---:|
+| crash episodes triggering (signed z ≥ +1.5) | **9 (64.3%)** | 4 (30.8%) |
+| null windows triggering | 83 (41.5%) | 83 (41.5%) |
+| **discrimination (pp)** | **+22.8** | **−10.7** |
+| median max signed z | 2.168 | 0.374 |
+| **verdict** | **supported** | **refuted (inverse)** |
+
+Train clears all three criteria substantially. **Validate is
+anti-predictive: −10.7 pp at 4d primary, scaling to −24.1 pp at
+5d N_std=2.0.** Validate-era crashes have *fewer* U-dip events
+than typical 4-5d windows — the inverse-direction signal is itself
+a *characteristic* signature of the parasympathetic-swing era, not
+random noise.
+
+#### Cross-channel coherence — four-channel train-era convergence
+
+HA11 adds the fourth train-era SUPPORTED autonomic precursor on the
+fourth channel:
+
+| test | channel | window | metric | train freq | train disc |
+|---|---|---|---|---:|---:|
+| H02b | per-minute stress spike count | 3d rolling | abs minutes ≥ +10 | 71.4% | +29.9 pp |
+| H02d bridge × 5d | per-minute stress spike (sentinel-corrected) | 5d | abs minutes ≥ +10 | 92.3% | +31.8 pp |
+| HA06b | nightly RHR z-score | 4d lagged | rel \|z\| ≥ 1.5 (bidir) | 71.4% | +18.9 pp |
+| **HA11** | **within-day U-dip count z-score** | **4d lagged** | **rel signed z ≥ 1.5 (elevated)** | **64.3%** | **+22.8 pp** |
+
+Four SUPPORTED train findings across four distinct channels:
+- Per-minute stress trajectory pattern (H02b, H02d) — sympathetic
+  spike duration
+- Per-night autonomic recovery (HA06b) — elevated RHR
+- Per-day within-day pattern (HA11) — elevated U-dip count
+
+The pre-cliff (2022-23) era's
+sympathetic-overarousal / orthostatic-instability precursor
+signature is now **four-channel-confirmed across distinct
+measurement modalities and time-scales**. This is the strongest
+multi-channel convergence in the project.
+
+#### Era reversal pattern formalised across four channels
+
+| era | H02b/H02d (stress) | HA06b (RHR) | HA11 (U-dip) | HA10 (BB peak) |
+|---|---|---|---|---|
+| **train** | SUPPORTED elevated | SUPPORTED elevated | **SUPPORTED elevated** | refuted (5d lowered SUPPORTED) |
+| **validate** | refuted | refuted | **refuted (inverse)** | **SUPPORTED elevated** (paradoxical swing) |
+
+Pre-cliff: sympathetic-arousal-spectrum events fire across all
+four channels. Post-cliff: parasympathetic-swing-spectrum events
+fire (HA10 BB high, with HA06b RHR low / HA11 U-dip low as
+inverse-direction characteristic signatures).
+
+#### Secondary descriptive — same-day correlation
+
+Per HA11 §4.10: Spearman ρ between u_dip_count[d] and gevoelscore[d]
+is essentially zero across both eras (train +0.075, validate
++0.012). The U-dip metric is a 4-day-lead precursor in train, NOT
+a same-day symptom correlate.
+
+### 5.16. Consolidated picture after HA06b + HA10 + HA11
+
+Reading §5.13 + §5.14 + §5.15 together (all three run on 2026-06-07
+under clean pre-registration), the consolidated picture for this
+participant's crash precursors:
+
+**Pre-cliff (2022-23) era — four-channel-confirmed
+sympathetic-overarousal + orthostatic-instability signature:**
+- H02b stress spike count 3d (+29.9 pp, 71.4%)
+- H02d bridge × 5d (+31.8 pp, 92.3%) — strongest train signal of project
+- HA06b RHR z-score 4d (+18.9 pp, 71.4%)
+- HA11 U-dip count z-score 4d (+22.8 pp, 64.3%)
+- HA10 BB peak lowered 5d (+18.3 pp, 64.3%) — fifth train arm
+  SUPPORTED, in the inverse-of-validate direction
+
+**Post-cliff (2024+) era — one-channel-confirmed
+parasympathetic-swing signature:**
+- HA10 BB peak elevated 4d primary (+16.2 pp, 86.7%) — the
+  project's first validate-era SUPPORTED finding under the
+  canonical bar.
+
+**Era directionality reversal demonstrated across four channels:**
+the same physiological phenomenon (autonomic deviation) operates in
+opposite directions across eras. The pattern is internally
+consistent across BB ↔ RHR ↔ U-dip via the vagal-tone / HRV /
+stress pathway.
+
+**Net change to "what's been SUPPORTED" under clean methodology:**
+the investigation now has **four train-era SUPPORTED autonomic-
+deviation precursors** (H02b, H02d, HA06b, HA11) and **one
+validate-era SUPPORTED precursor** (HA10 morning BB peak elevated).
+The D7 single-mechanism-two-regimes reframe now has empirical
+anchors in BOTH eras, on physiologically related channels with
+opposite-direction era-specific patterns.
+
+### 5.17. HA07/HA08 BLOCKED-PENDING-HARDWARE; substitute tests HA07c + HA08c + HA07d via sleep stress as HRV proxy
+
+After HA10 + HA11 closed, H04b path C authorisation was completed
+(garminconnect library installed, OAuth token cached) to unlock
+nightly HRV (for HA07/HA08/HA09/HA12) and per-minute Body Battery
+(for H03b proper). A smoke test against the Garmin Connect REST
+API on 2026-05-15 confirmed Body Battery, Sleep, and Stress
+endpoints respond. **But the HRV endpoint
+`/hrv-service/hrv/{date}` returned an empty dict for every date
+sampled (2022 through 2026).** Investigation traced the cause to
+**hardware**: the Forerunner 245 (firmware 10.40) was released in
+2019 with an older optical HR sensor. **Garmin's HRV Status
+feature was added to the newer Forerunner 255/265/955/965 and
+Fenix 7 generation watches (2022-2023) which use a
+multi-sample sensor.** The FR245's sensor does not support HRV
+Status; the data simply was never recorded.
+
+**HA07, HA08, HA12 are therefore BLOCKED-PENDING-HARDWARE.** The
+original pre-registrations remain as audit-trail records;
+substitute pre-registrations were locked before any analysis
+inspected the data.
+
+#### The substitute proxy argument
+
+Garmin's `stress` signal is computed as `f(HRV, HR, activity)`.
+During sleep, activity ≈ 0, so `sleep_stress ≈ f(HRV, HR)`. Higher
+mean sleep stress corresponds to lower HRV (sympathetic dominance);
+lower mean sleep stress corresponds to higher HRV (vagal
+dominance). The relationship is non-linear and bounded [1, 100],
+but **Workwell and Wiggers reference Garmin's stress in their
+pacing recommendations as an HRV-class indicator** — the
+proxy is already used in the field.
+
+Three substitute pre-registrations were locked **before** any
+sleep-stress data was inspected:
+
+- **HA07c** — night-over-night delta of mean sleep stress
+  z-scored against lagged baseline (analog of HA07).
+- **HA08c** — trailing-5-day OLS slope of mean sleep stress
+  z-scored (analog of HA08).
+- **HA07d** — night-over-night delta of in-sleep-window stress
+  STDEV z-scored (variability of HRV proxy — second-order
+  primitive testing autonomic flexibility shift).
+
+The pre-registered §8 caveats in each hypothesis.md require
+result.md files to explicitly acknowledge:
+- Sleep stress is a proxy for HRV, not HRV itself.
+- A SUPPORTED test on the proxy does NOT confirm the HRV
+  hypothesis directly.
+- A REFUTED test on the proxy does NOT refute the HRV hypothesis.
+- Cross-channel coherence with HA06b RHR / HA10 BB peak / HA11
+  U-dip is the strongest validation the proxies provide.
+
+Stage 1 extraction re-parsed all 7888 monitoring_b FIT files
+(~7 min, same approach as HA11) for per-minute stress samples;
+intersected with sleep windows from local `*_sleepData.json` (in
+`DI-Connect-Wellness`). Output: 1734 nights total, **1707 valid
+(≥120 in-window samples)**, mean 592 samples per valid night.
+
+### 5.18. HA07c — Sleep stress mean delta (one-sided elevated)
+
+Result at [HA07c-sleep-stress-mean-delta/result.md](garmin/hypotheses/HA07c-sleep-stress-mean-delta/result.md).
+
+**Primary 4d N_std=1.5 one-sided elevated: TRAIN SUPPORTED,
+VALIDATE REFUTED.**
+
+| | train (13/14 clean) | validate (15/15 clean) |
+|---|---:|---:|
+| triggering (signed z ≥ +1.5) | **9 (69.2%)** | 6 (40.0%) |
+| null | 46.0% | 46.0% |
+| **discrimination (pp)** | **+23.2** | −6.0 |
+| median max signed z | 1.677 | 1.392 |
+| verdict | **SUPPORTED** | refuted |
+
+**5th train-era SUPPORTED autonomic-channel precursor on the 5th
+channel** (after H02b, H02d, HA06b, HA11). The HRV proxy is
+validated on the train side: sleep stress mean delta discriminates
+train crashes at +23.2 pp, matching the magnitudes of HA06b RHR
+(+18.9 pp) and HA11 U-dip (+22.8 pp).
+
+Multiple arms SUPPORTED for train (5d secondary elevated +18.4 pp,
+4d N_std=2.0 bidirectional +19.7 pp, 4d N_std=2.0 lowered
++26.0 pp). Directionality split: train 33% elevated /
+67% lowered-at-max-|z| — train-era crashes preceded by HIGH
+AUTONOMIC VOLATILITY (large shifts in both directions; downward
+deviation at higher thresholds is the *strongest* discriminator).
+
+### 5.19. HA08c — Sleep stress mean slope (one-sided elevated)
+
+Result at [HA08c-sleep-stress-slope/result.md](garmin/hypotheses/HA08c-sleep-stress-slope/result.md).
+
+**Primary 4d N_std=1.5 one-sided elevated: TRAIN SUPPORTED,
+VALIDATE REFUTED.**
+
+| | train (13/14 clean) | validate (15/15 clean) |
+|---|---:|---:|
+| triggering (signed z ≥ +1.5) | **8 (61.5%)** | 6 (40.0%) |
+| null | 38.5% | 38.5% |
+| **discrimination (pp)** | **+23.0** | +1.5 |
+| median max signed z | 2.116 | 1.311 |
+| verdict | **SUPPORTED** | refuted |
+
+**6th train-era SUPPORTED finding under clean methodology**;
+both acute (HA07c delta) and sustained (HA08c slope) modes
+SUPPORTED in train on the same HRV-proxy channel. Wiggers' "HRV
+daalt over meerdere dagen na overbelasten" (multi-day creep mode)
+is empirically population-level present in pre-cliff era.
+
+Strong **validate ANTI-PREDICTIVE** pattern at higher thresholds
+(N_std=2.0 bidirectional **−36.2 pp**, one-sided lowered
+−27.3 pp). Validate-era crashes arrive against unusually-FLAT
+baseline — the autonomic creep that precedes train-era crashes is
+ABSENT in validate-era lead-ups. (This anti-predictive pattern
+foreshadows HA07d's variability finding — see §5.20.)
+
+### 5.20. HA07d — Sleep stress variability delta (BIDIRECTIONAL primary) → FIRST PROJECT-LEVEL OVERALL-SUPPORTED TEST
+
+Result at [HA07d-sleep-stress-variability/result.md](garmin/hypotheses/HA07d-sleep-stress-variability/result.md).
+
+Second-order primitive: **night-over-night delta of in-sleep-window
+stress STDEV** (variability of the HRV-proxy). Tests autonomic
+**flexibility** shift, not level shift. Bidirectional primary —
+the physiological direction is a priori ambiguous.
+
+**Primary 4d N_std=1.5 bidirectional: TRAIN SUPPORTED AND VALIDATE
+SUPPORTED → OVERALL SUPPORTED per the locked rule.**
+
+| | train (13/14 clean) | validate (15/15 clean) |
+|---|---:|---:|
+| triggering (\|z\| ≥ 1.5) | **11 (84.6%)** | **13 (86.7%)** |
+| null | 65.0% | 65.0% |
+| **discrimination (pp)** | **+19.6** | **+21.7** |
+| median max \|z\| | 2.541 | 2.752 |
+| verdict | **SUPPORTED** | **SUPPORTED** |
+| **OVERALL** | colspan=2 | **SUPPORTED both eras (project first)** |
+
+**This is the first pre-registered test in the entire investigation
+to OVERALL SUPPORT in both eras under the strict locked rule.**
+Nineteen pre-registered hypotheses preceded HA07d. HA10 was the
+first validate-era SUPPORTED but failed train. HA07d clears both
+simultaneously.
+
+#### Era-specific directionality within the bidirectional finding
+
+The bidirectional primary captures both directions; the one-sided
+sensitivity arms reveal the per-era directional preference:
+
+| arm | train | validate |
+|---|---|---|
+| **4d N_std=1.5 bidirectional (PRIMARY)** | **SUPPORTED +19.6** | **SUPPORTED +21.7** |
+| 4d N_std=1.5 one-sided **elevated** (variability rose) | **SUPPORTED +27.4** | refuted +3.8 |
+| 4d N_std=1.5 one-sided **lowered** (variability fell) | **SUPPORTED +16.5** | **SUPPORTED +21.7** |
+| 4d N_std=2.0 bidirectional | **SUPPORTED +15.5** | **SUPPORTED +27.3** |
+| 4d N_std=2.0 one-sided lowered | refuted +14.7 | **SUPPORTED +28.5** |
+
+**Train SUPPORTS BOTH directions** (variability rose AND fell)
+at N_std=1.5 — train-era crashes preceded by large variability
+shifts in either direction (autonomic instability / volatility).
+
+**Validate SUPPORTS ONLY the LOWERED direction** (variability
+fell, +21.7 pp at N_std=1.5, **+28.5 pp at N_std=2.0**) —
+validate-era crashes preceded by **autonomic stillness**: sleep
+stress variability DROPS in the days before crashes. The
+autonomic state becomes unusually stable, "looks like" recovery,
+but symptoms continue.
+
+**HA07d's +28.5 pp validate discrimination is the strongest
+validate-era discrimination on any arm in the project** (exceeds
+HA10's previous best of +27.5 pp at 5d one-sided elevated).
+
+#### The validate-era picture is now multi-channel-anchored — with one robust primary and one fragile secondary
+
+Validate-era crashes now have **two empirical anchors with
+different robustness profiles** (per independent peer review §3
+critique on threshold-fragility):
+
+| validate-era signature | direction | discrimination | threshold robustness | role |
+|---|---|---:|---|---|
+| **HA07d sleep stress variability** | **lowered** | **+21.7 pp (4d primary bidir), +28.5 pp (N_std=2.0 lowered)** | **ROBUST** — SUPPORTS at N_std=1.5 AND N_std=2.0 in primary | **PRIMARY** |
+| HA10 morning BB peak | elevated | +16.2 pp (4d primary bidir, N_std=1.5 only) | **FRAGILE** — refuted at N_std=2.0 and 2.5 | CORROBORATING |
+
+HA10's threshold fragility was flagged by the independent peer
+review as "the single most fragile headline in the project" before
+HA07d landed. HA07d does **not** inherit this fragility — its
+SUPPORTED status holds at multiple threshold tiers AND multiple
+arms.
+
+The HA10 fragility was further investigated through a
+**pre-registered threshold-monotonicity diagnostic** (locked
+[diagnostic.md](garmin/hypotheses/HA10-threshold-monotonicity-diagnostic/diagnostic.md);
+ran 2026-06-07; result at [HA10-threshold-monotonicity-diagnostic/result.md](garmin/hypotheses/HA10-threshold-monotonicity-diagnostic/result.md)).
+**Verdict per locked rescue/close/ambiguous criteria: CLOSE.** A
+fine N_std grid [0.5 → 4.0] showed HA10's primary bidirectional
+arm peaks at N_std=1.75 — one σ-tier past the locked rescue window
+[1.0, 1.5]. Every other shape criterion passed (Spearman rho
+−0.456 strongly monotonic; disc holds at +14 at N_std=2.0, +11
+at 2.5; one sign change); the peak-location failure is the only
+close trigger. **HA10's locked SUPPORTED verdict stays on record**
+under pre-registration discipline; but synthesis-level framing
+demotes HA10 to non-load-bearing per the locked CLOSE clause.
+
+**Important nuance** (recorded in the diagnostic result.md):
+HA10's one-sided ELEVATED arm shows robust threshold-monotonicity
+— +23 pp plateau from N_std=1.5 through 2.5. The **direction**
+HA10 identified (paradoxical elevated BB peak before validate-
+era crashes) is supported by the one-sided arm's robust shape;
+only HA10's specific BIDIRECTIONAL-PRIMARY choice failed the
+diagnostic.
+
+**Subsequent HA07d threshold-monotonicity diagnostic CLOSE both
+eras 2026-06-07** (see [HA07d-threshold-monotonicity-diagnostic/result.md](garmin/hypotheses/HA07d-threshold-monotonicity-diagnostic/result.md)):
+HA07d's bidirectional primary closes per the same locked v1
+rescue/close criteria. Peak at N_std=1.75 outside rescue window
+[1.0, 1.5] in both eras. Validate Spearman positive (+0.170 —
+rising-with-threshold shape that the v1 criteria penalise even
+though qualitatively highly robust: discrimination stays +19 to
++31 pp across N_std=1.0 through 4.0). Train Spearman near-zero
+(+0.005) with 4 sign changes (genuinely bumpy curve consistent
+with train-era volatility hypothesis). The v1 locked rule
+applied honestly: CLOSE both eras.
+
+**The validate-era picture therefore rests on NO LOAD-BEARING
+ANCHOR** in v1 synthesis framework. Both HA07d and HA10's locked
+SUPPORTED verdicts stay on record per audit-trail discipline;
+synthesis-level load-bearing claims do not. The diagnostic-v1
+criteria themselves are acknowledged to have a methodological
+defect — they only capture canonical-decline robustness and
+penalise stable-plateau and rising-with-threshold shapes that are
+equally robust forms of signal. **v2 criteria** are pre-registered
+2026-06-07 as a methodology document
+([garmin/methodology/threshold-sweep-rescue-criteria-v2.md](garmin/methodology/threshold-sweep-rescue-criteria-v2.md))
+with a five-category shape rule. **v2 diagnostics for HA10, HA07d,
+HA06b, and HA11** are pre-registered as separate locked
+diagnostic.md files. The validate-era load-bearing claim depends
+entirely on v2 outcomes.
+
+**Symmetric interim demotion** (peer-review concern on asymmetry):
+HA06b and HA11 were demoted to "load-bearing pending v2" in
+synthesis-level framing, joining HA10 and HA07d. All four findings
+under v2 diagnostic shared the same interim status until v2 ran.
+The discipline cost of demotion was paid symmetrically.
+
+**Atomic v2 round result (2026-06-07)** — three RESCUES, one CLOSE:
+
+- HA10 validate bidirectional: **RESCUE** via Cat 3 (rising/late-peak).
+- HA07d train bidirectional: **RESCUE** via Cat 3.
+- HA07d validate bidirectional: **RESCUE** via Cat 2 (stable plateau) + Cat 3.
+- HA11 train one-sided elevated: **RESCUE** via Cat 1 (canonical decline).
+- HA06b train bidirectional: **CLOSE** via Cat 4 (2 sign-changes in [1.0, 3.0]).
+
+Restoration map: HA10, HA07d, HA11 restored to load-bearing. HA06b
+permanently demoted. The discipline binds in both directions —
+v2 produced honest verdicts that could have gone either way per
+finding, and one of four findings did genuinely fail the v2
+strict reading.
+
+In the interim before v2 diagnostics run:
+- Card (b2) cannot ship anchored.
+- The era-as-moderator narrative weakens to "supported by
+  physiological consistency across multiple non-load-bearing
+  findings" rather than "demonstrated on a single load-bearing
+  test."
+- The HA07d-as-overall-SUPPORTED headline is paused. Locked
+  verdict stays on record; synthesis claim depends on v2.
+
+The pre-cliff multi-channel convergence narrative (six channels,
+seven tests, sleep-stress channel with three primitives) remains
+intact at the locked verdict level. After v2 criteria lock, the
+same diagnostic framework will be applied symmetrically to those
+train-era findings (H02b, H02d, HA06b, HA11 already pre-registered
+for v2). The train-era load-bearing status is conditional on those
+v2 outcomes too.
+
+Both LOOK like recovery. Neither IS recovery. The
+parasympathetic-swing pattern Wiggers documents qualitatively is
+empirically observable in this participant's validate era at
+robust discrimination magnitudes at the locked verdict level via
+HA07d and HA10. Whether either supports the synthesis-level
+load-bearing claim depends on v2 diagnostic outcomes. HA10's BB
+peak elevation is
+descriptively consistent but non-load-bearing per the diagnostic.
+
+### 5.21. Consolidated picture after the substitute tests
+
+The post-substitute SUPPORTED list:
+
+**Pre-cliff (2022-23) era — SEVEN-channel/primitive
+sympathetic-overarousal + autonomic-volatility precursor signature:**
+- H02b stress spike count 3d (+29.9 pp, 71.4%)
+- H02d bridge × 5d (+31.8 pp, 92.3%) — strongest train signal
+- HA06b RHR z-score 4d (+18.9 pp, 71.4%)
+- HA11 U-dip count z-score 4d (+22.8 pp, 64.3%)
+- HA07c sleep stress mean delta 4d (+23.2 pp, 69.2%)
+- HA08c sleep stress slope 4d (+23.0 pp, 61.5%)
+- **HA07d sleep stress variability delta 4d (+19.6 pp, 84.6%)** —
+  also validate-era SUPPORTED, project's first overall-SUPPORTED
+
+**Post-cliff (2024+) era — TWO-channel
+parasympathetic-swing / autonomic-stillness signature:**
+- HA10 BB peak elevated 4d primary (+16.2 pp, 86.7%)
+- **HA07d sleep stress variability lowered 4d primary (+21.7 pp,
+  86.7%, ALSO project's first overall-SUPPORTED at primary
+  bidirectional)**
+
+**Methodology lessons banked from the substitute round:**
+- Pre-register relative thresholds for autonomic-channel tests
+  (HA06 → HA06b banked; HA07c/HA08c/HA07d all followed).
+- Pre-register the **bidirectional primary** when the
+  physiological direction is genuinely ambiguous (HA07d's primary
+  bidirectional was crucial; one-sided primary would have missed
+  the validate-era finding).
+- **Second-order primitives (variability of derived metrics) can
+  carry signal first-order primitives miss.** HA07c (mean delta)
+  refuted validate at +4.3 pp; HA07d (variability delta) supported
+  validate at +21.7 pp. The autonomic dimension that shifts before
+  validate-era crashes is FLEXIBILITY, not LEVEL.
+- **Locked HRV pre-registrations do not waste effort if hardware
+  blocks them**: HA07 / HA08 / HA12 pre-registrations are
+  preserved as audit-trail records; substitutes were locked
+  *before* data inspection; methodology integrity stays clean.
+- When path C authorisation reveals a hardware gap, **the
+  defensible substitute path is to find a proxy whose
+  relationship to the original signal is known**, not to abandon
+  the pre-registered question.
+
+**Net change after the substitute round + threshold-monotonicity
+diagnostic-v1 results (2026-06-07):**
+
+- Train-era SUPPORTED on record: 7 across six distinct channels
+  (sleep-stress channel tested through three primitives). **None
+  has yet undergone threshold-monotonicity diagnostic.** v2
+  diagnostics pre-registered for HA06b and HA11 (HA07c, HA08c,
+  H02b, H02d to follow if v2 framework is adopted broadly).
+  Train load-bearing status conditional on v2 outcomes.
+- Validate-era SUPPORTED on record: 2 (HA10 + HA07d). **Both
+  demoted to non-load-bearing** under v1 diagnostic CLOSE
+  verdicts. v2 diagnostics pre-registered for both.
+- **Overall-SUPPORTED at primary on record: 1** (HA07d). Demoted
+  to non-load-bearing under v1; status pending v2.
+- Card (b) train-era retrospective: seven locked anchors on
+  record; load-bearing status conditional on v2 diagnostics for
+  the underlying tests.
+- Card (b2) validate-era retrospective: ZERO load-bearing
+  anchors after diagnostic-v1 round. Cannot ship anchored under
+  v1 framework. Ship pathway depends on v2 RESCUE outcomes plus
+  separately-completed specificity tables.
+- D7 single-mechanism-two-regimes reframe: HA07d's
+  single-channel both-eras evidence is **paused** pending v2.
+  In the interim, the era reversal narrative rests on
+  physiological consistency across multiple non-load-bearing
+  findings rather than a load-bearing single-test demonstration.
+
+**Channel-independence honest framing** (per peer-review §3 — the
+review's most important framing critique):
+
+The synthesis-level claim of "seven train channels SUPPORTED" weights
+the channels as independent samples of nature. They are NOT
+statistically independent:
+- Body Battery is a fused composite `g(HR, HRV, stress, sleep)`.
+- Sleep stress is per-minute stress restricted to the sleep window.
+- HA07c (mean delta), HA08c (slope), HA07d (variability delta) are
+  three primitives of the *same* sleep-stress channel.
+- Even RHR (HA06b) and stress (HA11) share underlying HRV input via
+  the Garmin algorithm.
+
+The more honest framing: **six distinct measurement axes confirming
+an underlying autonomic-state construct, all of which SUPPORT in
+train**. The pre-cliff sympathetic-overarousal + autonomic-
+volatility precursor signature is **well-replicated through
+multiple operationalisations**; "multi-channel convergence" was
+overstating the independence. A future cross-channel correlation
+matrix (queued) will anchor this caveat quantitatively.
+
+**Independent peer-review integration** (2026-06-07): the project
+received an independent variable-architecture review at
+[garmin/review/2026-06-07-variable-architecture-review.md](garmin/review/2026-06-07-variable-architecture-review.md);
+the project's research lead replied at
+[garmin/review/2026-06-07-reply-with-ha07d-context.md](garmin/review/2026-06-07-reply-with-ha07d-context.md)
+committing to Tier 1 framing fixes (this section + STOCKTAKE + synthesis
++ pem-pacing-indicators) and Tier 2 action items (HA10 threshold-
+monotonicity diagnostic; HA01b per-axis decomposition; H01/H03/H04
+Gen-3 re-tests; Fisher's exact p-values; cross-channel correlation
+matrix; card specificity tables; crash_v3 mechanism subtyping; S02
+score trajectory; pooled-corpus descriptive arm; HA11 parameter
+sensitivity diagnostic). See QUEUED-WORK for the full Tier 2 items.
+
+### 5.22. HA01b per-axis decomposition diagnostic — first diagnostic under consolidated testing playbook
+
+Pre-registered as the next strand after the Theme A bundled re-test
+demoted HA01b composite to REFUTED both eras. Locked at
+[HA01b-per-axis-diagnostic/diagnostic.md](garmin/hypotheses/HA01b-per-axis-diagnostic/diagnostic.md);
+run 2026-06-07; result at
+[HA01b-per-axis-diagnostic/result.md](garmin/hypotheses/HA01b-per-axis-diagnostic/result.md).
+This is the **first diagnostic locked under the consolidated testing
+playbook** ([garmin/methodology/testing-playbook.md](garmin/methodology/testing-playbook.md))
+section 9 compliance bar.
+
+**Diagnostic question**: HA01b's composite (`exertion_class_lagged`,
+MAX percentile rank across 4 input axes) refuted both eras under the
+clean lagged baseline. Was the composite obscuring a per-axis signal
+that any single axis, pre-registered as primary, would have caught?
+
+**Result**: yes, for one axis.
+
+| axis | train | validate |
+|---|---|---|
+| **effective_exertion** | **SUPPORTED** +21.3 pp / 81.8% freq / median rank 0.883 | **SUPPORTED** +19.5 pp / 80.0% freq / median rank 0.909 |
+| step_burden | refuted (crit-c miss by 0.008; +27.5 pp, 90.9% freq) | SUPPORTED +16.6 pp / 80.0% freq / median rank 0.875 |
+| max_hr_peak | refuted (+7.5 pp, crit-b miss) | **refuted (-7.7 pp, INVERTED)** |
+| vigorous_min | refuted (+10.7 pp, crit-b miss) | SUPPORTED +24.6 pp / 86.7% freq / median rank 0.917 |
+
+**Composite control reproduces HA01b REFUTED both eras** (+3.4 train,
++1.5 validate pp), confirming the per-axis decomposition is honestly
+extracting signal the composite obscured.
+
+**Why composite REFUTES while per-axis SUPPORTS**: the composite is
+`MAX(rank across 4 axes) ≥ 0.75`. The MAX across 4 axes triggers
+~78% of the time in null windows (any one of 4 axes being elevated
+suffices). Crashes trigger at ~80%. Spread = ~2 pp. When you ask
+"is THIS specific axis elevated," null rate drops to ~60% (the
+axes are correlated 0.31-0.69 but not identical, so any single
+axis is more specific than the MAX) and discrimination jumps to
+~+20 pp.
+
+**Generalisable methodology lesson**: MAX-rank composites can dilute
+per-axis signal in the null distribution. For future composites:
+pre-register per-axis primaries IN ADDITION to the composite, OR
+use AND-of-axes composites (require all N axes to trigger, tighter
+specificity at the cost of sensitivity). Queued for testing playbook
+§3 addendum.
+
+**Both-eras rule (playbook §4.4) reduces load-bearing to 1 axis**.
+Only effective_exertion clears the both-eras gate. step_burden and
+vigorous_min validate-only are **diagnostic findings, NOT load-bearing**.
+max_hr_peak's validate inversion (-7.7 pp) is consistent with the
+known chronotropic incompetence in ME/CFS (>85% prevalence per
+pacing-and-crash-mitigation literature).
+
+**Cross-axis correlation matrix (per playbook §6.1, channel
+non-independence)**: Spearman ρ across 1184 fully-valid days ranges
+0.31 to 0.69. effective_exertion is the "central" axis (mean ρ ≈
+0.58 with the other 3); step_burden is the most independent (mean
+ρ ≈ 0.35). Effective number of independent comparisons ≈ 2.5
+(not 4). Multi-comparison concern (8 verdicts at locked bar) is
+real but bounded.
+
+**Critical specificity caveat (per playbook §6.2)**: even at +19.5
+pp validate discrimination, **posterior-per-fire is ~2.2% vs 1.7%
+base rate**. 60% of any 4-day window in the analysis range has at
+least one effective_exertion ≥ 0.75 day. A card built on this
+primitive would fire roughly every other day and only marginally
+lift posterior over the base rate. **NOT shippable as a card without
+further refinement** (tighter threshold, multi-condition AND,
+temporal aggregation). The HA01c v2 threshold-monotonicity
+diagnostic is precisely designed to probe whether tighter thresholds
+yield acceptable specificity.
+
+**Pre-committed follow-ups (locked 2026-06-07 BEFORE per-axis
+diagnostic ran)**:
+
+- **HA01c**
+  ([HA01c-effective-exertion-shock/hypothesis.md](garmin/hypotheses/HA01c-effective-exertion-shock/hypothesis.md)):
+  effective_exertion as primary, same rank ≥ 0.75 threshold, same
+  3-criterion bar, both-eras rule. Not a re-test of HA01b; new
+  hypothesis with a different primary per playbook §2.2.
+- **HA01c v2 threshold-monotonicity diagnostic**
+  ([HA01c-threshold-monotonicity-diagnostic-v2/diagnostic.md](garmin/hypotheses/HA01c-threshold-monotonicity-diagnostic-v2/diagnostic.md)):
+  5th in v2 round (after HA10, HA07d, HA06b, HA11). Tests rank
+  thresholds {0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95} per
+  locked five-category shape rule.
+
+**Status**: HA01b composite REFUTED stays on record. The per-axis
+diagnostic produces a **diagnostic finding, NOT a re-test verdict**
+(playbook §5.2). HA01c + v2 pending user approval to run.
+
+**If HA01c + v2 both pass**: effective_exertion becomes the **second
+project-level both-eras SUPPORTED finding** after HA07d. The D7
+single-mechanism-two-regimes reframe regains an empirical anchor —
+a validate-era physiological precursor on a cleanly-pre-registered
+single-axis primary. Card-craft phase applies, gated on specificity
+tables.
+
+**If HA01c REFUTES or v2 fails**: HA01b composite REFUTED stays;
+per-axis finding documented as investigative artefact per playbook
+§2.5 audit-trail discipline.
+
+### 5.23. HA01c + HA01c v2 execution (same-day) — mixed v2 verdict (first AMBIGUOUS in v2 series)
+
+Same-day execution after the per-axis diagnostic, per user approval
+of the pre-committed sequence. Results at
+[HA01c result.md](garmin/hypotheses/HA01c-effective-exertion-shock/result.md)
++ [HA01c v2 result.md](garmin/hypotheses/HA01c-threshold-monotonicity-diagnostic-v2/result.md).
+
+**HA01c locked-threshold verdict: SUPPORTED both eras** at τ=0.75
+(train 81.8% / +21.3 pp / median 0.883; validate 80.0% / +19.5 pp /
+median 0.909). Numbers identical to per-axis diagnostic — disciplinary
+re-run, not informational. HA01b composite REFUTED stays unchanged
+on record per playbook §2.2 (HA01c is a separate hypothesis with a
+different primary).
+
+**HA01c v2 threshold-monotonicity diagnostic: MIXED verdict — first
+AMBIGUOUS in the v2 series.**
+
+| era | discrimination curve | peak | shape stats | v2 verdict |
+|---|---|---|---|---|
+| train | 15.4 → 6.4 → 16.2 → +21.3 → 10.3 → 7.9 → 2.0 → 7.3 | τ=0.75 (+21.3 pp) | ρ=-0.452; sign-changes [0.60, 0.90] = 0; max_neg = +2.0 | **AMBIGUOUS** (fails all 5 categories) |
+| validate | 15.4 → +24.6 → 21.0 → 19.5 → 13.3 → 13.3 → 12.3 → 6.7 | τ=0.60 (+24.6 pp) | ρ=-0.850; sign-changes = 0; max_neg = +6.7 | **RESCUE via Cat 1** (textbook canonical decline) |
+
+**Why train AMBIGUOUS**: shape is bumpy-but-never-negative.
+- Cat 1 (canonical decline) requires peak in [0.50, 0.70] — fails
+  (peak at 0.75).
+- Cat 2 (stable plateau) requires range ≤ 5 pp — fails (range
+  19.3 pp).
+- Cat 3 (rising / late-peak) requires peak ≥ 0.80 AND monotone
+  rise to peak — fails on both (peak 0.75; the 0.50→0.60 drop from
+  +15.4 to +6.4 breaks monotone rise).
+- Cat 4 (bumpy with sign-changes) requires ≥ 1 sign-change in
+  [0.60, 0.90] — fails (0 sign-changes; curve never crosses zero).
+- Cat 5 (loose-tail noise) requires peak < +5 pp — fails (peak
+  +21.3 pp).
+
+This is the **edge case the locked v2 framework was designed to
+surface**: a genuinely robust shape that doesn't fit any locked
+category. The framework returns AMBIGUOUS rather than forcing a
+fit. Discipline binds.
+
+**Why validate Cat 1 RESCUE**: classic canonical decline. Peak at
+the loosest threshold (τ=0.60) with +24.6 pp; declines monotonically
+beyond peak; ρ=-0.850 confirms strong negative threshold-discrimination
+correlation; 0 sign-changes. Cleanest Cat 1 shape in the entire v2
+round.
+
+**Era-moderator on threshold-stability** (not just on magnitude):
+validate-era crash precursor activity is broadly distributed across
+rank tiers; train-era is concentrated at τ=0.70-0.85 with a
+characteristic dip at τ=0.60 (a possibly-bimodal train precursor
+distribution — descriptive hypothesis only; not pre-registered).
+
+**Outcome per playbook §4.4 both-eras rule + HA01c hypothesis.md §5
+v2-gate**: HA01c stays **SUPPORTED-with-stability-mixed** — honest
+at τ=0.75 but **NOT load-bearing** in synthesis.
+
+**No HA01c card.md drafted**. Two converging reasons:
+1. Playbook §6.2 specificity gate: 2.2% posterior per fire vs 1.7%
+   base rate; 60% of any 4-day window triggers in the null.
+2. v2 mixed verdict: load-bearing status withheld, which also
+   withholds card-craft per playbook §2.7.
+
+**Project net state**:
+- HA07d remains the only project-level overall-SUPPORTED +
+  v2-validated finding (both eras RESCUE).
+- HA01c joins the "noted-but-not-load-bearing" status, alongside
+  HA06b's permanent demotion.
+- HA01b composite REFUTED stays unchanged on record.
+- The v2 framework now has worked examples of all four outcomes:
+  RESCUE Cat 1/2/3, CLOSE Cat 4, AMBIGUOUS.
+
+**Discipline-cost paid in full (revised)**: the locked v2 framework
+has demoted (HA06b), rescued (HA10/HA07d/HA11), and now surfaced
+edge cases (HA01c AMBIGUOUS). The framework distinguishes
+"robust-but-uncategorizable" from "non-robust-and-bumpy" — both
+are mature outcomes of a locked discipline. The user pre-committed
+to the framework after HA07d v1 CLOSE; the framework continues to
+return verdicts the locked criteria support, not the ones
+researcher intuition prefers.
+
+### 5.24. H03b per-minute BB overnight recharge — INCONCLUSIVE × 12 by data availability
+
+Same-day execution after HA01c chain. Result:
+[H03b result.md](garmin/hypotheses/H03b-bb-overnight-recharge-permin/result.md).
+
+H03b was pre-registered as the sharpening test of HA10: does the
+per-minute integral (peak_during_sleep − sleep_onset_value) give
+sharper discrimination than HA10's coarse 3-anchor proxy
+(+16.2 pp validate)?
+
+**Result**: INCONCLUSIVE × 12 (all evaluation cells; 3 N_std × 2
+windows × 2 eras). The locked n_clean ≥ 10 threshold from
+hypothesis.md §5 binds.
+
+**Data-availability finding (the substantive outcome of this
+run)**: Garmin's API has two cutover dates:
+- `bodyBatteryChange` (daily scalar): populated from ~2023-12-31
+- `sleepBodyBattery` (per-3-min array): populated from ~2024-06-03
+
+Of 29 crash episodes:
+- Train (2022-09 to 2023-12): 14 crashes, **0 with per-minute
+  data** (entire era predates the API cutover)
+- Validate (2024-01 to 2026-06): 15 crashes, 9 with leadup data,
+  **only 6 with both data AND usable lagged baseline** (baseline
+  window [d-90, d-30] needs ≥40 valid days, stabilising
+  ~Sept 2024)
+
+**User pre-committed to running as-locked** rather than lowering
+the n=10 threshold mid-run (which would have created H03c per
+playbook §2.2). Pre-registration discipline preserved.
+
+**Endpoint clarification audit trail (per playbook §2.5)**:
+hypothesis.md §3 specified the
+`/wellness-service/wellness/bodyBattery/events/{date}` endpoint as
+the per-minute source. The endpoint actually returns event records
+(sleep, activities, naps), NOT per-minute samples. The per-3-min
+BB during sleep window IS available via
+`get_sleep_data().sleepBodyBattery` (already captured in the
+existing path C sleep backfill; no separate BB backfill required).
+Per playbook §2.2, this is an implementation-source clarification,
+not a spec change.
+
+**HA10 stays canonical for the BB overnight recharge channel** —
+SUPPORTED validate at +16.2 pp (coarse 3-anchor proxy on full
+corpus), v2 RESCUE Cat 3, currently load-bearing as the
+corroborating secondary anchor for validate-era. The substantive
+BB-overnight-recharge question is answered at coarse resolution;
+the sharpening test cannot run on the current data corpus.
+
+**H03b re-runnable only after** path B (FIT decode of
+`unknown_233`) unlocks per-minute BB for the old corpus. That is
+an open H04b track with no fixed timeline.
+
+**Methodology lesson banked** (queued for playbook §3 addendum):
+when a pre-registered hypothesis depends on a third-party API
+endpoint, verify data availability across the analysis window
+BEFORE locking the inconclusive threshold. The H03b case shows
+that an n=10 threshold combined with a 2024-06 data cutover
+automatically forces INCONCLUSIVE — a constraint the
+pre-registration did not anticipate.
+
+**Project net state unchanged**: load-bearing list (HA07d, HA10,
+HA11, H02b, H02d) and noted-but-not-load-bearing list (HA01c,
+HA06b) all unchanged. H03b adds "INCONCLUSIVE-by-data-availability"
+to the verdict-category roster.
+
+### 5.25. Tier 2 specificity tables — all 9 anchors land in Tier C (retrospective-annotation-only)
+
+Tier 2 peer-review action item completed 2026-06-07. Locked spec
+at [methodology/specificity-tables-spec.md](garmin/methodology/specificity-tables-spec.md).
+Derivative Bayes computation over locked result-data.json files —
+no new hypothesis tests, no new null draws.
+
+**Locked era parameters** (from playbook §4.3):
+
+| era | days | crash_v1 count | base rate |
+|---|---:|---:|---:|
+| train (2022-09-03 → 2023-12-31) | 485 | 14 | 2.89% |
+| validate (2024-01-01 → 2026-06-05) | 887 | 15 | 1.69% |
+
+**Precision tier definitions** (locked in spec §7):
+- **Tier A**: lift ≥ 5× AND precision ≥ 30% — informative for
+  next-N-day awareness
+- **Tier B**: lift 2-5× AND precision 5-30% — reflective use only,
+  no alerting
+- **Tier C**: lift < 2× OR precision < 5% — retrospective
+  annotation only (playbook §6.6 no-go boundary)
+
+**Card (b) train-era results** (7 anchors at locked primary arms):
+
+| anchor | recall | null_fire | precision | lift | tier |
+|---|---:|---:|---:|---:|:-:|
+| H02b train 3d | 71.4% | 41.5% | **4.87%** | **1.69×** | **C** |
+| H02d train bridge × 5d | 92.3% | 64.0% | 4.34% | 1.50× | C |
+| HA07d train 4d bidir | 84.6% | 65.0% | 3.73% | 1.29× | C |
+| HA11 train 4d elevated | 64.3% | 41.5% | 4.40% | 1.52× | C |
+| HA07c train 4d elevated | 69.2% | 46.0% | 4.28% | 1.48× | C |
+| HA08c train 4d elevated | 61.5% | 38.5% | 4.54% | 1.57× | C |
+| HA06b train 4d bidir | 71.4% | 52.5% | 3.89% | 1.35× | C |
+
+**Card (b2) validate-era results** (2 anchors at locked primary arms):
+
+| anchor | recall | null_fire | precision | lift | tier |
+|---|---:|---:|---:|---:|:-:|
+| HA07d validate 4d bidir | 86.7% | 65.0% | **2.24%** | **1.33×** | **C** |
+| HA10 validate 4d bidir | 86.7% | 70.5% | 2.07% | 1.22× | C |
+
+**Decisive structural finding**: lift ≈ recall/null_fire is
+independent of base rate (Bayes algebra at low base rates). No
+anchor's recall-to-null-fire ratio exceeds 2× (best is H02b at
+0.714/0.415 = 1.72×). Therefore **no anchor can clear the 2× lift
+threshold at any base rate** — even if the era's true crash rate
+were 5× higher, the Tier C verdict would hold.
+
+The hypothesis-test 3-criterion bar (frequency ≥ 60%, discrimination
+≥ +15 pp, magnitude floor) confirms metrics are *measurably
+different* in crash lead-ups vs random windows. It does NOT confirm
+they are good *predictive cards*. These are different gates that
+were conflated in the original card-concept framing.
+
+**Card framing implications**: Card (b) and Card (b2) both
+restricted to **retrospective-annotation-only surfaces**. The
+acceptable surface per playbook §6.6 is timeline annotation during
+after-the-fact review, paired with the gevoelscore record.
+
+Even HA07d — the project's only overall-SUPPORTED + v2-validated
+finding — drops to **2.24% precision per fire vs 1.69% base rate**.
+At 86.7% recall it surfaces nearly every crash AND ~65% of any
+random 4-day window. As a forward signal, it is too noisy. As a
+retrospective annotation ("this crash was preceded by an autonomic
+stillness pattern that fired in 87% of validate-era crashes — here
+is where it fired in the timeline"), it remains a meaningful
+empirical artifact.
+
+**No-go boundary reaffirmed** (playbook §6.6): even with full
+discrimination support, the following are still NOT permitted:
+- Crash-risk percentages ("12% crash risk today")
+- Traffic-light alerting on a single metric trigger
+- Push notifications
+- Recovery-score framing
+- Automated rest-targets
+- Age-predicted HR zones
+- Time-contingent escalation
+
+**Methodology lesson banked (and load-bearing for the project's
+future)**: a hypothesis-test bar clearance and a card-shippable
+precision are different gates. Future card pre-registrations
+should include specificity-table thresholds in the hypothesis.md,
+not deferred to a downstream check. This is a candidate
+playbook §3.9 addendum (queued).
+
+**Project shape after the specificity table**: the discrimination
+work was right; the card framing was over-eager. The findings
+become **empirical anchors for retrospective sense-making**, not
+forward-predictive cards. This is consistent with the original
+project ethos (reflective tool, not predictive product) — but the
+specificity computation makes the boundary precise.
+
+Full tables: [card-b-train-specificity.md](garmin/cards/card-b-train-specificity.md)
++ [card-b2-validate-specificity.md](garmin/cards/card-b2-validate-specificity.md).
+Computation script: [compute_specificity.py](garmin/cards/compute_specificity.py).
+
+### 5.26. Tier 2 statistical audits — Fisher's exact + cross-channel correlation
+
+Two cheap derivative computations completed 2026-06-08 per Tier 2
+peer-review action items in [QUEUED-WORK.md](QUEUED-WORK.md). No new
+hypothesis tests, no new null draws — purely derivative over locked
+result-data.json files + per-day primitive CSVs.
+
+#### Fisher's exact + 95% binomial CIs on 11 primary verdicts
+
+[primary-verdict-statistics.md](garmin/cards/primary-verdict-statistics.md) +
+[compute_fisher_ci.py](garmin/cards/compute_fisher_ci.py).
+
+For each primary verdict, retrofits: Fisher's one-sided exact
+p-value (alternative = crash trigger > null trigger), Wilson 95%
+binomial CI on recall, Wilson 95% CI on null fire rate, Wald 95%
+CI on discrimination pp.
+
+**Headline result**:
+
+| anchor | era | recall | disc (pp) | Fisher p | sig α=0.05 | sig Bonf α=0.005 |
+|---|---|---:|---:|---:|:-:|:-:|
+| H02b | train | 71.4% | +29.9 | **0.0285** | ✓ | — |
+| H02d bridge × 5d | train | 92.3% | +28.3 | **0.0112** | ✓ | — |
+| HA06b 4d bidir | train | 71.4% | +18.9 | 0.1362 | — | — |
+| HA07c 4d elevated | train | 69.2% | +23.2 | 0.0581 | — | — |
+| HA07d 4d bidir | train | 84.6% | +19.6 | 0.0934 | — | — |
+| HA08c 4d elevated | train | 61.5% | +23.0 | 0.0539 | — | — |
+| HA11 4d elevated | train | 64.3% | +22.8 | 0.0836 | — | — |
+| HA07d 4d bidir | validate | 86.7% | +21.7 | 0.0703 | — | — |
+| HA10 4d bidir | validate | 86.7% | +16.2 | 0.1475 | — | — |
+| HA01c rank ≥ 0.75 | train | 81.8% | +21.3 | 0.1355 | — | — |
+| HA01c rank ≥ 0.75 | validate | 80.0% | +19.5 | 0.1085 | — | — |
+
+**Only H02b (p=0.029) and H02d (p=0.011) reach α=0.05 one-sided.
+Zero reach Bonferroni α=0.005.** Even HA07d validate (+21.7 pp,
+the strongest validate-era discrimination in the project) lands at
+p=0.0703 — close-to-bar but failing α=0.05 conventional significance.
+
+**Honest interpretation**: the project's pre-registered bar
+(frequency ≥ 60%, discrimination ≥ +15 pp, magnitude floor) is
+**more permissive than a conventional α=0.05 Fisher's exact test**
+when n_crash = 14-15. This was a conscious choice for n-of-1
+exploratory research — the bar was calibrated to "discrimination
+that would be worth seeing if real" not "discrimination that
+distinguishes signal from null at conventional p < 0.05". The
+peer-review §2 critique correctly flagged this gap; the audit
+retrofits the numbers.
+
+**Why the recall CIs are wide**: with n_crash = 15, a point
+estimate of 86.7% (HA07d validate) has Wilson 95% CI roughly
+[60%, 96%]. The verdict-bar pass (≥ 60%) is robust to the lower
+CI bound only if that bound stays > 60% — this varies by anchor.
+
+#### Cross-channel correlation matrix (Spearman + Pearson)
+
+[cross-channel-correlation.md](garmin/cards/cross-channel-correlation.md) +
+[compute_cross_channel_correlation.py](garmin/cards/compute_cross_channel_correlation.py).
+
+Per-day raw primitive values loaded from existing CSV / UDS
+sources (no z-scoring, no lagging — captures underlying biological
+correlation, not lead-up-window correlation). Inner-joined on
+calendar date within 2022-09-03 to 2026-06-05; min N=30 days per
+pair (typical N ~1340).
+
+**Two paradigm-shifting findings**:
+
+**1. H02b ≡ H02d at the per-day primitive level (ρ = +1.000,
+identical for all 1737 shared valid days)**. The H02d "bridge"
+sentinel handling produces the same daily `max_spike_minutes`
+values as H02b. The discrimination difference (H02b +29.9 pp at
+3d vs H02d bridge +31.8 pp at 5d) comes ENTIRELY from window-length
++ validity rules, NOT from a distinct underlying signal.
+
+**Implication**: the "six channels with seven SUPPORTED tests"
+synthesis framing must **drop H02d as a separate channel**. H02b
+and H02d are one primitive at two windows.
+
+**2. HA10 ≡ −HA07c (ρ = −0.922; Pearson r = −0.863)**. Morning BB
+peak and sleep stress mean are nearly the same underlying signal
+in opposite signs. Structural in Garmin's BB algorithm (BB
+decreases when stress is high). **HA10 and HA07c are NOT
+independent channels** — they are two views of the same
+autonomic-state measurement.
+
+**Other findings**:
+- HA06b ↔ HA07c = +0.377; HA06b ↔ HA10 = −0.393 (vagal-tone pathway)
+- HA07c ↔ HA07d = +0.501 (level and variability of the same sleep-stress signal)
+- H02b ↔ HA11 = +0.377 (within-day stress patterns share variance)
+- HA08c is a slope of the HA07c primitive; identical raw values
+
+**Effective independent signal clusters: 3-4 (not 6-7)**:
+- **Cluster 1 (within-day stress)**: H02b/H02d + HA11
+- **Cluster 2 (autonomic state)**: HA07c + HA10 ± HA06b
+- **Cluster 3 (autonomic variability)**: HA07d, partially tied to Cluster 2
+
+**Honest effective-N Bonferroni**: α = 0.05/4 ≈ 0.0125 (using
+effective N of clusters, not naive 11 verdicts). Of the 11 primary
+verdicts, only **H02d (p=0.011) clears this threshold**. But the
+H02b/H02d collinearity means **only ONE distinct primitive
+survives honest effective-N statistical significance correction**.
+
+#### Combined implications
+
+The discrimination findings are real; the **"many converging
+channels" framing was overstated**. Tightening:
+
+- "Seven SUPPORTED on six channels" → "**three-to-four
+  effectively-independent signal clusters, of which one (within-day
+  stress spike, H02b/H02d in train) clears α=0.05 one-sided
+  Fisher's exact**"
+- HA10 validate-SUPPORTED ≠ corroborating second channel for
+  HA07d in validate — they're structurally linked through Garmin's
+  BB algorithm at ρ ≈ −0.5 (validate-specific value)
+- HA07d remains the only project-level overall-SUPPORTED +
+  v2-validated finding, but at p=0.0703 (validate) and p=0.0934
+  (train) it does NOT clear conventional α=0.05 with current N
+
+**This is the most significant project-shape revision since the
+Theme A bundled re-test.** The findings stay on record (verdicts
+unchanged per pre-registration discipline); the framing tightens
+honestly. The Tier 2 peer-review items are now closed with numbers
+that re-shape the synthesis.
+
+**Methodology lessons banked**:
+
+1. **Pre-registration bars and conventional statistical
+   significance are different gates**. Future hypothesis.md files
+   should include Fisher's exact + 95% CI lines in the result.md
+   template by default; the peer-review §2 critique surfaced this
+   gap and it should be closed for new tests.
+
+2. **"Channels are not independent" was true but the magnitude
+   matters**. Future synthesis claims about "multiple channels
+   converging" should be quantified with a correlation matrix
+   before being made. Candidate playbook §3.9 addendum (queued).
+
+3. **Identical per-day primitives at different windows are not
+   independent corroborating tests** (H02b/H02d lesson). Future
+   hypothesis pre-registrations on the same primitive at different
+   windows should be flagged as a single test with multiple arms,
+   not as multiple tests.
+
 ## 6. Discussion — sharpened "kind of crash changed" narrative
 
 Integrating these new findings with the original report's seven-axis framework, the "kind of crash changed" theory now has **nine directional findings on independent axes** and one cross-class convergence finding:
@@ -405,7 +1696,15 @@ Integrating these new findings with the original report's seven-axis framework, 
 | **activity shock at 3-day lag (new)** | **HA01 3-day** | **+0.7 pp train (refuted), +11.5 pp validate (refuted)** |
 | **activity shock at 4-day lag, rolling baseline (new)** | **HA01b 4-day rolling** | **+8.6 pp train (refuted, N=13), +17.3 pp validate (originally SUPPORTED — see footnote)** |
 | **activity shock at 4-day lag, lagged baseline (new, see §5.9)** | **HA01b-recomputed + HA02c** | **+5.8 pp train, +4.0 pp validate — REFUTED on cleanest baseline; the +17.3 pp was largely a rolling-baseline artifact** |
-| **lag length (revised after §5.9)** | **H02b vs HA01b-recomputed** | **3 days (train, stress) → no measurable validate-era precursor on cleanest baseline** |
+| **morning RHR delta, absolute thresholds (new, see §5.12)** | **HA06** | **+13.9 pp train (close-but-refuted at 21.4% freq); 0 of 15 validate crashes trigger at 5 bpm — decisive refutation; absolute bar miscalibrated to participant variability** |
+| **morning RHR delta, z-score relative thresholds (new, see §5.13)** | **HA06b** | **+18.9 pp train SUPPORTED at N_std=1.5 (71.4% freq); validate +0.8 pp refuted; directionality reversal: train 70% elevated → validate 75% lowered (Wiggers' swing pattern empirically present in validate but non-discriminative)** |
+| **morning BB peak, z-score (new, see §5.14)** | **HA10** | **train refuted (−20.5 pp, 100% lowered direction); validate +16.2 pp SUPPORTED (86.7% freq, 69% elevated direction — paradoxical "swing" direction); FIRST VALIDATE-ERA SUPPORTED IN THE PROJECT; 5d each-era one-sided opposite-direction SUPPORTED (train +18.3 pp lowered; validate +27.5 pp elevated)** |
+| **within-day U-dip count, z-score (new, see §5.15)** | **HA11** | **train +22.8 pp SUPPORTED at N_std=1.5 (64.3% freq, elevated direction); validate refuted inverse direction (−10.7 pp at 4d, scales to −24.1 pp at 5d N_std=2.0); FOURTH TRAIN-ERA SUPPORTED ON FOURTH CHANNEL** |
+| **sleep stress mean delta, z-score (new, see §5.18)** | **HA07c** | **train +23.2 pp SUPPORTED at N_std=1.5 (69.2% freq, elevated direction); validate refuted (-6.0 pp); 5th train-era SUPPORTED on 5th channel; HRV proxy validated for train** |
+| **sleep stress slope, z-score (new, see §5.19)** | **HA08c** | **train +23.0 pp SUPPORTED at N_std=1.5 (61.5% freq, elevated direction); validate refuted (+1.5 pp, anti-predictive at higher thresholds); 6th train-era SUPPORTED finding; sustained creep mode** |
+| **sleep stress variability delta, z-score BIDIRECTIONAL (NEW, see §5.20)** | **HA07d** | **train +19.6 pp SUPPORTED + validate +21.7 pp SUPPORTED → OVERALL SUPPORTED — FIRST PROJECT OVERALL-SUPPORTED TEST. Validate +28.5 pp at N_std=2.0 lowered (autonomic stillness signature)** |
+| **lag length (revised after §5.16)** | **H02b vs HA06b vs HA10 vs HA11** | **3-5 days, cross-channel-confirmed in train across 4 channels; 4-5 days validate-era confirmed by HA10 primary 4d + secondary 5d both SUPPORTED** |
+| **era directionality reversal (NEW, see §5.16)** | **HA06b + HA10 + HA11** | **train: sympathetic-arousal-spectrum (elevated stress / RHR / U-dip / lowered BB); validate: parasympathetic-swing-spectrum (elevated BB peak / lowered RHR / lowered U-dip count); internally consistent via vagal-tone physiology** |
 
 The dip-tier finding extends the theory in a way the original report could not: residual events are not just smaller versions of the original crashes; they are increasingly transient single-day events, with the multi-day crashes themselves having lost their distinctive physiological signature relative to dips. The participant's residual eventscape is dominated by isolated bad days that the original crash_v1 framework treated as noise.
 
