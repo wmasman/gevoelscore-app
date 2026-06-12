@@ -710,6 +710,15 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["hr_longest_elevated_run_min_waking"] = ihs.get("hr_longest_elevated_run_min_waking") or ""
     row["hr_sustained_elevated_flag"] = ihs.get("hr_sustained_elevated_flag") or ""
     row["hr_area_above_daytime_baseline_waking"] = ihs.get("hr_area_above_daytime_baseline_waking") or ""
+    # A4 LC-era-only variants (window source restricted to dates >= LC_ERA_START
+    # = 2022-04-04). Prefer these for PEM-pacing analyses; see memory
+    # feedback_use_lagged_exertion_for_pem. Coverage effectively starts
+    # 2022-05-18 (when 14 LC-era days have entered the window).
+    row["hr_daytime_baseline_lagged_lcera"] = ihs.get("hr_daytime_baseline_lagged_lcera") or ""
+    row["hr_min_above_daytime_baseline_plus_20_waking_lcera"] = ihs.get("hr_min_above_daytime_baseline_plus_20_waking_lcera") or ""
+    row["hr_longest_elevated_run_min_waking_lcera"] = ihs.get("hr_longest_elevated_run_min_waking_lcera") or ""
+    row["hr_sustained_elevated_flag_lcera"] = ihs.get("hr_sustained_elevated_flag_lcera") or ""
+    row["hr_area_above_daytime_baseline_waking_lcera"] = ihs.get("hr_area_above_daytime_baseline_waking_lcera") or ""
     # C4 (unchanged from v1)
     row["stress_post_peak_drop_avg"] = ihs.get("stress_post_peak_drop_avg") or ""
     row["stress_post_peak_time_to_rest_min"] = ihs.get("stress_post_peak_time_to_rest_min") or ""

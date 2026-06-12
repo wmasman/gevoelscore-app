@@ -187,7 +187,7 @@ Conventions:
 | A1 | `resting_hr` deviation vs rolling 28d median | `is_crash` (peri-event window) | peri-event alignment at `t-3 … t+3`; stratify magnitude by `exertion_rank_composite_lagged_lcera` quartile | ✅ |
 | A2 | `\|resting_hr − rolling_28d_median\|` | `gevoelscore` | correlation; allow both-direction deviation | ✅ |
 | A3 | `resting_hr` (already sleep-derived per Garmin) | `is_crash` / `gevoelscore` | peri-event alignment from `t-2` | ✅ |
-| A4 | `hr_sustained_elevated_flag` (primary categorical), `hr_longest_elevated_run_min_waking` (primary continuous), `hr_area_above_daytime_baseline_waking` (magnitude × duration); covariates / transparency: `hr_median_waking`, `hr_daytime_baseline_lagged` | `is_crash` next-day / current-day | cross-tab on the flag; regression on the continuous variants; A4 baseline = `[d-90, d-30]` lagged median of `hr_median_waking` + 20 bpm offset (v3 locked 2026-06-12; v1's resting_hr + 15 threshold was superseded same day for being too lenient) | ✅ (operationalised Wave 4 v3) |
+| A4 | **for PEM-pacing**: `hr_sustained_elevated_flag_lcera` (primary categorical), `hr_longest_elevated_run_min_waking_lcera` (primary continuous), `hr_area_above_daytime_baseline_waking_lcera`. **for cross-era trajectory**: drop `_lcera` suffix. Transparency: `hr_median_waking`, `hr_daytime_baseline_lagged[_lcera]` | `is_crash` next-day / current-day | cross-tab on the flag; regression on the continuous variants; A4 baseline = `[d-90, d-30]` lagged median of `hr_median_waking` + 20 bpm offset (v3 locked 2026-06-12; v1's resting_hr + 15 threshold was superseded same day for being too lenient) | ✅ (operationalised Wave 4 v3) |
 
 ### B. HRV — ALL BLOCKED on this device
 

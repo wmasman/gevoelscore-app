@@ -14,6 +14,24 @@ Sleep-window vs waking-window: sleep windows come from sleepData.json
 sleep window are excluded from these metrics — both Wiggers A4 and
 C4 are about waking-period dynamics.
 
+### LC-era-only baseline variant (added 2026-06-12)
+
+The `_lcera` suffixed columns mirror the v3.2 LC-era pattern (see
+`11_compute_lagged_baseline.py` for the exertion equivalent). The
+rolling baseline window draws ONLY from dates `>= LC_ERA_START`
+(2022-04-04, locked in `build_unified_dataset.py`). The candidate
+day must itself be `>= LC_ERA_START` or the lcera output is NaN.
+
+Use for PEM-pacing analyses where pre-LC healthy-capacity days would
+mis-rank LC-era load. Use the non-_lcera columns for cross-era
+trajectory characterisation (e.g. citalopram-period HR climb visible
+in the slow drift of `hr_daytime_baseline_lagged`).
+
+Effective coverage starts ~2022-07-03 (90 days after LC_ERA_START)
+once 14+ in-LC-era days have accumulated in the window.
+
+### Main A4 spec
+
 A4 baseline (v3, locked 2026-06-12 — see evolution note below):
 - For each day d, `hr_median_waking[d]` = median HR across all waking
   samples that day. Stands as its own column — honest descriptor of
@@ -135,6 +153,13 @@ HR_BASELINE_MIN_VALID = 14            # A4: need at least N valid days in the wi
 HR_MEDIAN_MIN_SAMPLES = 120           # A4: need at least N waking HR samples to call hr_median_waking valid
 HR_ELEVATION_OFFSET_BPM = 20          # A4: "elevated" = HR > daytime baseline + this
 HR_SUSTAINED_MIN = 30                 # A4: "sustained" flag threshold
+
+# LC-era boundary for the `_lcera` baseline variant. Mirrors the
+# constant in build_unified_dataset.py + 11_compute_lagged_baseline.py.
+# The Monday after the Fietsweekend Ardennen (2022-04-01 → 2022-04-03),
+# the user's locked factual boundary for the post-corona / LC-symptom-
+# onset window.
+LC_ERA_START = date(2022, 4, 4)
 STRESS_REST_THRESHOLD = 25            # C4: "back to rest" = stress < this
 STRESS_HIGH_THRESHOLD = 75            # C4: "high stress" = stress > this
 STRESS_POST_PEAK_WINDOW_MIN = 60      # C4: minutes after peak for drop_avg
@@ -154,6 +179,12 @@ FIELDS = [
     "hr_longest_elevated_run_min_waking",
     "hr_sustained_elevated_flag",
     "hr_area_above_daytime_baseline_waking",
+    # A4 — LC-era-only variants (window source restricted to dates >= LC_ERA_START)
+    "hr_daytime_baseline_lagged_lcera",
+    "hr_min_above_daytime_baseline_plus_20_waking_lcera",
+    "hr_longest_elevated_run_min_waking_lcera",
+    "hr_sustained_elevated_flag_lcera",
+    "hr_area_above_daytime_baseline_waking_lcera",
     # C4 — stress decay (unchanged)
     "stress_post_peak_drop_avg",
     "stress_post_peak_time_to_rest_min",
@@ -216,23 +247,28 @@ def compute_hr_median_waking(samples: list[tuple[datetime, int]]) -> float | Non
     return statistics.median(s for _, s in samples)
 
 
-def compute_hr_metrics(samples: list[tuple[datetime, int]], baseline: float | None) -> dict:
+def compute_hr_metrics(
+    samples: list[tuple[datetime, int]],
+    baseline: float | None,
+    suffix: str = "",
+) -> dict:
     """A4 metrics from a day's waking HR samples + the personal daytime baseline.
 
     samples: list of (timestamp_utc, hr_bpm) for waking minutes only.
-    baseline: hr_daytime_baseline_28d for the day (lagged-trailing
-              28d median of hr_median_waking). None => all outputs NaN.
+    baseline: per-day reference; None => all outputs blank.
+    suffix: column-name suffix (e.g. "_lcera"). Empty for the all-era set.
 
     Per-minute binning: build a sparse set of 'was HR above threshold
     during this minute', then walk for longest consecutive run.
     Robust to varying sample cadence (15s / 30s / 1min).
     """
-    out = {
-        "hr_min_above_daytime_baseline_plus_20_waking": "",
-        "hr_longest_elevated_run_min_waking": "",
-        "hr_sustained_elevated_flag": "",
-        "hr_area_above_daytime_baseline_waking": "",
+    cols = {
+        "min": f"hr_min_above_daytime_baseline_plus_20_waking{suffix}",
+        "run": f"hr_longest_elevated_run_min_waking{suffix}",
+        "flag": f"hr_sustained_elevated_flag{suffix}",
+        "area": f"hr_area_above_daytime_baseline_waking{suffix}",
     }
+    out = {c: "" for c in cols.values()}
     if baseline is None or not samples:
         return out
     threshold = baseline + HR_ELEVATION_OFFSET_BPM
@@ -250,13 +286,13 @@ def compute_hr_metrics(samples: list[tuple[datetime, int]], baseline: float | No
             above_minutes.add(m)
             area += hr - baseline
 
-    out["hr_min_above_daytime_baseline_plus_20_waking"] = len(above_minutes)
-    out["hr_area_above_daytime_baseline_waking"] = round(area, 1)
+    out[cols["min"]] = len(above_minutes)
+    out[cols["area"]] = round(area, 1)
 
     # Longest consecutive-minute run
     if not above_minutes:
-        out["hr_longest_elevated_run_min_waking"] = 0
-        out["hr_sustained_elevated_flag"] = False
+        out[cols["run"]] = 0
+        out[cols["flag"]] = False
     else:
         sorted_min = sorted(above_minutes)
         longest = current = 1
@@ -269,14 +305,16 @@ def compute_hr_metrics(samples: list[tuple[datetime, int]], baseline: float | No
             else:
                 current = 1
             prev = m
-        out["hr_longest_elevated_run_min_waking"] = longest
-        out["hr_sustained_elevated_flag"] = longest >= HR_SUSTAINED_MIN
+        out[cols["run"]] = longest
+        out[cols["flag"]] = longest >= HR_SUSTAINED_MIN
 
     return out
 
 
 def compute_daytime_baselines(
     median_by_date: dict[date, float],
+    min_source_date: date | None = None,
+    min_candidate_date: date | None = None,
 ) -> dict[date, float]:
     """Two-pass rolling [d - 90, d - 30] median of per-day waking HR median.
 
@@ -286,6 +324,12 @@ def compute_daytime_baselines(
     v3.2 lagged exertion baseline, so the recent push window does not
     contaminate its own reference).
 
+    Optional restrictions for the `_lcera` variant:
+    - `min_source_date`: window values from dates earlier than this are
+      excluded. The baseline is then computed from in-LC-era days only.
+    - `min_candidate_date`: returns no entry for d earlier than this.
+      Equivalent to NaN-ing the lcera baseline on pre-LC-era days.
+
     Returns: dict mapping date -> baseline. Dates without enough valid
     history (HR_BASELINE_MIN_VALID days within the window) are omitted.
     """
@@ -294,10 +338,14 @@ def compute_daytime_baselines(
     if not dates_sorted:
         return out
     first_d = dates_sorted[0]
+    if min_candidate_date is not None and first_d < min_candidate_date:
+        first_d = min_candidate_date
     last_d = dates_sorted[-1] + timedelta(days=HR_BASELINE_WINDOW_LAG)
     d = first_d
     while d <= last_d:
         window_start = d - timedelta(days=HR_BASELINE_WINDOW_END)
+        if min_source_date is not None and window_start < min_source_date:
+            window_start = min_source_date
         window_end = d - timedelta(days=HR_BASELINE_WINDOW_LAG)  # exclusive upper
         window_vals: list[float] = []
         wd = window_start
@@ -475,6 +523,16 @@ def main() -> int:
     print(f"  {len(median_by_date)} dates with valid hr_median_waking", file=sys.stderr)
     baseline_by_date = compute_daytime_baselines(median_by_date)
     print(f"  {len(baseline_by_date)} dates with valid hr_daytime_baseline_lagged", file=sys.stderr)
+    baseline_by_date_lcera = compute_daytime_baselines(
+        median_by_date,
+        min_source_date=LC_ERA_START,
+        min_candidate_date=LC_ERA_START,
+    )
+    print(
+        f"  {len(baseline_by_date_lcera)} dates with valid hr_daytime_baseline_lagged_lcera"
+        f" (LC_ERA_START={LC_ERA_START.isoformat()})",
+        file=sys.stderr,
+    )
 
     # Emit per-day CSV
     all_dates = sorted(set(hr_by_date.keys()) | set(stress_by_date.keys()))
@@ -489,6 +547,11 @@ def main() -> int:
             bl = baseline_by_date.get(d)
             row["hr_daytime_baseline_lagged"] = round(bl, 1) if bl is not None else ""
             row.update(compute_hr_metrics(hr_by_date.get(d, []), bl))
+            bl_lcera = baseline_by_date_lcera.get(d)
+            row["hr_daytime_baseline_lagged_lcera"] = (
+                round(bl_lcera, 1) if bl_lcera is not None else ""
+            )
+            row.update(compute_hr_metrics(hr_by_date.get(d, []), bl_lcera, suffix="_lcera"))
             row.update(compute_stress_metrics(stress_by_date.get(d, [])))
             w.writerow(row)
     print(f"\nWrote {len(all_dates)} rows to {OUT_CSV}", file=sys.stderr)
