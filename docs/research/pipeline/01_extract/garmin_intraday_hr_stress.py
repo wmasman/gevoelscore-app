@@ -1,6 +1,6 @@
 """Extract per-day intraday HR + stress summaries from monitoring_b FIT files.
 
-Wave 4: builds per-day aggregates supporting Wiggers A4 (sustained
+Wave 4: builds per-day aggregates operationalising Wiggers A4 (sustained
 multi-hour HR elevation) and C4 (stress fails to drop during rest
 after overexertion). Both signals share the same source file
 (monitoring_b), so one walk produces both.
@@ -14,25 +14,61 @@ Sleep-window vs waking-window: sleep windows come from sleepData.json
 sleep window are excluded from these metrics — both Wiggers A4 and
 C4 are about waking-period dynamics.
 
-Baselines:
-- HR baseline = per-day `resting_hr` from daily_uds.csv (Garmin's
-  algorithmic RHR). A4 threshold = `resting_hr + 15 bpm`.
-- Stress baseline = Garmin's "rest" zone cutoff of 25 (matches the
-  Garmin app's colour scheme). C4 uses both "rest" (< 25) and
-  "high" (> 75; matches existing H02b threshold) cutoffs.
+A4 baseline (v3, locked 2026-06-12 — see evolution note below):
+- For each day d, `hr_median_waking[d]` = median HR across all waking
+  samples that day. Stands as its own column — honest descriptor of
+  where the user's daytime HR actually sat (the "missing" middle bucket
+  between sleep-derived `resting_hr` and noisy peak `max_hr`).
+- `hr_daytime_baseline_lagged[d]` = median of `hr_median_waking` over
+  the window `[d - 90, d - 30]` — same shape as the v3.2 lagged
+  exertion baseline (see memory feedback_use_lagged_exertion_for_pem
+  and severity_spec.md § Lagged baseline). The lag-30 buffer ensures
+  the recent push window does not contaminate its own reference.
+- Threshold for "elevated" = `hr_daytime_baseline_lagged[d] + 20 bpm`.
+  Offset chosen to clear the natural spread of typical daytime HR
+  (sitting / standing / light household activity); +15 was the v2
+  candidate but the reviewer flagged that a daytime baseline already
+  embeds those activities into the reference, so a slightly larger
+  offset is appropriate.
+
+Evolution:
+- v1 (commit 98f416b): threshold = `resting_hr + 15`. Used Garmin's
+  sleep-derived RHR as the reference. Any waking activity cleared
+  it; median day had 459 elevated minutes and 31-min longest run,
+  tripping `hr_sustained_elevated_flag=True` on the median day. The
+  flag separated nothing.
+- v2 (uncommitted, this file's history briefly): switched to
+  `hr_daytime_baseline_28d + 15` (28d trailing). Direction-of-travel
+  correct; window and offset suboptimal per reviewer:
+  - window of 28d trailing differs from v3.2's `[d-90, d-30]`
+    lagged pattern; methodological inconsistency
+  - offset +15 may be too lenient given daytime baseline already
+    accounts for "where you usually are"
+- v3 (this file, locked 2026-06-12): `[d-90, d-30]` window +
+  `+20` offset. Matches v3.2 discipline and reviewer recommendation.
+
+C4 baselines (unchanged from v1):
+- Stress "rest" zone cutoff of 25 (Garmin app colour scheme).
+- Stress "high" zone cutoff of 75 (matches existing H02b threshold
+  used by daily_max_spike.csv).
 
 Output: $GEVOELSCORE_DATA_PATH/processed/garmin/intraday_hr_stress_daily.csv
 
 Coverage: from 2021-08-16 (earliest FIT file), per the locked
-re-extract convention.
+re-extract convention. A4 columns NaN until 14 valid `hr_median_waking`
+days have accumulated within the `[d-90, d-30]` lagged window —
+roughly the first ~3 months of coverage will lack A4 columns
+(`hr_daytime_baseline_lagged` only valid from ~2021-11-15 onward).
 
 Columns:
-- A4 (4 HR cols):
-  - hr_min_above_baseline_plus_15_waking
+- A4 (6 HR cols):
+  - hr_median_waking                                <- transparency descriptor
+  - hr_daytime_baseline_lagged                      <- transparency: [d-90, d-30] rolling median
+  - hr_min_above_daytime_baseline_plus_20_waking
   - hr_longest_elevated_run_min_waking
   - hr_sustained_elevated_flag
-  - hr_area_above_baseline_waking
-- C4 (4 stress cols):
+  - hr_area_above_daytime_baseline_waking
+- C4 (4 stress cols, unchanged from v1):
   - stress_post_peak_drop_avg
   - stress_post_peak_time_to_rest_min
   - stress_high_duration_min
@@ -91,8 +127,13 @@ CLASSIFIED_CSV = DATA_ROOT / "analyses" / "garmin_exploration" / "fit_files_clas
 DAILY_UDS = DATA_ROOT / "processed" / "garmin" / "daily_uds.csv"
 OUT_CSV = DATA_ROOT / "processed" / "garmin" / "intraday_hr_stress_daily.csv"
 
-# --- Thresholds (Wave 4 v1; tunable, document if changed) ---
-HR_BASELINE_OFFSET_BPM = 15           # A4: "elevated" = HR > resting + this
+# --- Thresholds (Wave 4 v3 2026-06-12; tunable, document if changed) ---
+# Window matches v3.2 lagged exertion convention: [d - WINDOW_END, d - WINDOW_LAG]
+HR_BASELINE_WINDOW_END = 90           # A4: trailing edge of personal-baseline window (90 days back)
+HR_BASELINE_WINDOW_LAG = 30           # A4: leading edge (30-day lag, excludes recent push period)
+HR_BASELINE_MIN_VALID = 14            # A4: need at least N valid days in the window to call baseline valid
+HR_MEDIAN_MIN_SAMPLES = 120           # A4: need at least N waking HR samples to call hr_median_waking valid
+HR_ELEVATION_OFFSET_BPM = 20          # A4: "elevated" = HR > daytime baseline + this
 HR_SUSTAINED_MIN = 30                 # A4: "sustained" flag threshold
 STRESS_REST_THRESHOLD = 25            # C4: "back to rest" = stress < this
 STRESS_HIGH_THRESHOLD = 75            # C4: "high stress" = stress > this
@@ -106,12 +147,14 @@ MINUTES_PER_DAY = 24 * 60
 
 FIELDS = [
     "date",
-    # A4 — HR sustained elevation
-    "hr_min_above_baseline_plus_15_waking",
+    # A4 — HR sustained elevation (v3: [d-90, d-30] lagged personal daytime baseline + offset 20)
+    "hr_median_waking",                          # transparency: per-day median waking HR
+    "hr_daytime_baseline_lagged",                # transparency: [d-90, d-30] rolling-median baseline
+    "hr_min_above_daytime_baseline_plus_20_waking",
     "hr_longest_elevated_run_min_waking",
     "hr_sustained_elevated_flag",
-    "hr_area_above_baseline_waking",
-    # C4 — stress decay
+    "hr_area_above_daytime_baseline_waking",
+    # C4 — stress decay (unchanged)
     "stress_post_peak_drop_avg",
     "stress_post_peak_time_to_rest_min",
     "stress_high_duration_min",
@@ -152,22 +195,6 @@ def load_sleep_windows() -> dict[date, tuple[datetime, datetime]]:
     return out
 
 
-def load_resting_hr_by_date() -> dict[date, float]:
-    """Load per-day resting_hr from daily_uds.csv for A4 baseline."""
-    if not DAILY_UDS.exists():
-        raise SystemExit(f"daily_uds.csv not found: {DAILY_UDS}")
-    out: dict[date, float] = {}
-    for r in csv.DictReader(DAILY_UDS.open(encoding="utf-8")):
-        try:
-            d = date.fromisoformat(r["date"])
-            v = r.get("resting_hr", "")
-            if v not in ("", None):
-                out[d] = float(v)
-        except (ValueError, TypeError, KeyError):
-            continue
-    return out
-
-
 def in_sleep_window(ts: datetime, sleep_windows: dict[date, tuple[datetime, datetime]]) -> bool:
     """Is ts inside ANY sleep window (current or next-day's)?"""
     ts_date = ts.date()
@@ -178,30 +205,40 @@ def in_sleep_window(ts: datetime, sleep_windows: dict[date, tuple[datetime, date
     return False
 
 
-def compute_hr_metrics(samples: list[tuple[datetime, int]], resting_hr: float | None) -> dict:
-    """A4 metrics from a day's waking HR samples.
+def compute_hr_median_waking(samples: list[tuple[datetime, int]]) -> float | None:
+    """First-pass per-day median waking HR.
+
+    Returns None if fewer than HR_MEDIAN_MIN_SAMPLES samples were
+    collected (insufficient evidence to claim a reliable daily median).
+    """
+    if len(samples) < HR_MEDIAN_MIN_SAMPLES:
+        return None
+    return statistics.median(s for _, s in samples)
+
+
+def compute_hr_metrics(samples: list[tuple[datetime, int]], baseline: float | None) -> dict:
+    """A4 metrics from a day's waking HR samples + the personal daytime baseline.
 
     samples: list of (timestamp_utc, hr_bpm) for waking minutes only.
-    resting_hr: per-day Garmin RHR; None => all outputs NaN.
+    baseline: hr_daytime_baseline_28d for the day (lagged-trailing
+              28d median of hr_median_waking). None => all outputs NaN.
 
-    Per-minute binning: build a 1440-element array of 'was HR above
-    threshold during this minute', then walk for longest consecutive
-    run. Robust to varying sample cadence.
+    Per-minute binning: build a sparse set of 'was HR above threshold
+    during this minute', then walk for longest consecutive run.
+    Robust to varying sample cadence (15s / 30s / 1min).
     """
     out = {
-        "hr_min_above_baseline_plus_15_waking": "",
+        "hr_min_above_daytime_baseline_plus_20_waking": "",
         "hr_longest_elevated_run_min_waking": "",
         "hr_sustained_elevated_flag": "",
-        "hr_area_above_baseline_waking": "",
+        "hr_area_above_daytime_baseline_waking": "",
     }
-    if resting_hr is None or not samples:
+    if baseline is None or not samples:
         return out
-    threshold = resting_hr + HR_BASELINE_OFFSET_BPM
+    threshold = baseline + HR_ELEVATION_OFFSET_BPM
 
-    # Per-minute bins keyed by minute-of-day. above[m] = max HR seen
-    # in minute m (None if no sample).
     above_minutes: set[int] = set()
-    area = 0.0  # sum of (hr - resting_hr) over above-threshold minutes
+    area = 0.0  # sum of (hr - baseline) over above-threshold minutes
     minute_max_hr: dict[int, int] = {}
     for ts, hr in samples:
         minute = ts.hour * 60 + ts.minute
@@ -211,10 +248,10 @@ def compute_hr_metrics(samples: list[tuple[datetime, int]], resting_hr: float | 
     for m, hr in minute_max_hr.items():
         if hr > threshold:
             above_minutes.add(m)
-            area += hr - resting_hr
+            area += hr - baseline
 
-    out["hr_min_above_baseline_plus_15_waking"] = len(above_minutes)
-    out["hr_area_above_baseline_waking"] = round(area, 1)
+    out["hr_min_above_daytime_baseline_plus_20_waking"] = len(above_minutes)
+    out["hr_area_above_daytime_baseline_waking"] = round(area, 1)
 
     # Longest consecutive-minute run
     if not above_minutes:
@@ -235,6 +272,43 @@ def compute_hr_metrics(samples: list[tuple[datetime, int]], resting_hr: float | 
         out["hr_longest_elevated_run_min_waking"] = longest
         out["hr_sustained_elevated_flag"] = longest >= HR_SUSTAINED_MIN
 
+    return out
+
+
+def compute_daytime_baselines(
+    median_by_date: dict[date, float],
+) -> dict[date, float]:
+    """Two-pass rolling [d - 90, d - 30] median of per-day waking HR median.
+
+    For each date d, baseline = median of `median_by_date` values over
+    [d - HR_BASELINE_WINDOW_END, d - HR_BASELINE_WINDOW_LAG)
+    (60 days of history ending 30 days BEFORE d — same shape as the
+    v3.2 lagged exertion baseline, so the recent push window does not
+    contaminate its own reference).
+
+    Returns: dict mapping date -> baseline. Dates without enough valid
+    history (HR_BASELINE_MIN_VALID days within the window) are omitted.
+    """
+    out: dict[date, float] = {}
+    dates_sorted = sorted(median_by_date.keys())
+    if not dates_sorted:
+        return out
+    first_d = dates_sorted[0]
+    last_d = dates_sorted[-1] + timedelta(days=HR_BASELINE_WINDOW_LAG)
+    d = first_d
+    while d <= last_d:
+        window_start = d - timedelta(days=HR_BASELINE_WINDOW_END)
+        window_end = d - timedelta(days=HR_BASELINE_WINDOW_LAG)  # exclusive upper
+        window_vals: list[float] = []
+        wd = window_start
+        while wd < window_end:
+            v = median_by_date.get(wd)
+            if v is not None:
+                window_vals.append(v)
+            wd += timedelta(days=1)
+        if len(window_vals) >= HR_BASELINE_MIN_VALID:
+            out[d] = statistics.median(window_vals)
+        d += timedelta(days=1)
     return out
 
 
@@ -304,10 +378,6 @@ def main() -> int:
     print("Loading sleep windows from sleepData.json...", file=sys.stderr)
     sleep_windows = load_sleep_windows()
     print(f"  {len(sleep_windows)} dates with sleep windows", file=sys.stderr)
-
-    print("Loading per-day resting_hr from daily_uds.csv...", file=sys.stderr)
-    resting_by_date = load_resting_hr_by_date()
-    print(f"  {len(resting_by_date)} dates with resting_hr", file=sys.stderr)
 
     with CLASSIFIED_CSV.open(encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh))
@@ -391,6 +461,21 @@ def main() -> int:
     print(f"parsed waking HR samples for {len(hr_by_date)} dates", file=sys.stderr)
     print(f"parsed waking stress samples for {len(stress_by_date)} dates", file=sys.stderr)
 
+    # Pass 2: per-day median + rolling [d-90, d-30] lagged baseline
+    print(
+        f"computing hr_median_waking + [d-{HR_BASELINE_WINDOW_END}, d-{HR_BASELINE_WINDOW_LAG}] lagged baseline "
+        f"(min {HR_MEDIAN_MIN_SAMPLES} samples/day, min {HR_BASELINE_MIN_VALID} valid days in window)...",
+        file=sys.stderr,
+    )
+    median_by_date: dict[date, float] = {}
+    for d in hr_by_date:
+        m = compute_hr_median_waking(hr_by_date[d])
+        if m is not None:
+            median_by_date[d] = m
+    print(f"  {len(median_by_date)} dates with valid hr_median_waking", file=sys.stderr)
+    baseline_by_date = compute_daytime_baselines(median_by_date)
+    print(f"  {len(baseline_by_date)} dates with valid hr_daytime_baseline_lagged", file=sys.stderr)
+
     # Emit per-day CSV
     all_dates = sorted(set(hr_by_date.keys()) | set(stress_by_date.keys()))
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
@@ -399,7 +484,11 @@ def main() -> int:
         w.writeheader()
         for d in all_dates:
             row = {"date": d.isoformat()}
-            row.update(compute_hr_metrics(hr_by_date.get(d, []), resting_by_date.get(d)))
+            m = median_by_date.get(d)
+            row["hr_median_waking"] = round(m, 1) if m is not None else ""
+            bl = baseline_by_date.get(d)
+            row["hr_daytime_baseline_lagged"] = round(bl, 1) if bl is not None else ""
+            row.update(compute_hr_metrics(hr_by_date.get(d, []), bl))
             row.update(compute_stress_metrics(stress_by_date.get(d, [])))
             w.writerow(row)
     print(f"\nWrote {len(all_dates)} rows to {OUT_CSV}", file=sys.stderr)

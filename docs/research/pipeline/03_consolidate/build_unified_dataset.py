@@ -701,10 +701,16 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     # (sleep-window samples are excluded — sleep dynamics are covered
     # by the existing stress_mean_sleep block).
     ihs = intraday_hr_stress.get(d, {})
-    row["hr_min_above_baseline_plus_15_waking"] = ihs.get("hr_min_above_baseline_plus_15_waking") or ""
+    # A4 (v3 2026-06-12): personal daytime baseline (lagged [d-90, d-30])
+    # + offset 20. See garmin_intraday_hr_stress.py docstring for the
+    # v1 -> v2 -> v3 evolution and reviewer rationale.
+    row["hr_median_waking"] = ihs.get("hr_median_waking") or ""
+    row["hr_daytime_baseline_lagged"] = ihs.get("hr_daytime_baseline_lagged") or ""
+    row["hr_min_above_daytime_baseline_plus_20_waking"] = ihs.get("hr_min_above_daytime_baseline_plus_20_waking") or ""
     row["hr_longest_elevated_run_min_waking"] = ihs.get("hr_longest_elevated_run_min_waking") or ""
     row["hr_sustained_elevated_flag"] = ihs.get("hr_sustained_elevated_flag") or ""
-    row["hr_area_above_baseline_waking"] = ihs.get("hr_area_above_baseline_waking") or ""
+    row["hr_area_above_daytime_baseline_waking"] = ihs.get("hr_area_above_daytime_baseline_waking") or ""
+    # C4 (unchanged from v1)
     row["stress_post_peak_drop_avg"] = ihs.get("stress_post_peak_drop_avg") or ""
     row["stress_post_peak_time_to_rest_min"] = ihs.get("stress_post_peak_time_to_rest_min") or ""
     row["stress_high_duration_min"] = ihs.get("stress_high_duration_min") or ""

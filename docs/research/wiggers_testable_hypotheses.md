@@ -34,7 +34,7 @@ The handleiding is a collection of *lotgenoten* observations and n-of-1 generali
 | Bedtime inconsistency (F4) | `bedtime_std_7d` | hours |
 | Respiration during sleep + waking (G1) | `respiration_avg_sleep`, `respiration_max_sleep`; `respiration_avg_waking`, `respiration_max_24h` | breaths/min |
 | SpO2 (G4, deprioritised) | `spo2_avg_sleep`, `spo2_min_sleep`, `spo2_avg_24h`, `spo2_min_24h` | percent |
-| **A4 — sustained HR elevation operationalised** | `hr_sustained_elevated_flag` (bool, longest run ≥ 30 min above `resting_hr + 15`), `hr_longest_elevated_run_min_waking` (minutes), `hr_area_above_baseline_waking` (bpm⋅min) | per-minute bins over waking window only |
+| **A4 — sustained HR elevation operationalised** | `hr_sustained_elevated_flag` (bool, longest run ≥ 30 min above `hr_daytime_baseline_lagged + 20` bpm), `hr_longest_elevated_run_min_waking` (minutes), `hr_area_above_daytime_baseline_waking` (bpm⋅min), plus transparency cols `hr_median_waking` + `hr_daytime_baseline_lagged` | per-minute bins over waking window only; baseline = lagged `[d-90, d-30]` median of `hr_median_waking` (same shape as v3.2 lagged exertion) |
 | **C4 — stress-decay-after-peak operationalised** | `stress_post_peak_time_to_rest_min` (primary; NaN = "did not return to rest that day" = C4-positive), `stress_post_peak_drop_avg`, `stress_recovery_pct_within_2h`, `stress_high_duration_min` | minutes / Garmin 0-100 |
 
 **HRV-dependent hypotheses are hardware-blocked on this dataset.** The Forerunner 245 (Elevate V3 sensor) does not produce nightly HRV Status; FIT sleep type-49 files store the relevant data in undocumented `unknown_273/274/276` messages with no community decode. **B1, B2, B3, B4, B5** (all of category B), and the **HRV-dependent parts of H1, H2, H3, H4, H5**, cannot be tested on this corpus. See [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md) § HRV — hardware blocked. Only a device upgrade (Forerunner 265+, fēnix 7, etc.) would unblock these going forward; existing data remains untestable for HRV.
@@ -187,7 +187,7 @@ Conventions:
 | A1 | `resting_hr` deviation vs rolling 28d median | `is_crash` (peri-event window) | peri-event alignment at `t-3 … t+3`; stratify magnitude by `exertion_rank_composite_lagged_lcera` quartile | ✅ |
 | A2 | `\|resting_hr − rolling_28d_median\|` | `gevoelscore` | correlation; allow both-direction deviation | ✅ |
 | A3 | `resting_hr` (already sleep-derived per Garmin) | `is_crash` / `gevoelscore` | peri-event alignment from `t-2` | ✅ |
-| A4 | `hr_sustained_elevated_flag` (primary), `hr_longest_elevated_run_min_waking` (continuous), `hr_area_above_baseline_waking` (magnitude × duration) | `is_crash` next-day / current-day | cross-tab on the flag; regression on the continuous variants | ✅ (operationalised Wave 4) |
+| A4 | `hr_sustained_elevated_flag` (primary categorical), `hr_longest_elevated_run_min_waking` (primary continuous), `hr_area_above_daytime_baseline_waking` (magnitude × duration); covariates / transparency: `hr_median_waking`, `hr_daytime_baseline_lagged` | `is_crash` next-day / current-day | cross-tab on the flag; regression on the continuous variants; A4 baseline = `[d-90, d-30]` lagged median of `hr_median_waking` + 20 bpm offset (v3 locked 2026-06-12; v1's resting_hr + 15 threshold was superseded same day for being too lenient) | ✅ (operationalised Wave 4 v3) |
 
 ### B. HRV — ALL BLOCKED on this device
 
