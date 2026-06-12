@@ -113,11 +113,6 @@ ALLOWLISTED_PATHS = {
     "docs/research/analyses/reviews/reintegration_gaps_review_instructions.md",
     # This script itself
     "docs/research/pipeline/audit_for_publication.py",
-    # TODO(queued): merge_calendar_triage.py contains HAND_CURATED_SPANS
-    # with real names baked into the script. Should be refactored to read
-    # external YAML at $DATA/raw/directus_exports/hand_curated_spans.yaml.
-    # Until then, allowlisted so the audit stays runnable.
-    "docs/research/pipeline/03_consolidate/merge_calendar_triage.py",
     # Docstring-only name references (umbrella period labels documented
     # in comments for readability)
     "docs/research/pipeline/03_consolidate/analyze_event_crash_correlation.py",

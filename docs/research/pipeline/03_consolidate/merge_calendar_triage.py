@@ -1,9 +1,9 @@
 """Merge calendar triage CSV into annotations.yaml.
 
-Reads the user-triaged calendar CSV (keep_yn=y rows + per-event
-cognitive/physical/emotional load 1-3 + notes), applies the
-agreed load to category mapping, deduplicates against existing
-hand-curated entries, and writes a clean chronological
+Reads the user-triaged calendar CSVs (keep_yn=y rows + per-event
+cognitive/physical/emotional load 1-3 + notes) plus the hand-curated
+narrative spans (external YAML), applies the agreed load to category
+mapping, deduplicates, and writes a clean chronological
 annotations.yaml.
 
 Load to category mapping:
@@ -11,266 +11,97 @@ Load to category mapping:
 - max load = 2                       -> levensgebeurtenis
 - all loads empty or 1               -> levensgebeurtenis (subtle)
 
-Triage CSVs supported (drop in additional files when other years are
-triaged):
-- data/calendar_2022_triage.csv
+Inputs (all external; resolved against $GEVOELSCORE_DATA_PATH):
+- reviews/calendar_*_triage.csv       (user-triaged calendar feed)
+- processed/manual_triage/triage_events.csv  (notes-triage-derived events)
+- raw/directus_exports/hand_curated_spans.yaml  (PII narrative spans;
+  markers + spans_pre_2022 + spans_post_2022)
+
+Output:
+- raw/directus_exports/annotations.yaml
 """
 from __future__ import annotations
 
 import csv
+import os
 import re
-import unicodedata
 from datetime import date
 from pathlib import Path
 
 import yaml
 
 HERE = Path(__file__).resolve().parent
-DATA = HERE.parent / "data"
-ANNOTATIONS = DATA / "annotations.yaml"
-TRIAGE_CSVS = sorted(DATA.glob("calendar_*_triage.csv"))
+# docs/research/pipeline/03_consolidate -> ... -> repo root
+REPO_ROOT = HERE.parent.parent.parent.parent
 
 
-# ---- Hand-curated annotations that pre-date / sit outside calendar coverage.
-HAND_CURATED_MARKERS = [
-    {
-        "date": "2022-05-06",
-        "label": "Long COVID diagnose",
-        "category": "medical",
-        "note": "Huisarts stelt long covid vast.",
-    },
-]
+def _load_env_file(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
 
-HAND_CURATED_SPANS = [
-    {
-        "start": "2021-08-16",
-        "end": "2022-03-22",
-        "label": "Training-periode (hardlopen + fietsen, voorbereiding Ardennen)",
-        "category": "levensgebeurtenis",
-        "note": "Garmin gekocht voor trainings-tracking. Doel: fietsweekend Ardennen 01-04-2022. Activities-data: gemiddeld 130-280 min/week running + cycling, met initiele piek aug 2021 (W33-W35: 573/162/893 min) en daarna stabiel. Week 12 (21-27 mrt) heeft 0 minuten training, consistent met corona-ziek-week.",
-    },
-    {
-        "start": "2022-03-23",
-        "end": "2022-03-30",
-        "label": "Corona-infectie",
-        "category": "trigger",
-        "note": "Een aantal dagen op bed met koorts. Donderdag 31-03 voelt over de infectie heen. Trigger voor long-covid onset. Bevestigd door 0 training-activities in week 12.",
-    },
-    {
-        "start": "2022-04-01",
-        "end": "2022-04-03",
-        "label": "Fietsweekend Ardennen",
-        "category": "high_intensity",
-        "note": "Weekendje fietsen met vrienden, net een dikke week na corona. Niet veel op de fiets gezeten. Eerste nacht heel diep geslapen, herken ik nu als diepe long-covid-slaap bij overexertion.",
-    },
-    {
-        "start": "2022-04-28",
-        "end": "2022-05-02",
-        "label": "Zuna periode (high intensity)",
-        "category": "high_intensity",
-        "note": "In Zuna; merkt dat er echt iets mis is, slaapt superveel, eerste herkenbare grote crash volgde (zie crash-band uit research-data).",
-    },
-    {
-        "start": "2022-05-15",
-        "end": "2022-05-21",
-        "label": "Jantine op Bonaire (alleen thuis met zorgtaken)",
-        "category": "levensgebeurtenis",
-        "note": "Jantine op Bonaire; veel zelf in huis doen. Mogelijk hulp van Jantines ouders (TODO: bevestigen). Pre-2022-06-17 dus niet uit calendar te halen.",
-    },
-    {
-        "start": "2022-06-04",
-        "end": "2022-06-06",
-        "label": "Pinkster campinglife 2022",
-        "category": "high_intensity",
-        "note": "Door gebruiker bevestigd; pinksterzondag 2022 was 5 juni. Niet uit calendar (coverage start 17-06).",
-    },
-    {
-        "start": "2022-07-08",
-        "end": "2022-07-10",
-        "label": "Zuna feest juli 2022",
-        "category": "high_intensity",
-        "note": "Door gebruiker bevestigd. Geen specifieke calendar-entry teruggevonden.",
-    },
-]
 
-# Recurring high-intensity events found earlier in calendar (>2022).
-# Plus narrative umbrella periods (long levensgebeurtenis spans that
-# contextualise dense clusters of individual events within them).
-HAND_CURATED_SPANS_POST_2022 = [
-    # ------------------------------------------------------------------
-    # 2024 umbrella narrative periods
-    # ------------------------------------------------------------------
-    {
-        "start": "2024-04-01",
-        "end": "2024-11-08",
-        "label": "Mirjam-periode (Angela tensions + relatiecoach met Jantine)",
-        "category": "levensgebeurtenis",
-        "note": "Umbrella-periode. Aanloop: oplopende spanningen met Angela (schoonmoeder), wat ook de relatie met Jantine raakte. Vanaf 24-06 vier sessies relatiecoach Mirjam (zie individuele entries). Belangrijk maar zwaar. Einde met de moeilijke sessie samen met Angela 08-11-2024.",
-    },
-    {
-        "start": "2024-04-01",
-        "end": "2024-07-18",
-        "label": "Werk-transitie (afbouw + afscheid)",
-        "category": "levensgebeurtenis",
-        "note": "Umbrella-periode. Voorjaar 2024 aanloop. Spullen inleveren op kantoor Utrecht 27-06. Afscheid op kantoor (Mark 60) 18-07.",
-    },
-    # ------------------------------------------------------------------
-    # 2025-2026 umbrella narrative periods (work + family processes)
-    # ------------------------------------------------------------------
-    {
-        "start": "2025-09-17",
-        "end": "2026-06-05",  # ongoing; capped at timeline end
-        "label": "Werk-reintegratietraject met Wilco (ongoing)",
-        "category": "levensgebeurtenis",
-        "note": "Umbrella-periode. Formeel reintegratie-traject naar werk via Wilco. Gestart met kennismaking 17-09-2025; meerdere afspraken sep 2025 t/m juni 2026. Ongoing - einddatum hier gezet op timeline-einde, pas aan wanneer het traject afsluit.",
-    },
-    {
-        "start": "2025-06-23",
-        "end": "2026-05-04",
-        "label": "TVO/TVOO project (jun 2025 -> mei 2026 afronding)",
-        "category": "levensgebeurtenis",
-        "note": "Umbrella-periode. Eigen project rond TVO/TVOO. Eerste TVO-event 23-06-2025 (Koffie met Ria). Officiele lancering 12-02-2026. Afronding ~04-05-2026 ('laatste gesprek met eric voordat tvoo/tvo...').",
-    },
-    {
-        "start": "2026-03-10",
-        "end": "2026-08-31",
-        "label": "Breinvoeding-interventie (6 sessies, mar -> ~aug 2026)",
-        "category": "interventie",
-        "note": "Formele Breinvoeding-interventie. Eerste consult 10-03-2026. Reeks van 6 sessies; eind-datum schatting op basis van ~3 weken tussen sessies. Pas aan zodra echt aantal/laatste sessie bekend.",
-    },
-    {
-        "start": "2026-04-20",
-        "end": "2026-06-05",  # ongoing
-        "label": "Gezinscoaching / Groeihelden + Opvoedcoach (ongoing)",
-        "category": "levensgebeurtenis",
-        "note": "Umbrella-periode. Gestart met Start Groeihelden Kindercoaching intake 20-04-2026, plus Opvoedcoach-sessies voor Willem & Jantine als ouders vanaf 11-05-2026. Combineert beide coaching-strands. Ongoing - einddatum hier gezet op timeline-einde.",
-    },
-    # ------------------------------------------------------------------
-    # CPAP-interventie (uit day_entries notes geverifieerd, jan-feb 2024)
-    # ------------------------------------------------------------------
-    {
-        "start": "2024-01-10",
-        "end": "2024-02-28",
-        "label": "CPAP-interventie",
-        "category": "interventie",
-        "note": "Uit day_entries notes geverifieerd. 10-01-2024 instructie cpap-apparaat; 11-01-2024 eerste nacht; tot 31-01-2024 dagelijks gebruik ('eindelijk te wennen'). Daarna geen verdere vermelding in notes. Einddatum schatting eind feb 2024. NB: was niet jan-mar 2025 zoals eerder geschat.",
-    },
-    # ------------------------------------------------------------------
-    # Naproxen-interventie (uit day_entries notes; start 2025-03-27, ongoing)
-    # ------------------------------------------------------------------
-    {
-        "start": "2025-03-27",
-        "end": "2026-06-10",  # ongoing; capped at current timeline end
-        "label": "Naproxen-interventie (ongoing, ad-hoc gebruik bij hoofdpijn)",
-        "category": "interventie",
-        "note": "Eerste vermelding 27-03-2025: 'voor het eerst naproxen geslikt tegen de hoofdpijn. Eerder niet gedaan'. Daarna 19 vermeldingen verspreid t/m mei 2026 (clusters: mar-apr 2025, jul 2025, mei 2026). Ongoing intervention; per-day usage tagged separately via v2 dictionary 'medicatie' category. Niet een continue dagelijkse medicatie maar ad-hoc bij symptomen.",
-    },
-    # ------------------------------------------------------------------
-    # Citalopram-traject (uit day_entries notes geverifieerd)
-    # Een umbrella + 6 dose-fase sub-spans, allemaal interventie.
-    # ------------------------------------------------------------------
-    {
-        "start": "2024-04-09",
-        "end": "2026-06-05",  # ongoing; capped at timeline end
-        "label": "Citalopram-traject (umbrella, 2024-04 -> ongoing)",
-        "category": "interventie",
-        "note": "Umbrella over het hele Citalopram-traject. Start 09-04-2024 (10mg, na huisarts-bezoek 08-04). Plateau 30mg ~21 maanden. Afbouw vanaf 20-03-2026. Ongoing op 8mg druppelvorm vanaf 27-05-2026. Zie 6 sub-fase spans voor detail.",
-    },
-    {
-        "start": "2024-04-09",
-        "end": "2024-04-30",
-        "label": "Citalopram fase 1: 10mg buildup",
-        "category": "interventie",
-        "note": "Uit notes: start 09-04-2024 ('Morgen starten met ssri'). Drie weken op 10mg voordat ophogen op 30-04-2024.",
-    },
-    {
-        "start": "2024-04-30",
-        "end": "2024-06-20",
-        "label": "Citalopram fase 2: 20mg",
-        "category": "interventie",
-        "note": "Uit notes 30-04-2024: 'voor het eerst citalopram opgehoogd naar 20mg'. Zeven weken op 20mg.",
-    },
-    {
-        "start": "2024-06-20",
-        "end": "2026-03-20",
-        "label": "Citalopram fase 3: 30mg plateau (~21 maanden)",
-        "category": "interventie",
-        "note": "Uit notes 20-06-2024: 'Eerste dag op 30mg citalopram'. Plateau van ~21 maanden tot afbouw start 20-03-2026.",
-    },
-    {
-        "start": "2026-03-20",
-        "end": "2026-04-17",
-        "label": "Citalopram fase 4: afbouw 30 -> 20mg",
-        "category": "interventie",
-        "note": "Uit notes 20-03-2026: 'Begonnen met afbouwen van citalopram van 30 naar 20'.",
-    },
-    {
-        "start": "2026-04-17",
-        "end": "2026-05-27",
-        "label": "Citalopram fase 5: afbouw 20 -> 10mg",
-        "category": "interventie",
-        "note": "Uit notes 18-04-2026: 'Gisteren bij huisarts geweest, nu terug naar 10 mg citalopram'. Dus dose-change was 17-04-2026.",
-    },
-    {
-        "start": "2026-05-27",
-        "end": "2026-06-05",  # ongoing
-        "label": "Citalopram fase 6: afbouw 10 -> 8mg druppelvorm (ongoing)",
-        "category": "interventie",
-        "note": "Uit notes 27-05-2026: 'Citalopram afbouw: vandaag voor het eerst 8mg in druppelvorm'. Ongoing afbouw; einddatum capped op timeline end.",
-    },
-    # ------------------------------------------------------------------
-    # Recurring high-intensity events found earlier in calendar (>2022).
-    # ------------------------------------------------------------------
-    {
-        "start": "2023-05-18",
-        "end": "2023-05-22",
-        "label": "Zuna (hemelvaart-weekend?)",
-        "category": "high_intensity",
-        "note": "Calendar event: 'Zuna' 5 dagen.",
-    },
-    {
-        "start": "2023-05-20",
-        "end": "2023-05-21",
-        "label": "Afscheidsfeest Zuna",
-        "category": "high_intensity",
-        "note": "Calendar event. Valt binnen Zuna-periode 18-22 mei.",
-    },
-    {
-        "start": "2023-05-26",
-        "end": "2023-05-30",
-        "label": "Pinkster campinglife",
-        "category": "high_intensity",
-        "note": "Calendar event: 4 dagen camping rond pinksteren.",
-    },
-    {
-        "start": "2023-06-09",
-        "end": "2023-06-12",
-        "label": "Zuna klustival",
-        "category": "high_intensity",
-        "note": "Calendar event: 4 dagen klus-festival.",
-    },
-    {
-        "start": "2025-03-09",
-        "end": "2025-03-10",
-        "label": "Zuna (lente)",
-        "category": "high_intensity",
-        "note": "Calendar event: 2 dagen.",
-    },
-    {
-        "start": "2025-06-06",
-        "end": "2025-06-10",
-        "label": "Pinkster campinglife 2025",
-        "category": "high_intensity",
-        "note": "Calendar event: 4 dagen camping rond pinksteren.",
-    },
-    {
-        "start": "2026-05-22",
-        "end": "2026-05-26",
-        "label": "Pinkster campinglife 2026",
-        "category": "high_intensity",
-        "note": "Calendar event: meest recent.",
-    },
-]
+_load_env_file(REPO_ROOT / ".env")
+_data_env = os.environ.get("GEVOELSCORE_DATA_PATH")
+if not _data_env:
+    raise SystemExit(
+        "GEVOELSCORE_DATA_PATH not set (env var or .env at repo root). "
+        "See .env.example."
+    )
+
+DATA_ROOT = Path(_data_env)
+TRIAGE_DIR = DATA_ROOT / "reviews"
+TRIAGE_EVENTS_CSV = DATA_ROOT / "processed" / "manual_triage" / "triage_events.csv"
+HAND_CURATED_YAML = DATA_ROOT / "raw" / "directus_exports" / "hand_curated_spans.yaml"
+ANNOTATIONS = DATA_ROOT / "raw" / "directus_exports" / "annotations.yaml"
+
+TRIAGE_CSVS = sorted(TRIAGE_DIR.glob("calendar_*_triage.csv"))
+
+
+def _stringify_dates(entries: list[dict]) -> list[dict]:
+    """YAML auto-converts bare ISO dates to datetime.date; convert back to
+    ISO strings so the rest of the pipeline (which treats start/end/date as
+    strings) is undisturbed."""
+    for e in entries:
+        for k, v in list(e.items()):
+            if isinstance(v, date):
+                e[k] = v.isoformat()
+    return entries
+
+
+def _load_hand_curated() -> tuple[list[dict], list[dict], list[dict], list[dict]]:
+    """Load PII-containing narrative spans from the external YAML.
+
+    File schema:
+      markers:         [{date, label, category, note}]
+      spans_pre_2022:  [{start, end, label, category, note}]
+      spans_post_2022: [{start, end, label, category, note}]
+      daily_mentions:  [{start, end, label, category, note}]  single-day
+                       medication/condition mentions extracted from
+                       day_entries notes by a pre-Phase-C pipeline (now
+                       defunct); preserved here so annotations.yaml stays
+                       reproducible.
+    """
+    if not HAND_CURATED_YAML.exists():
+        raise SystemExit(
+            f"Missing hand-curated spans file: {HAND_CURATED_YAML}\n"
+            "This file lives outside the repo (contains PII)."
+        )
+    doc = yaml.safe_load(HAND_CURATED_YAML.read_text(encoding="utf-8")) or {}
+    return (
+        _stringify_dates(list(doc.get("markers") or [])),
+        _stringify_dates(list(doc.get("spans_pre_2022") or [])),
+        _stringify_dates(list(doc.get("spans_post_2022") or [])),
+        _stringify_dates(list(doc.get("daily_mentions") or [])),
+    )
 
 
 def clean_title(title: str) -> str:
@@ -426,8 +257,15 @@ def read_triage_events(csv_path: Path) -> list[dict]:
 
 
 def main():
+    (
+        hand_curated_markers,
+        hand_curated_spans_pre,
+        hand_curated_spans_post,
+        hand_curated_daily_mentions,
+    ) = _load_hand_curated()
+
     # Gather all entries
-    spans = list(HAND_CURATED_SPANS)
+    spans = list(hand_curated_spans_pre)
 
     # CSV-derived entries
     for csv_path in TRIAGE_CSVS:
@@ -436,15 +274,19 @@ def main():
         print(f"  {len(new)} entries (keep_yn=y after dedupe)")
         spans.extend(new)
 
-    spans.extend(HAND_CURATED_SPANS_POST_2022)
+    spans.extend(hand_curated_spans_post)
 
     # Events extracted from triage notes (via process_triage_actions.py)
-    triage_events_csv = DATA / "triage_events.csv"
-    triage_event_entries = read_triage_events(triage_events_csv)
+    triage_event_entries = read_triage_events(TRIAGE_EVENTS_CSV)
     if triage_event_entries:
-        print(f"Reading {triage_events_csv.name}...")
+        print(f"Reading {TRIAGE_EVENTS_CSV.name}...")
         print(f"  {len(triage_event_entries)} entries from triage-notes-derived events")
         spans.extend(triage_event_entries)
+
+    # Daily mentions extracted by the (now-defunct) pre-Phase-C pipeline.
+    # Appended last so stable-sort on `start` places them after same-day
+    # triage_events entries, matching baseline ordering.
+    spans.extend(hand_curated_daily_mentions)
 
     # Deduplicate spans by (start, end, label) — favouring earlier-added
     # (which prefers hand-curated over CSV-derived).
@@ -463,13 +305,12 @@ def main():
         return d if d else "9999-12-31"
     deduped.sort(key=sort_key)
 
-    markers_sorted = sorted(HAND_CURATED_MARKERS, key=lambda m: m["date"])
+    markers_sorted = sorted(hand_curated_markers, key=lambda m: m["date"])
 
     header = (
         "# annotations.yaml - user-curated context for the research timeline.\n"
-        "# Hand-curated entries + calendar-triage CSV merged by\n"
-        "# scripts/merge_calendar_triage.py\n"
-        "# Re-render with: python docs/research/timeline/scripts/build_timeline.py\n\n"
+        "# Hand-curated entries (external YAML) + calendar-triage CSV + notes-triage CSV merged.\n"
+        "# Re-render with: python docs/research/pipeline/03_consolidate/merge_calendar_triage.py\n\n"
     )
     # Build a single YAML document so quoting / escaping is handled correctly.
     doc = {
