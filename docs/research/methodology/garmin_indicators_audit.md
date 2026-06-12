@@ -195,28 +195,75 @@ v3.1 + all 4 per-axis classes v3.2 lagged + `above_baseline_streak`.
 Lagged ranks composite + push_burden + slope landed in the v3.2
 commit 02018e0. See [`../DATA_DICTIONARY.md`](../DATA_DICTIONARY.md) §6.)*
 
-### NOT extracted from raw FIT (latent in dump)
+### HRV — hardware blocked (Forerunner 245 / Elevate V3)
 
-- **HRV (Heart Rate Variability)**: Garmin's nightly HRV summary lives
-  in sleep type-49 files. Highly relevant for autonomic-recovery
-  signals. Extraction script does not exist.
-- **Body Battery**: per-minute energy reserve estimate. Lives in
-  monitoring_b. Not extracted.
-- **SpO2**: nightly oxygen saturation. Lives in monitoring_b. Not
-  extracted.
-- **Respiration rate spread**: relates to ANS reactivity. Mentioned as
-  H03 candidate in STOCKTAKE but not implemented.
+Nightly HRV Status is a feature of the Elevate V4 sensor (Forerunner
+265, 955, 965, fēnix 7, Epix 2, Venu 2+). The Forerunner 245 used
+across the entire 2021-08-16 → today dump carries the older Elevate
+V3 sensor and **does not produce nightly HRV at all** —  not
+extracted, not raw, not derivable from any other Garmin field.
+
+Confirmation:
+- Pre-flight inventory script
+  (`$DATA/scratch/preflight_hrv_inventory.py`, throwaway diagnostic,
+  not committed) opened 3 sleep type-49 FIT files spanning 2021-08-16
+  → 2026-06-03; zero field-name hits on `hrv`, `rmssd`, `rr_interval`,
+  `stress_hrv`. The data-bearing messages are `unknown_273` /
+  `unknown_274` / `unknown_276` — undocumented by Garmin; community
+  has not decoded them (per Garmin Forums threads "Sleep and
+  monitoring files: unknown messages" and "List of Undocumented
+  mesg_num", checked 2026-06-12).
+- The fr245's HRV record-setting (`Settings → Physiological Metrics
+  → Log HRV`) only captures **per-activity** beat-to-beat RR
+  intervals — and only when an external HR chest strap is paired
+  (wrist OHR is not clean enough). Not nightly. Not aggregated to
+  per-day. Not the signal Wiggers B1-B5 / H1-H5 reference.
+
+Wiggers consequence: **B1-B5 and the HRV-dependent parts of H1, H2,
+H3, H4, H5 are hardware-blocked on this dataset.** Only a device
+upgrade would unblock forward, and only for new data from the upgrade
+date onward.
+
+The 8 partially-decoded fields visible in the unknown messages
+(`unknown_0` ... `unknown_253`) are presumably sleep-stage timing data
+that Garmin Connect uses internally to render the sleep timeline.
+Reverse-engineering them is not a productive use of effort: even if
+fully decoded, they would not yield HRV (the sensor doesn't produce
+it).
+
+### NOT extracted from raw FIT (latent in dump, but not currently surfaced)
+
 - **Per-minute stress curve**: we extract sleep-window aggregates +
   daily max spike, but the full intra-day stress profile is in the
   FIT files and could support shape-of-day analyses.
+- **Per-activity HRV (RR intervals)**: only present if the user wore
+  a chest strap and enabled `Log HRV` on the watch. Worth a one-off
+  check whether the activity FIT files have an `hrv` message before
+  declaring it absent.
 
-When any of these is queued for addition:
+*(Extracted to master in Wave 3 2026-06-12 via JSON-side propagation —
+**no FIT parsing needed**: Body Battery (8 cols), all-day stress
+(5 cols), 24h / waking respiration (3 cols), 24h SpO2 (2 cols), sleep
+stages (4 cols), sleep-window respiration (3 cols), sleep-window
+SpO2 (2 cols) — total 27 columns. Sources:
+`pipeline/01_extract/garmin_uds_extras.py` reads UDS JSON,
+`pipeline/01_extract/garmin_sleep_extras.py` reads sleepData.json.
+See [`../DATA_DICTIONARY.md`](../DATA_DICTIONARY.md) §7 + §7B.
+Respiration / Body Battery / SpO2 — previously listed here as latent
+— are now first-class master columns. Body Battery in particular
+turned out to live in the UDS JSON as the `bodyBattery` object with
+charged / drained / 7-element stat list — not in monitoring_b as the
+earlier audit entry assumed.)*
 
-1. New extraction script in `pipeline/01_extract/`.
-2. New CSV in `data/processed/garmin/` (or external equivalent
-   per Phase C reorganisation).
-3. New rows in this audit table.
-4. New rows in DATA_DICTIONARY.
+When a future signal is queued for addition:
+
+1. Pre-flight in `$DATA/scratch/` (throwaway) to confirm the field
+   exists with a real name on this device.
+2. Extraction script in `pipeline/01_extract/`.
+3. CSV output in `$DATA/processed/garmin/`.
+4. Propagation in `pipeline/03_consolidate/build_unified_dataset.py`.
+5. Audit row in this document.
+6. Column rows in DATA_DICTIONARY.
 
 ---
 

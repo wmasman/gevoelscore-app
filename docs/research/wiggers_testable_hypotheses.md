@@ -24,6 +24,18 @@ The handleiding is a collection of *lotgenoten* observations and n-of-1 generali
 | Per-axis comparison "which axis predicts best" (E3) | `step_rank_lagged`, `eff_exertion_rank_lagged`, `max_hr_rank_lagged`, `vigorous_min_rank_lagged` | side-by-side |
 | Activity-invisible crash detection (H2) | low `step_rank_lagged` + low `max_hr_rank_lagged` + crash | combine |
 | Sustained-elevation push count (E2, H4 supporting) | `push_burden_7d_lagged` | int 0-7 |
+| Body Battery level / dynamics (D1, D3) | `bb_highest`, `bb_lowest` | int 0-100 |
+| Overnight Body Battery gain (D2) | `bb_overnight_gain` (= `bb_sleep_end_value - bb_sleep_start_value`) | int; 33.8% fill (only when sleep+BB align) |
+| Body Battery drain rate around crashes (D4) | `bb_drained_24h` | int |
+| Morning Body Battery after overexertion (D5) | `bb_sleep_end_value` | int; 33.8% fill |
+| All-day stress total (C2, C3) | `all_day_stress_avg`, `all_day_stress_max` | int 0-100; TOTAL aggregator |
+| Waking vs sleep stress separation (C1, C2) | `awake_stress_avg`, `asleep_stress_avg_uds` (cross-check vs `stress_mean_sleep`) | int 0-100 |
+| Sleep duration / stages (F1, F2) | `sleep_duration_min`, `sleep_deep_min`, `sleep_light_min`, `sleep_awake_min` | minutes |
+| Bedtime inconsistency (F4) | `bedtime_std_7d` | hours |
+| Respiration during sleep + waking (G1) | `respiration_avg_sleep`, `respiration_max_sleep`; `respiration_avg_waking`, `respiration_max_24h` | breaths/min |
+| SpO2 (G4, deprioritised) | `spo2_avg_sleep`, `spo2_min_sleep`, `spo2_avg_24h`, `spo2_min_24h` | percent |
+
+**HRV-dependent hypotheses are hardware-blocked on this dataset.** The Forerunner 245 (Elevate V3 sensor) does not produce nightly HRV Status; FIT sleep type-49 files store the relevant data in undocumented `unknown_273/274/276` messages with no community decode. **B1, B2, B3, B4, B5** (all of category B), and the **HRV-dependent parts of H1, H2, H3, H4, H5**, cannot be tested on this corpus. See [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md) § HRV — hardware blocked. Only a device upgrade (Forerunner 265+, fēnix 7, etc.) would unblock these going forward; existing data remains untestable for HRV.
 
 Source: [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md) § Rule for new analyses; [`analyses/garmin_exploration/activity-labels/spec/severity_spec.md`](analyses/garmin_exploration/activity-labels/spec/severity_spec.md) § Lagged baseline.
 

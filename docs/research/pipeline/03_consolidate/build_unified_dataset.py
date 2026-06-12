@@ -64,6 +64,8 @@ DAILY_UDS = DATA_PATH / "processed/garmin/daily_uds.csv"
 ACTIVITY_FEATURES = DATA_PATH / "processed/garmin/activity_features_daily.csv"
 SLEEP_STRESS = DATA_PATH / "processed/garmin/sleep_stress_nightly.csv"
 DAILY_MAX_SPIKE = DATA_PATH / "processed/garmin/daily_max_spike.csv"
+UDS_EXTRAS = DATA_PATH / "processed/garmin/uds_extras_daily.csv"
+SLEEP_EXTRAS = DATA_PATH / "processed/garmin/sleep_extras_daily.csv"
 LABELS_CRASH = DATA_PATH / "processed/crash_labels/labels_crash_v2.csv"
 V24_CLAUSES = DATA_PATH / "processed/notes/notes-categorized-v24-clauses.csv"
 PER_DAY_INTENSITY = DATA_PATH / "processed/manual_triage/per_day_intensity.csv"
@@ -287,6 +289,10 @@ def main():
     print(f"  sleep_stress: {len(sleep)}")
     spike = load_csv_by_date(DAILY_MAX_SPIKE)
     print(f"  daily_max_spike: {len(spike)}")
+    uds_extras = load_csv_by_date(UDS_EXTRAS)
+    print(f"  uds_extras: {len(uds_extras)}")
+    sleep_extras = load_csv_by_date(SLEEP_EXTRAS)
+    print(f"  sleep_extras: {len(sleep_extras)}")
     crash = load_csv_by_date(LABELS_CRASH)
     print(f"  crash labels: {len(crash)}")
     intensity = load_csv_by_date(PER_DAY_INTENSITY)
@@ -338,7 +344,7 @@ def main():
         row = build_row(
             d, day_entries, uds, af, sleep, spike, crash, intensity,
             sub_dips, pwc_hours, v24_per_day, events_by_day, umbrella_by_day,
-            dossier_by_day,
+            dossier_by_day, uds_extras, sleep_extras,
         )
         rows.append(row)
 
@@ -404,7 +410,10 @@ def main():
 
 def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
               sub_dips, pwc_hours, v24_per_day, events_by_day,
-              umbrella_by_day, dossier_by_day):
+              umbrella_by_day, dossier_by_day, uds_extras=None,
+              sleep_extras=None):
+    uds_extras = uds_extras or {}
+    sleep_extras = sleep_extras or {}
     row = {"date": d.isoformat()}
 
     # --- Identity ---
@@ -485,6 +494,31 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["min_hr"] = u.get("min_hr") or ""
     row["max_hr"] = u.get("max_hr") or ""
     row["max_avg_hr_uds"] = u.get("max_avg_hr") or ""  # max-of-averages from UDS
+
+    # --- Wave 3: Body Battery + all-day stress + respiration + SpO2 (from UDS extras) ---
+    # Propagated from uds_extras_daily.csv (extracted by
+    # pipeline/01_extract/garmin_uds_extras.py). All JSON-source, no FIT
+    # parsing. Supports Wiggers D1-D5 (Body Battery), C1-C3 (stress), G1
+    # (respiration), G4 (SpO2 — Wiggers deprioritises but included).
+    ue = uds_extras.get(d, {})
+    row["bb_charged_24h"] = ue.get("bb_charged_24h") or ""
+    row["bb_drained_24h"] = ue.get("bb_drained_24h") or ""
+    row["bb_highest"] = ue.get("bb_highest") or ""
+    row["bb_lowest"] = ue.get("bb_lowest") or ""
+    row["bb_sleep_start_value"] = ue.get("bb_sleep_start_value") or ""
+    row["bb_sleep_end_value"] = ue.get("bb_sleep_end_value") or ""
+    row["bb_during_sleep_value"] = ue.get("bb_during_sleep_value") or ""
+    row["bb_overnight_gain"] = ue.get("bb_overnight_gain") or ""
+    row["all_day_stress_avg"] = ue.get("all_day_stress_avg") or ""
+    row["all_day_stress_max"] = ue.get("all_day_stress_max") or ""
+    row["awake_stress_avg"] = ue.get("awake_stress_avg") or ""
+    row["awake_stress_max"] = ue.get("awake_stress_max") or ""
+    row["asleep_stress_avg_uds"] = ue.get("asleep_stress_avg_uds") or ""
+    row["respiration_avg_waking"] = ue.get("respiration_avg_waking") or ""
+    row["respiration_max_24h"] = ue.get("respiration_max_24h") or ""
+    row["respiration_min_24h"] = ue.get("respiration_min_24h") or ""
+    row["spo2_avg_24h"] = ue.get("spo2_avg_24h") or ""
+    row["spo2_min_24h"] = ue.get("spo2_min_24h") or ""
 
     # --- Activity features ---
     # v3.1 columns (exertion_class, step_z_30d) retained for HA01b/HA02c
@@ -592,6 +626,23 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
             row["sleep_duration_min"] = ""
     else:
         row["sleep_duration_min"] = ""
+
+    # --- Wave 3: Sleep stages + sleep-window respiration + sleep-window SpO2 (from sleep extras) ---
+    # Propagated from sleep_extras_daily.csv (extracted by
+    # pipeline/01_extract/garmin_sleep_extras.py). JSON-source, no FIT
+    # parsing. Supports Wiggers F2 (deep-sleep deviation), G1 (respiration —
+    # sleep-window variant complements 24h/waking), G4 (SpO2 — sleep-window
+    # variant complements 24h).
+    se_extras = sleep_extras.get(d, {})
+    row["sleep_deep_min"] = se_extras.get("sleep_deep_min") or ""
+    row["sleep_light_min"] = se_extras.get("sleep_light_min") or ""
+    row["sleep_awake_min"] = se_extras.get("sleep_awake_min") or ""
+    row["sleep_unmeasurable_min"] = se_extras.get("sleep_unmeasurable_min") or ""
+    row["respiration_avg_sleep"] = se_extras.get("respiration_avg_sleep") or ""
+    row["respiration_max_sleep"] = se_extras.get("respiration_max_sleep") or ""
+    row["respiration_min_sleep"] = se_extras.get("respiration_min_sleep") or ""
+    row["spo2_avg_sleep"] = se_extras.get("spo2_avg_sleep") or ""
+    row["spo2_min_sleep"] = se_extras.get("spo2_min_sleep") or ""
 
     # --- Stress spikes ---
     sp = spike.get(d, {})
