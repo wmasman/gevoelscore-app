@@ -110,6 +110,20 @@ This is a refinement of the original "no pulse" rule, which was too absolute. Th
 
 ---
 
+## Anchoring: self-referenced, never normative
+
+When any surface shows a number in context — a trend, a result, a breakdown — the reference point is **the user's own history** (prior value, rolling baseline, usual range), never a healthy-population norm, an "average", or another person.
+
+**Why.** A normative anchor invites a deficit read every time the score is shown; for someone whose ceiling is genuinely lowered it reframes honest reporting as failure, which can nudge under-reporting and quietly corrupt the data. A self-referenced anchor carries the same orienting information with no ranking and no incentive to under-report.
+
+A bare number with no anchor is also wrong (illegible). The rule is *self-referenced* anchor, not *no* anchor. Allowed: `0,3 boven vorige maand. Binnen het gebruikelijke bereik.` Forbidden: `Lager dan een gezond persoon.`
+
+Any clinical/normative comparison (to validate impairment to a doctor) lives only behind an explicit opt-in or on a clinician-facing export — never a default view.
+
+**Source:** ratified 2026-06-04 from the Visible/Welltory UI/UX study ([../research/ui-ux-patterns-from-visible-welltory.md](../research/ui-ux-patterns-from-visible-welltory.md) §1.9), which observed Visible anchoring against a healthy person's score and judged that framing against this app's manifest.
+
+---
+
 ## Component personality
 
 | Element | Direction |
@@ -153,6 +167,7 @@ These are *allowed* even within the restrained direction. Each was an explicit c
 | **Mascots, illustration characters, decorative artwork** | No friendly bird, no plant-that-grows-with-streak, no hand-drawn anything. The app's identity is type + color + space, not pictures. |
 | **Celebration animations** | No confetti, no bouncing, no flashing. Pulses are forbidden as decoration; one-shot completion acknowledgments (e.g. today-card tint-pulse after the last tag is saved) are allowed — see [Motion as communication](#motion-as-communication). The 200ms cap from [frontend brainfog rules](../architecture/frontend-conventions.md#brainfog-extensions-above-wcag) still applies to most transitions. |
 | **Color-coded score scale** (red→amber→green) | The score is a self-rating; color-coding feels like the app rendering judgment before the user has finished thinking. The accent fills the *selected* button only. |
+| **Normative comparison by default** (score vs. healthy norm, "average", or other users) | Compares and judges the user against others — against the no-judgment manifest, and nudges under-reporting. Anchor to the user's own baseline/history; reserve normative framing for an opt-in or clinician export. See [Anchoring](#anchoring-self-referenced-never-normative). |
 | **Unsolicited notifications** (default-on reminders, marketing/news, "we miss you" re-engagement) | Reminders are allowed *only* as an explicit user opt-in (see Allowed nuances). Anything that pushes without prior user consent — or that exists to drive engagement rather than serve the logging — is forbidden. |
 
 ---
