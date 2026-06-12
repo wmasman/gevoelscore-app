@@ -23,10 +23,15 @@ Columns are documented with:
 - **Class** — one of:
   - `daily_computed` — exists every day in coverage; safe for
     trajectory analyses; missing-of-value means out-of-coverage.
-  - `presence_conditioned_positive_evidence` ⚠️ — exists only when a
-    note exists on the date; value > 0 is positive evidence, value = 0
-    on a note-day is *low-specificity* about absence, `NaN` on a
-    no-note day. See
+  - `presence_conditioned_positive_evidence` ⚠️ — exists only when the
+    column's **section-specific gating flag** is True. The gating flag
+    is NOT universally `has_note`: e.g. §9/§10 (v24 categorisation rollup)
+    gates on `has_note=True`; §2 (cog/phy/emo load triage) gates on
+    `has_intensity_triage=True` (= `intensity_source != ""`). Always
+    check the section's preamble for its specific rule; do not assume
+    `has_note` applies. Once gated: value > 0 is positive evidence,
+    value = 0 (or `_no_info` for §2) on a gated day is *low-specificity*
+    about absence, `NaN` on a non-gated day. See
     [methodology/symptom_mention_asymmetry.md](methodology/symptom_mention_asymmetry.md).
   - `derived` — computed from other columns of the master (coverage
     flags, identity, etc.).
@@ -59,7 +64,7 @@ Columns are documented with:
 | name | class | source | source column | dtype | units | coverage | missingness | notes |
 |---|---|---|---|---|---|---|---|---|
 | `gevoelscore` | daily_computed | `raw/directus_exports/day_entries.json` | `score` | float64 (nullable int) | 1-10 (in practice 1-6 dense, 7-10 sparse) | 2022-09-03 → today | NaN when no entry that day | the primary subjective signal |
-| `has_note` | derived | computed | — | bool | True when `note_text` is non-empty | full | never null | **mandatory companion** to every presence-conditioned column |
+| `has_note` | derived | computed | — | bool | True when `note_text` is non-empty | full | never null | **mandatory companion** to every §9 + §10 presence-conditioned column (the v24 categorisation rollup). NOT the universal gating flag — §2 presence-conditioned load columns gate on `has_intensity_triage` instead. |
 | `note_text` | daily_computed | `raw/directus_exports/day_entries.json` | `note` | object (string) | free text | 2022-09-03 → today | empty string when no note (then `has_note=False`) | **personal data — external only** |
 
 ---
@@ -80,7 +85,7 @@ for the three-state semantics.
 | `cog_load` | presence_conditioned ⚠️ | `processed/manual_triage/per_day_intensity.csv` | `cog` | float64 (nullable int) | 1, 2, 3 (mild / moderate / severe event intensity) | rows with non-empty `intensity_source` only | NaN when `intensity_source` empty (not triaged); NaN when `intensity_source = bulk_triage_*_no_info` (reviewed, no signal found) — the source flag distinguishes the two | see [methodology/methodology.md](methodology/methodology.md) §2; gating rule: `intensity_source != ""` |
 | `phy_load` | presence_conditioned ⚠️ | `processed/manual_triage/per_day_intensity.csv` | `phy` | float64 (nullable int) | 1, 2, 3 | same | same | |
 | `emo_load` | presence_conditioned ⚠️ | `processed/manual_triage/per_day_intensity.csv` | `emo` | float64 (nullable int) | 1, 2, 3 | same | same | |
-| `intensity_source` | daily_computed | `processed/manual_triage/per_day_intensity.csv` | `source` | category | `consolidation_YYYY-MM-DD`, `bulk_triage_YYYY_YYYY-MM-DD`, `bulk_triage_YYYY_no_info`, `manual_*`, `triage_notes_classified`, `pwc_cross_validation_2026-06-11` | matches `per_day_intensity.csv` | empty string when not in source (= not yet triaged); a non-empty value is the **mandatory companion** to interpret cog/phy/emo loads | `*_no_info` is presence-conditioned **explicit absence** (user reviewed, found no load-bearing material). Distinct from empty source (= unreviewed) |
+| `intensity_source` | daily_computed | `processed/manual_triage/per_day_intensity.csv` | `source` | category | `consolidation_YYYY-MM-DD`, `bulk_triage_YYYY_YYYY-MM-DD`, `bulk_triage_YYYY_no_info`, `manual_*`, `triage_notes_classified`, `pwc_cross_validation_2026-06-11` | matches `per_day_intensity.csv` | empty string when not in source (= not yet triaged); a non-empty value is the **mandatory companion** to interpret cog/phy/emo loads | `*_no_info` is presence-conditioned **explicit absence** (user reviewed, found no load-bearing material). Distinct from empty source (= unreviewed). **Rate-computation caveat (Layer 2 audit 2026-06-12)**: per-quarter rates of the form `% cog/phy/emo_load notna among has_intensity_triage=True days` are not directly comparable across quarters when the `_no_info` share differs. Quarters with high `_no_info` counts shrink the load-assignable denominator and inflate the rate. For honest cross-quarter comparison, split `has_intensity_triage=True` into `_no_info` and context-sufficient subsets and compute rates within the context-sufficient subset only. Observed example: 2025Q3 = 92 triaged / 61 `_no_info` / 31 context-sufficient → 74.2% cog-rate; 2024Q1 = 91 triaged / 1 `_no_info` / 90 context-sufficient → 26.7% cog-rate; absolute cog-assigned counts are 23 vs 24 across the two quarters. |
 | `intensity_notes` | presence_conditioned ⚠️ | `processed/manual_triage/per_day_intensity.csv` | `notes` | object (string) | free text | matches | empty string when no notes | **personal data — external only**; same gating rule as cog/phy/emo |
 
 ---
@@ -171,6 +176,10 @@ All columns in this section follow the wake-up-date rule. See
 | `stress_mean_sleep` | daily_computed | `processed/garmin/sleep_stress_nightly.csv` | `stress_mean` | float64 | Garmin stress 0-100 | same | NaN if no sleep or sleep_valid_flag=False | mean across the sleep window |
 | `stress_stdev_sleep` | daily_computed | `processed/garmin/sleep_stress_nightly.csv` | `stress_stdev` | float64 | same scale | same | NaN if invalid | within-window variability |
 | `sleep_valid_flag` | daily_computed | `processed/garmin/sleep_stress_nightly.csv` | `valid` | bool | True if enough samples to trust | same | False if too few samples | gate stress_mean_sleep on this |
+| `sleep_start_afternoon_flag` | derived | computed from `sleep_start_gmt` | — | bool | True iff `sleep_valid_flag=True` AND `sleep_start_gmt` converted to Europe/Amsterdam (DST-correct) has `hour < 17` | same as `sleep_valid_flag` | NaN/blank when `sleep_valid_flag=False` | Layer 2 audit 2026-06-12 — "Definition A" flag for afternoon `sleep_start_gmt` values; 144 / 1707 valid-sleep nights = 8.44% at landing. See [methodology/nightly_attribution.md](methodology/nightly_attribution.md) §"Afternoon `sleep_start_gmt` values" for context, co-occurrence with crash labels and umbrella event_labels, and the rejected Definition B (additional `sleep_duration_min > p95` constraint — degenerate at n=1 on this dataset). |
+| `bedtime_hour_local` | derived | computed from `sleep_start_gmt` | — | float64 | fractional local hour (0.0-23.99), Europe/Amsterdam DST-correct | same as `sleep_valid_flag` | NaN when `sleep_valid_flag=False` | Wave 1 add 2026-06-12. Wiggers F4 input. Raw fractional hour preserves minute precision (21:30 → 21.5). After-midnight bedtimes appear as 0-12 — handle wrap-around in downstream variance/mean calculations (e.g. add 24 to values < 12 when computing rolling std). |
+| `sleep_duration_min` | derived | computed from `sleep_start_gmt` + `sleep_end_gmt` | — | float64 | minutes | same as `sleep_valid_flag` | NaN when `sleep_valid_flag=False` or either timestamp missing | Wave 1 add 2026-06-12. Wiggers F1 (sleep duration ↑ during PEM). For the long-sleep example (2023-02-05 inside crash-006): 951 min. |
+| `bedtime_std_7d` | derived | rolling 7-day std of `bedtime_hour_local` | — | float64 | hours | full (≥2 valid prior bedtimes required) | NaN until 2 valid prior bedtimes accumulate; afternoon-flagged nights excluded from the window | Wave 1 add 2026-06-12. Wiggers F4 (bedtime inconsistency → next-day energy). After-midnight wrap handled by adding 24 to values < 12 before the std calculation, so 22:00 / 23:30 / 00:30 has small variance (22.0 / 23.5 / 24.5) instead of being inflated by the 24h discontinuity. Afternoon-start nights (`sleep_start_afternoon_flag=True`) are excluded from the rolling window as aberrant per Layer 2 audit. |
 
 ---
 
@@ -185,8 +194,13 @@ All columns in this section follow the wake-up-date rule. See
 ## Section 9 — note categorization rollup (presence-conditioned)
 
 ⚠️ **All columns in this section are `presence_conditioned_positive_evidence`.**
-Gate on `has_note=True` before interpreting. Value 0 on a note-day is
-*low-specificity about absence* — see
+The gating flag **for this section** is `has_note=True` (the v24
+categorisation rollup is derived from the day's note). Other
+presence-conditioned sections use different gating flags — §2
+(cog/phy/emo loads) gates on `has_intensity_triage=True` (i.e.
+`intensity_source != ""`). Always check the section's preamble; do
+not assume `has_note` applies universally. Once gated: value 0 on a
+note-day is *low-specificity about absence* — see
 [methodology/symptom_mention_asymmetry.md](methodology/symptom_mention_asymmetry.md).
 `NaN` on a no-note day.
 
@@ -222,8 +236,9 @@ v24 = v2 + v2.2 patches + v2.3 patches + v2.4 patches).
 
 ## Section 10 — note `symptoom_fysiek` sub-tags (presence-conditioned)
 
-⚠️ All `presence_conditioned_positive_evidence`. Same gating rules
-as §9.
+⚠️ All `presence_conditioned_positive_evidence`. Same gating rule
+as §9 (gate on `has_note=True`); see §9 preamble for why this is
+section-specific and not a dictionary-wide rule.
 
 Source: aggregated from `processed/notes/notes-categorized-v24-clauses.csv`
 to per-day counts via `pipeline/02_label/aggregate_v24_subtypes.py`.
@@ -247,7 +262,7 @@ to per-day counts via `pipeline/02_label/aggregate_v24_subtypes.py`.
 
 | name | class | source | source column | dtype | units / categories | coverage | missingness | notes |
 |---|---|---|---|---|---|---|---|---|
-| `n_events_on_day` | daily_computed | `raw/directus_exports/annotations.yaml` + `processed/manual_triage/triage_events.csv` | derived | float64 (nullable int) | count of span-or-marker entries covering the date | 2021-08-16 → today (events range varies) | 0 when no events | |
+| `n_events_on_day` | daily_computed | `raw/directus_exports/annotations.yaml` + `processed/manual_triage/triage_events.csv` | derived | float64 (nullable int) | count of span-or-marker entries covering the date | 2021-08-16 → today (events range varies) | 0 when no events | **Coverage caveat (added 2026-06-12)**: `0` is observed-no-event only when `has_calendar_coverage=True` (`date >= 2022-06-17`, the date the user began maintaining the external calendar that feeds `annotations.yaml`). Before that date, `0` may reflect incomplete logging rather than absence of events. Gate on `has_calendar_coverage=True` before interpreting absence. |
 | `event_labels` | daily_computed | same | derived | object (string) | semicolon-separated event titles | matches | empty string when 0 events | **may contain personal references; external only** |
 | `event_categories` | daily_computed | same | derived | object (string) | semicolon-separated from `{crash, dip, high_intensity, interventie, levensgebeurtenis, medical, trigger, marker}` | matches | empty when 0 events | |
 | `in_umbrella` | derived | annotations.yaml | computed | bool | True if covered by a span whose label contains the word `umbrella` (e.g. "PwC reintegratie 2023 (umbrella)", "Citalopram-traject (umbrella, 2024-04 -> ongoing)") | full | False otherwise | matches the explicit user-curated marker per methodology §4. Earlier draft also flagged any `levensgebeurtenis > 14 days` as an umbrella; that arbitrary fallback was removed 2026-06-11. |
@@ -282,9 +297,9 @@ rows directly (those are already joined in Section 11).
 
 | name | class | source | dtype | coverage | missingness | notes |
 |---|---|---|---|---|---|---|
-| `dossier_event_today` | derived | from triage_events.csv where `source=pwc_dossier_2022-2024` | bool | full | False otherwise | True if any dossier-sourced event on the date |
-| `dossier_event_labels` | derived | same | object (string) | full | empty otherwise | semicolon list |
-| `dossier_event_categories` | derived | same | object (string) | full | empty | subset of `{medical, levensgebeurtenis, marker}` per the dossier review |
+| `dossier_event_today` | derived | from triage_events.csv where `source=pwc_dossier_2022-2024` | bool | full | False otherwise | True if any dossier-sourced event on the date. **Coverage caveat (added 2026-06-12)**: `False` is observed-no-event only when `has_pwc_dossier_window=True` (2022-03-28 → 2024-04-17, the wachttijd-loondoorbetaling 104w span during which the dossier was maintained). Outside that window, `False` means the dossier wasn't tracked, not that no event happened. Gate on `has_pwc_dossier_window=True` before interpreting absence. |
+| `dossier_event_labels` | derived | same | object (string) | full | empty otherwise | semicolon list. **Coverage caveat**: same as `dossier_event_today` — empty string is observed-no-event only when `has_pwc_dossier_window=True`; outside that window, empty means the dossier wasn't tracked. |
+| `dossier_event_categories` | derived | same | object (string) | full | empty | subset of `{medical, levensgebeurtenis, marker}` per the dossier review. **Coverage caveat**: same as `dossier_event_today` — empty string is observed-no-event only when `has_pwc_dossier_window=True`; outside that window, empty means the dossier wasn't tracked. |
 
 ---
 
@@ -301,6 +316,7 @@ All `derived`. These exist every day in the master's full range.
 | `has_pwc_log` | bool | True for 2022-09-26 → 2024-02-26 (the PwC log window) |
 | `has_pwc_dossier_window` | bool | True for 2022-03-28 → 2024-04-17 (wachttijd 104w span); the period during which dossier events may exist |
 | `has_intensity_triage` | bool | True if `intensity_source` is non-empty (includes `bulk_triage_YYYY_no_info`). **Mandatory gating flag** for §2 cog/phy/emo loads, analogous to `has_note` for §9/§10 |
+| `has_calendar_coverage` | bool | True for `date >= 2022-06-17` (the date the user began maintaining the external calendar that feeds `annotations.yaml`). **Mandatory gating flag** for §11 `n_events_on_day` and `event_labels` when interpreting absence: `n_events_on_day=0` outside this window may reflect incomplete calendar logging rather than no events. (Added 2026-06-12 per Layer 2 gating-flag audit.) |
 
 ---
 
@@ -355,3 +371,8 @@ Header semantics: **PwC dossier window** mirrors `has_pwc_dossier_window` (the w
 | 2026-06-12 | Layer 1 fixes — absent-state | fixed two compounding bugs in `pipeline/03_consolidate/build_unified_dataset.py` so the 104 upstream `symptoom_*=absent` clauses (102 fysiek, 2 cognitief) now surface in the master. Bug A: aggregation used `state_max` defaulting to 0, so absent (sev=0) clauses never updated state; added a separate `state_absent_seen` set. Bug B: emit gated on `sev > 0`, so even fixed aggregation couldn't surface absent; rewrote as three-state (severity → "absent" → ""). Worst-severity wins over absent (matches §9 line 181 semantic). Result: `state_symptoom_fysiek=absent` now appears on 32 days (4.7% of note-days), `state_symptoom_cognitief=absent` on 2 days (0.3%). |
 | 2026-06-12 | Layer 1 fixes — dictionary corrections | (1) `crash_episode_id` (§3) clarified: tags both crash-episode days AND single-day dips (108 distinct IDs = 29 crash streaks + 79 dips). (2) `exertion_class` (§6): added `none` as 6th category (≈26.5% of `has_garmin_uds=True` days; distinct from NaN out-of-coverage); flagged that `very_light` does not appear in the current dataset. (3) `effective_exertion_min` and `step_z_30d` (§6): documented ≈22-23% additional NaN within `has_garmin_uds=True` due to 30-day rolling-baseline warmup + post-Garmin-gap recovery. |
 | 2026-06-12 | v3.2 lagged exertion added | added 8 v3.2 lagged-baseline exertion columns to the master (1755 rows × 87 → 95 cols): `exertion_class_lagged`, `exertion_rank_composite_lagged` (newly derived in build script), `eff_exertion_rank_lagged`, `step_rank_lagged`, `max_hr_rank_lagged`, `vigorous_min_rank_lagged`, `push_burden_7d_lagged`, `effective_exertion_slope_28d`. Default surface for new analyses (Wiggers hypothesis testing in particular). v3.1 columns (`exertion_class`, `step_z_30d`) retained for HA01b/HA02c reproducibility and now carry explicit "use lagged for new work" notes. Section 6 restructured into v3.1 / v3.2 sub-sections. Methodology cross-references added in [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md), [`methodology/methodology.md`](methodology/methodology.md) §3c, [`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md) Column-choice matrix, and the spec doc. |
+| 2026-06-12 | Layer 2 audit — descriptive findings persisted as guardrails | (1) §2 `intensity_source` notes appended with rate-computation caveat: per-quarter `% cog/phy/emo_load notna` rates are non-comparable across quarters when the `_no_info` share differs; honest cross-quarter comparison requires splitting `has_intensity_triage=True` into `_no_info` and context-sufficient subsets. Observed example: 2025Q3 = 74.2% cog-rate vs 2024Q1 = 26.7% cog-rate while absolute cog-assigned counts are 23 vs 24. (2) [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md): documented 2022Q3 coverage gap on v3.1 `step_z_30d` (9.6%) and `effective_exertion_min` (33.7%) within `has_garmin_uds=True` days — separate from the 30-day warmup; likely an upstream `activity_features_daily.csv` extraction discontinuity. (3) [`methodology/nightly_attribution.md`](methodology/nightly_attribution.md): documented Layer 2 derivation check for `sleep_start_afternoon_flag` (Definition A = 144 rows / 8.44%; Definition B at p95 = 1 row / degenerate). |
+| 2026-06-12 | Layer 2 schema — `sleep_start_afternoon_flag` added | added derived bool column `sleep_start_afternoon_flag` (§7) to the master. Derivation: True iff `sleep_valid_flag=True` AND `sleep_start_gmt` converted to Europe/Amsterdam (DST-correct via stdlib `zoneinfo.ZoneInfo`) has `hour < 17`. Build script now imports `ZoneInfo` and emits the column in the sleep block. 144 / 1707 valid-sleep nights = 8.44% True at landing. See [`methodology/nightly_attribution.md`](methodology/nightly_attribution.md) §"Afternoon `sleep_start_gmt` values" for co-occurrence with crash labels and top umbrella event_labels. |
+| 2026-06-12 | Gating-flag scope correction | the class definition (line 26-30), `has_note` row (§1), §9 preamble, and §10 preamble all previously implied `has_note=True` is the universal gating flag for `presence_conditioned_positive_evidence` columns. Reworded all four spots to make explicit that the gating flag is section-specific: §9 + §10 (v24 categorisation rollup) gate on `has_note`; §2 (cog/phy/emo + intensity_notes load columns) gates on `has_intensity_triage` (= `intensity_source != ""`). Each section's preamble names its own gating flag; readers must not assume `has_note` applies universally. |
+| 2026-06-12 | `has_calendar_coverage` added + dossier coverage caveats | added derived bool `has_calendar_coverage` to §14 (True for `date >= 2022-06-17`, the date the user began maintaining the external calendar that feeds `annotations.yaml`). Added coverage caveat to §11 `n_events_on_day` notes: `0` is observed-no-event only inside this window; before that date, `0` may reflect incomplete logging. Added matching coverage caveats to §13 `dossier_event_today` / `_labels` / `_categories` referencing the existing `has_pwc_dossier_window` flag: `False` / empty is observed-no-event only inside the wachttijd window (2022-03-28 → 2024-04-17); outside, the dossier wasn't tracked. Both clarifications follow the same gating-flag discipline already used by §2 and §9/§10. |
+| 2026-06-12 | Wave 1 — sleep-derivation columns | added 3 derived columns to §7 from existing `sleep_start_gmt` / `sleep_end_gmt`: `bedtime_hour_local` (DST-correct fractional local hour, Wiggers F4 input), `sleep_duration_min` (Wiggers F1), `bedtime_std_7d` (rolling 7-day std of bedtime, Wiggers F4 — after-midnight wrap handled by `+24` adjustment for values < 12 before std; afternoon-flagged nights excluded). No new extraction, pure derive. Master 97 → 100 cols. Plan: [`.claude/plans/garmin-enrichment-waves.md`](../../.claude/plans/garmin-enrichment-waves.md) Wave 1. |

@@ -15,11 +15,17 @@ from __future__ import annotations
 import csv
 import json
 import os
+import statistics
 from collections import Counter, defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import yaml
+
+# Europe/Amsterdam used to derive `sleep_start_afternoon_flag` from
+# `sleep_start_gmt`. DST-correct via stdlib zoneinfo.
+TZ_LOCAL = ZoneInfo("Europe/Amsterdam")
 
 
 def load_env_file(env_path: Path) -> None:
@@ -79,6 +85,12 @@ TRAIN_END = date(2023, 12, 31)
 # Used only to compute `has_pwc_dossier_window`; not a methodological period.
 WACHTTIJD_START = date(2022, 3, 28)
 WACHTTIJD_END = date(2024, 4, 17)
+# Calendar-coverage window: from the date the user began maintaining the
+# external calendar that feeds annotations.yaml. Before this date,
+# n_events_on_day=0 is unobserved (calendar not yet maintained); from this
+# date onwards, n_events_on_day=0 is observed-no-event. Used to compute
+# `has_calendar_coverage` (added 2026-06-12 per Layer 2 gating-flag audit).
+CALENDAR_COVERAGE_START = date(2022, 6, 17)
 # NOTE: an earlier draft included a `stabilisation_period` bool with
 # arbitrary boundaries (2024-01-01 → 2025-06-30). Removed 2026-06-11 per
 # user feedback: that boundary is not pre-registered, not data-driven, and
@@ -320,6 +332,33 @@ def main():
         )
         rows.append(row)
 
+    # === Post-pass: rolling 7-day bedtime std (Wave 1, Wiggers F4) ===
+    # Compute trailing 7-day std of bedtime_hour_local (DST-correct local
+    # fractional hour). Handles after-midnight wrap: bedtimes < 12 are
+    # treated as +24 so a sequence like 22:00, 23:30, 00:30 has small
+    # variance (22.0, 23.5, 24.5) instead of being inflated by the 24h
+    # discontinuity. Afternoon-flagged nights (<17:00 local) are excluded
+    # from the window — they are aberrant per the Layer 2 audit and would
+    # distort variance.
+    bedtime_window: list[float] = []
+    for row in rows:
+        bh = row.get("bedtime_hour_local")
+        afternoon = row.get("sleep_start_afternoon_flag")
+        if bh not in ("", None) and afternoon is not True:
+            try:
+                v = float(bh)
+                bedtime_window.append(v + 24.0 if v < 12 else v)
+            except (ValueError, TypeError):
+                pass
+        # Keep only last 7 values
+        if len(bedtime_window) > 7:
+            bedtime_window = bedtime_window[-7:]
+        row["bedtime_std_7d"] = (
+            round(statistics.stdev(bedtime_window), 3)
+            if len(bedtime_window) >= 2
+            else ""
+        )
+
     # === Write ===
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fields = list(rows[0].keys())
@@ -460,6 +499,39 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["sleep_valid_flag"] = sleep_valid
     row["has_garmin_sleep"] = sleep_valid
 
+    # Derived: sleep_start_afternoon_flag + bedtime_hour_local + sleep_duration_min.
+    # All three rely on parsing sleep_start_gmt once; co-located so the parse is shared.
+    # sleep_start_afternoon_flag: True iff sleep_valid_flag AND sleep_start
+    # (converted to Europe/Amsterdam, DST-correct via zoneinfo) has hour < 17.
+    # Definition A from Layer 2 audit 2026-06-12; see
+    # methodology/nightly_attribution.md "Afternoon sleep_start_gmt values".
+    # bedtime_hour_local: fractional local hour (DST-correct), 0.0-23.99.
+    # Wave 1 addition for Wiggers F4 (bedtime inconsistency).
+    # sleep_duration_min: end - start in minutes. Wave 1 for Wiggers F1.
+    ssg = s.get("sleep_start_gmt") or ""
+    seg = s.get("sleep_end_gmt") or ""
+    if sleep_valid and ssg:
+        try:
+            ssg_utc = datetime.fromisoformat(ssg.replace("Z", "+00:00"))
+            ssg_local = ssg_utc.astimezone(TZ_LOCAL)
+            row["sleep_start_afternoon_flag"] = ssg_local.hour < 17
+            row["bedtime_hour_local"] = round(ssg_local.hour + ssg_local.minute / 60, 3)
+        except (ValueError, TypeError):
+            row["sleep_start_afternoon_flag"] = ""
+            row["bedtime_hour_local"] = ""
+    else:
+        row["sleep_start_afternoon_flag"] = ""
+        row["bedtime_hour_local"] = ""
+    if sleep_valid and ssg and seg:
+        try:
+            ssg_utc = datetime.fromisoformat(ssg.replace("Z", "+00:00"))
+            seg_utc = datetime.fromisoformat(seg.replace("Z", "+00:00"))
+            row["sleep_duration_min"] = round((seg_utc - ssg_utc).total_seconds() / 60, 1)
+        except (ValueError, TypeError):
+            row["sleep_duration_min"] = ""
+    else:
+        row["sleep_duration_min"] = ""
+
     # --- Stress spikes ---
     sp = spike.get(d, {})
     row["max_spike_minutes"] = sp.get("max_spike_minutes") or ""
@@ -520,6 +592,7 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["dossier_event_labels"] = ";".join(e["label"] for e in dossier_evs)
     row["dossier_event_categories"] = ";".join(e["category"] for e in dossier_evs)
     row["has_pwc_dossier_window"] = WACHTTIJD_START <= d <= WACHTTIJD_END
+    row["has_calendar_coverage"] = d >= CALENDAR_COVERAGE_START
 
     # --- PwC work record ---
     p = pwc_hours.get(d, {})
