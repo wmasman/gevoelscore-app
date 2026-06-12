@@ -92,6 +92,38 @@ Not currently in the corpus. Revisit this section if a long
 intercontinental trip appears in the data — the rule may need a
 local-clock vs UTC clarification.
 
+### Afternoon `sleep_start_gmt` values
+
+Garmin's sleep-onset algorithm flags sustained low-motion + low-HR
+windows as the start of a sleep session. This produces a small
+number of `sleep_start_gmt` timestamps in the afternoon, outside
+the user's typical evening-bedtime distribution.
+
+Across the 1707 `sleep_valid_flag=True` nights, the bedtime-hour
+distribution (local approx UTC+1, DST not corrected) has its
+primary mode at 20:00-21:00 and a left tail at 18:00 (14 nights)
+and 16:00 (1 night).
+
+**Observed example** (Layer 1 audit, 2026-06-12):
+`date = 2023-02-05`, `sleep_start_gmt = 2023-02-04 15:18 UTC`,
+`sleep_end_gmt = 2023-02-05 07:09 UTC`, `sleep_duration = 951 min`.
+The same row has `is_crash=True` (`crash_episode_id=crash-006`,
+Feb 4-8 per `labels_crash_v2.csv`), `gevoelscore=1`,
+`stress_mean_sleep=49.4` (+4σ above the 1707-night mean of 19.75),
+`total_steps=419`.
+
+The top-5 `sleep_duration_min` HI z-scored dates from Layer 1 Block H
+(951, 877, 844, 814, 809 min) fall on dates that carry the umbrella
+event_labels `Citalopram-traject`, the 2024 relatiecoach-umbrella, and
+`PwC reintegratie 2023`.
+
+**Rule**: these rows are **not filtered or normalised**. The
+wake-up-date convention still applies — the attribution rule is
+unchanged. Downstream analyses that use `bedtime_hour` or
+`sleep_duration_min` should be aware that the afternoon-start tail
+is structurally distinct from late-night bedtime and may warrant a
+separate flag.
+
 ---
 
 ## Operationalisation
