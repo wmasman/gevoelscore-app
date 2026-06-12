@@ -38,14 +38,25 @@ try {
     exit 3
   }
 
-  # Set on GHA via stdin (gh secret set reads value from stdin when
-  # --body is omitted).
-  $secret | & gh secret set CALENDAR_SYNC_SECRET
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host 'ERROR: gh secret set failed.'
-    Write-Host 'NOTE: Fly secret IS already staged; values now mismatched.'
-    Write-Host '      Re-run this script to regenerate and resync both.'
-    exit 4
+  # Set on GHA via --env-file (dotenv format: KEY=VALUE). Piping
+  # `$secret | gh secret set` in PowerShell appends a trailing newline
+  # that gh stores verbatim, causing a length mismatch against the Fly
+  # side (where `fly secrets import` parses cleanly from KEY=VALUE).
+  # WriteAllText writes raw bytes with no trailing newline; --env-file
+  # parses the KEY=VALUE shape with no whitespace gotchas. Keeps the
+  # secret out of argv too.
+  $tmpFile = [System.IO.Path]::GetTempFileName()
+  try {
+    [System.IO.File]::WriteAllText($tmpFile, "CALENDAR_SYNC_SECRET=$secret")
+    & gh secret set --env-file $tmpFile
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host 'ERROR: gh secret set failed.'
+      Write-Host 'NOTE: Fly secret IS already staged; values now mismatched.'
+      Write-Host '      Re-run this script to regenerate and resync both.'
+      exit 4
+    }
+  } finally {
+    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
   }
 
   Write-Host ''
