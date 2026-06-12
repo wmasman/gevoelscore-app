@@ -91,6 +91,16 @@ WACHTTIJD_END = date(2024, 4, 17)
 # date onwards, n_events_on_day=0 is observed-no-event. Used to compute
 # `has_calendar_coverage` (added 2026-06-12 per Layer 2 gating-flag audit).
 CALENDAR_COVERAGE_START = date(2022, 6, 17)
+# LC research-era boundaries (added 2026-06-12 per user lock).
+# CORONA_START = first day of the documented corona-ziek-week
+# (2022-03-21 to 2022-03-27, per the Training-periode span note in
+# annotations.yaml). LC_ERA_START = Monday after the Fietsweekend Ardennen
+# (2022-04-01 to 2022-04-03), the user's locked factual boundary for the
+# post-corona / LC-symptom-onset window. See the 2022-04-04 marker in
+# annotations.yaml. Used to compute the `lc_phase` derived column and
+# referenced by the *_lagged_lcera variant in 11_compute_lagged_baseline.py.
+CORONA_START = date(2022, 3, 21)
+LC_ERA_START = date(2022, 4, 4)
 # NOTE: an earlier draft included a `stabilisation_period` bool with
 # arbitrary boundaries (2024-01-01 → 2025-06-30). Removed 2026-06-11 per
 # user feedback: that boundary is not pre-registered, not data-driven, and
@@ -519,6 +529,27 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["class_axis_D_vig_lagged"] = a.get("class_axis_D_vig_lagged") or ""
     row["above_baseline_streak"] = a.get("above_baseline_streak") or ""
 
+    # v3.2 LC-era-only lagged variants (baseline restricted to dates >= 2022-04-04 = LCERA_START).
+    # See LC_ERA_START constant and DATA_DICTIONARY.md sec 6 "v3.2 LC-era-only" for the methodological
+    # rationale. Use *_lagged_lcera for PEM-pacing / Wiggers analyses where the user's pre-LC
+    # healthy-capacity days would mis-rank LC-era load.
+    eff_lag_lc = a.get("effective_exertion_rank_lagged_lcera") or ""
+    step_lag_lc = a.get("step_rank_lagged_lcera") or ""
+    max_hr_lag_lc = a.get("max_hr_rank_lagged_lcera") or ""
+    vig_lag_lc = a.get("vigorous_min_rank_lagged_lcera") or ""
+    row["exertion_class_lagged_lcera"] = a.get("exertion_class_lagged_lcera") or ""
+    row["eff_exertion_rank_lagged_lcera"] = eff_lag_lc
+    row["step_rank_lagged_lcera"] = step_lag_lc
+    row["max_hr_rank_lagged_lcera"] = max_hr_lag_lc
+    row["vigorous_min_rank_lagged_lcera"] = vig_lag_lc
+    rank_vals_lc = [float(x) for x in (eff_lag_lc, step_lag_lc, max_hr_lag_lc, vig_lag_lc) if x not in ("", None)]
+    row["exertion_rank_composite_lagged_lcera"] = max(rank_vals_lc) if rank_vals_lc else ""
+    row["push_burden_7d_lagged_lcera"] = a.get("push_burden_7d_lagged_lcera") or ""
+    row["class_axis_A_eff_lagged_lcera"] = a.get("class_axis_A_eff_lagged_lcera") or ""
+    row["class_axis_B_step_lagged_lcera"] = a.get("class_axis_B_step_lagged_lcera") or ""
+    row["class_axis_C_maxhr_lagged_lcera"] = a.get("class_axis_C_maxhr_lagged_lcera") or ""
+    row["class_axis_D_vig_lagged_lcera"] = a.get("class_axis_D_vig_lagged_lcera") or ""
+
     # --- Sleep-stress (wake-up-date attributed; see methodology/nightly_attribution.md) ---
     s = sleep.get(d, {})
     row["sleep_start_gmt"] = s.get("sleep_start_gmt") or ""
@@ -623,6 +654,20 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["dossier_event_categories"] = ";".join(e["category"] for e in dossier_evs)
     row["has_pwc_dossier_window"] = WACHTTIJD_START <= d <= WACHTTIJD_END
     row["has_calendar_coverage"] = d >= CALENDAR_COVERAGE_START
+    # lc_phase: three-tier categorical for LC research timeline.
+    # pre_corona     date < 2022-03-21 (the user's healthy / training period)
+    # corona_infection  2022-03-21 to 2022-04-03 (corona-ziek-week + post-acute
+    #                recovery window; includes Fietsweekend Ardennen 2022-04-01
+    #                to 2022-04-03 which the user identifies as the trigger /
+    #                end-of-acute-corona event)
+    # lc             date >= 2022-04-04 (LC-symptom-onset window per the
+    #                LC-era marker in annotations.yaml)
+    if d < CORONA_START:
+        row["lc_phase"] = "pre_corona"
+    elif d < LC_ERA_START:
+        row["lc_phase"] = "corona_infection"
+    else:
+        row["lc_phase"] = "lc"
 
     # --- PwC work record ---
     p = pwc_hours.get(d, {})

@@ -121,8 +121,26 @@ event_labels `Citalopram-traject`, the 2024 relatiecoach-umbrella, and
 wake-up-date convention still applies — the attribution rule is
 unchanged. Downstream analyses that use `bedtime_hour` or
 `sleep_duration_min` should be aware that the afternoon-start tail
-is structurally distinct from late-night bedtime and may warrant a
-separate flag.
+is structurally distinct from late-night bedtime.
+
+**Layer 2 derivation check (2026-06-12)**: a candidate flag was
+tested at two thresholds — (A) `sleep_start_local_hour < 17`
+(Europe/Amsterdam, DST-correct) returns 144 of 1707 valid-sleep
+nights (8.44%); (B) A AND `sleep_duration_min > p95 (737 min)`
+returns 1 row (the 2023-02-05 observation alone). Definition B at
+p95 is a degenerate threshold for this dataset. Definition A's 144
+flagged rows co-occur with `is_crash=True` in 8 rows (5.6%) and
+with any `crash_episode_id` in 12 rows (8.3%); the top co-occurring
+umbrella `event_labels` tokens are `Training-periode (hardlopen +
+fietsen)` (46 rows, 31.9%, pre-LC date range), `Citalopram-traject
+(umbrella)` (40 rows, 27.8%), `Citalopram fase 3: 30mg plateau` (34
+rows, 23.6%), and `Naproxen-interventie` (22 rows, 15.3%).
+
+Definition A is persisted as the derived column
+`sleep_start_afternoon_flag` in the master (see DATA_DICTIONARY.md
+§7). Definition B is not persisted (degenerate at p95). A
+less-restrictive duration constraint than p95 has not been
+evaluated; that would be a Layer 3+ feature-engineering decision.
 
 ---
 

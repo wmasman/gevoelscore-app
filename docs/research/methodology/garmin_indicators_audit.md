@@ -5,14 +5,36 @@
 ## Rule for new analyses (v3.2 lagged baseline)
 
 New analyses on `per_day_master.csv` use the **v3.2 lagged-baseline**
-exertion columns (`exertion_class_lagged`, `exertion_rank_composite_lagged`,
-`step_rank_lagged`, `eff_exertion_rank_lagged`, `max_hr_rank_lagged`,
-`vigorous_min_rank_lagged`, `push_burden_7d_lagged`,
-`effective_exertion_slope_28d`). The v3.1 columns (`exertion_class`,
-`step_z_30d`, etc.) stay in the master only for reproducibility of
-existing HA01b / HA02c results; they are not the default surface for
-new work. See § Per-column provenance map and the v3.2 sub-section in
+exertion columns. Two variants exist (added 2026-06-12):
+
+- **`_lagged_lcera`** (LC-era-only baseline, restricted to dates >=
+  `LC_ERA_START = 2022-04-04`): **use for PEM-pacing analyses**
+  (Wiggers H1, H3, H5, B4, D5). The baseline reflects the user's
+  LC-era normal, so today's rank measures load relative to current
+  capacity. Avoids the all-era variant's mis-ranking of early-LC days
+  whose lagged window still reaches into pre-LC healthy days.
+- **`_lagged`** (all-era baseline, no date restriction): use for
+  trajectory characterisation, cross-era comparison, and "how have I
+  changed from pre-LC capacity" questions.
+
+Default v3.2 columns for new analyses:
+`exertion_class_lagged[_lcera]`, `exertion_rank_composite_lagged[_lcera]`,
+4 per-axis ranks `_lagged[_lcera]`, 4 per-axis classes `_lagged[_lcera]`,
+`push_burden_7d_lagged[_lcera]`, plus `effective_exertion_slope_28d`
+(shared, no LC-era variant — see DATA_DICTIONARY.md §6).
+
+The v3.1 columns (`exertion_class`, `step_z_30d`, etc.) stay in the
+master only for reproducibility of existing HA01b / HA02c results;
+they are not the default surface for new work. See § Per-column
+provenance map and the v3.2 sub-section in
 [`severity_spec.md`](../analyses/garmin_exploration/activity-labels/spec/severity_spec.md).
+The LC-era boundary `lc_phase` column is in §0 of the dictionary —
+gate on `lc_phase == "lc"` to scope to LC-era days; on
+`lc_phase == "pre_corona"` for healthy-baseline characterisation;
+exclude `lc_phase == "corona_infection"` from both. Per-phase
+distributions of Garmin + subjective signals are documented in
+[`lc_phase_descriptive.md`](lc_phase_descriptive.md) (regenerate from
+`c:/tmp/lc_phase_descriptive.py` after any master rebuild).
 
 This document serves three purposes:
 
@@ -78,8 +100,8 @@ spec / locked decisions.
 |---|---|---|---|
 | `exertion_class` | `exertion_class` | 4-axis percentile-rank composite; locked v3.1 spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md); script [`garmin/activity-labels/scripts/04_classify_exertion.py`](../garmin/activity-labels/scripts/04_classify_exertion.py) | sensitive to rolling-baseline contamination during sustained pushes (the 30d rolling baseline includes the pushes themselves); v3.2 lagged variant in the same spec exists but the master uses v3.1 |
 | ~~`push_burden_7d`~~ DROPPED 2026-06-11 | (upstream `push_burden_7d`) | spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md) | **Held back from the master.** Known methodological issue (rolling-baseline contamination — the 30d baseline includes the pushes themselves; sustained creep rebases into its own reference). A v3.2 lagged-baseline variant `push_burden_7d_lagged` exists upstream (script [`11_compute_lagged_baseline.py`](../garmin/activity-labels/scripts/11_compute_lagged_baseline.py)) and is the documented fix. Neither is currently in the master: same discipline as `stabilisation_period` — we don't surface a known-broken metric, nor pre-commit to its replacement before descriptive analysis motivates the choice. When descriptive work surfaces the need, the lagged variant can be added cleanly. |
-| `effective_exertion_min` | `effective_exertion_min` | max(recorded-activity total, passive UDS vigorous + 0.5×moderate); definition in `garmin/activity-labels/definition.md` §3.3 | weighted-passive convention captures unlogged exertion but the 0.5× weight on moderate is a designed convention, not a derived constant. **2022Q3 coverage gap (Layer 2 audit 2026-06-12)**: only 33.7% of `has_garmin_uds=True` days in 2022Q3 have this column populated, vs 100% in 2022Q4 onwards. The 30-day warmup ended ~2021-09-14 so this is a separate post-warmup gap (see `step_z_30d` note for the parallel finding and likely upstream cause). |
-| `step_z_30d` | `step_z_30d` | z-score of daily steps vs 30d rolling median + MAD; spec in definition.md §3.3 | inherits the same rolling-baseline issue as push_burden in extreme push periods (less severe for steps than for class because steps are more granular). **2022Q3 coverage gap (Layer 2 audit 2026-06-12)**: only 9.6% of `has_garmin_uds=True` days in 2022Q3 have `step_z_30d` populated, vs 100% in 2022Q4 onwards. The 30-day warmup ended ~2021-09-14 so this is a separate post-warmup gap — likely an upstream `activity_features_daily.csv` extraction discontinuity around Sep-Oct 2022. Worth confirming against the extract script before relying on early-2022Q3 rolling features. |
+| `effective_exertion_min` | `effective_exertion_min` | max(recorded-activity total, passive UDS vigorous + 0.5×moderate); definition in `garmin/activity-labels/definition.md` §3.3 | weighted-passive convention captures unlogged exertion but the 0.5× weight on moderate is a designed convention, not a derived constant. **2022Q3 coverage gap resolved (re-extract 2026-06-12)**: now 100% fill from 2021Q3 onwards (extended `ANALYSIS_START` from 2022-09-03 to 2021-08-16 in `03_compute_daily_features.py` line 26). Pre-LC baseline now accessible. |
+| `step_z_30d` | `step_z_30d` | z-score of daily steps vs 30d rolling median + MAD; spec in definition.md §3.3 | inherits the same rolling-baseline issue as push_burden in extreme push periods (less severe for steps than for class because steps are more granular). **2022Q3 coverage gap resolved (re-extract 2026-06-12)**: now 100% fill from 2021Q4 onwards (after 20-day warmup window). v3.1 rolling-baseline values for **2022-09-23 → 2022-10-22 shifted** because the baseline now includes pre-LC training-period days — strict HA01b/HA02c bit-identical reproducibility breaks for those 30 days only; qualitative results expected stable. |
 
 ### From `sleep_stress_nightly.csv` (custom-extracted from FIT)
 

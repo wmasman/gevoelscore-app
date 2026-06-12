@@ -50,6 +50,17 @@ LAGGED_WINDOW_END_DAYS = 90    # oldest included day
 LAGGED_WINDOW_LEN = LAGGED_WINDOW_END_DAYS - LAGGED_WINDOW_START_DAYS  # 60
 MIN_LAGGED_DAYS = 40           # require ~2/3 of 60 days
 
+# LC-era boundary for the LC-era-only lagged variant (added 2026-06-12).
+# Date = Monday after the 2022-04-01 to 2022-04-03 "Fietsweekend Ardennen" span
+# (annotations.yaml), which followed the corona-ziek-week 2022-03-21 to 2022-03-27
+# (per Training-periode span note). User-locked factual marker for the post-corona
+# / LC-symptom-onset window — earlier than the LC dx (2022-05-06) and earlier than
+# gevoelscore corpus start (2022-09-03). Used to restrict the lagged-baseline
+# window for `*_lagged_lcera` columns: only days >= this date contribute to the
+# baseline. For days before LCERA_START + 30 + 60 = 2022-08-03, the LC-era window
+# is not yet full and the LC-era ranks will be NaN.
+LCERA_START = date(2022, 4, 4)
+
 # A.2 trend slope window
 SLOPE_WINDOW_DAYS = 28
 MIN_SLOPE_DAYS = 21            # require ~3/4 of 28 days
@@ -97,17 +108,26 @@ def compute_lagged_rank(
     sorted_dates: list[date],
     source_key: str,
     out_key: str,
+    min_window_date: date | None = None,
 ) -> int:
     """Percentile rank within days [d-90, d-30].
 
     Same midrank-for-ties logic as compute_rolling_rank in script 03.
     Returns the number of days that got a valid rank.
+
+    If `min_window_date` is set, baseline window dates earlier than this
+    boundary are excluded from `prior_vals`. Used for the LC-era-only
+    variant (see LCERA_START) so the lagged baseline does not draw on
+    the user's pre-LC healthy-capacity days. Days early enough that the
+    filtered window has < MIN_LAGGED_DAYS valid entries still emit "".
     """
     n_valid = 0
     for d in sorted_dates:
         prior_vals: list[float] = []
         for i in range(LAGGED_WINDOW_START_DAYS + 1, LAGGED_WINDOW_END_DAYS + 1):
             wd = d - timedelta(days=i)
+            if min_window_date is not None and wd < min_window_date:
+                continue
             if wd in by_date:
                 v = parse_num(by_date[wd].get(source_key))
                 if v is not None:
@@ -169,17 +189,23 @@ def compute_slope(
 def compute_push_burden_lagged(
     by_date: dict[date, dict],
     sorted_dates: list[date],
+    source_rank_key: str = "effective_exertion_rank_lagged",
+    out_key: str = "push_burden_7d_lagged",
 ) -> None:
-    """Count of last 7 days (including today) with effective_exertion_rank_lagged >= 0.75."""
+    """Count of last 7 days (including today) with `source_rank_key` >= 0.75.
+
+    Generalised so the same logic can produce `push_burden_7d_lagged` (from
+    the all-era rank) and `push_burden_7d_lagged_lcera` (from the LC-era rank).
+    """
     for d in sorted_dates:
         push_days = 0
         for i in range(7):
             wd = d - timedelta(days=i)
             if wd in by_date:
-                r = parse_num(by_date[wd].get("effective_exertion_rank_lagged"))
+                r = parse_num(by_date[wd].get(source_rank_key))
                 if r is not None and r >= PUSH_RANK_THRESHOLD:
                     push_days += 1
-        by_date[d]["push_burden_7d_lagged"] = push_days
+        by_date[d][out_key] = push_days
 
 
 def main():
@@ -201,6 +227,20 @@ def main():
         "class_axis_D_vig_lagged",
         "push_burden_7d_lagged",
         "effective_exertion_slope_28d",
+        # LC-era-only variants (baseline restricted to dates >= LCERA_START).
+        # See LCERA_START constant for rationale. Slope is not duplicated:
+        # its 28-day window slides into LC era within ~4 weeks of LCERA_START
+        # so a separate variant would not differ except at the boundary.
+        "effective_exertion_rank_lagged_lcera",
+        "step_rank_lagged_lcera",
+        "max_hr_rank_lagged_lcera",
+        "vigorous_min_rank_lagged_lcera",
+        "exertion_class_lagged_lcera",
+        "class_axis_A_eff_lagged_lcera",
+        "class_axis_B_step_lagged_lcera",
+        "class_axis_C_maxhr_lagged_lcera",
+        "class_axis_D_vig_lagged_lcera",
+        "push_burden_7d_lagged_lcera",
     ]
     for r in rows:
         for col in new_cols:
@@ -254,8 +294,68 @@ def main():
         r["exertion_class_lagged"] = composite(a, b, c, dcls)
         n_classed += 1
 
-    # Push burden on lagged baseline
+    # Push burden on all-era lagged baseline
     compute_push_burden_lagged(by_date, sorted_dates)
+
+    # === LC-era-only variants (baseline window restricted to dates >= LCERA_START) ===
+    print(
+        f"\n=== A.1 LC-era-only lagged baseline ranks "
+        f"(LCERA_START={LCERA_START}, window [d-{LAGGED_WINDOW_END_DAYS}, d-{LAGGED_WINDOW_START_DAYS}], "
+        f"min {MIN_LAGGED_DAYS} of {LAGGED_WINDOW_LEN}) ==="
+    )
+    n_eff_l = compute_lagged_rank(
+        by_date, sorted_dates, "effective_exertion_min",
+        "effective_exertion_rank_lagged_lcera", min_window_date=LCERA_START,
+    )
+    n_step_l = compute_lagged_rank(
+        by_date, sorted_dates, "total_steps",
+        "step_rank_lagged_lcera", min_window_date=LCERA_START,
+    )
+    n_mhr_l = compute_lagged_rank(
+        by_date, sorted_dates, "max_hr_uds",
+        "max_hr_rank_lagged_lcera", min_window_date=LCERA_START,
+    )
+    n_vig_l = compute_lagged_rank(
+        by_date, sorted_dates, "vigorous_min_uds",
+        "vigorous_min_rank_lagged_lcera", min_window_date=LCERA_START,
+    )
+    print(f"  effective_exertion_rank_lagged_lcera: {n_eff_l}/{len(rows)} valid")
+    print(f"  step_rank_lagged_lcera:               {n_step_l}/{len(rows)} valid")
+    print(f"  max_hr_rank_lagged_lcera:             {n_mhr_l}/{len(rows)} valid")
+    print(f"  vigorous_min_rank_lagged_lcera:       {n_vig_l}/{len(rows)} valid")
+
+    # Classify the LC-era-only variant
+    n_classed_l = 0
+    for r in rows:
+        eff = parse_num(r.get("effective_exertion_rank_lagged_lcera"))
+        step = parse_num(r.get("step_rank_lagged_lcera"))
+        mhr = parse_num(r.get("max_hr_rank_lagged_lcera"))
+        vig = parse_num(r.get("vigorous_min_rank_lagged_lcera"))
+        if all(v is None for v in (eff, step, mhr, vig)):
+            r["exertion_class_lagged_lcera"] = ""
+            r["class_axis_A_eff_lagged_lcera"] = ""
+            r["class_axis_B_step_lagged_lcera"] = ""
+            r["class_axis_C_maxhr_lagged_lcera"] = ""
+            r["class_axis_D_vig_lagged_lcera"] = ""
+            continue
+        a = rank_to_class(eff)
+        b = rank_to_class(step)
+        c = rank_to_class(mhr)
+        dcls = rank_to_class(vig)
+        r["class_axis_A_eff_lagged_lcera"] = a
+        r["class_axis_B_step_lagged_lcera"] = b
+        r["class_axis_C_maxhr_lagged_lcera"] = c
+        r["class_axis_D_vig_lagged_lcera"] = dcls
+        r["exertion_class_lagged_lcera"] = composite(a, b, c, dcls)
+        n_classed_l += 1
+    print(f"  exertion_class_lagged_lcera classified: {n_classed_l}/{len(rows)}")
+
+    # Push burden from the LC-era effective_exertion rank
+    compute_push_burden_lagged(
+        by_date, sorted_dates,
+        source_rank_key="effective_exertion_rank_lagged_lcera",
+        out_key="push_burden_7d_lagged_lcera",
+    )
 
     print(
         f"\n=== A.2 trend slope "

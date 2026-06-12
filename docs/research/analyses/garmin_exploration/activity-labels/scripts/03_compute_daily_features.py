@@ -22,8 +22,15 @@ DAY_ENTRIES_CSV = (
 )
 OUT = OUT_DIR / "activity_features_daily.csv"
 
-# Locked analysis window (matches gevoelscore corpus)
-ANALYSIS_START = date(2022, 9, 3)
+# Analysis window (extended 2026-06-12 from 2022-09-03 to 2021-08-16 = Garmin
+# coverage start, per Layer 1 patch investigation. The earlier 2022-09-03 start
+# was locked to the gevoelscore corpus; extending recovers ~9 months of pre-LC
+# baseline + closes the 2022Q3-Q4 v3.2 inheritance gap. v3.1 rank values for
+# 2022-09-23 → 2022-10-22 shift slightly because the rolling baseline now
+# includes pre-LC training-period days; HA01b/HA02c strict bit-identical
+# reproducibility breaks for those 30 days only. See DATA_DICTIONARY.md update
+# log for the full trade-off.
+ANALYSIS_START = date(2021, 8, 16)
 ANALYSIS_END = date(2026, 6, 5)
 
 # Step-spike rule (definition.md §3.4)
