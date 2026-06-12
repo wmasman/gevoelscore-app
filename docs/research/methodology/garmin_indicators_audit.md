@@ -78,8 +78,8 @@ spec / locked decisions.
 |---|---|---|---|
 | `exertion_class` | `exertion_class` | 4-axis percentile-rank composite; locked v3.1 spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md); script [`garmin/activity-labels/scripts/04_classify_exertion.py`](../garmin/activity-labels/scripts/04_classify_exertion.py) | sensitive to rolling-baseline contamination during sustained pushes (the 30d rolling baseline includes the pushes themselves); v3.2 lagged variant in the same spec exists but the master uses v3.1 |
 | ~~`push_burden_7d`~~ DROPPED 2026-06-11 | (upstream `push_burden_7d`) | spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md) | **Held back from the master.** Known methodological issue (rolling-baseline contamination — the 30d baseline includes the pushes themselves; sustained creep rebases into its own reference). A v3.2 lagged-baseline variant `push_burden_7d_lagged` exists upstream (script [`11_compute_lagged_baseline.py`](../garmin/activity-labels/scripts/11_compute_lagged_baseline.py)) and is the documented fix. Neither is currently in the master: same discipline as `stabilisation_period` — we don't surface a known-broken metric, nor pre-commit to its replacement before descriptive analysis motivates the choice. When descriptive work surfaces the need, the lagged variant can be added cleanly. |
-| `effective_exertion_min` | `effective_exertion_min` | max(recorded-activity total, passive UDS vigorous + 0.5×moderate); definition in `garmin/activity-labels/definition.md` §3.3 | weighted-passive convention captures unlogged exertion but the 0.5× weight on moderate is a designed convention, not a derived constant |
-| `step_z_30d` | `step_z_30d` | z-score of daily steps vs 30d rolling median + MAD; spec in definition.md §3.3 | inherits the same rolling-baseline issue as push_burden in extreme push periods (less severe for steps than for class because steps are more granular) |
+| `effective_exertion_min` | `effective_exertion_min` | max(recorded-activity total, passive UDS vigorous + 0.5×moderate); definition in `garmin/activity-labels/definition.md` §3.3 | weighted-passive convention captures unlogged exertion but the 0.5× weight on moderate is a designed convention, not a derived constant. **2022Q3 coverage gap (Layer 2 audit 2026-06-12)**: only 33.7% of `has_garmin_uds=True` days in 2022Q3 have this column populated, vs 100% in 2022Q4 onwards. The 30-day warmup ended ~2021-09-14 so this is a separate post-warmup gap (see `step_z_30d` note for the parallel finding and likely upstream cause). |
+| `step_z_30d` | `step_z_30d` | z-score of daily steps vs 30d rolling median + MAD; spec in definition.md §3.3 | inherits the same rolling-baseline issue as push_burden in extreme push periods (less severe for steps than for class because steps are more granular). **2022Q3 coverage gap (Layer 2 audit 2026-06-12)**: only 9.6% of `has_garmin_uds=True` days in 2022Q3 have `step_z_30d` populated, vs 100% in 2022Q4 onwards. The 30-day warmup ended ~2021-09-14 so this is a separate post-warmup gap — likely an upstream `activity_features_daily.csv` extraction discontinuity around Sep-Oct 2022. Worth confirming against the extract script before relying on early-2022Q3 rolling features. |
 
 ### From `sleep_stress_nightly.csv` (custom-extracted from FIT)
 
@@ -145,34 +145,33 @@ future researcher knows what's possible.
 
 ### In `daily_uds.csv`, available but unused
 
-- `daily_step_goal` — Garmin's adaptive step target. Could anchor
-  "above-goal" boolean.
 - `total_distance_m` — daily distance (steps × stride). Largely
   redundant with `total_steps` for this user (no significant cycling
   outside recorded activities).
-- `highly_active_sec`, `active_sec` — finer-grained intensity-time
-  buckets than moderate_min / vigorous_min.
-- `is_vigorous_day` — Garmin's binary flag for at-least-one vigorous
-  burst during the day. Convenient gate.
+
+*(Propagated to master in Wave 2 2026-06-12: `daily_step_goal`,
+`highly_active_sec`, `active_sec`, `is_vigorous_day`. See
+[`../DATA_DICTIONARY.md`](../DATA_DICTIONARY.md) §4.)*
 
 ### In `activity_features_daily.csv`, available but unused
 
 The full feature table has **~40 columns** beyond what the master
-surfaces. Notable groups:
+surfaces. Remaining unused groups (after Wave 2 propagation):
 
-- **4-axis class attribution**: `class_axis_A_eff`, `class_axis_B_step`,
-  `class_axis_C_maxhr`, `class_axis_D_vig` — which axis drove the
-  composite exertion_class. Useful for stratifying by exertion type.
-- **Lagged-baseline variants**: `effective_exertion_rank_lagged`,
-  `step_rank_lagged`, `max_hr_rank_lagged`, `vigorous_min_rank_lagged`,
-  `exertion_class_lagged`, `push_burden_7d_lagged` — the v3.2
-  contamination-fixed metrics.
-- **Trend / streak**: `above_baseline_streak`,
-  `effective_exertion_slope_28d`.
 - **Per-activity richness**: `max_aerobicTE`, `max_anaerobicTE`,
-  `total_distance_km`, `avg_workoutRpe`, `avg_workoutFeel`.
-- **Raw rank columns**: `step_rank_30d`, `effective_exertion_rank_30d`,
-  `max_hr_rank_30d`, `vigorous_min_rank_30d`.
+  `total_distance_km`, `avg_workoutRpe`, `avg_workoutFeel`. Per-activity
+  resolution; if needed build a separate per-activity table rather than
+  collapsing to per-day.
+- **Raw rank columns (v3.1)**: `step_rank_30d`,
+  `effective_exertion_rank_30d`, `max_hr_rank_30d`,
+  `vigorous_min_rank_30d`. The v3.2 lagged ranks are now in the master
+  and are the default; raw v3.1 ranks remain unused unless an
+  HA01b-style reproduction explicitly requires them.
+
+*(Propagated to master in Wave 2 2026-06-12: all 4 per-axis classes
+v3.1 + all 4 per-axis classes v3.2 lagged + `above_baseline_streak`.
+Lagged ranks composite + push_burden + slope landed in the v3.2
+commit 02018e0. See [`../DATA_DICTIONARY.md`](../DATA_DICTIONARY.md) §6.)*
 
 ### NOT extracted from raw FIT (latent in dump)
 

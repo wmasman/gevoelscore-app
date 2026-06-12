@@ -448,6 +448,23 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["moderate_min"] = u.get("moderate_min") or ""
     row["vigorous_min"] = u.get("vigorous_min") or ""
     row["total_calories"] = u.get("active_kcal") or ""
+    # Wave 2: finer intensity buckets + step goal (propagated from daily_uds.csv)
+    row["highly_active_sec"] = u.get("highly_active_sec") or ""
+    row["active_sec"] = u.get("active_sec") or ""
+    row["is_vigorous_day"] = u.get("is_vigorous_day") or ""
+    row["daily_step_goal"] = u.get("daily_step_goal") or ""
+    # Derived: did total_steps clear daily_step_goal? Useful as E1 calibration
+    # anchor (Wiggers personal-step-threshold). Boolean; "" when either input
+    # is missing.
+    _ts = u.get("total_steps")
+    _sg = u.get("daily_step_goal")
+    if _ts and _sg:
+        try:
+            row["steps_above_goal_flag"] = float(_ts) >= float(_sg)
+        except (ValueError, TypeError):
+            row["steps_above_goal_flag"] = ""
+    else:
+        row["steps_above_goal_flag"] = ""
 
     # HR — pass Garmin's algorithmic RHR through directly.
     # An inherited 30-130 bpm sanity filter was removed 2026-06-11 after
@@ -488,6 +505,19 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["exertion_rank_composite_lagged"] = max(rank_vals) if rank_vals else ""
     row["push_burden_7d_lagged"] = a.get("push_burden_7d_lagged") or ""
     row["effective_exertion_slope_28d"] = a.get("effective_exertion_slope_28d") or ""
+    # Wave 2: per-axis classes (v3.1 and v3.2) + above-baseline streak.
+    # Propagated from activity_features_daily.csv to support Wiggers E3
+    # (per-axis comparison) and supplement E2 (streak as a direct
+    # creeping-floor count complementing effective_exertion_slope_28d).
+    row["class_axis_A_eff"] = a.get("class_axis_A_eff") or ""
+    row["class_axis_B_step"] = a.get("class_axis_B_step") or ""
+    row["class_axis_C_maxhr"] = a.get("class_axis_C_maxhr") or ""
+    row["class_axis_D_vig"] = a.get("class_axis_D_vig") or ""
+    row["class_axis_A_eff_lagged"] = a.get("class_axis_A_eff_lagged") or ""
+    row["class_axis_B_step_lagged"] = a.get("class_axis_B_step_lagged") or ""
+    row["class_axis_C_maxhr_lagged"] = a.get("class_axis_C_maxhr_lagged") or ""
+    row["class_axis_D_vig_lagged"] = a.get("class_axis_D_vig_lagged") or ""
+    row["above_baseline_streak"] = a.get("above_baseline_streak") or ""
 
     # --- Sleep-stress (wake-up-date attributed; see methodology/nightly_attribution.md) ---
     s = sleep.get(d, {})
