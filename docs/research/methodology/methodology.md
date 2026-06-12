@@ -503,6 +503,23 @@ exports from other employers, etc.). Each new source should:
    `reintegration_gaps.csv`-style review file.
 4. Be added to the source table in §0 above.
 
+## 3c. Exertion metric choice (v3.2 lagged is the default)
+
+Two versions of the Garmin-derived exertion metrics live in
+`per_day_master.csv`:
+
+- **v3.1** (`exertion_class`, `step_z_30d`, per-axis ranks): trailing
+  30-day baseline. Retained in the master for reproducibility of
+  HA01b / HA02c results; do not use for new work.
+- **v3.2** (`*_lagged` columns + `effective_exertion_slope_28d`):
+  baseline window `[d-90, d-30]`. Default for new analyses, including
+  all Wiggers-derived hypothesis testing.
+
+Full provenance + per-column issues in
+[`garmin_indicators_audit.md`](garmin_indicators_audit.md). Column
+choice matrix per Wiggers hypothesis in
+[`../wiggers_testable_hypotheses.md`](../wiggers_testable_hypotheses.md).
+
 ## 4. Event-label conventions
 
 Labels describe **what happened** (the event), not **how the user

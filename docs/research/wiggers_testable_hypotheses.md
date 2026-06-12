@@ -12,7 +12,20 @@ The handleiding is a collection of *lotgenoten* observations and n-of-1 generali
 
 - **"Deviation"** = value minus your own rolling personal baseline (e.g. trailing 7–28 day median), not an absolute number. The handleiding repeatedly stresses that absolute values are meaningless across people; for you they're meaningless across *seasons and device changes* too.
 - **`t0`** = day of a labelled crash/dip. **`t-n` / `t+n`** = days before/after. The workhorse method for most of these is **peri-event alignment**: stack all crash episodes at `t0`, average each metric across `t-5 … t+5`, and look at the shape.
-- **Exertion proxy** = whatever you decide best stands in for "did too much": steps, intensive minutes, an activity flag, calendar load, or a composite.
+- **Exertion proxy** = whatever you decide best stands in for "did too much": steps, intensive minutes, an activity flag, calendar load, or a composite. **For tests on `per_day_master.csv`, use the v3.2 lagged columns** (see Column choice below); v3.1 columns (`exertion_class`, `step_z_30d`) stay in the master for reproducibility of HA01b/HA02c only.
+
+**Column choice for `per_day_master.csv` (locked 2026-06-12)**
+
+| hypothesis-need | v3.2 column to use | notes |
+|---|---|---|
+| Continuous exertion proxy for scaling / correlation / lag-profile (A1, H1, H3, H5) | `exertion_rank_composite_lagged` | float 0-1 |
+| Threshold "did too much" for overexertion stratification (B4, D5, H2, H4) | `exertion_class_lagged` in `{heavy, very_heavy}` | categorical |
+| Steps-specific threshold or trend (E1, E2) | `step_rank_lagged` and `effective_exertion_slope_28d` | dose-response, creeping floor |
+| Per-axis comparison "which axis predicts best" (E3) | `step_rank_lagged`, `eff_exertion_rank_lagged`, `max_hr_rank_lagged`, `vigorous_min_rank_lagged` | side-by-side |
+| Activity-invisible crash detection (H2) | low `step_rank_lagged` + low `max_hr_rank_lagged` + crash | combine |
+| Sustained-elevation push count (E2, H4 supporting) | `push_burden_7d_lagged` | int 0-7 |
+
+Source: [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md) § Rule for new analyses; [`analyses/garmin_exploration/activity-labels/spec/severity_spec.md`](analyses/garmin_exploration/activity-labels/spec/severity_spec.md) § Lagged baseline.
 
 **Statistical hygiene (you know these, listed so the register is self-contained)**
 

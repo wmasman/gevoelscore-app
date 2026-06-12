@@ -225,6 +225,11 @@ classifications + analyses.
 
 ## Lagged baseline + trend slope (v3.2 extension — 2026-06-06)
 
+**v3.2 is the default for new analyses (locked 2026-06-12).** v3.1
+columns stay in `per_day_master.csv` for reproducibility of HA01b /
+HA02c results; new descriptive work, Wiggers hypothesis tests, and
+any exertion-proxy use should pick the `*_lagged` columns by default.
+
 **This is an additive extension to v3.1, not a redefinition.** The
 locked v3.1 columns (`effective_exertion_rank_30d`,
 `exertion_class`, `push_burden_7d`, per-axis class columns)

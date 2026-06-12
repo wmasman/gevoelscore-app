@@ -91,7 +91,7 @@ for the three-state semantics.
 |---|---|---|---|---|---|---|---|---|
 | `is_crash` | daily_computed | `processed/crash_labels/labels_crash_v2.csv` | `is_crash` (or derived from `label`) | bool | True if day inside a v2 crash episode | 2022-09-03 → today | False outside any episode | see [methodology/crash_v2_definition.md](methodology/crash_v2_definition.md) |
 | `is_dip` | daily_computed | `processed/crash_labels/labels_crash_v2.csv` | `is_dip` (or derived) | bool | True if day is a v2 isolated single-day dip | 2022-09-03 → today | False otherwise | |
-| `crash_episode_id` | daily_computed | `processed/crash_labels/labels_crash_v2.csv` | `episode_id` | object (string) | episode identifier (e.g. `EP_2023_06_05`) | matches | empty when not in an episode | groups multi-day crashes |
+| `crash_episode_id` | daily_computed | `processed/crash_labels/labels_crash_v2.csv` | `episode_id` | object (string) | episode identifier (e.g. `EP_2023_06_05`) | matches | empty when not in an episode | tags every day inside a crash episode AND every single-day `is_dip` day; 108 distinct IDs across 182 in-episode days (= 29 crash streaks + 79 isolated dips, per Layer 1 audit 2026-06-12) |
 | `is_sub_threshold_dip` | daily_computed | `processed/crash_labels/sub_threshold_dips.csv` | derived | bool | True if day is user-confirmed sub-threshold dip | 2022-09-03 → today | False otherwise | distinct from `is_dip` (research-derived); user-triaged |
 | `dip_type` | daily_computed | `processed/crash_labels/sub_threshold_dips.csv` | `dip_type` | category | `general`, `brainfog` | only where `is_sub_threshold_dip=True` | NaN otherwise | brainfog dips added 2026-06-11 from Q2 review |
 
@@ -121,11 +121,41 @@ for the three-state semantics.
 
 ## Section 6 — Garmin exertion features (engineered)
 
+**Two versions live side by side in the master.** v3.1 columns are
+retained for backward compatibility with HA01b / HA02c results;
+v3.2 lagged columns are the default for new analyses (see
+[`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md)
+§ Rule for new analyses and the column-choice matrix in
+[`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md)).
+
+### v3.1 (legacy, backward compat)
+
 | name | class | source | source column | dtype | units | coverage | missingness | notes |
 |---|---|---|---|---|---|---|---|---|
-| `exertion_class` | daily_computed | `processed/garmin/activity_features_daily.csv` | `exertion_class` | category | `very_light`, `light`, `moderate`, `heavy`, `very_heavy` | 2021-08-16 → today (1.754 days) | NaN on gap | v3.1 spec, 4-axis percentile rank against rolling personal baseline; see `analyses/garmin_exploration/exertion-class-definition.md` |
-| `effective_exertion_min` | daily_computed | `processed/garmin/activity_features_daily.csv` | `effective_exertion_min` | float64 | minutes | same | NaN on gap | |
-| `step_z_30d` | daily_computed | `processed/garmin/activity_features_daily.csv` | `step_z_30d` | float64 | z-score of daily steps vs 30d rolling baseline | same | NaN on gap | step-based; do not interpret as a generic "intensity z-score" — earlier draft renamed it from the misleading `intensity_z_score` proxy |
+| `exertion_class` | daily_computed | `processed/garmin/activity_features_daily.csv` | `exertion_class` | category | `none`, `very_light`, `light`, `moderate`, `heavy`, `very_heavy` | 2021-08-16 → today (1.754 days) | NaN on gap | v3.1 spec, 4-axis percentile rank against 30-day **trailing** rolling baseline that includes the candidate day. **Known issue**: sustained pushes rebase into their own reference frame; use `exertion_class_lagged` for new work. See `analyses/garmin_exploration/exertion-class-definition.md`. **Note**: `none` (sedentary day inside coverage; ≈26.5% of `has_garmin_uds=True` days per Layer 1 audit 2026-06-12) is distinct from `NaN` (out-of-coverage). `very_light` does not appear in the current dataset — the 4-axis rank may always route low-activity days to `none`; worth re-confirming against the v3.1 spec. |
+| `effective_exertion_min` | daily_computed | `processed/garmin/activity_features_daily.csv` | `effective_exertion_min` | float64 | minutes | same | NaN on gap; additionally NaN where the rolling-baseline computation is undefined (e.g. at the start of coverage before the 30-day window is full, or after multi-day Garmin gaps) — empirically ≈22% of `has_garmin_uds=True` days are NaN here, per Layer 1 audit 2026-06-12 | raw minutes; not affected by the v3.1/v3.2 baseline split |
+| `step_z_30d` | daily_computed | `processed/garmin/activity_features_daily.csv` | `step_z_30d` | float64 | z-score of daily steps vs 30d rolling baseline | same | NaN on gap; additionally NaN where the 30-day rolling baseline cannot be computed (first 30 days of coverage; gaps after extended Garmin outages) — empirically ≈23% of `has_garmin_uds=True` days are NaN here, per Layer 1 audit 2026-06-12 | step-based; do not interpret as a generic "intensity z-score" — earlier draft renamed it from the misleading `intensity_z_score` proxy. **For new work use `step_rank_lagged`** (same contamination issue as `exertion_class`). |
+
+### v3.2 lagged baseline (default for new analyses, added 2026-06-12)
+
+Baseline window `[d-90, d-30]` — 60 days ending 30 days BEFORE the
+candidate day; excludes the recent push period from its own reference.
+Computed by
+[`analyses/garmin_exploration/activity-labels/scripts/11_compute_lagged_baseline.py`](analyses/garmin_exploration/activity-labels/scripts/11_compute_lagged_baseline.py);
+specced in
+[`analyses/garmin_exploration/activity-labels/spec/severity_spec.md`](analyses/garmin_exploration/activity-labels/spec/severity_spec.md)
+§ Lagged baseline + trend slope.
+
+| name | class | source | source column | dtype | units / values | coverage | missingness | notes |
+|---|---|---|---|---|---|---|---|---|
+| `exertion_class_lagged` | daily_computed | `processed/garmin/activity_features_daily.csv` | `exertion_class_lagged` | category | `none`, `light`, `moderate`, `heavy`, `very_heavy` | 2021-08-16 → today | NaN before the 90-day baseline window is full and after multi-day Garmin gaps (≈74.2% fill of all rows, per build 2026-06-12) | composite of 4 lagged per-axis classes; use for overexertion thresholding (Wiggers B4, D5, H2, H4) |
+| `exertion_rank_composite_lagged` | daily_computed | derived in `pipeline/03_consolidate/build_unified_dataset.py` | `max(eff_exertion_rank_lagged, step_rank_lagged, max_hr_rank_lagged, vigorous_min_rank_lagged)` | float64 | 0.0 – 1.0 | same | same (≈74.2% fill) | continuous companion to `exertion_class_lagged`; use for scaling, correlation, cross-correlation lag-profile (Wiggers A1, H1, H3, H5) |
+| `eff_exertion_rank_lagged` | daily_computed | `processed/garmin/activity_features_daily.csv` | `effective_exertion_rank_lagged` | float64 | 0.0 – 1.0 | same | same | per-axis input to the composite; for per-axis comparison (Wiggers E3) |
+| `step_rank_lagged` | daily_computed | `processed/garmin/activity_features_daily.csv` | `step_rank_lagged` | float64 | 0.0 – 1.0 | same | same | steps axis; supports E1 (personal step threshold) and E3 |
+| `max_hr_rank_lagged` | daily_computed | `processed/garmin/activity_features_daily.csv` | `max_hr_rank_lagged` | float64 | 0.0 – 1.0 | same | same | HR-peak axis; supports H2 (activity-invisible crashes use low-HR-rank as a defining criterion) |
+| `vigorous_min_rank_lagged` | daily_computed | `processed/garmin/activity_features_daily.csv` | `vigorous_min_rank_lagged` | float64 | 0.0 – 1.0 | same | same | intensive-minutes axis; supports A4 (sustained vs spike) and E3 |
+| `push_burden_7d_lagged` | daily_computed | `processed/garmin/activity_features_daily.csv` | `push_burden_7d_lagged` | int | 0 – 7 | same | NaN where the rolling 7-day window cannot be formed (≈78.2% fill) | count of days in last 7 where any lagged axis rank ≥ 0.75; v3.2 fix for the contamination that dropped v3.1 `push_burden_7d` |
+| `effective_exertion_slope_28d` | daily_computed | `processed/garmin/activity_features_daily.csv` | `effective_exertion_slope_28d` | float64 | log-units per day | same | NaN before 28d of history available (≈77.0% fill) | OLS slope of log(1 + effective_exertion_min) over trailing 28 days; first-class signal for creeping-floor / sustained-creep patterns (Wiggers E2) |
 
 ---
 
@@ -279,13 +309,15 @@ All `derived`. These exist every day in the master's full range.
 Use this table to know which signals exist when querying any specific
 date range:
 
-| date range | gevoelscore | notes (asymm.) | Garmin UDS | sleep-stress | PwC log | PwC dossier | intensity triage |
+| date range | gevoelscore | notes (asymm.) | Garmin UDS | sleep-stress | PwC log | PwC dossier window | intensity reviewed |
 |---|---|---|---|---|---|---|---|
-| 2021-08-16 → 2022-09-02 | – | – | ✓ | ✓ | – | – | – |
-| 2022-09-03 → 2022-09-25 | ✓ | partial | ✓ | ✓ | – | ✓ | – |
+| 2021-08-16 → 2022-09-02 | – | – | ✓ | ✓ | – | partial | partial |
+| 2022-09-03 → 2022-09-25 | ✓ | – | ✓ | ✓ | – | ✓ | ✓ |
 | 2022-09-26 → 2024-02-26 | ✓ | partial | ✓ | ✓ | ✓ | ✓ | ✓ (2022-2024 done) |
-| 2024-02-27 → 2024-07-18 | ✓ | partial | ✓ | ✓ | – | ✓ | ✓ |
+| 2024-02-27 → 2024-07-18 | ✓ | partial | ✓ | ✓ | – | partial | ✓ |
 | 2024-07-19 → today | ✓ | varies | ✓ | ✓ | – | – | ✓ |
+
+Header semantics: **PwC dossier window** mirrors `has_pwc_dossier_window` (the wachttijd 104w span 2022-03-28 → 2024-04-17), not the count of dossier events on a given date. **intensity reviewed** mirrors `has_intensity_triage` (non-empty `intensity_source`), which includes the `bulk_triage_YYYY_no_info` three-state explicit-absence value — i.e. days the user reviewed and explicitly marked as carrying no load signal. Both are gating flags for downstream presence-conditioned semantics; neither is a "did data exist" cell.
 
 ---
 
@@ -318,4 +350,8 @@ date range:
 | 2026-06-11 | initial spec | created during Plan-mode phase A; not yet validated against a built dataset |
 | 2026-06-11 | Phase B audit | removed `push_burden_7d` column. The Garmin indicators audit ([methodology/garmin_indicators_audit.md](methodology/garmin_indicators_audit.md)) confirmed the known rolling-baseline-contamination issue. A v3.2 lagged variant (`push_burden_7d_lagged`) exists upstream but is also held back from the master: per the established schema discipline (same reasoning as `stabilisation_period`), we don't surface a known-broken metric even with a caveat, nor pre-commit to its replacement before descriptive analysis motivates the choice. When the need surfaces, the lagged variant can be added cleanly. |
 | 2026-06-11 | Phase B refinement | removed `stabilisation_period` column. Initial draft had it as a bool True for 2024-01-01 → 2025-06-30 sourced from a fuzzy user-trajectory memory note ("pendulum settling across 2023→2025"). The boundaries were neither pre-registered nor data-driven — they were post-hoc qualitative guesses. The honest classification of a stabilisation period belongs in descriptive-analysis output (e.g. a threshold on `gevoelscore_rolling_std_90d`) rather than in the schema. If a data-driven stabilisation indicator emerges later, it joins the dictionary then. |
-| 2026-06-11 | Phase B build verified | first build (1755 rows × 89 cols) ran clean on 5-date spot-check; 81 forward-dated rows pruned from `per_day_intensity.csv` source. Date range capped at last_score_date (`max(day_entries.date)`) for reproducibility. |
+| 2026-06-11 | Phase B build verified | first build (1755 rows × 87 cols) ran clean on 5-date spot-check; 81 forward-dated rows pruned from `per_day_intensity.csv` source. Date range capped at last_score_date (`max(day_entries.date)`) for reproducibility. |
+| 2026-06-12 | Layer 0 audit | renamed CSV column `cat_sub_keel_respiratoir` → `cat_sub_keel_resp` to match the dictionary spec on line 205 (build script now uses a `V24_SUB_CSV_NAME` override to decouple source-key from emitted column name). Reworded coverage-matrix headers to mirror flag semantics ("PwC dossier" → "dossier window", "intensity triage" → "intensity reviewed"); aligned 5 cells with the actual partial-overlap data, including window-2 notes (the user did not write notes during the first 23 days of gevoelscore use). |
+| 2026-06-12 | Layer 1 fixes — absent-state | fixed two compounding bugs in `pipeline/03_consolidate/build_unified_dataset.py` so the 104 upstream `symptoom_*=absent` clauses (102 fysiek, 2 cognitief) now surface in the master. Bug A: aggregation used `state_max` defaulting to 0, so absent (sev=0) clauses never updated state; added a separate `state_absent_seen` set. Bug B: emit gated on `sev > 0`, so even fixed aggregation couldn't surface absent; rewrote as three-state (severity → "absent" → ""). Worst-severity wins over absent (matches §9 line 181 semantic). Result: `state_symptoom_fysiek=absent` now appears on 32 days (4.7% of note-days), `state_symptoom_cognitief=absent` on 2 days (0.3%). |
+| 2026-06-12 | Layer 1 fixes — dictionary corrections | (1) `crash_episode_id` (§3) clarified: tags both crash-episode days AND single-day dips (108 distinct IDs = 29 crash streaks + 79 dips). (2) `exertion_class` (§6): added `none` as 6th category (≈26.5% of `has_garmin_uds=True` days; distinct from NaN out-of-coverage); flagged that `very_light` does not appear in the current dataset. (3) `effective_exertion_min` and `step_z_30d` (§6): documented ≈22-23% additional NaN within `has_garmin_uds=True` due to 30-day rolling-baseline warmup + post-Garmin-gap recovery. |
+| 2026-06-12 | v3.2 lagged exertion added | added 8 v3.2 lagged-baseline exertion columns to the master (1755 rows × 87 → 95 cols): `exertion_class_lagged`, `exertion_rank_composite_lagged` (newly derived in build script), `eff_exertion_rank_lagged`, `step_rank_lagged`, `max_hr_rank_lagged`, `vigorous_min_rank_lagged`, `push_burden_7d_lagged`, `effective_exertion_slope_28d`. Default surface for new analyses (Wiggers hypothesis testing in particular). v3.1 columns (`exertion_class`, `step_z_30d`) retained for HA01b/HA02c reproducibility and now carry explicit "use lagged for new work" notes. Section 6 restructured into v3.1 / v3.2 sub-sections. Methodology cross-references added in [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md), [`methodology/methodology.md`](methodology/methodology.md) §3c, [`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md) Column-choice matrix, and the spec doc. |

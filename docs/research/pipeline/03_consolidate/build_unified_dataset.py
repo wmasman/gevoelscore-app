@@ -96,6 +96,11 @@ V24_SUB_FYSIEK = [
     "hoofdpijn", "spier", "keel_respiratoir", "koorts",
     "gastro", "huid", "neuro", "systemisch_vermoeid", "slaap", "overig",
 ]
+# CSV column-name overrides for sub-tags whose source key would produce
+# an unwieldy column name. The lookup key (left) is the source subtype
+# value in notes-categorized-v24-clauses.csv; the emitted column suffix
+# (right) is the dictionary-canonical short name.
+V24_SUB_CSV_NAME = {"keel_respiratoir": "keel_resp"}
 STATE_SEVERITY = {"absent": 0, "mild": 1, "present": 2, "severe": 3}
 STATE_SEVERITY_INV = {v: k for k, v in STATE_SEVERITY.items()}
 
@@ -150,6 +155,7 @@ def aggregate_v24_per_day() -> dict:
         "cat_counts": defaultdict(int),
         "sub_counts": defaultdict(int),
         "state_max": defaultdict(int),
+        "state_absent_seen": set(),
         "polarities": [],
         "neutral_forward_looking": False,
     })
@@ -173,9 +179,12 @@ def aggregate_v24_per_day() -> dict:
                 sym, state = token.split("=", 1)
                 if sym.startswith("symptoom_"):
                     family = sym.replace("symptoom_", "")
-                    sev = STATE_SEVERITY.get(state, 0)
-                    if sev > rec["state_max"][family]:
-                        rec["state_max"][family] = sev
+                    if state == "absent":
+                        rec["state_absent_seen"].add(family)
+                    else:
+                        sev = STATE_SEVERITY.get(state, 0)
+                        if sev > rec["state_max"][family]:
+                            rec["state_max"][family] = sev
         pol = (r.get("polarity") or "").strip()
         if pol:
             rec["polarities"].append(pol)
@@ -412,15 +421,34 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["max_avg_hr_uds"] = u.get("max_avg_hr") or ""  # max-of-averages from UDS
 
     # --- Activity features ---
-    # `push_burden_7d` deliberately NOT surfaced — has known
-    # rolling-baseline contamination issue (see garmin_indicators_audit.md).
-    # The v3.2 fix `push_burden_7d_lagged` exists upstream but is also held
-    # back: descriptive analysis on the unified master should motivate
-    # whether/how to use a push-burden indicator before it enters the schema.
+    # v3.1 columns (exertion_class, step_z_30d) retained for HA01b/HA02c
+    # reproducibility; carry the rolling-baseline contamination issue
+    # described in garmin_indicators_audit.md. v3.2 lagged columns
+    # (baseline = [d-90, d-30]) are the default for new analyses; see
+    # the column-choice matrix in wiggers_testable_hypotheses.md.
     a = af.get(d, {})
+    # v3.1 (legacy, backward compat)
     row["exertion_class"] = a.get("exertion_class") or ""
     row["effective_exertion_min"] = a.get("effective_exertion_min") or ""
-    row["step_z_30d"] = a.get("step_z_30d") or ""  # daily steps z-score vs 30d rolling baseline
+    row["step_z_30d"] = a.get("step_z_30d") or ""
+    # v3.2 lagged-baseline (default for new analyses)
+    eff_lag = a.get("effective_exertion_rank_lagged") or ""
+    step_lag = a.get("step_rank_lagged") or ""
+    max_hr_lag = a.get("max_hr_rank_lagged") or ""
+    vig_lag = a.get("vigorous_min_rank_lagged") or ""
+    row["exertion_class_lagged"] = a.get("exertion_class_lagged") or ""
+    row["eff_exertion_rank_lagged"] = eff_lag
+    row["step_rank_lagged"] = step_lag
+    row["max_hr_rank_lagged"] = max_hr_lag
+    row["vigorous_min_rank_lagged"] = vig_lag
+    # Composite rank: max over the 4 axis ranks (mirrors the categorical
+    # composite logic in 04_classify_exertion.py but on the underlying
+    # rank scale so continuous correlation / lag-profile analyses don't
+    # have to re-derive from the categorical class).
+    rank_vals = [float(x) for x in (eff_lag, step_lag, max_hr_lag, vig_lag) if x not in ("", None)]
+    row["exertion_rank_composite_lagged"] = max(rank_vals) if rank_vals else ""
+    row["push_burden_7d_lagged"] = a.get("push_burden_7d_lagged") or ""
+    row["effective_exertion_slope_28d"] = a.get("effective_exertion_slope_28d") or ""
 
     # --- Sleep-stress (wake-up-date attributed; see methodology/nightly_attribution.md) ---
     s = sleep.get(d, {})
@@ -443,10 +471,16 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
         for cat in V24_CATEGORIES:
             row[f"cat_{cat}"] = v["cat_counts"].get(cat, 0)
         for sub in V24_SUB_FYSIEK:
-            row[f"cat_sub_{sub}"] = v["sub_counts"].get(sub, 0)
+            col = V24_SUB_CSV_NAME.get(sub, sub)
+            row[f"cat_sub_{col}"] = v["sub_counts"].get(sub, 0)
         for family in ("cognitief", "emotioneel", "fysiek"):
             sev = v["state_max"].get(family, 0)
-            row[f"state_symptoom_{family}"] = STATE_SEVERITY_INV.get(sev, "") if sev > 0 else ""
+            if sev > 0:
+                row[f"state_symptoom_{family}"] = STATE_SEVERITY_INV[sev]
+            elif family in v["state_absent_seen"]:
+                row[f"state_symptoom_{family}"] = "absent"
+            else:
+                row[f"state_symptoom_{family}"] = ""
         pol_count = Counter(v["polarities"])
         row["day_dominant_polarity"] = pol_count.most_common(1)[0][0] if pol_count else ""
         row["n_pos_clauses"] = pol_count.get("positive", 0)
@@ -460,7 +494,8 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
         for cat in V24_CATEGORIES:
             row[f"cat_{cat}"] = ""
         for sub in V24_SUB_FYSIEK:
-            row[f"cat_sub_{sub}"] = ""
+            col = V24_SUB_CSV_NAME.get(sub, sub)
+            row[f"cat_sub_{col}"] = ""
         for family in ("cognitief", "emotioneel", "fysiek"):
             row[f"state_symptoom_{family}"] = ""
         row["day_dominant_polarity"] = ""

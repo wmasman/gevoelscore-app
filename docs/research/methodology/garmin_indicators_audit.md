@@ -1,6 +1,18 @@
 # Garmin indicators audit — provenance + known issues + inventory
 
-**Status**: navigation index, locked 2026-06-11.
+**Status**: navigation index, locked 2026-06-11; v3.2 preference clause added 2026-06-12.
+
+## Rule for new analyses (v3.2 lagged baseline)
+
+New analyses on `per_day_master.csv` use the **v3.2 lagged-baseline**
+exertion columns (`exertion_class_lagged`, `exertion_rank_composite_lagged`,
+`step_rank_lagged`, `eff_exertion_rank_lagged`, `max_hr_rank_lagged`,
+`vigorous_min_rank_lagged`, `push_burden_7d_lagged`,
+`effective_exertion_slope_28d`). The v3.1 columns (`exertion_class`,
+`step_z_30d`, etc.) stay in the master only for reproducibility of
+existing HA01b / HA02c results; they are not the default surface for
+new work. See § Per-column provenance map and the v3.2 sub-section in
+[`severity_spec.md`](../analyses/garmin_exploration/activity-labels/spec/severity_spec.md).
 
 This document serves three purposes:
 
@@ -56,7 +68,7 @@ spec / locked decisions.
 | `vigorous_min` | `vigorous_min` | passthrough | same |
 | `total_calories` | `active_kcal` | passthrough (active calories only, not BMR) | the column-name mismatch (master uses `total_calories`, source uses `active_kcal`) is intentional but slightly misleading — see DATA_DICTIONARY note |
 | `resting_hr` | `resting_hr` | passthrough; Garmin's algorithmic RHR computed from sleep periods + day-low windows | **the 30-130 bpm sanity filter previously applied is a no-op for this user** (data range observed: 47-65 bpm, 0 outliers in 1731 days). Filter removed 2026-06-11. The RHR depends on sleep-data quality; days with poor sleep coverage may give jittery values; downstream analyses should consider robust rolling means rather than single-day values for trajectory work. |
-| `min_hr` | `min_hr` | passthrough | depends on wear pattern (off-wrist gaps can artificially raise min) |
+| `min_hr` | `min_hr` | passthrough | depends on wear pattern (off-wrist gaps can artificially raise min). Observed range 31-72 bpm; 5 days at or below 40 bpm (0.29% of 1733 obs), 43 days at or below 45 bpm. The sub-40 days are 2022-01-13, 2022-01-17, 2022-02-28, 2024-09-30, 2024-11-29 — co-occurring with the `Training-periode (hardlopen + fietsen)` event_label (first three) and the `Citalopram-traject (umbrella)` event_label (last two). No sanity filter applied. For trajectory work prefer rolling minima over single-day values. (Audit added 2026-06-12 per Layer 1 review.) |
 | `max_hr` | `max_hr` | passthrough | depends on whether activity was recorded (activities push max_hr; passive days are lower) |
 | `max_avg_hr_uds` | `max_avg_hr` | passthrough; "max-of-averages" UDS metric (NOT a daily mean) | misleading without context — the column name in the master makes the UDS provenance explicit; downstream analyses should NOT treat as daily mean HR |
 
