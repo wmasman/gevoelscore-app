@@ -233,13 +233,28 @@ it).
 
 ### NOT extracted from raw FIT (latent in dump, but not currently surfaced)
 
-- **Per-minute stress curve**: we extract sleep-window aggregates +
-  daily max spike, but the full intra-day stress profile is in the
-  FIT files and could support shape-of-day analyses.
 - **Per-activity HRV (RR intervals)**: only present if the user wore
   a chest strap and enabled `Log HRV` on the watch. Worth a one-off
   check whether the activity FIT files have an `hrv` message before
   declaring it absent.
+- **Garmin sleep score** (single 0-100 number): not in `sleepData.json`
+  on this device; possibly computed cloud-side only. Wiggers F3 remains
+  blocked until verified absent in FIT layer too.
+- **Body Battery per-minute curve**: the 7 stat points from UDS
+  cover daily extremes + sleep-start/end; the per-minute curve in
+  monitoring_b would enable shape-of-day BB-slope analyses. Wave 4
+  candidate, not built.
+
+*(Extracted to master in Wave 4 2026-06-12 from `monitoring_b` FIT
+files: 8 columns operationalising Wiggers A4 (sustained HR elevation)
+and C4 (stress decay after peak). Source: `pipeline/01_extract/
+garmin_intraday_hr_stress.py` using `Monitoring16Resolver` for
+`timestamp_16` rollover. Per-minute intraday stress curve and HR
+samples — previously listed here as latent — are now collapsed to
+daily summary columns in §8B of DATA_DICTIONARY. The full per-minute
+curves are intentionally NOT propagated to the master (column
+explosion); the daily summaries cover the Wiggers A4/C4 questions
+without it.)*
 
 *(Extracted to master in Wave 3 2026-06-12 via JSON-side propagation —
 **no FIT parsing needed**: Body Battery (8 cols), all-day stress

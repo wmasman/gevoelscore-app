@@ -242,6 +242,23 @@ All columns here propagated from `processed/garmin/uds_extras_daily.csv`
 (extracted by [`pipeline/01_extract/garmin_uds_extras.py`](pipeline/01_extract/garmin_uds_extras.py)
 from UDS JSON; no FIT parsing). Wave 3 add 2026-06-12.
 
+**Negative-value sentinel policy (added 2026-06-12 per Layer 1 Wiggers
+sentinel audit)**: Garmin emits negative integers (-1, -2 for stress
+columns; -4, -5 for `bb_during_sleep_value`) as a "no data" sentinel on
+some days. These values are physically impossible on the underlying
+0-100 scales, so they cannot be real measurements. The build script
+filters them to blank via `drop_neg_sentinel()` for the four affected
+columns: `all_day_stress_avg`, `awake_stress_avg`, `asleep_stress_avg_uds`,
+`bb_during_sleep_value`. *_stress_max values that hit 0 only co-occur
+with the negative-avg sentinels they accompany, so the day-level
+"no data" condition is already captured by the avg-channel drop and
+the max-channel zeros are left raw. Class-3 legitimate zeros (sleep-stage
+minutes, BB charge/drain on no-net-change days) are real states and stay.
+Two dates (2025-11-19, 2025-11-24) have `sleep_valid_flag=True` but UDS
+asleep_stress sentinel — these are real Garmin-internal channel
+discrepancies; for those nights analysts should use `stress_mean_sleep`
+(FIT-derived) instead.
+
 **Device caveat**: the Forerunner 245 (Elevate V3 sensor) does NOT
 produce **nightly HRV Status** — that feature requires the Elevate V4
 sensor (Forerunner 265+, fēnix 7, etc.). HRV-bearing FIT messages in
@@ -261,18 +278,18 @@ blocked. See [`methodology/garmin_indicators_audit.md`](methodology/garmin_indic
 | `bb_lowest` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `bb_lowest` | int | BB units | same | NaN on gap | Daily BB floor. Wiggers D3 (BB floor coincides with fewer crashes). |
 | `bb_sleep_start_value` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `bb_sleep_start_value` | int | BB units | 2021-08-16 → today (667 / 1755 = 38.0%) | NaN unless sleep window AND BB measurement aligned | BB at sleep onset (evening "battery left"). |
 | `bb_sleep_end_value` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `bb_sleep_end_value` | int | BB units | 2021-08-16 → today (593 / 1755 = 33.8%) | NaN unless sleep window AND BB measurement aligned | **Morning BB** = BB at wake-up. **Wiggers D5** (paradoxically high morning BB after overexertion → crash risk). |
-| `bb_during_sleep_value` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `bb_during_sleep_value` | int | BB units | 2021-08-16 → today (863 / 1755 = 49.2%) | NaN if not aligned | BB peak during the sleep window. |
+| `bb_during_sleep_value` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `bb_during_sleep_value` | int | BB units | 2021-08-16 → today (~861 / 1755 after the 2026-06-12 sentinel filter dropped 2 negative values) | NaN if not aligned **OR** sentinel-filtered (see policy note above). Affected dates: 2024-02-19 (-4 → blank), 2024-07-16 (-5 → blank). | BB peak during the sleep window. |
 | `bb_overnight_gain` | derived | computed in build script | `bb_sleep_end_value - bb_sleep_start_value` | int | BB units | matches `bb_sleep_end_value` (593 / 1755 = 33.8%) | NaN when either input missing | **Wiggers D2 directly** (BB overnight charge → next-day gevoelscore). Positive = net charge during sleep; negative = drain. |
 
 ### All-day stress (5 columns)
 
 | name | class | source | source column | dtype | units | coverage | missingness | notes |
 |---|---|---|---|---|---|---|---|---|
-| `all_day_stress_avg` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `all_day_stress_avg` | int | Garmin stress 0-100 (TOTAL aggregator) | 2021-08-16 → today (1734 / 1755 = 98.8%) | NaN on gap | 24-hour mean stress level. Wiggers C2 (high daily stress → worse next-day recharge), C3 (non-linear stress→fatigue relationship). |
-| `all_day_stress_max` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `all_day_stress_max` | int | same | same | NaN on gap | 24-hour peak stress. |
-| `awake_stress_avg` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `awake_stress_avg` | int | same (AWAKE aggregator) | same | NaN on gap | Waking-period mean stress; separates daytime sympathetic state from sleep-window stress. |
-| `awake_stress_max` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `awake_stress_max` | int | same | same | NaN on gap | Waking-period peak stress. |
-| `asleep_stress_avg_uds` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `asleep_stress_avg_uds` | int | same (ASLEEP aggregator) | same | NaN on gap | UDS-aggregated sleep-window mean stress. **Different source from `stress_mean_sleep`** (which is recomputed from raw FIT stress samples by `extract_sleep_stress.py`). Cross-check: should agree closely; documented difference suggests sleep-window boundary differences. |
+| `all_day_stress_avg` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `all_day_stress_avg` | int | Garmin stress 0-100 (TOTAL aggregator) | 2021-08-16 → today (~1732 / 1755 after the 2026-06-12 sentinel filter dropped 2 negative values) | NaN on gap **OR** sentinel-filtered (see §7B policy note). Affected dates: 2021-08-16 (-2), 2022-10-28 (-1). | 24-hour mean stress level. Wiggers C2 (high daily stress → worse next-day recharge), C3 (non-linear stress→fatigue relationship). |
+| `all_day_stress_max` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `all_day_stress_max` | int | same | same | NaN on gap. *Not sentinel-filtered* — `0` values on the two whole-day-void dates (2021-08-16, 2022-10-28) are left raw because the day is already flagged by the avg-channel sentinel. | 24-hour peak stress. |
+| `awake_stress_avg` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `awake_stress_avg` | int | same (AWAKE aggregator) | same (~1732 / 1755 after the same sentinel filter) | same dropped dates as `all_day_stress_avg` | Waking-period mean stress; separates daytime sympathetic state from sleep-window stress. |
+| `awake_stress_max` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `awake_stress_max` | int | same | same | NaN on gap. Same not-filtered rationale as `all_day_stress_max`. | Waking-period peak stress. |
+| `asleep_stress_avg_uds` | daily_computed | `processed/garmin/uds_extras_daily.csv` | `asleep_stress_avg_uds` | int | same (ASLEEP aggregator) | 2021-08-16 → today (~1722 / 1755 after the 2026-06-12 sentinel filter dropped 12 negative values) | NaN on gap **OR** sentinel-filtered. 12 affected dates total: 2 whole-day Pattern A + 10 days where Garmin's UDS asleep_stress channel failed (8 have `sleep_valid_flag=False`, 2 (2025-11-19, 2025-11-24) have valid FIT sleep — these are Garmin internal-channel discrepancies; use `stress_mean_sleep` for those nights). | UDS-aggregated sleep-window mean stress. **Different source from `stress_mean_sleep`** (which is recomputed from raw FIT stress samples by `extract_sleep_stress.py`). Cross-check: they should agree closely; documented divergence usually means sleep-window boundary differences between UDS and FIT extraction. |
 
 ### 24h / waking respiration (3 columns)
 
@@ -296,6 +313,55 @@ blocked. See [`methodology/garmin_indicators_audit.md`](methodology/garmin_indic
 | name | class | source | source column | dtype | units | coverage | missingness | notes |
 |---|---|---|---|---|---|---|---|---|
 | `max_spike_minutes` | daily_computed | `processed/garmin/daily_max_spike.csv` | `max_spike_minutes` | float64 (nullable int) | minutes of longest stress spike > 75 | 2021-08-16 → today (1.737 days) | NaN on gap | from H02b extraction |
+
+---
+
+## Section 8B — Intraday HR + stress (operationalises Wiggers A4 + C4)
+
+Wave 4 add 2026-06-12. All columns propagated from
+`processed/garmin/intraday_hr_stress_daily.csv` (extracted by
+[`pipeline/01_extract/garmin_intraday_hr_stress.py`](pipeline/01_extract/garmin_intraday_hr_stress.py)
+from `monitoring_b` FIT files using `Monitoring16Resolver` for the
+`timestamp_16` rollover, per
+[`analyses/garmin_exploration/scripts/fit_utils.py`](analyses/garmin_exploration/scripts/fit_utils.py)).
+
+**Window**: waking minutes only — samples falling inside a sleep
+window (per `sleepData.json`) are excluded. Sleep dynamics are covered
+separately by `stress_mean_sleep` (§7) and sleep-stage / sleep
+respiration / sleep SpO2 columns.
+
+**These columns are not auxiliary indicators; they are the operational
+form of Wiggers A4 and C4.** A4 directly: "sustained multi-hour HR
+elevation, not a brief spike, marks real overexertion" → tested as
+"is `hr_sustained_elevated_flag=True` more common on PEM-onset days
+than on calm days?". C4 directly: "after overexertion, stress fails
+to drop during rest" → tested as "does `stress_post_peak_time_to_rest_min`
+elongate after high-exertion days?".
+
+### A4 — HR sustained elevation (4 columns)
+
+Reference: per-day `resting_hr` from §5; threshold = `resting_hr + 15 bpm`;
+"sustained" = longest consecutive-minute run ≥ 30 min.
+
+| name | class | source | source column | dtype | units | coverage | missingness | notes |
+|---|---|---|---|---|---|---|---|---|
+| `hr_min_above_baseline_plus_15_waking` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `hr_min_above_baseline_plus_15_waking` | int | count of distinct waking minutes where HR > `resting_hr` + 15 bpm | 2021-08-16 → today (1730 / 1755 = 98.6%) | NaN on day with no monitoring_b HR samples or no per-day `resting_hr` available | Per-minute bucketing makes this robust to varying sample cadence (1-min monitoring vs 3-min stress). |
+| `hr_longest_elevated_run_min_waking` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `hr_longest_elevated_run_min_waking` | int | minutes | same | NaN on gap | Longest consecutive-minute run above threshold. The primary A4 number — Wiggers emphasises **sustained** over **count**. |
+| `hr_sustained_elevated_flag` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `hr_sustained_elevated_flag` | bool | True iff `hr_longest_elevated_run_min_waking >= 30` | same | NaN on gap | The categorical A4 surface for cross-tab / stratification. Threshold tunable; v1 = 30 min. |
+| `hr_area_above_baseline_waking` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `hr_area_above_baseline_waking` | float64 | bpm⋅min (integral of `HR − resting_hr` over above-threshold minutes) | same | NaN on gap | Captures magnitude × duration jointly. Useful when comparing days where the run length is similar but peak elevation differs. |
+
+### C4 — Stress decay after daily peak (4 columns)
+
+Reference: per-day stress peak (the maximum stress sample in the waking
+window) and Garmin's "rest" zone cutoff of 25 (matches the watch's
+colour coding).
+
+| name | class | source | source column | dtype | units | coverage | missingness | notes |
+|---|---|---|---|---|---|---|---|---|
+| `stress_post_peak_drop_avg` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `stress_post_peak_drop_avg` | float64 | Garmin stress 0-100 | 2021-08-16 → today (1721 / 1755 = 98.1%) | NaN if no waking stress samples or no samples in the 60-min post-peak window | Mean stress in the 60 minutes after the daily peak. Lower = better recovery; high = "stuck sympathetic" pattern Wiggers C4 names. |
+| `stress_post_peak_time_to_rest_min` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `stress_post_peak_time_to_rest_min` | int | minutes | 2021-08-16 → today (1522 / 1755 = 86.7%) | NaN if no waking stress samples; **NaN if stress never drops below the 25 "rest" threshold within the same calendar day** (interpret NaN as "did not return to rest" — that's the C4-positive case, not a missing measurement) | Minutes from the daily peak until stress drops below 25. **C4-primary number**. The NaN-on-failure semantics inverts the usual rule: high NaN-fraction on a date range is the C4 signature, not a coverage problem. |
+| `stress_high_duration_min` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `stress_high_duration_min` | int | minutes | 2021-08-16 → today (1737 / 1755 = 99.0%) | NaN on day with no monitoring_b stress samples | Distinct waking minutes with stress > 75. **Re-uses the H02b daily-max-spike threshold** but extends it from "longest single spike" (§8 `max_spike_minutes`) to "total time in the high zone". |
+| `stress_recovery_pct_within_2h` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `stress_recovery_pct_within_2h` | float64 | percent (negative if stress rose) | 2021-08-16 → today (1526 / 1755 = 86.9%) | NaN if peak occurred too late in the day to have a sample in the [peak + 2h − 15min, peak + 2h + 15min] window | `(peak − stress_at_peak+2h) / peak × 100`. Direct rate-of-recovery metric. Pair with `time_to_rest_min` to distinguish slow-but-complete recovery from fast-then-stall. |
 
 ---
 
@@ -488,3 +554,5 @@ Header semantics: **PwC dossier window** mirrors `has_pwc_dossier_window` (the w
 | 2026-06-12 | Activity-features re-extract from 2021-08-16 | extended `ANALYSIS_START` in [`analyses/garmin_exploration/activity-labels/scripts/03_compute_daily_features.py`](analyses/garmin_exploration/activity-labels/scripts/03_compute_daily_features.py) from `date(2022, 9, 3)` to `date(2021, 8, 16)` (Garmin coverage start). Re-ran scripts 03 → 04 → 11, replaced `processed/garmin/activity_features_daily.csv`, rebuilt `per_day_master.csv`. **Result**: 2022Q3 v3.1 + v3.2 coverage gap (previously 9.6% / 33.7% / 0% fill) now 100%; pre-LC healthy baseline (2021-08-16 → 2022-05-06 dx) now accessible — 264 days of `has_garmin_uds=True` with mean `exertion_rank_composite_lagged` = 0.577 (vs train-era 0.698). **Trade-off**: v3.1 rolling-baseline ranks for **2022-09-23 → 2022-10-22** (30 days) shifted because the baseline window `[d-30, d-1]` now reaches into pre-LC training-period data; strict bit-identical HA01b/HA02c reproducibility breaks for those 30 days. Qualitative results expected stable but not verified. Locked policy going forward: every new Garmin extraction starts at 2021-08-16 (per memory `feedback_garmin_reextract_from_2021_08_16`). |
 | 2026-06-12 | LC research-era boundary + LC-era-only lagged variants | **(1) `lc_phase` column added to §0 identity** (derived category: `pre_corona` < 2022-03-21, `corona_infection` 2022-03-21 → 2022-04-03, `lc` >= 2022-04-04). The 2022-04-04 boundary is the **research-wide LC start of record** (locked by user 2026-06-12): the Monday after the Fietsweekend Ardennen (2022-04-01 → 2022-04-03), which the user identifies as the trigger / end-of-acute-corona event. Pre-corona boundary 2022-03-21 = first day of the corona-ziek-week (per Training-periode span note). Existing `era` column kept for HA01b/HA02c backward compat but explicitly relabelled as gevoelscore-corpus-driven, not LC-onset-driven. **(2) 11 LC-era-only v3.2 lagged columns added to §6**: `exertion_class_lagged_lcera`, `exertion_rank_composite_lagged_lcera`, 4 axis ranks `_lcera`, 4 per-axis classes `_lcera`, `push_burden_7d_lagged_lcera`. Baseline window restricted to dates >= `LC_ERA_START = 2022-04-04`. For PEM-pacing analyses (Wiggers H1, H3, H5, B4, D5) use the `_lcera` variants; for cross-era trajectory characterisation use the all-era `_lagged` variants. ~82.6% fill within `has_garmin_uds=True` (LC-era window effectively starts 2022-07-03 after the 90-day warmup). **(3) `effective_exertion_slope_28d` not duplicated** — its 28-day window slides fully into LC era within ~4 weeks, so a separate variant would not differ except at the boundary. **(4)** Added 2022-04-04 marker to `hand_curated_spans.yaml` (category `marker`, label "LC-era analysis boundary (Monday after Fietsweekend Ardennen)"); re-ran `merge_calendar_triage.py` to propagate to `annotations.yaml`. Master 114 → 126 cols. |
 | 2026-06-12 | Wave 3 — Garmin physiological extras (JSON-side propagation) | added **27 new columns** to the master from two new JSON-source extractors (no FIT parsing). **(1) `pipeline/01_extract/garmin_uds_extras.py`** writes `processed/garmin/uds_extras_daily.csv` with 18 columns from UDSFile_*.json: 8 Body Battery (charged/drained 24h + highest/lowest + sleep-start/sleep-end/during-sleep values + derived overnight gain) for Wiggers D1-D5; 5 all-day stress (TOTAL/AWAKE/ASLEEP aggregator avg+max) for Wiggers C1-C3; 3 respiration 24h/waking and 2 SpO2 24h for Wiggers G1, G4. **(2) `pipeline/01_extract/garmin_sleep_extras.py`** writes `processed/garmin/sleep_extras_daily.csv` with 9 columns from sleepData.json: 4 sleep-stage minutes (deep/light/awake/unmeasurable) for Wiggers F2; 3 sleep-window respiration for Wiggers G1 (sleep variant); 2 sleep-window SpO2 for Wiggers G4. Both extractors propagated into `build_unified_dataset.py` and surfaced in §7 (sleep extras) and new §7B (physiological extras). **HRV explicitly not added — hardware-blocked on Forerunner 245** (Elevate V3 sensor does not produce nightly HRV Status; FIT sleep type-49 files store the relevant data in undocumented `unknown_273/274/276` messages with no community decode available). Wiggers B1-B5 and HRV-dependent H1-H5 remain blocked on this device. Master 126 → 153 cols. Plan: [`.claude/plans/garmin-enrichment-waves.md`](../../.claude/plans/garmin-enrichment-waves.md) Wave 3 (Option A pivot: JSON-side propagation in place of FIT-based extraction). |
+| 2026-06-12 | Wave 3 — sentinel filter for Garmin UDS extras | applied negative-value sentinel filter at build time to 4 columns in §7B: `all_day_stress_avg`, `awake_stress_avg`, `asleep_stress_avg_uds`, `bb_during_sleep_value`. Garmin emits `-1`/`-2` (stress) and `-4`/`-5` (BB) as a "no data" sentinel on a handful of dates — physically impossible on the underlying 0-100 scales, so they cannot be real measurements. `drop_neg_sentinel()` helper added to `build_unified_dataset.py`; sentinel-policy preamble added at top of §7B explaining the three sentinel classes (clear negatives, ambiguous zeros, legitimate zeros) and the policy rationale. Total cells affected: 2 (`all_day_stress_avg`), 2 (`awake_stress_avg`), 12 (`asleep_stress_avg_uds`), 2 (`bb_during_sleep_value`) = 18 cells across ~15 unique dates. Two of the asleep_stress dates (2025-11-19, 2025-11-24) have `sleep_valid_flag=True` — these are Garmin-internal channel discrepancies; for those nights analysts should use `stress_mean_sleep` (FIT-derived). |
+| 2026-06-12 | Wave 4 — intraday HR + stress (operationalises Wiggers A4 + C4) | added **8 new columns** to the master from new FIT-source extractor `pipeline/01_extract/garmin_intraday_hr_stress.py` walking `monitoring_b` files. Uses the shared `Monitoring16Resolver` (from `fit_utils.py`) to expand `timestamp_16` for HR samples (per-minute monitoring frames carry the rolling 16-bit timestamp, not full datetime). Waking-window only — sleep-window samples excluded. **New §8B documents the 8 columns**: 4 A4 (`hr_min_above_baseline_plus_15_waking`, `hr_longest_elevated_run_min_waking`, `hr_sustained_elevated_flag`, `hr_area_above_baseline_waking`) and 4 C4 (`stress_post_peak_drop_avg`, `stress_post_peak_time_to_rest_min`, `stress_high_duration_min`, `stress_recovery_pct_within_2h`). **A4 and C4 are not auxiliary signals; these columns are the operational form of those Wiggers hypotheses** — A4 = "sustained multi-hour HR elevation marks real overexertion" → testable as `hr_sustained_elevated_flag` cross-tab; C4 = "stress fails to drop after overexertion" → testable as `stress_post_peak_time_to_rest_min` elongation. Spot-check 2023-06-15 (known very-heavy / crash day): HR 577 above-baseline min, longest run 32 min, sustained=True, area 16925; stress high-duration 34 min, post-peak time-to-rest 164 min. Fill rates 87-99%. **NaN semantics for `stress_post_peak_time_to_rest_min` inverts the usual rule**: NaN = "stress never returned to rest that day" = the C4-positive case, not a coverage problem. Master 153 → 161 cols. Plan: [`.claude/plans/garmin-fit-extraction-feasibility.md`](../../.claude/plans/garmin-fit-extraction-feasibility.md). |

@@ -66,6 +66,7 @@ SLEEP_STRESS = DATA_PATH / "processed/garmin/sleep_stress_nightly.csv"
 DAILY_MAX_SPIKE = DATA_PATH / "processed/garmin/daily_max_spike.csv"
 UDS_EXTRAS = DATA_PATH / "processed/garmin/uds_extras_daily.csv"
 SLEEP_EXTRAS = DATA_PATH / "processed/garmin/sleep_extras_daily.csv"
+INTRADAY_HR_STRESS = DATA_PATH / "processed/garmin/intraday_hr_stress_daily.csv"
 LABELS_CRASH = DATA_PATH / "processed/crash_labels/labels_crash_v2.csv"
 V24_CLAUSES = DATA_PATH / "processed/notes/notes-categorized-v24-clauses.csv"
 PER_DAY_INTENSITY = DATA_PATH / "processed/manual_triage/per_day_intensity.csv"
@@ -145,6 +146,37 @@ def parse_float_safe(s):
         return float(s)
     except (ValueError, TypeError):
         return None
+
+
+def drop_neg_sentinel(raw):
+    """Garmin negative-value sentinel filter.
+
+    The UDS extras export emits negative integers (-1, -2, -4, -5) on
+    some days as a "no data" sentinel — sometimes whole-day (Pattern A:
+    watch off / first day of coverage) and sometimes channel-specific
+    (Pattern B: no asleep_stress computed even though FIT-derived sleep
+    window may be valid). Negative values are physically impossible for
+    stress (0-100 scale) and body battery (0-100 scale), so they cannot
+    be real measurements. Replace with blank.
+
+    Class 2 ambiguous zeros (e.g. *_stress_max = 0 only on whole-day
+    void days) are left alone — they only co-occur with Class 1 sentinels
+    that this function catches, so the affected days end up correctly
+    flagged via the negative-stress-avg drop anyway. Class 3 legitimate
+    zeros (sleep_unmeasurable_min, sleep_awake_min, sleep_deep_min) are
+    real states and stay.
+
+    Applied 2026-06-12 per Layer 1 Wiggers-enrichment sentinel audit.
+    See DATA_DICTIONARY.md sec 7B sentinel-policy note.
+    """
+    if not raw or raw in ("None", "NaN", "nan"):
+        return ""
+    try:
+        if float(raw) < 0:
+            return ""
+    except (ValueError, TypeError):
+        pass
+    return raw
 
 
 def load_csv_by_date(path: Path, date_col: str = "date") -> dict:
@@ -293,6 +325,8 @@ def main():
     print(f"  uds_extras: {len(uds_extras)}")
     sleep_extras = load_csv_by_date(SLEEP_EXTRAS)
     print(f"  sleep_extras: {len(sleep_extras)}")
+    intraday_hr_stress = load_csv_by_date(INTRADAY_HR_STRESS)
+    print(f"  intraday_hr_stress: {len(intraday_hr_stress)}")
     crash = load_csv_by_date(LABELS_CRASH)
     print(f"  crash labels: {len(crash)}")
     intensity = load_csv_by_date(PER_DAY_INTENSITY)
@@ -344,7 +378,7 @@ def main():
         row = build_row(
             d, day_entries, uds, af, sleep, spike, crash, intensity,
             sub_dips, pwc_hours, v24_per_day, events_by_day, umbrella_by_day,
-            dossier_by_day, uds_extras, sleep_extras,
+            dossier_by_day, uds_extras, sleep_extras, intraday_hr_stress,
         )
         rows.append(row)
 
@@ -411,7 +445,8 @@ def main():
 def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
               sub_dips, pwc_hours, v24_per_day, events_by_day,
               umbrella_by_day, dossier_by_day, uds_extras=None,
-              sleep_extras=None):
+              sleep_extras=None, intraday_hr_stress=None):
+    intraday_hr_stress = intraday_hr_stress or {}
     uds_extras = uds_extras or {}
     sleep_extras = sleep_extras or {}
     row = {"date": d.isoformat()}
@@ -507,13 +542,21 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["bb_lowest"] = ue.get("bb_lowest") or ""
     row["bb_sleep_start_value"] = ue.get("bb_sleep_start_value") or ""
     row["bb_sleep_end_value"] = ue.get("bb_sleep_end_value") or ""
-    row["bb_during_sleep_value"] = ue.get("bb_during_sleep_value") or ""
+    # bb_during_sleep_value: Garmin emits -4/-5 as sentinel for no UDS sleep BB
+    # (2 dates). See drop_neg_sentinel + DATA_DICTIONARY.md sec 7B.
+    row["bb_during_sleep_value"] = drop_neg_sentinel(ue.get("bb_during_sleep_value"))
     row["bb_overnight_gain"] = ue.get("bb_overnight_gain") or ""
-    row["all_day_stress_avg"] = ue.get("all_day_stress_avg") or ""
+    # all_day / awake stress avg: -1/-2 sentinel on whole-day-void days. Max
+    # values stay raw — they go to 0 not negative on those days.
+    row["all_day_stress_avg"] = drop_neg_sentinel(ue.get("all_day_stress_avg"))
     row["all_day_stress_max"] = ue.get("all_day_stress_max") or ""
-    row["awake_stress_avg"] = ue.get("awake_stress_avg") or ""
+    row["awake_stress_avg"] = drop_neg_sentinel(ue.get("awake_stress_avg"))
     row["awake_stress_max"] = ue.get("awake_stress_max") or ""
-    row["asleep_stress_avg_uds"] = ue.get("asleep_stress_avg_uds") or ""
+    # asleep_stress_avg_uds: -2 sentinel on days where Garmin's UDS asleep_stress
+    # didn't compute. Often (8/10) co-occurs with sleep_valid_flag=False, but
+    # 2 dates have valid FIT sleep + UDS sentinel — analysts should prefer
+    # stress_mean_sleep (FIT-derived) when available; see sec 7B note.
+    row["asleep_stress_avg_uds"] = drop_neg_sentinel(ue.get("asleep_stress_avg_uds"))
     row["respiration_avg_waking"] = ue.get("respiration_avg_waking") or ""
     row["respiration_max_24h"] = ue.get("respiration_max_24h") or ""
     row["respiration_min_24h"] = ue.get("respiration_min_24h") or ""
@@ -647,6 +690,25 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     # --- Stress spikes ---
     sp = spike.get(d, {})
     row["max_spike_minutes"] = sp.get("max_spike_minutes") or ""
+
+    # --- Wave 4: intraday HR + stress (operationalises Wiggers A4 + C4) ---
+    # Propagated from intraday_hr_stress_daily.csv (extracted by
+    # pipeline/01_extract/garmin_intraday_hr_stress.py from monitoring_b
+    # FIT files; per-minute HR + stress samples summarised per day).
+    # A4 columns directly test "sustained multi-hour HR elevation marks
+    # real overexertion"; C4 columns directly test "after overexertion,
+    # stress fails to drop during rest". Both use the WAKING window
+    # (sleep-window samples are excluded — sleep dynamics are covered
+    # by the existing stress_mean_sleep block).
+    ihs = intraday_hr_stress.get(d, {})
+    row["hr_min_above_baseline_plus_15_waking"] = ihs.get("hr_min_above_baseline_plus_15_waking") or ""
+    row["hr_longest_elevated_run_min_waking"] = ihs.get("hr_longest_elevated_run_min_waking") or ""
+    row["hr_sustained_elevated_flag"] = ihs.get("hr_sustained_elevated_flag") or ""
+    row["hr_area_above_baseline_waking"] = ihs.get("hr_area_above_baseline_waking") or ""
+    row["stress_post_peak_drop_avg"] = ihs.get("stress_post_peak_drop_avg") or ""
+    row["stress_post_peak_time_to_rest_min"] = ihs.get("stress_post_peak_time_to_rest_min") or ""
+    row["stress_high_duration_min"] = ihs.get("stress_high_duration_min") or ""
+    row["stress_recovery_pct_within_2h"] = ihs.get("stress_recovery_pct_within_2h") or ""
 
     # --- v24 rollup (presence-conditioned on has_note) ---
     if row["has_note"] and d in v24_per_day:
