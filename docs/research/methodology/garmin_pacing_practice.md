@@ -287,7 +287,7 @@ vs the participant's as a *don't-cross* differs in kind. Personal
 hypotheses citing this MD should use the participant's tier, not
 Wiggers'.
 
-### 7.4 Intervention-period baseline calibration — narrowed by Session C run 2026-06-14
+### 7.4 Intervention-period baseline calibration — resolved 2026-06-14 across the autonomic-load family
 
 The protocol's thresholds (25/20/15 BB floor, "stress at rest"
 trigger level, etc.) were calibrated under the participant's
@@ -297,55 +297,93 @@ ergotherapie start — were the source of concern that the
 physiological baseline shifted across these dates, invalidating the
 protocol's lived calibration across boundaries.
 
-**Session C resolved the open question to a narrow finding.** Per
-[`intervention_effects_descriptive.md` §8](intervention_effects_descriptive.md#8-findings-session-c-run-2026-06-14)
-(run 2026-06-14), the corpus-wide descriptive sweep ruled out a
-corpus-wide step-change pattern; only two channel × boundary pairs
-showed step-changes that survived the trajectory-detrend check
-(CONVENTIONS §3.7):
+**Resolved 2026-06-14 across the autonomic-load family.** Two
+sequential analyses landed the finding:
 
-- `resting_hr` around 2022-09-22 (Ergotherapie start) — large but
-  confounded with the steep LC-trajectory's deterioration phase;
-  causal attribution to ergotherapie unsupported. The protocol does
-  not use absolute RHR as a trigger, so this finding does NOT
-  invalidate the protocol's BB/stress thresholds.
-- `stress_mean_sleep` around 2026-03-20 (Citalopram afbouw start) —
-  mechanistically clean SSRI-withdrawal candidate; **this DOES
-  intersect with the protocol's rest-stress trigger**. Days within
-  ±60 of 2026-03-20 inherit a stress-trigger calibration uncertainty.
-  Pending dose-response narrow MD (`methodology/citalopram_dose_response_stress_mean_sleep.md`,
-  handed off 2026-06-14) for fuller characterisation.
+1. **Session C** (parent MD descriptive sweep, [`intervention_effects_descriptive.md` §8](intervention_effects_descriptive.md#8-findings-session-c-run-2026-06-14))
+   identified `stress_mean_sleep` × 2026-03-20 (Citalopram afbouw)
+   as the mechanistically clean SSRI candidate, with `resting_hr` ×
+   2022-09-22 (Ergotherapie) as a confounded second candidate.
+2. **Dose-response narrow MD v3** ([`citalopram_dose_response_stress_mean_sleep.md`](citalopram_dose_response_stress_mean_sleep.md))
+   confirmed via three-pronged tests (afbouw 2026 primary + buildup
+   2024 post-CPAP symmetric + spring 2025 calendar control) that the
+   dose-response is real, with per-channel verdicts:
 
-**Operational implications for the protocol** (refined from the
-pre-Session-C blanket caveat):
+| channel | verdict | magnitude (buildup post-CPAP β/mg) |
+|---|---|---:|
+| `stress_mean_sleep` | CONFIRMED | +0.43 (p = 0.001) |
+| `all_day_stress_avg` | CONFIRMED | +0.57 (p = 0.000) |
+| `bb_lowest` | CONFIRMED | −1.13 (p = 0.000) |
+| `resting_hr` | weakly consistent | +0.03 (p = 0.34) |
+| `bb_overnight_gain` | partial — no 2024 buildup data | — |
+| `respiration_avg_sleep` | REJECTED | −0.01 (p = 0.86) |
 
-- **BB thresholds (25/20/15)** survive intact across the corpus: the
-  Session C sweep showed no detrend-surviving step-changes on
-  `bb_lowest`, `bb_overnight_gain` (where data was available), or
-  related BB metrics.
-- **Rest-stress trigger** may have shifted around 2026-03-20: the
-  same stress-with-low-motion concurrence that triggered an early-bed
-  decision in 2025 may correspond to a different absolute
-  `stress_mean_sleep` value in 2026 after the SSRI scale-down took
-  effect. The lived protocol absorbs this automatically (the user
-  recalibrates by felt-state), but downstream HA / Personal tests
-  that use rolling-baseline z-scores on `stress_mean_sleep` inherit
-  the calibration concern.
-- **Earlier interventions (2022 Ergo, 2024 CPAP, 2024 Citalopram
-  buildup)** show no detrend-surviving step-changes on the protocol's
-  trigger channels; the protocol's lived calibration is not
-  retroactively invalidated for those eras.
+See [`§5.6.1`](citalopram_dose_response_stress_mean_sleep.md#561-per-channel-three-pronged-read)
+for the full table; [`§5.6.3`](citalopram_dose_response_stress_mean_sleep.md#563-combined-v3-verdict-super-553)
+for the combined verdict.
+
+**Operational implications for the protocol** (substantive revision
+of the pre-v3 Session-C reading):
+
+- **BB nadir threshold (25/20/15) IS dose-modulated** — superseding
+  the pre-v3 "BB thresholds survive intact" reading. `bb_lowest` is
+  CONFIRMED dose-responsive at ~1.13 BB-points per mg in the buildup
+  phase; the same SD-normalised magnitude as the stress channels.
+  Practically: at 30mg plasma steady-state the BB-nadir distribution
+  sits ~25-30 BB-points lower than at 0mg plasma. The protocol's
+  25/20/15 floor was lived-calibrated during the 30mg-plateau
+  consolidation phase (2024-06 → 2026-03); during the afbouw (and
+  potentially again post-afbouw at lower steady-state) the floor
+  thresholds may need re-calibration upward. Felt-state recalibration
+  by the participant continues to absorb this automatically.
+- **Rest-stress trigger IS dose-modulated** — strengthened from the
+  pre-v3 "may have shifted" reading. Both `stress_mean_sleep` and
+  `all_day_stress_avg` are CONFIRMED dose-responsive; the latter is
+  actually the strongest signal (~+0.57 stress-points per mg plasma
+  in the buildup phase). The stress-with-low-motion concurrence that
+  triggered an early-bed decision in 2025 (30mg plateau) maps to a
+  meaningfully different absolute stress value at lower plasma
+  levels.
+- **Respiration rate (`respiration_avg_sleep`) is NOT dose-modulated**
+  — useful negative finding. SSRI does not alter sleep respiration
+  rate at this dose range on this participant. Personal-register
+  hypotheses can use respiration-rate channels without inheriting
+  the dose-calibration concern.
+- **Resting HR is weakly dose-modulated** — direction matches the
+  HRV-reduction prior (higher dose → mildly higher RHR) but the
+  buildup CI brushes zero. The protocol does not use absolute RHR
+  as a trigger anyway, so this is a research-side caveat rather
+  than an operational one.
+- **The pre-2024 interventions (Ergotherapie 2022) sit before the
+  buildup window** and are not directly testable by the v3 design;
+  the LC-trajectory confound at 2022-09-22 (parent MD §8.3) remains
+  the most likely explanation for the `resting_hr` step there. The
+  protocol's lived calibration is not retroactively invalidated for
+  those eras, but a separate ITS-style design would be needed to
+  formally test.
 
 **For Personal-register hypotheses (P4a, P4b, P5b, P6, P7) and
-Wiggers C4b**: each carries a refined version of this caveat per
-their own predictor channel. P5b and C4b inherit the
-`stress_mean_sleep` × 2026-03-20 finding sharply; others inherit only
-the residual general caveat. This is the *physiological-state*
-sibling of the §2 *behavioural-practice* temporal qualifier; the two
-qualifiers interact at the 2026-03-20 boundary specifically (the
-behavioural protocol stabilised over recent months *while* the
-physiological baseline for `stress_mean_sleep` was shifting from
-SSRI withdrawal).
+Wiggers C4b**: each carries a per-channel-quantified caveat now.
+The pre-v3 reading "only P5b and C4b inherit sharply" has been
+**substantively revised**: P4a (BB-floor crossing) now inherits the
+caveat as load-bearingly as P5b (stress-trigger) does, because
+`bb_lowest` joined the confirmed-channel set. P5b and C4b inherit
+both the `stress_mean_sleep` AND `all_day_stress_avg` confirmations
+(jointly, since both channels enter their predictors). P6
+(post-crash recovery shape) inherits on three channels rather than
+one.
+
+This is the *physiological-state* sibling of the §2
+*behavioural-practice* temporal qualifier; the two qualifiers
+interact at the 2026-03-20 boundary specifically (the behavioural
+protocol stabilised over recent months *while* the physiological
+baseline for the autonomic-load family was shifting from SSRI
+withdrawal). The quantified per-channel magnitudes from
+[`citalopram_dose_response §5.6.1`](citalopram_dose_response_stress_mean_sleep.md#561-per-channel-three-pronged-read)
+turn this from "qualifier known" to "qualifier corrected" — downstream
+analyses can apply a per-mg-plasma dose-adjustment offset to the
+affected channels instead of treating the calibration as an
+unresolvable confound.
 
 ---
 

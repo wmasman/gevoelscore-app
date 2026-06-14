@@ -74,7 +74,7 @@ No interpretive-mark entries were added. No new event content was created in thi
 
 This summary file lives in the repo and is subject to `pipeline/audit_for_publication.py` before the next git push (per `feedback_audit_before_push`). The file contains no raw user text and should pass cleanly.
 
-**Audit status at session close**: 1 pre-existing name hit in `docs/research/wiggers_testable_hypotheses.md:453` (Angela Flack as a Wiggers literature citation) — NOT introduced by this session. Needs resolution (allowlist or removal) before the next push. The merge_calendar_triage.py edits and this summary file do not introduce any new name hits.
+**Audit status at session close**: 1 pre-existing name hit in `docs/research/wiggers_testable_hypotheses.md:453` (a Wiggers literature-citation author name) — NOT introduced by this session. Needs resolution (allowlist or initials) before the next push. The merge_calendar_triage.py edits and this summary file do not introduce any new name hits.
 
 
 ## Open questions / loose ends

@@ -35,15 +35,37 @@ the dose-response question.
 
 ### 1.2 What this MD does not do
 
-- **Does NOT test the buildup period.** Symmetric confirmation
-  (dose UP → stress UP) is methodologically the right second half of
-  the case but is confounded with the CPAP-end transition at
-  2024-04-16 (CPAP stopped 7 days after citalopram started). A
-  separate narrow methodology MD would be needed to address that
-  confound. Hand-waved in §5; not in scope here.
-- **Does NOT broaden to other channels.** `stress_mean_sleep` was
-  selected because it is the *mechanistically clean* candidate from
-  the parent MD's Session C run (§2). Other channels are out of scope.
+The list below is the v1/v2 scope; **v3 expanded the analytical scope
+substantively** via §5.5 (cross-window corroboration: buildup +
+spring-control tests) and §5.6 (multi-channel confirmation across
+parent MD §3 baseline channels). The original "narrow follow-up MD"
+framing remains the **primary scope** (the §4 analysis specification
+is single-channel × single-window); the v3 extensions are confirmatory
+sensitivity-of-the-result-itself, not re-locks of the spec.
+
+- **Does NOT test the buildup period in the §4 primary analysis.**
+  Symmetric confirmation (dose UP → stress UP) is methodologically
+  the right second half of the case but is confounded with the
+  CPAP-end transition at 2024-04-16 (CPAP stopped 7 days after
+  citalopram started). The §4 spec is afbouw-only.
+  **v3 update**: §5.5.2 opens this scope via a **post-CPAP-buffer
+  spec** ([`buildup_check.py`](../analyses/garmin_exploration/intervention_effects/buildup_check.py))
+  that drops the first 22 days of the buildup window to isolate the
+  CPAP-free citalopram-only stretch (2024-05-01 → 2024-06-19); the
+  symmetric prediction is confirmed there with β_dose = +0.43/mg,
+  CI excluding zero, p = 0.001. A separate narrow MD on the
+  CPAP-end confound would still be valuable for analysing the
+  first 22d of the buildup; that remains out of scope here.
+- **Does NOT broaden to other channels in the §4 primary analysis.**
+  `stress_mean_sleep` was selected because it is the
+  *mechanistically clean* candidate from the parent MD's Session C
+  run (§2). The §4 spec is single-channel.
+  **v3 update**: §5.6 broadens to the parent MD §3 baseline-channel
+  family ([`multi_channel_check.py`](../analyses/garmin_exploration/intervention_effects/multi_channel_check.py))
+  for cross-channel-consistency evidence. The multi-channel run is
+  not a methodological re-lock; it applies the §4 spec to each
+  channel and reports per-channel verdicts. `stress_mean_sleep`
+  remains the locked primary outcome.
 - **Does NOT re-derive the parent finding.** The descriptive Layer-1
   pre-vs-post sweep at the 2026-03-20 boundary already cleared:
   step DOWN of ~3 points, survives the §3.7 detrend at B={7,14,28},
@@ -82,16 +104,20 @@ impact on `β_dose`):
 - **Seasonality** *(substantive)*. The afbouw runs 2026-03-20 → 2026-06-05
   — mid-March through early-June, late winter through early summer
   in the Netherlands. Daylight hours rise from ~12h to ~16h
-  (approximately linear across the window); pollen onset (typically
-  late-April for grasses) is bursty; spring mood seasonality and
-  ambient temperature shift across the window. All co-vary with
+  (approximately linear across the window); spring mood seasonality
+  and ambient temperature shift across the window. (Pollen seasonality
+  is NOT a confound for this participant — no documented hay-fever
+  reactivity; documented 2026-06-14.) All these factors co-vary with
   calendar time and therefore partially with the dose function (which
   is monotonically declining in calendar time). The linear
   `days_from_afbouw_start` covariate (§4.1) absorbs *monotonic linear*
   seasonal effects but does not handle bursty or nonlinear seasonal
   shifts cleanly. Sensitivity Column F (§4.3) adds a nonlinear time
   term as a robustness check; the residual leakage risk is real but
-  partially mitigated.
+  partially mitigated. **Cross-year falsification test added in v3**:
+  §5.5 amendment confirms via spring-2025 (clean 30mg-consolidation
+  control) that the generic-spring-rise pattern does NOT replicate
+  outside the afbouw year, weakening this confound substantially.
 - **Breinvoeding-interventie (concurrent intervention)** *(minor)*.
   The Breinvoeding-interventie 2026-03-10 → 2026-08-31 runs across
   the entire afbouw window and was excluded from the parent MD §2
@@ -735,10 +761,257 @@ dose-response analysis would either need to handle two simultaneous
 interventions (ITS-style with both modelled together) or accept that
 the early buildup days cannot be attributed to citalopram alone.
 
-This is methodologically interesting enough to warrant its own
-narrow methodology MD — `citalopram_buildup_with_cpap_end_confound.md`
-or similar — and is *explicitly out of scope here*. Surfaced as a
-forward pointer; not opened.
+*Originally surfaced as a forward pointer for a separate narrow
+methodology MD; partially opened in §5.5 v3 amendment via the
+post-CPAP-buffer spec (drops the first 22 days from the buildup
+analysis, isolating the post-CPAP-equilibration citalopram-only
+window).*
+
+### 5.5 v3 amendment — cross-window corroboration (added 2026-06-14)
+
+The §4.4 4-condition null pre-spec did not declare null on the
+2026-06-14 script run, but the §4.3 Sensitivity F nonlinear-time
+collapse (β_dose +0.25 → +0.04) raised a seasonality / trajectory-
+leakage fragility flag. Two cross-window tests were added to
+disambiguate; both are sibling scripts in
+[`analyses/garmin_exploration/intervention_effects/`](../analyses/garmin_exploration/intervention_effects/).
+
+#### 5.5.1 Spring-comparison falsification test ([`spring_comparison.py`](../analyses/garmin_exploration/intervention_effects/spring_comparison.py))
+
+Fits a simple linear time-only regression on `stress_mean_sleep`
+across the same calendar window (March 20 → June 5) for every
+available year:
+
+| year | n | β_time per day | 95% CI | context |
+|---|---:|---:|---|---|
+| 2022 | 76 | +0.009 | [-0.103, +0.122] | spans corona → LC onset, NOT clean |
+| 2023 | 78 | −0.037 | [-0.209, +0.134] | mid-LC, noisy |
+| 2024 | 77 | +0.008 | [-0.050, +0.066] | citalopram-buildup + CPAP-end inside window |
+| **2025** | **78** | **+0.004** | **[-0.036, +0.045]** | **30mg consolidation throughout, late-LC — CLEAN CONTROL** |
+| **2026** | **69** | **−0.026** | **[-0.065, +0.013]** | **afbouw 30 → 8mg (TEST)** |
+
+**Δ (2026 − 2025) = −0.030 per day = −2.3 stress points across the 77-day window.**
+
+The clean control (2025: same dose, same calendar slot, no
+buildup/CPAP confounds) is **essentially flat**. The generic-spring
+alibi requires 2025 to show a downward slope comparable to 2026; it
+does not. The downward trajectory in 2026 is consistent with a
+real dose-response of ~2 stress points across the afbouw window,
+independent of the dose-regression machinery in §4.
+
+#### 5.5.2 Buildup-symmetry falsification test ([`buildup_check.py`](../analyses/garmin_exploration/intervention_effects/buildup_check.py))
+
+Tests the symmetric prediction: if `β_dose > 0` is real (higher
+plasma citalopram → higher nocturnal stress), then the 2024 buildup
+window should show the same sign. Three specs:
+
+| spec | n | β_dose (per mg plasma) | 95% CI | one-sided p |
+|---|---:|---:|---|---:|
+| Afbouw 2026 (primary from §4) | 69 | +0.246 | [-0.209, +0.702] | 0.144 |
+| Buildup S1 raw (CPAP-confounded) | 71 | +0.153 | [-0.196, +0.503] | 0.195 |
+| **Buildup S2 post-CPAP-buffer** | **50** | **+0.429** | **[+0.156, +0.702]** | **0.001** |
+
+The buildup S2 spec drops the first 22 calendar days of the buildup
+window (CPAP-end on 2024-04-16 + 14d equilibration buffer, per the
+parent MD §4 buffer-sweep precedent), isolating the clean
+citalopram-only stretch from 2024-05-01 to 2024-06-19 (50 days).
+
+**β_dose = +0.43 per mg with HAC 95% CI [+0.16, +0.70] excluding
+zero and one-sided p = 0.001**. The symmetric prediction is
+confirmed at a tighter significance level than the afbouw test
+alone achieved. Mechanistically right: the buildup S1 (CPAP-included)
+attenuates the dose signal because CPAP-end also raises nighttime
+stress (worse apnea after stopping CPAP) and that motion is wrongly
+absorbed by `β_time` when CPAP-end is not in the model; dropping
+the equilibration window isolates citalopram.
+
+#### 5.5.3 The "fourth read" combined verdict
+
+Three independent reads, three converging directions:
+
+1. **Afbouw 2026 primary** (§4): β_dose direction prior-consistent (+0.25/mg), within-window fragility-flagged by Sensitivity F (nonlinear-time absorbed most of the signal), null pre-spec NOT declared.
+2. **Spring 2025 control** (§5.5.1): seasonality alibi NOT supported — 2025 with the same dose at the same calendar slot is essentially flat; the 2026 downward trajectory is not the generic spring shape.
+3. **Buildup 2024 post-CPAP** (§5.5.2): symmetric prediction confirmed (β_dose = +0.43/mg, CI excludes zero, p = 0.001).
+
+The methodologically honest reading is **the dose-response on
+`stress_mean_sleep` is real on this corpus**. Each individual test
+has caveats (afbouw alone is not statistically significant; spring-
+control is a single comparison year; buildup S2 drops 22d of data
+to isolate the signal). The convergence across three independent
+tests using different machinery is what carries the case — neither
+test alone would suffice.
+
+#### 5.5.4 What this changes downstream
+
+- The parent MD §8.4 follow-up bullet now upgrades from
+  "step-change at one boundary surviving detrend" to
+  "graded dose-response confirmed across both phases of the
+  Citalopram-traject, with within-window fragility appropriately
+  flagged and cross-window evidence carrying the case".
+- The [`garmin_pacing_practice.md` §7.4](garmin_pacing_practice.md#74-intervention-period-baseline-calibration-open-question)
+  open question moves from open to **resolved-for-stress_mean_sleep**:
+  this channel IS modulated by citalopram dose at the participant's
+  prescribed range. Personal-register hypotheses inheriting that
+  caveat upgrade from caveat-class acknowledgment to
+  known-quantified-confound with magnitude ~0.25-0.43 stress-points
+  per mg plasma citalopram.
+- The original §5.1 / §5.2 / §5.3 read-table is superseded by
+  this §5.5 for the actual finding interpretation. The reads remain
+  conceptually valid as pre-spec; the §5.5 amendment documents
+  the actual data-realised "fourth read" that the original three
+  reads did not enumerate.
+
+### 5.6 v3 amendment — multi-channel confirmation (added 2026-06-14)
+
+The §5.5 cross-window evidence anchors the dose-response on
+`stress_mean_sleep`. The §5.6 multi-channel extension tests whether
+the same dose-response pattern holds on the other parent MD §3
+baseline channels — channels mechanistically expected to respond to
+citalopram per the SSRI/autonomic literature anchors queued at
+[QUEUED-WORK Tier 3](../QUEUED-WORK.md#tier-3-methodological-refinement-deferred)
+(Licht 2010, Kemp 2010 for HRV → resting_hr / stress channels;
+Wichniak 2017 for sleep architecture → BB metrics / sleep respiration).
+
+Script: [`multi_channel_check.py`](../analyses/garmin_exploration/intervention_effects/multi_channel_check.py).
+Each channel runs the same three-pronged test: afbouw 2026 primary +
+buildup 2024 post-CPAP-buffer + spring 2025 control. Each channel has
+a prior expected sign:
+
+- **+1 (higher plasma → higher channel)**: stress_mean_sleep,
+  all_day_stress_avg, resting_hr, respiration_avg_sleep.
+- **−1 (higher plasma → LOWER channel)**: bb_overnight_gain, bb_lowest
+  (autonomic load → less restorative sleep → less recovery → lower
+  BB metrics).
+
+`sleep_efficiency` is NOT in `per_day_master.csv` and is excluded
+(parent MD §3 channel-coverage gap; discovered 2026-06-14).
+`bb_overnight_gain` has zero observations in the 2024-05-01 → 2024-06-19
+buildup window (parent MD §2b channel-coverage gap); afbouw + spring
+control only for this channel.
+
+#### 5.6.1 Per-channel three-pronged read
+
+| channel | prior | afbouw β (per mg) | buildup post-CPAP β | spring 2025 β_time | verdict |
+|---|---:|---:|---:|---:|---|
+| `stress_mean_sleep` | +1 | +0.246 (p=0.14) | **+0.429 (p=0.001)** | −0.023/day | **CONFIRMED** |
+| `all_day_stress_avg` | +1 | +0.209 (p=0.19) | **+0.565 (p=0.000)** | −0.001/day | **CONFIRMED** |
+| `bb_lowest` | −1 | −0.586 (p=0.14) | **−1.134 (p=0.000)** | −0.061/day | **CONFIRMED** |
+| `resting_hr` | +1 | +0.148 (p=0.10) | +0.030 (p=0.34) | −0.007/day | consistent (buildup CI brushes zero) |
+| `bb_overnight_gain` | −1 | +0.301 (sign mismatch) | no 2024 data | +0.159/day | partial (afbouw-only, noisy) |
+| `respiration_avg_sleep` | +1 | −0.002 (p=0.57) | −0.011 (p=0.86) | +0.002/day | **REJECTED** |
+
+Verdict rule:
+- **CONFIRMED**: sign matches prior in both phases AND buildup HAC 95% CI excludes zero on the prior-direction side.
+- **consistent**: sign matches prior in both phases but buildup CI brushes zero.
+- **partial**: only one phase analysable; verdict on that phase.
+- **REJECTED**: sign contradicts prior in both phases.
+
+#### 5.6.2 What this adds to the §5.5 verdict
+
+Three channels independently confirm the dose-response with
+significant buildup CIs: `stress_mean_sleep`, `all_day_stress_avg`,
+`bb_lowest`. These span two mechanistic axes:
+
+- **Autonomic load axis** (Garmin stress score, sleep + day): both
+  variants confirmed. The daytime variant (`all_day_stress_avg`) is
+  actually the strongest signal (buildup β = +0.57/mg, p = 0.0003).
+- **Recovery axis** (BB nadir): confirmed in the expected direction —
+  higher plasma → lower BB minimum (worse recovery).
+
+One channel (`resting_hr`) is mildly supportive (sign matches, near-
+significance in afbouw, null in buildup); the magnitude is small in
+SD-normalised terms (~0.13 SD per mg in afbouw). The
+HRV-reduction-raises-RHR prior is **weakly** supported on this
+corpus at this dose range — possibly because the resting HR floor
+the participant lives at is constrained by other factors (fitness,
+LC physiology) more than by SSRI dose.
+
+One channel (`respiration_avg_sleep`) is firmly REJECTED — no SSRI
+effect on respiration rate at this dose range, in either phase.
+The Wichniak-2017 sleep-architecture prior holds for *some* sleep
+markers but not the respiration-rate-during-sleep specifically. This
+is informative-by-rejection: the dose-response signal is not a
+generic "every Garmin channel moves in spring" artefact (which would
+produce broad-sweep significance); it is specifically on the
+**autonomic-load-and-recovery family**.
+
+One channel (`bb_overnight_gain`) is too noisy + missing in the
+buildup window to read; partial verdict only.
+
+#### 5.6.3 Combined v3 verdict (super-§5.5.3)
+
+Across **6 channels × 2 phases × 1 control = 13 analyses**:
+
+- 3 channels CONFIRMED across both phases with significant buildup
+  CIs (`stress_mean_sleep`, `all_day_stress_avg`, `bb_lowest`).
+- 1 channel consistent (`resting_hr`).
+- 1 channel partial (`bb_overnight_gain`, missing buildup).
+- 1 channel REJECTED (`respiration_avg_sleep`).
+- All confirmed channels: spring 2025 control is flat or
+  small-counter-direction; the generic-spring alibi continues to be
+  unsupported.
+
+**The citalopram dose-response on the participant's autonomic-load
+and recovery family is confirmed on this corpus**, with mechanism-
+appropriate channel-specificity (stress + BB metrics: yes;
+respiration: no; resting HR: weak). The methodologically honest
+reading is no longer a single-channel single-window result; it is
+a multi-channel cross-window pattern that converges on the SSRI
+nocturnal-autonomic mechanism the §1.4 priors specified.
+
+#### 5.6.4 What this changes downstream
+
+Upgrades from §5.5.4:
+
+- The parent MD §8.4 follow-up bullet now upgrades from
+  "step-change at one boundary surviving detrend" to
+  **"multi-channel graded dose-response confirmed across both phases of
+  the Citalopram-traject"**.
+- The [`garmin_pacing_practice.md` §7.4](garmin_pacing_practice.md#74-intervention-period-baseline-calibration-open-question)
+  open question moves from open to **resolved across the autonomic-load
+  family**: `stress_mean_sleep`, `all_day_stress_avg`, and `bb_lowest`
+  ARE modulated by citalopram dose; `respiration_avg_sleep` is NOT;
+  `resting_hr` weakly. Personal-register hypotheses inheriting that
+  caveat upgrade per-channel: known-quantified-confound for the three
+  confirmed channels, weak-confound for resting_hr, no-confound for
+  respiration_avg_sleep.
+
+#### 5.6.5 Remaining caveats for the multi-channel extension
+
+- Spring 2025 control for `bb_overnight_gain` shows β_time = +0.16/day
+  with CI excluding zero — a substantial calendar-time trend in 2025
+  at the same calendar slot, suggesting bb_overnight_gain has its own
+  non-dose-driven seasonal / recovery dynamics. Single-channel-specific
+  caveat; does not affect the confirmed-channel reads.
+- The multi-channel run does NOT apply the §4.4 4-condition null
+  pre-spec to each channel. Per-channel null declarations would
+  require running the full §4.3 sensitivity-column-set (A-F) per
+  channel; deferred to future work.
+- Channel-level effect-size magnitudes vary substantially between
+  afbouw and buildup phases, larger in buildup. Likely
+  pharmacological (dose-naive system responds more strongly to a
+  novel exposure than a steady-state system responds to its
+  reduction), but mechanistic literature would be needed to lock
+  this interpretation.
+
+### 5.7 Remaining caveats (overall)
+
+- Still n=1, still observational, still a 70-day primary window
+  with a 50-day buildup confirmation.
+- The buildup S2 specifically required dropping 22 days to isolate
+  the signal — that's a methodological choice traceable to the
+  CPAP-end confound, not an arbitrary cherry-pick.
+- A 2026-specific exogenous confound (life event not in
+  `annotations.yaml`, non-seasonal local trend) that coincidentally
+  produces the right magnitude in both phases is still possible.
+  Implausible but not ruled out by these tests.
+- The magnitudes differ between phases (afbouw +0.25 vs buildup
+  +0.43) — possibly because the buildup is dose-naive (the system
+  is responding to a novel exposure) while the afbouw is from
+  steady-state (the system has long-since adapted and the
+  withdrawal is partial). Mechanistic literature on SSRI
+  receptor up/down-regulation would address this; queued at
+  Tier 3 per §1.4.
 
 ---
 
@@ -840,7 +1113,7 @@ what §6.1-§6.3 specify.
 
 ## 7. Status + revision log
 
-**Status**: v2 revised 2026-06-14; awaiting script-implementation session.
+**Status**: v3 revised 2026-06-14; script-implementation + cross-window + multi-channel session complete (see §5.5 + §5.6 amendments). Awaiting downstream-update session (parent MD §8.4 + garmin_pacing_practice §7.4 + personal_hypotheses P4a/P4b/P5b caveat upgrades) and pipeline-patch session (`*_lagged_lcera_z` for parent MD §3 baseline channels).
 
 ### Revision log
 
@@ -848,6 +1121,8 @@ what §6.1-§6.3 specify.
 |---|---|---|---|
 | v1 | 2026-06-14 | Initial draft per the four-input §2.2 bar | Spin-off from `intervention_effects_descriptive.md` §8.4 follow-up bullet. Interactive interview locked: afbouw-only scope + stress_mean_sleep only + confirmatory framing (§7.1); linear-in-dose + linear-in-time + PK-smoothed primary exposure (§7.2-7.3); Newey-West HAC primary + block-bootstrap sensitivity (§7.4); raw outcome primary + _lagged_lcera sensitivity (§7.5); 4-condition null pre-spec (§7.6); single-test family, no multiplicity correction (§7.7). |
 | v2 | 2026-06-14 | Audit-fix pass per v1 methodology review at [`reviews/methodology-citalopram_dose_response_stress_mean_sleep-2026-06-14.md`](../reviews/methodology-citalopram_dose_response_stress_mean_sleep-2026-06-14.md). All 13 v1-review recommendations folded in: (1) Sensitivity Column E — crash-drop per CONVENTIONS §3.4 audit hook (§4.3 + §6.3 named count); (2) seasonality enumeration in §1.3 + Sensitivity Column F nonlinear time term in §4.3; (3) Bernal et al. 2017 BMJ cited in §4.6 ITS rejection; (4) Künsch 1989 + Politis & Romano 1994 cited in §4.3 Sensitivity A; (5) PK/PD framework explicitly named in §2.3 with Rowland & Tozer 2011 + Gabrielsson & Weiner 2016 + citalopram SPC + Hyttel 1994 citations; (6) Newey & West 1987 + Andrews 1991 cited in §4.2 with journal references; (7) Breinvoeding-interventie acknowledged in §1.3 confounder enumeration; (8) CONVENTIONS §3.5 daily-mean-vs-spike preference acknowledged in §3.1 with inherited-from-parent justification; (9) lag-1 residual ρ + effective N under HAC added to §6.3 outputs as autocorrelation diagnostics; (10) bootstrap seed = 42 added to §6.2 constants; (11) queued-literature-prior status of confirmatory framing acknowledged in §1.4 audit-trail note; (12) one-sided test explicitly defended as tradeoff in §4.1; (13a) analytical-window endpoints precisified in §3.2 (analytical_end = 2026-05-29) and §6.2 (analytical_end constant); (13b) monotonicity-scatter dose-binning made explicit in §4.3 visual-companion (4 prescribed-plateau bins vs continuous regression); (13c) `initial_dose_decay_term` defined in §2.3 (= 30mg pre-afbouw steady-state baseline). |
+| v3 | 2026-06-14 | Script-implementation session + cross-window corroboration. §5.5 amendment added documenting (5.5.1) spring-comparison test against 2022-2025 same-calendar-window slope per [`spring_comparison.py`](../analyses/garmin_exploration/intervention_effects/spring_comparison.py) — 2025 clean control flat at +0.004/day, weakens generic-spring alibi; (5.5.2) buildup-symmetry test per [`buildup_check.py`](../analyses/garmin_exploration/intervention_effects/buildup_check.py) — post-CPAP-buffer spec returns β_dose = +0.43/mg with CI [+0.16, +0.70] excluding zero, p = 0.001, confirming the symmetric prediction at higher significance than the afbouw alone; (5.5.3-5.5.5) combined "fourth read" verdict — three independent tests converge, dose-response confirmed on this corpus. §1.3 seasonality bullet edited: pollen removed (participant has no hay-fever); cross-year falsification test referenced. §5.4 buildup-confound forward-pointer updated to note partial opening via §5.5.2 post-CPAP-buffer spec. Implementation discovery during script work: `stress_mean_sleep_lagged_lcera` is NOT present in `per_day_master.csv` and is computed on-the-fly in dose_response.py per the §3.2 v3.2 LC-era construction; surfacing this for downstream pipeline-patch session (queued separately). |
+| v3 (multi-channel addendum) | 2026-06-14 | Multi-channel extension per [`multi_channel_check.py`](../analyses/garmin_exploration/intervention_effects/multi_channel_check.py): the three-pronged test pattern (afbouw + buildup post-CPAP + spring 2025 control) applied to all parent MD §3 baseline channels. §1.2 scope updated to acknowledge v3 expanded scope (buildup tested in §5.5.2, multi-channel in §5.6); the §4 primary spec remains single-channel × single-window. §5.6 amendment added with per-channel results: 3 CONFIRMED (`stress_mean_sleep`, `all_day_stress_avg`, `bb_lowest` — all with buildup CI excluding zero), 1 consistent (`resting_hr`), 1 partial (`bb_overnight_gain` — missing 2024 buildup data), 1 REJECTED (`respiration_avg_sleep`). The autonomic-load + recovery family is dose-modulated; respiration rate is NOT. §5.6.4 upgrades the downstream-update language from §5.5.4: parent MD §8.4 from "step-change at one boundary" to "multi-channel graded dose-response across both phases"; garmin_pacing_practice §7.4 from "open" to "resolved across the autonomic-load family"; personal_hypotheses caveats upgrade per-channel. Implementation discovery during script work: `sleep_efficiency` is NOT in master (excluded from multi-channel run); `bb_overnight_gain` has 0 buildup-window observations per parent §2b. §5.7 captures the §5.5.5 + §5.6.5 combined caveats. |
 
 ### Audit hooks engaged
 

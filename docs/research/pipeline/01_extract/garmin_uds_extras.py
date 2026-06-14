@@ -17,9 +17,18 @@ Field mapping:
 - bodyBattery.chargedValue / drainedValue                   -> bb_charged_24h, bb_drained_24h
 - bodyBattery.bodyBatteryStatList[HIGHEST/LOWEST/...]       -> bb_highest, bb_lowest, bb_sleep_start_value, bb_sleep_end_value, bb_during_sleep_value
 - derived bb_overnight_gain = sleep_end - sleep_start
+- derived bb_overnight_gain_proxy = HIGHEST - SLEEPSTART (HIGHEST sits ~06:00, validated r=0.989 vs truth on n=593)
+- derived bb_overnight_gain_best   = truth where present, proxy otherwise
+- derived bb_overnight_gain_source = "truth" / "proxy" / "" (audit channel for _best)
 - allDayStress.aggregatorList[TOTAL/AWAKE/ASLEEP]           -> all_day_stress_avg/max, awake_stress_avg/max, asleep_stress_avg_uds
 - respiration.{avgWakingRespirationValue,highest,lowest}    -> respiration_avg_waking, respiration_max_24h, respiration_min_24h
 - averageSpo2Value, lowestSpo2Value                         -> spo2_avg_24h, spo2_min_24h
+
+Proxy rationale and validation: see methodology/bb_overnight_gain_proxy.md.
+Two-stage Garmin UDS rollout on FR245: SLEEPSTART first emitted 2024-07-08,
+SLEEPEND first emitted 2024-09-18. Truth column is bound by the later
+date; the proxy unblocks 2024-07-08 .. 2024-09-17 (71 days at the
+2024-06-20 post-window).
 """
 from __future__ import annotations
 
@@ -70,6 +79,7 @@ FIELDS = [
     "bb_highest", "bb_lowest",
     "bb_sleep_start_value", "bb_sleep_end_value",
     "bb_during_sleep_value", "bb_overnight_gain",
+    "bb_overnight_gain_proxy", "bb_overnight_gain_best", "bb_overnight_gain_source",
     # All-day stress (3 aggregator types)
     "all_day_stress_avg", "all_day_stress_max",
     "awake_stress_avg", "awake_stress_max",
@@ -117,15 +127,24 @@ def parse_one(p: Path) -> list[dict]:
             row["bb_charged_24h"] = bb.get("chargedValue")
             row["bb_drained_24h"] = bb.get("drainedValue")
             sl = bb.get("bodyBatteryStatList") or []
-            row["bb_highest"] = _bb_stat(sl, "HIGHEST")
+            hi = _bb_stat(sl, "HIGHEST")
+            row["bb_highest"] = hi
             row["bb_lowest"] = _bb_stat(sl, "LOWEST")
             ss = _bb_stat(sl, "SLEEPSTART")
             se = _bb_stat(sl, "SLEEPEND")
             row["bb_sleep_start_value"] = ss
             row["bb_sleep_end_value"] = se
             row["bb_during_sleep_value"] = _bb_stat(sl, "DURINGSLEEP")
-            if ss is not None and se is not None:
-                row["bb_overnight_gain"] = se - ss
+            truth = se - ss if (ss is not None and se is not None) else None
+            proxy = hi - ss if (ss is not None and hi is not None) else None
+            row["bb_overnight_gain"] = truth
+            row["bb_overnight_gain_proxy"] = proxy
+            if truth is not None:
+                row["bb_overnight_gain_best"] = truth
+                row["bb_overnight_gain_source"] = "truth"
+            elif proxy is not None:
+                row["bb_overnight_gain_best"] = proxy
+                row["bb_overnight_gain_source"] = "proxy"
 
         # All-day stress
         ads = item.get("allDayStress") or {}

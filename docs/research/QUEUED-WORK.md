@@ -337,7 +337,73 @@ items committed here:
   Pre-fetch PDFs via `/fetch-paper`; add one paragraph to §3.
   Independent of running the descriptive script (Session C in the
   2026-06-14 plan); deferred so Session C is not gated on the lit
-  pass.
+  pass. **2026-06-14 update**: also referenced as the mechanistic
+  anchor for v3 dose-response findings in
+  [`methodology/citalopram_dose_response_stress_mean_sleep.md` §1.4](methodology/citalopram_dose_response_stress_mean_sleep.md#14-framing--confirmatory-per-conventions-43)
+  and [`methodology/citalopram_phase_stratification.md`](methodology/citalopram_phase_stratification.md)
+  §1.3. Retrieval would tighten both MDs' literature priors but is
+  not gating either.
+
+- **Cross-window replication as a CONVENTIONS audit hook** *(queued
+  2026-06-14)* — Surfaced as a methodological lesson from the v3
+  dose-response session (see [`citalopram_phase_stratification §8.1`](methodology/citalopram_phase_stratification.md#81-cross-window-replication-discipline)).
+  The v3 strengthening of the dose-response came from *independent
+  cross-window evidence* (afbouw 2026 + buildup 2024 post-CPAP +
+  spring 2025 control), not from more machinery on the original
+  window. Within-window p-values on n=1 day-level data are
+  high-fragility; cross-window concordance is high-information.
+  **Queued spec**: add a new CONVENTIONS §3.x audit hook that says
+  "for any test whose claim should hold across multiple corpus
+  windows or phases, pre-spec a cross-window replication arm before
+  the within-window p-value is reported as primary." Decision needed:
+  bind via CONVENTIONS (project-wide) or via a new framework MD
+  (`methodology/cross_window_replication.md`)? CONVENTIONS is more
+  reachable; framework MD is more detailed. Both are defensible.
+
+- **Rejection-channel inclusion in multi-channel hypothesis families**
+  *(queued 2026-06-14)* — Surfaced as a methodological lesson from
+  the v3 multi-channel dose-response sweep (see
+  [`citalopram_phase_stratification §8.2`](methodology/citalopram_phase_stratification.md#82-multi-channel-rejection-as-credibility)).
+  The v3 sweep produced 3 CONFIRMED + 1 weak + 1 partial + 1
+  REJECTED; the rejection of `respiration_avg_sleep` (combined with
+  the rejection's mechanism-appropriateness per Wichniak 2017)
+  *earned the confirmations their credibility* by ruling out a
+  "spring moves everything" artefact. **Queued spec**: add a new
+  CONVENTIONS §3.x audit hook that says "multi-channel hypothesis
+  families should include channels expected to NOT respond per
+  mechanism priors, and report their rejections alongside
+  confirmations. Same-direction-everywhere results are less credible
+  than mixed-direction-with-mechanistic-fit results." Pairs with
+  the cross-window replication hook above; could land jointly.
+
+- **`dose_plasma_mg` column added to per_day_master.csv** *(queued
+  2026-06-14)* — Forward pointer from
+  [`citalopram_phase_stratification §8.3`](methodology/citalopram_phase_stratification.md#83-pkpd-as-a-first-class-corpus-axis).
+  The PK-smoothed citalopram plasma dose is currently computed
+  on-the-fly in
+  [`analyses/garmin_exploration/intervention_effects/dose_response.py`](analyses/garmin_exploration/intervention_effects/dose_response.py)
+  for the afbouw window only. Promoting to a master column makes it
+  a first-class data axis for any downstream test that needs
+  dose-adjustment per `citalopram_phase_stratification §5.B`. Sibling
+  work to the `*_lagged_lcera_z` columns queued separately
+  (build_unified_dataset.py patch). Same canonical formula as
+  [`citalopram_dose_response §2.3`](methodology/citalopram_dose_response_stress_mean_sleep.md#23-pk-smoothed-plasma-proxy-primary-exposure).
+  Defined for all dates ≥ 2024-04-09 (citalopram-traject start); NaN
+  before that.
+
+#### Explicitly out-of-scope for the core research
+
+The v3 dose-response session surfaced the **buildup-vs-afbouw
+magnitude asymmetry** (buildup post-CPAP β consistently ~1.5-2×
+larger than afbouw β across all three CONFIRMED channels). This is
+pharmacological / mechanistic territory (SSRI receptor up/down-
+regulation, dose-naive vs steady-state adaptation). **Dropped from
+the queue 2026-06-14 per user direction**: the core research mission
+is pacing signals, crash-leading indicators, and crash signatures —
+not pharmacology mechanism investigation. The asymmetry is recorded
+in [`citalopram_dose_response §5.6.5`](methodology/citalopram_dose_response_stress_mean_sleep.md)
+and [`citalopram_phase_stratification §8.4`](methodology/citalopram_phase_stratification.md#84-the-buildup-and-afbouw-magnitude-asymmetry-as-a-research-question)
+for transparency but is not actionable for the project's mission.
 
 ---
 

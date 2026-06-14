@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import os
 import statistics
 from collections import Counter, defaultdict
@@ -423,6 +424,148 @@ def main():
             else ""
         )
 
+    # === Post-pass: stress_mean_sleep_lagged_lcera_z (z-score variant) ===
+    # Per citalopram_dose_response §4.3-C + citalopram_phase_stratification framework:
+    # the v3.2 lagged-baseline pattern from CONVENTIONS §3.2 applied to a raw-continuous
+    # channel produces a z-score against the rolling [d-90, d-30] LC-era window using
+    # median + 1.4826*MAD (normal-equivalent SD). This is the SAME formulation
+    # `dose_response.py` computes on-the-fly for its Sensitivity Column C; promoting
+    # to the master so downstream tests can read it directly.
+    #
+    # Naming: distinct from the existing percentile-rank `_lagged_lcera` family (which
+    # applies to rank-source columns like effective_exertion_rank). The `_z` suffix
+    # makes the z-score semantics explicit.
+    #
+    # Window: [d-90, d-30] LC-era only (days >= LC_ERA_START = 2022-04-04).
+    # NaN policy: emit "" when fewer than 5 valid LC-era days in the window, when
+    # the candidate day's value is missing, or when MAD == 0 (degenerate baseline).
+    #
+    # Stage 1 of the pipeline patch: stress_mean_sleep first, validate against
+    # dose_response.py in-script before extending to the rest of §3 baseline channels.
+    LAGGED_LCERA_LOOKBACK = 90
+    LAGGED_LCERA_GAP = 30
+    LAGGED_LCERA_MIN_WINDOW = 5
+    MAD_TO_SD = 1.4826
+
+    def _row_date(row):
+        return parse_iso(row["date"])
+
+    def _compute_lagged_lcera_z(rows, src_key, out_key):
+        # Build {date: value} for LC-era days where value is parseable
+        lc_era_values = {}
+        for r in rows:
+            d_obj = _row_date(r)
+            if d_obj is None or d_obj < LC_ERA_START:
+                continue
+            v = parse_float_safe(r.get(src_key))
+            if v is None:
+                continue
+            lc_era_values[d_obj] = v
+        # Sort dates once
+        sorted_lc_dates = sorted(lc_era_values.keys())
+        # For each row, compute z
+        for r in rows:
+            d_obj = _row_date(r)
+            if d_obj is None:
+                r[out_key] = ""
+                continue
+            today_val = parse_float_safe(r.get(src_key))
+            if today_val is None:
+                r[out_key] = ""
+                continue
+            win_start = d_obj - timedelta(days=LAGGED_LCERA_LOOKBACK)
+            win_end = d_obj - timedelta(days=LAGGED_LCERA_GAP)
+            window_vals = [
+                lc_era_values[wd]
+                for wd in sorted_lc_dates
+                if win_start <= wd <= win_end
+            ]
+            if len(window_vals) < LAGGED_LCERA_MIN_WINDOW:
+                r[out_key] = ""
+                continue
+            window_vals.sort()
+            n = len(window_vals)
+            med = (
+                window_vals[n // 2]
+                if n % 2 == 1
+                else (window_vals[n // 2 - 1] + window_vals[n // 2]) / 2.0
+            )
+            abs_devs = sorted(abs(v - med) for v in window_vals)
+            mad = (
+                abs_devs[n // 2]
+                if n % 2 == 1
+                else (abs_devs[n // 2 - 1] + abs_devs[n // 2]) / 2.0
+            )
+            scaled_mad = MAD_TO_SD * mad
+            if scaled_mad <= 0:
+                r[out_key] = ""
+                continue
+            z = (today_val - med) / scaled_mad
+            r[out_key] = round(z, 4)
+
+    # Stage 1 (2026-06-14): stress_mean_sleep validated against dose_response.py
+    # in-script computation (abs diff max ~5e-5; PASS).
+    # Stage 2 (2026-06-14): extended to the rest of the parent MD §3 baseline
+    # channel family. Per citalopram_phase_stratification §4 inheritance table:
+    #   - stress_mean_sleep, all_day_stress_avg, bb_lowest -- CONFIRMED dose-modulated
+    #   - resting_hr -- weakly consistent
+    #   - bb_overnight_gain -- partial (no 2024 buildup data)
+    #   - respiration_avg_sleep -- REJECTED dose-modulated
+    # All six channels get the z-score variant since the operationalisation is
+    # uniform (the z-score is the variable; the v3 verdict is the test).
+    for _src, _out in [
+        ("stress_mean_sleep",      "stress_mean_sleep_lagged_lcera_z"),
+        ("all_day_stress_avg",     "all_day_stress_avg_lagged_lcera_z"),
+        ("resting_hr",             "resting_hr_lagged_lcera_z"),
+        ("respiration_avg_sleep",  "respiration_avg_sleep_lagged_lcera_z"),
+        ("bb_lowest",              "bb_lowest_lagged_lcera_z"),
+        ("bb_overnight_gain",      "bb_overnight_gain_lagged_lcera_z"),
+    ]:
+        _compute_lagged_lcera_z(rows, _src, _out)
+
+    # === Post-pass: dose_plasma_mg (PK-smoothed citalopram plasma proxy) ===
+    # Per citalopram_phase_stratification §8.3 forward pointer: the PK-smoothed
+    # citalopram plasma dose is a first-class data axis on this corpus, not just
+    # an analytical convenience for one MD. Promoted to a master column so any
+    # downstream test that needs dose-adjustment per §5.B can read it directly.
+    #
+    # Formula: one-compartment first-order PK model with t_half = 35h (citalopram
+    # SPC, EMA). Initial dose = 0mg pre-2024-04-09 (unmedicated). Subsequent
+    # dose-step contributions accumulate via linear superposition of step inputs.
+    #
+    # See citalopram_dose_response §2.3 for the canonical formula derivation;
+    # this implementation mirrors dose_response.py's plasma_dose_mg() function.
+    CITALOPRAM_T_HALF_HOURS = 35.0
+    CITALOPRAM_T_HALF_DAYS = CITALOPRAM_T_HALF_HOURS / 24.0
+    CITALOPRAM_DECAY_K = math.log(2.0) / CITALOPRAM_T_HALF_DAYS
+    # Step dates verified against annotations.yaml 2026-06-14:
+    #   2024-04-09 phase 1 start (0 -> 10mg), 2024-05-05 phase 2 (10 -> 20mg),
+    #   2024-06-20 buildup -> consolidation marker (20 -> 30mg),
+    #   2026-03-20 consolidation -> afbouw (30 -> 20mg),
+    #   2026-04-17 afbouw step (20 -> 10mg),
+    #   2026-05-27 afbouw step (10 -> 8mg druppelvorm).
+    CITALOPRAM_DOSE_STEPS = [
+        (date(2024,  4,  9), +10.0),
+        (date(2024,  5,  5), +10.0),
+        (date(2024,  6, 20), +10.0),
+        (date(2026,  3, 20), -10.0),
+        (date(2026,  4, 17), -10.0),
+        (date(2026,  5, 27),  -2.0),
+    ]
+    CITALOPRAM_INITIAL_DOSE_MG = 0.0
+
+    for r in rows:
+        d_obj = _row_date(r)
+        if d_obj is None:
+            r["dose_plasma_mg"] = ""
+            continue
+        val = CITALOPRAM_INITIAL_DOSE_MG
+        for step_date, delta in CITALOPRAM_DOSE_STEPS:
+            if d_obj >= step_date:
+                days_since = (d_obj - step_date).days
+                val += delta * (1.0 - math.exp(-CITALOPRAM_DECAY_K * days_since))
+        r["dose_plasma_mg"] = round(val, 4)
+
     # === Write ===
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fields = list(rows[0].keys())
@@ -560,6 +703,10 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     # (2 dates). See drop_neg_sentinel + DATA_DICTIONARY.md sec 7B.
     row["bb_during_sleep_value"] = drop_neg_sentinel(ue.get("bb_during_sleep_value"))
     row["bb_overnight_gain"] = ue.get("bb_overnight_gain") or ""
+    # Proxy + fused + audit channel for bb_overnight_gain. See methodology/bb_overnight_gain_proxy.md.
+    row["bb_overnight_gain_proxy"] = ue.get("bb_overnight_gain_proxy") or ""
+    row["bb_overnight_gain_best"] = ue.get("bb_overnight_gain_best") or ""
+    row["bb_overnight_gain_source"] = ue.get("bb_overnight_gain_source") or ""
     # all_day / awake stress avg: -1/-2 sentinel on whole-day-void days. Max
     # values stay raw — they go to 0 not negative on those days.
     row["all_day_stress_avg"] = drop_neg_sentinel(ue.get("all_day_stress_avg"))
