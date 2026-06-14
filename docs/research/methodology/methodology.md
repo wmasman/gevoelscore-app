@@ -531,7 +531,7 @@ primary label is the event.
 |---|---|---|
 | Direct event | `[name of event]` | "Bestuursweekend" |
 | Event with consequence hint | `[event] ([consequence])` | "Wandeling 15 min (terugslag)" |
-| Multi-day umbrella | `[name of period] (umbrella)` | "Mirjam-periode (Angela tensions + relatiecoach met Jantine)" |
+| Multi-day umbrella | `[name of period] (umbrella)` | "Werk-transitie (afbouw + extern coachingstraject)" |
 | Treatment / intervention | `[Trial name] - [optional phase]` | "Citalopram fase 3: 30mg plateau" |
 | PEM-style delayed crash | `PEM-respons na [trigger or period]` | "PEM-respons na Mirjam-sessie" |
 
@@ -790,11 +790,11 @@ becomes available.
   which 25 medical (was 3).
 - **2026-06-11** (later): Q3b umbrella-review for 2024+2025 completed.
   Keyword-clustering surfaced 15 candidate clusters; 1 actioned: new
-  umbrella `Angela-spanning 2024 (umbrella)` 2024-06-06 → 2024-11-24,
+  umbrella `Relational-spanning 2024 (umbrella)` 2024-06-06 → 2024-11-24,
   category `levensgebeurtenis`, source `q3b_umbrella_review_2026-06-11`.
-  Other 14 clusters rejected as either family-name aggregation (Jantine,
-  Tijmen, Tobias), generic activity-type recurrence (sailing, koffie,
-  eten), or broad-category aggregation (kids, gezin). The 1-umbrella
+  Other 14 clusters rejected as either family-member name aggregation
+  (three household-member tokens), generic activity-type recurrence
+  (sailing, koffie, eten), or broad-category aggregation (kids, gezin). The 1-umbrella
   conservative outcome respects methodology §4's "at most 2-3 concurrent
   umbrellas per period" guideline. annotations.yaml: 506 spans (was
   505).

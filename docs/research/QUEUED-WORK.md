@@ -319,6 +319,107 @@ items committed here:
   effect sizes — Era-as-moderator narrative gains a formal
   statistical test rather than narrative inference.
 
+- **Per-channel intervention-effect literature citations for
+  `methodology/intervention_effects_descriptive.md` §3** *(queued
+  2026-06-14)* — Surfaced as fix #4 from the methodology review at
+  [`reviews/methodology-intervention_effects_descriptive-2026-06-14.md`](reviews/methodology-intervention_effects_descriptive-2026-06-14.md).
+  The current §3 baseline-channels list says channels are "plausibly
+  affected by CPAP + citalopram" — project-intuition framing.
+  Literature documents these effects:
+  - **Marin et al. 2010** *Lancet* + **Tantucci et al. 2003** *Chest*
+    — CPAP autonomic effects on RHR / HRV / sleep, ~2-4 week onset.
+  - **Licht et al. 2010** *Biol Psychiatry* + **Kemp et al. 2010**
+    — SSRI / citalopram autonomic effects on HRV.
+  - **Wichniak et al. 2017** *Curr Psychiatry Rep* — SSRI sleep
+    architecture (REM suppression in particular).
+  Lifts channel selection from project intuition to literature-
+  grounded; closes CONVENTIONS §2.2 input 2 fully on this MD.
+  Pre-fetch PDFs via `/fetch-paper`; add one paragraph to §3.
+  Independent of running the descriptive script (Session C in the
+  2026-06-14 plan); deferred so Session C is not gated on the lit
+  pass.
+
+---
+
+## Recently completed (2026-06-14, Session C) — intervention_effects_descriptive script run + v3 catalog curation + narrow-MD handoff
+
+The intervention-effects script ran 2026-06-14. Outputs:
+
+- [`docs/research/analyses/garmin_exploration/intervention_effects/run.py`](analyses/garmin_exploration/intervention_effects/run.py) committed (script with curated catalog + Windows-safe filename sanitization + console diagnostics)
+- `$GEVOELSCORE_DATA_PATH/analyses/intervention_effects/summary.csv` (224 rows = 8 boundaries × 7 channels × 4 buffers; gitignored)
+- `$GEVOELSCORE_DATA_PATH/analyses/intervention_effects/plots/*.png` (~35 plots; gitignored)
+- [`methodology/intervention_effects_descriptive.md`](methodology/intervention_effects_descriptive.md) §8 (new) populated with findings table, structural caveats, decision-framework reading
+- v3 revision-log row added to §7 (4 fixes: curated catalog, 2024-04 boundary-collision caveat, bb_overnight_gain coverage caveat, refined annotations.yaml dates)
+- `annotations.yaml` (external) updated 2026-06-14: CPAP-interventie end refined to 2024-04-16 (was 2024-04-17 day-after); Ergotherapie Rouschop end refined to 2022-12-22 with `(~13wk, end approx)` label
+
+### Key analytical findings
+- **No corpus-wide M2 segmentation boundary supported**: step-changes are boundary-specific × channel-specific
+- **Two detrend-surviving candidates**: `resting_hr` × 2022-09-22 (confounded with LC trajectory; causal attribution unsupported) and `stress_mean_sleep` × 2026-03-20 (mechanistically clean SSRI-withdrawal candidate)
+- **Detrend column killed 2 of top-7 raw findings** as trajectory artifacts (empirical validation of [CONVENTIONS §3.7](CONVENTIONS.md#37-trajectory-detrend-sensitivity-for-raw-pre-vs-post-comparisons))
+- **2024-04 boundary-collision** (Citalopram start vs CPAP end, 7 days apart) → structurally unanalyzable; promoted to [CONVENTIONS §3.8](CONVENTIONS.md#38-boundary-spacing-minimum-for-pre-vs-post-window-designs)
+- **`bb_overnight_gain` coverage starts only 2024-09-18** → DATA_DICTIONARY notes column updated
+
+### Binding-pattern promotions to CONVENTIONS
+- **§3.7** — empirical validation evidence added (Session C killed 2 of 7 strongest findings as artifacts)
+- **§3.8** (new) — boundary-spacing minimum for pre-vs-post window designs (`gap ≥ 2·B + min_window_days`); worked example in intervention_effects §8.1
+- **§3.9** (new) — curated-catalog discipline for heterogeneous annotated categories; worked example: `EXCLUDE_LABEL_KEYWORDS` in run.py + §2 exclude-list table
+
+### Downstream caveat propagation
+- [`personal_hypotheses.md`](personal_hypotheses.md) P4a, P4b, P5b, P6, P7 — intervention-baseline caveats narrowed from "open question" to "specifically these two pairs"; P5b and P6 inherit the `stress_mean_sleep` × 2026-03-20 finding sharply
+- [`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md) C4b — caveat narrowed; C4b sharply inherits the 2026-03-20 finding (its predictor uses `stress_mean_sleep`)
+- [`methodology/garmin_pacing_practice.md`](methodology/garmin_pacing_practice.md) §7.4 — operational-side caveat narrowed; BB thresholds survive intact across corpus; rest-stress trigger may have shifted around 2026-03-20
+
+### Spun-off follow-up — narrow MD on Citalopram dose-response (DRAFTED)
+A focused follow-up MD was handed off and **drafted in a parallel session** 2026-06-14: [`methodology/citalopram_dose_response_stress_mean_sleep.md`](methodology/citalopram_dose_response_stress_mean_sleep.md). Approach: **continuous-dose regression on the afbouw period only** (2026-03-20 → 2026-06-05, ~77 days), with the 3-step dose function (30 → 20 → 10 → 8mg) as the exposure variable and `stress_mean_sleep` as the outcome. **MD status**: drafted, awaiting script-implementation session. Handoff brief at `~/.claude/plans/session-citalopram-dose-response-handoff-2026-06-14.md` was self-contained (13 sections, interactive interview script, scope guardrails) and is now superseded by the drafted MD.
+
+### Sister sessions completed same day
+- **Session A** — [`methodology/time_resolution.md`](methodology/time_resolution.md) drafted 2026-06-14. Framework MD for picking analysis time-resolution. 4 scales identified (per-minute / per-day / situational multi-day / lagged reference frame). Literature row honestly downgraded to "deferred"; sister to `lc_era_temporal_segmentation.md` and a generaliser of `intervention_effects_descriptive.md`'s scale choice.
+- **Session B** — [`notes/session-b-annotations-triage-2026-06-14.md`](notes/session-b-annotations-triage-2026-06-14.md) completed 2026-06-14. 10 candidate events triaged: 4 ALREADY-PRESENT, 2 DECLINED-NARRATIVE-ONLY, 1 DECLINED-UMBRELLA, 1 NOT-APPLICABLE, 1 OUT-OF-SCOPE (later resolved), 1 RESOLVED. Side-effect contribution: 401 Garmin-derived activity markers added via pipeline edit (running/cycling/walking/breathwork). **Critical handoff bug Session B identified**: `annotations.yaml` is regenerated; canonical edit targets are `hand_curated_spans.yaml` + `calendar_*_triage.csv`. This insight propagated back into intervention_effects MD §2 "Source-of-truth note" 2026-06-14 (after Session B's mirror, before next merge would have undone Session C's CPAP/Ergo refinements).
+
+### Audit-before-push state
+Session B identified one pre-existing name hit at [`docs/research/wiggers_testable_hypotheses.md:453`](wiggers_testable_hypotheses.md) (a literature-citation author name). NOT introduced by Session A/B/C — tracked as a separate pre-push task. Resolution path: allowlist the wiggers file's literature-citation section, OR redact the name to initials.
+
+---
+
+## Recently completed (2026-06-14) — trajectory-detrend pattern + intervention_effects_descriptive v2 revision
+
+The methodology MD [`methodology/intervention_effects_descriptive.md`](methodology/intervention_effects_descriptive.md)
+was drafted 2026-06-14, audited via `/research-methodology-review`
+([v1 review](reviews/methodology-intervention_effects_descriptive-2026-06-14.md)),
+revised (8 of 10 fixes applied; 1 queued at Tier 3 above; 1 deferred),
+re-audited ([v2 review](reviews/methodology-intervention_effects_descriptive-2026-06-14-v2.md)
+verdict **DEFENSIBLE with revision**), and a single highest-leverage
+v2 residual was closed:
+
+- **`mw_p_after_linear_detrend` sensitivity column** added to the
+  intervention-effects descriptive script. Linear fit on pre-window
+  extrapolated forward; subtracted from both pre and post; Mann-Whitney
+  recomputed on residuals. Moves audit fire A7.4 (recovery-trajectory
+  underlying-trend confound) from "named confound" to "tested confound".
+  Now part of the `no_visible_change` 5-condition pre-spec.
+
+- **Promoted to project-wide pattern** at
+  [CONVENTIONS §3.7 "Trajectory-detrend sensitivity for raw pre-vs-post
+  comparisons"](CONVENTIONS.md#37-trajectory-detrend-sensitivity-for-raw-pre-vs-post-comparisons).
+  Binding audit hook for all Layer 4+ raw pre-vs-post comparisons on
+  the LC frame. The `linear_detrend_on_pre` helper in the
+  intervention-effects script is reusable verbatim.
+
+- **Scope**: applies to raw pre-vs-post tests. Does NOT apply to
+  lagged-baseline z-score comparisons (the `_lagged_lcera` family
+  partly handles slow trend by construction). Does NOT replace the
+  segmented-baseline machinery for the broader baseline-shift
+  question.
+
+- **Downstream propagation**: any future Personal / Wiggers pre-reg
+  that does raw pre-vs-post on day-level channels inherits the §3.7
+  audit hook. Existing locked verdicts are not retroactively re-run;
+  the pattern applies forward from 2026-06-14.
+
+Doc updates landed same day: [`CONVENTIONS.md` §3.7](CONVENTIONS.md#37-trajectory-detrend-sensitivity-for-raw-pre-vs-post-comparisons)
+(new section), [`methodology/intervention_effects_descriptive.md`](methodology/intervention_effects_descriptive.md)
+(§4 + §6 script + §7 v2 revision-log row).
+
 ---
 
 ## Recently completed (2026-06-07, much later same day) — HA07c + HA08c + HA07d substitutes; FIRST OVERALL-SUPPORTED TEST

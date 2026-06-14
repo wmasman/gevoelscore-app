@@ -80,7 +80,7 @@ reading from S02 §3.8 (all four channels' same-day ρ near zero)
 is the through-line.
 
 The merged product plan
-([review/app-plan.md](review/app-plan.md)) replaces two prior
+([reviews/app-plan.md](reviews/app-plan.md)) replaces two prior
 documents, defers the disputed push-burden card pending a
 pre-registered participant-evaluation study, and incorporates the
 post-v2-rescue + post-S02 state-of-the-world into Phase 3
@@ -609,8 +609,8 @@ push-pattern surfaces in v1 on the grounds that any push-pattern
 card risks being read as a warning regardless of framing.
 
 The merged active plan
-([review/app-plan.md](review/app-plan.md)) replaces both, with the
-two sources archived at [review/archive/](review/archive/) with
+([reviews/app-plan.md](reviews/app-plan.md)) replaces both, with the
+two sources archived at [reviews/_archive/](reviews/_archive/) with
 archive-notice headers preserving content verbatim.
 
 ### 5.2. Resolution of the push-burden disagreement: PENDING further research
@@ -675,9 +675,9 @@ Live references:
   active plan.
 
 Archived references preserved verbatim:
-- [review/archive/pem-pacing-indicators.md](review/archive/pem-pacing-indicators.md)
+- [reviews/_archive/pem-pacing-indicators.md](reviews/_archive/pem-pacing-indicators.md)
   with archive-notice header.
-- [review/archive/2026-06-07-trajectory-and-events-app-plan.md](review/archive/2026-06-07-trajectory-and-events-app-plan.md)
+- [reviews/_archive/2026-06-07-trajectory-and-events-app-plan.md](reviews/_archive/2026-06-07-trajectory-and-events-app-plan.md)
   with archive-notice header.
 
 Historical research-doc references to "pem-pacing-indicators.md" (in
@@ -959,4 +959,4 @@ Specific to this addendum:
 [RESEARCH-REPORT-ADDENDUM.md](RESEARCH-REPORT-ADDENDUM.md). Next-
 phase work tracked in [docs/research/garmin/hypotheses/](garmin/hypotheses/),
 [docs/research/QUEUED-WORK.md](QUEUED-WORK.md), and
-[docs/research/review/app-plan.md](review/app-plan.md).*
+[docs/research/reviews/app-plan.md](reviews/app-plan.md).*

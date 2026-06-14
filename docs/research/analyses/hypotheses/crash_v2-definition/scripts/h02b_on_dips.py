@@ -242,8 +242,8 @@ def write_md(train_eval, validate_eval, dip_records, n_dips_train, n_dips_valida
                  "It's a generic 'bad day' marker, not crash-specific.\n")
     lines.append("**Both refuted -> ** dips have a different physiological signature than "
                  "crashes. They may be mood-only events with no autonomic precursor.\n")
-    lines.append("**Train supported, validate refuted -> ** same trajectory pattern as "
-                 "crashes themselves: signal was real in 2022-23, faded with stabilisation. "
+    lines.append("**Train supported, validate refuted -> ** same multi-year pattern as "
+                 "crashes themselves: signal was real in 2022-23, faded later. "
                  "Supports the 'kind of bad day changed' broader story.\n")
     lines.append("**Train refuted, validate supported -> ** unlikely; flag for investigation.\n")
     lines.append("## Per-dip deltas — train window\n")

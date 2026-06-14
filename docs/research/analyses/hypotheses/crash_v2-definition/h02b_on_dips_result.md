@@ -38,7 +38,7 @@ Do isolated single-day dips show the same +10-minute spike-precursor pattern as 
 
 **Both refuted -> ** dips have a different physiological signature than crashes. They may be mood-only events with no autonomic precursor.
 
-**Train supported, validate refuted -> ** same trajectory pattern as crashes themselves: signal was real in 2022-23, faded with stabilisation. Supports the 'kind of bad day changed' broader story.
+**Train supported, validate refuted -> ** same multi-year pattern as crashes themselves: signal was real in 2022-23, faded later. Supports the 'kind of bad day changed' broader story.
 
 **Train refuted, validate supported -> ** unlikely; flag for investigation.
 

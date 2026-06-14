@@ -134,7 +134,6 @@ Separately captured (not part of classification):
 - Surfaces envelope shifts: "your typical max HR drifted from 115
   in mid-2024 to 122 in early-2026" — the trend the z-score
   cancels out is itself meaningful for pacing.
-- Cross-references with the S01 stabilisation-trajectory work.
 - Output: `baseline_trajectories.png` from script 06.
 
 ## Actual joint distribution (v3 rank-based, after applying)

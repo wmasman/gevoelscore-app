@@ -62,8 +62,20 @@ TRIAGE_DIR = DATA_ROOT / "reviews"
 TRIAGE_EVENTS_CSV = DATA_ROOT / "processed" / "manual_triage" / "triage_events.csv"
 HAND_CURATED_YAML = DATA_ROOT / "raw" / "directus_exports" / "hand_curated_spans.yaml"
 ANNOTATIONS = DATA_ROOT / "raw" / "directus_exports" / "annotations.yaml"
+GARMIN_ACTIVITIES_CSV = DATA_ROOT / "processed" / "garmin" / "activities.csv"
 
 TRIAGE_CSVS = sorted(TRIAGE_DIR.glob("calendar_*_triage.csv"))
+
+# Per-session activity types that get emitted as Garmin-derived single-day
+# markers. Mapping: activity_type -> (label_prefix, default category).
+# Other activity types in activities.csv (sailing_v2, incident_detected) are
+# intentionally skipped.
+ACTIVITY_TYPES_TO_LABEL = {
+    "running": ("Running", "high_intensity"),
+    "cycling": ("Cycling", "high_intensity"),
+    "walking": ("Walking", "levensgebeurtenis"),
+    "breathwork": ("Breathwork", "interventie"),
+}
 
 
 def _stringify_dates(entries: list[dict]) -> list[dict]:
@@ -215,6 +227,75 @@ def read_triage(csv_path: Path) -> list[dict]:
     return entries
 
 
+def _opt_float(v: str | None) -> float | None:
+    if v is None:
+        return None
+    s = v.strip()
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def read_garmin_activities() -> list[dict]:
+    """Emit one single-day marker per Garmin activity session for the types
+    in ACTIVITY_TYPES_TO_LABEL. Label is a concise summary
+    (e.g. 'Running, 38min, 6.2km, HR avg/max 144/166'); note carries the
+    Garmin activity name plus a source tag for provenance.
+
+    Note on the distance unit: the column is named `distance_m` in
+    `activities.csv` (set by 02_extract_activities.py via
+    `a.get('distance')`), but Garmin Connect returns distance in
+    centimetres. Dividing by 100_000 converts to kilometres; verified
+    against typical pace/speed for cycling and running.
+    """
+    if not GARMIN_ACTIVITIES_CSV.exists():
+        return []
+    markers: list[dict] = []
+    for r in csv.DictReader(GARMIN_ACTIVITIES_CSV.open(encoding="utf-8")):
+        atype = (r.get("activity_type") or "").strip().lower()
+        if atype not in ACTIVITY_TYPES_TO_LABEL:
+            continue
+        date_str = (r.get("start_date") or "").strip()
+        if not date_str:
+            continue
+        type_label, category = ACTIVITY_TYPES_TO_LABEL[atype]
+
+        duration_min = _opt_float(r.get("duration_min"))
+        avg_hr = _opt_float(r.get("avg_hr"))
+        max_hr = _opt_float(r.get("max_hr"))
+        distance_cm = _opt_float(r.get("distance_m"))
+
+        parts = [type_label]
+        if duration_min is not None:
+            parts.append(f"{int(round(duration_min))}min")
+        if distance_cm is not None and distance_cm > 0:
+            distance_km = distance_cm / 100_000.0
+            parts.append(f"{distance_km:.1f}km")
+        if avg_hr is not None or max_hr is not None:
+            avg_s = str(int(avg_hr)) if avg_hr is not None else "-"
+            max_s = str(int(max_hr)) if max_hr is not None else "-"
+            parts.append(f"HR avg/max {avg_s}/{max_s}")
+        label = ", ".join(parts)
+
+        name = (r.get("name") or "").strip()
+        note_parts = []
+        if name:
+            note_parts.append(f"name: {name}")
+        note_parts.append("source: garmin_activities_csv")
+        note = "; ".join(note_parts)
+
+        markers.append({
+            "date": date_str,
+            "label": label,
+            "category": category,
+            "note": note,
+        })
+    return markers
+
+
 def read_triage_events(csv_path: Path) -> list[dict]:
     """Read triage_events.csv produced by process_triage_actions.py.
 
@@ -305,7 +386,16 @@ def main():
         return d if d else "9999-12-31"
     deduped.sort(key=sort_key)
 
-    markers_sorted = sorted(hand_curated_markers, key=lambda m: m["date"])
+    # Garmin per-session activity markers (running + cycling + walking + breathwork)
+    activity_markers = read_garmin_activities()
+    if activity_markers:
+        print(f"Reading {GARMIN_ACTIVITIES_CSV.name}...")
+        print(f"  {len(activity_markers)} activity markers from activities.csv")
+
+    markers_sorted = sorted(
+        list(hand_curated_markers) + activity_markers,
+        key=lambda m: m["date"],
+    )
 
     header = (
         "# annotations.yaml - user-curated context for the research timeline.\n"

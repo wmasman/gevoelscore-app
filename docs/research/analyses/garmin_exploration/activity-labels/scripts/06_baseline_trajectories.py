@@ -4,7 +4,8 @@ Surfaces the envelope shifts that z-scores / percentile ranks cancel out.
 'Your typical max HR drifted from 115 in mid-2024 to 122 in early-2026' is
 the kind of pattern this plot makes visible.
 
-Cross-references with S01 stabilisation-trajectory work.
+Earlier S01 work that this referenced has been archived; this
+script's descriptive plot stands on its own.
 """
 from __future__ import annotations
 

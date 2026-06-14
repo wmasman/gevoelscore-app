@@ -570,6 +570,6 @@ you go.**
 
 ---
 
-*Draft for review. Save to `docs/research/review/` or move to a
+*Draft for review. Save to `docs/research/reviews/` or move to a
 product-facing location (`docs/design/` or a new `docs/product/`
 folder) depending on where the v1 conversations are happening.*

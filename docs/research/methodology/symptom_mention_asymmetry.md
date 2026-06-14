@@ -69,7 +69,7 @@ written. These are the trajectory-grade columns:
   (2021-08-16 →). `daily_uds.csv`, `activity_features_daily.csv`,
   `sleep_stress_nightly.csv`, `daily_max_spike.csv`. Objective sensor
   measurement; `has_garmin_uds=False` means a FIT-file gap, not
-  inactivity. The S01 stabilisation-trajectory work uses these.
+  inactivity.
 - **Coverage flags** (`has_score`, `has_garmin_uds`, etc.) — defined
   every day, computed from the above.
 

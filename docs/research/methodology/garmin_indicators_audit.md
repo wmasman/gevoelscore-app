@@ -99,7 +99,7 @@ spec / locked decisions.
 | master column | upstream column | derivation home | known issues |
 |---|---|---|---|
 | `exertion_class` | `exertion_class` | 4-axis percentile-rank composite; locked v3.1 spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md); script [`garmin/activity-labels/scripts/04_classify_exertion.py`](../garmin/activity-labels/scripts/04_classify_exertion.py) | sensitive to rolling-baseline contamination during sustained pushes (the 30d rolling baseline includes the pushes themselves); v3.2 lagged variant in the same spec exists but the master uses v3.1 |
-| ~~`push_burden_7d`~~ DROPPED 2026-06-11 | (upstream `push_burden_7d`) | spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md) | **Held back from the master.** Known methodological issue (rolling-baseline contamination — the 30d baseline includes the pushes themselves; sustained creep rebases into its own reference). A v3.2 lagged-baseline variant `push_burden_7d_lagged` exists upstream (script [`11_compute_lagged_baseline.py`](../garmin/activity-labels/scripts/11_compute_lagged_baseline.py)) and is the documented fix. Neither is currently in the master: same discipline as `stabilisation_period` — we don't surface a known-broken metric, nor pre-commit to its replacement before descriptive analysis motivates the choice. When descriptive work surfaces the need, the lagged variant can be added cleanly. |
+| ~~`push_burden_7d`~~ DROPPED 2026-06-11 | (upstream `push_burden_7d`) | spec at [`garmin/activity-labels/spec/severity_spec.md`](../garmin/activity-labels/spec/severity_spec.md) | **Held back from the master.** Known methodological issue (rolling-baseline contamination — the 30d baseline includes the pushes themselves; sustained creep rebases into its own reference). A v3.2 lagged-baseline variant `push_burden_7d_lagged` exists upstream (script [`11_compute_lagged_baseline.py`](../garmin/activity-labels/scripts/11_compute_lagged_baseline.py)) and is the documented fix. Neither is currently in the master: we don't surface a known-broken metric, nor pre-commit to its replacement before descriptive analysis motivates the choice. When descriptive work surfaces the need, the lagged variant can be added cleanly. |
 | `effective_exertion_min` | `effective_exertion_min` | max(recorded-activity total, passive UDS vigorous + 0.5×moderate); definition in `garmin/activity-labels/definition.md` §3.3 | weighted-passive convention captures unlogged exertion but the 0.5× weight on moderate is a designed convention, not a derived constant. **2022Q3 coverage gap resolved (re-extract 2026-06-12)**: now 100% fill from 2021Q3 onwards (extended `ANALYSIS_START` from 2022-09-03 to 2021-08-16 in `03_compute_daily_features.py` line 26). Pre-LC baseline now accessible. |
 | `step_z_30d` | `step_z_30d` | z-score of daily steps vs 30d rolling median + MAD; spec in definition.md §3.3 | inherits the same rolling-baseline issue as push_burden in extreme push periods (less severe for steps than for class because steps are more granular). **2022Q3 coverage gap resolved (re-extract 2026-06-12)**: now 100% fill from 2021Q4 onwards (after 20-day warmup window). v3.1 rolling-baseline values for **2022-09-23 → 2022-10-22 shifted** because the baseline now includes pre-LC training-period days — strict HA01b/HA02c bit-identical reproducibility breaks for those 30 days only; qualitative results expected stable. |
 
@@ -195,7 +195,7 @@ v3.1 + all 4 per-axis classes v3.2 lagged + `above_baseline_streak`.
 Lagged ranks composite + push_burden + slope landed in the v3.2
 commit 02018e0. See [`../DATA_DICTIONARY.md`](../DATA_DICTIONARY.md) §6.)*
 
-### HRV — hardware blocked (Forerunner 245 / Elevate V3)
+### HRV — hardware blocked for HRV Status directly; partial proxy unblock via `stress_mean_sleep` on descriptive grounds
 
 Nightly HRV Status is a feature of the Elevate V4 sensor (Forerunner
 265, 955, 965, fēnix 7, Epix 2, Venu 2+). The Forerunner 245 used
@@ -219,17 +219,83 @@ Confirmation:
   (wrist OHR is not clean enough). Not nightly. Not aggregated to
   per-day. Not the signal Wiggers B1-B5 / H1-H5 reference.
 
-Wiggers consequence: **B1-B5 and the HRV-dependent parts of H1, H2,
-H3, H4, H5 are hardware-blocked on this dataset.** Only a device
-upgrade would unblock forward, and only for new data from the upgrade
-date onward.
-
 The 8 partially-decoded fields visible in the unknown messages
 (`unknown_0` ... `unknown_253`) are presumably sleep-stage timing data
 that Garmin Connect uses internally to render the sleep timeline.
 Reverse-engineering them is not a productive use of effort: even if
 fully decoded, they would not yield HRV (the sensor doesn't produce
 it).
+
+#### Partial unblock 2026-06-13 — `stress_mean_sleep` proxy on descriptive grounds
+
+The above blocker stands for **HRV Status directly** (the Garmin UI
+feature) and for **RMSSD / SDNN-anchored claims in their literal
+units**. It does NOT stand for the substantive Wiggers claims about
+autonomic-state shifts around PEM episodes.
+
+The Garmin "stress" score is computed by the Firstbeat algorithm from
+the same R-R interval signal underlying HRV Status (Firstbeat 2014
+white paper; Garmin / Firstbeat technology overview). During sleep —
+when motion is absent, HR is at baseline, and respiration is regular —
+the algorithm's multivariate composite collapses toward its
+HRV-derived component. **`stress_mean_sleep` is therefore the cleanest
+HRV-correlated daily signal available on the FR245.**
+
+**Descriptive characterisation on this corpus**
+([`hrv_proxy_via_stress.md`](hrv_proxy_via_stress.md) Checks 7.1-7.3;
+raw run results in
+[`../analyses/garmin_exploration/hrv_proxy_validation/result-table.txt`](../analyses/garmin_exploration/hrv_proxy_validation/result-table.txt)):
+
+- Episode-level crash signal (crash_v2, 29 crash-episodes vs 1,162
+  normal-day base rate): Cohen's d = +0.90, CI95 [+1.51, +8.22] for
+  mean diff. CI does not cross zero.
+- Day-level supplementary (n=101 crash days vs n=1162 normal days):
+  Cohen's d = +1.03 (autocorrelation-inflated).
+- Confound-separability vs `resting_hr`: Pearson r = +0.342,
+  R² = 0.117. ~88% of sleep-stress variance is not HR-driven.
+
+These are descriptive characterisations, not test verdicts. They
+support the proxy DIRECTION and motivate pre-registering B-block /
+HRV-dependent H-block tests; they do not lock channel-selection or
+prove the proxy generalises out-of-sample.
+
+**Revised Wiggers consequence:**
+
+- **B1, B2, B3, B4, B5**: were BLOCKED; now **PARTIAL** with
+  `stress_mean_sleep` as candidate HRV-proxy channel on descriptive
+  grounds.
+- **HRV-dependent parts of H1, H2, H3, H5**: were PARTIAL (non-HRV
+  channels only); now **PARTIAL** with `stress_mean_sleep` added as
+  candidate HRV-proxy channel.
+- **H4 (parasympathetic-swing composite)**: was BLOCKED; now
+  **PARTIAL** on combined source + descriptive grounds. Wiggers'
+  parasympathetic swing chapter (PDF lines 1431-1457) directly cites
+  the BB-drop pattern, so a BB-anchored composite (`bb_sleep_end_value`
+  + `bb_drained_24h`) is source-grounded independent of the RHR claim;
+  `stress_mean_sleep` enters as secondary HRV-proxy channel.
+
+Constraints any B / H pre-reg file inherits from this unblock:
+
+1. The test is on the `stress_mean_sleep` proxy, not on HRV proper.
+   The pre-reg abstract must acknowledge this.
+2. Descriptive effect-size anchor: episode-level Cohen's d = +0.90
+   (CI95 [+1.51, +8.22]) is the same-day reference for power planning.
+3. Walk-forward / hold-out validation discipline applies — the
+   descriptive characterisation is in-sample.
+4. Channel selection (single vs multi) is a per-hypothesis pre-reg
+   choice. Descriptive r = +0.342 between `stress_mean_sleep` and
+   `resting_hr` shows the channels are distinct enough that the
+   framing question is legitimate per-pre-reg, not pre-decided.
+5. Specific Wiggers UI anchors ("≥10 HRV-point drop") do not
+   translate to stress units; calibrate the proxy threshold from
+   descriptive characterisation.
+6. No literal-HRV claim: pre-reg defends the proxy-tested claim
+   ("stress-derived sleep signal elevates around crashes"), not the
+   verbatim Wiggers framing ("HRV drops before PEM").
+
+A device upgrade (Forerunner 265+, fēnix 7, Epix 2, Venu 2+) would
+unblock direct HRV from the upgrade date onward; existing data
+remains testable only via the stress proxy.
 
 ### NOT extracted from raw FIT (latent in dump, but not currently surfaced)
 
@@ -299,8 +365,8 @@ build:
    contamination. Removed from
    `pipeline/03_consolidate/build_unified_dataset.py`. The v3.2 lagged
    variant `push_burden_7d_lagged` is also held back: per the same
-   discipline applied to `stabilisation_period`, the master does not
-   carry indicators with known issues or unvalidated replacements.
+   discipline of held-back indicators, the master does not carry
+   indicators with known issues or unvalidated replacements.
    When descriptive analysis on the master motivates a push-burden
    construct, the lagged variant is the documented fix to add.
 

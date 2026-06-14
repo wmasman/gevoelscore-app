@@ -2,7 +2,7 @@
 
 **Status: REFUTED on the pre-registered bar (criterion c — lag does
 not improve over same-day). The rolling-curve T1 lead/lag pattern
-from [S02](../S02-score-trajectory/notes.md) does NOT survive
+from [S02 (archived 2026-06-13)](../_archive/S02-score-trajectory/notes.md) does NOT survive
 transition to daily-resolution inference with autocorrelation
 correction.**
 
@@ -165,7 +165,7 @@ cross-correlation test was run and refuted in one direction.
   ("score leads Garmin therefore the score channel is informative
   ahead of biometric improvement") is NOT supported.
 - **S02's rolling-curve T1 paragraph in
-  [S02 notes.md](../S02-score-trajectory/notes.md) should be
+  [S02 notes.md](../_archive/S02-score-trajectory/notes.md) should be
   cross-referenced to S02b** so future readers don't take T1 as
   evidence of daily-resolution lead/lag.
 - **STOCKTAKE.md and synthesis.md** should reflect this. The
@@ -224,7 +224,7 @@ cross-correlation test was run and refuted in one direction.
 
 ## What this enables
 
-- **A cleaner cross-reference in [S02 notes.md](../S02-score-trajectory/notes.md)**
+- **A cleaner cross-reference in [S02 notes.md](../_archive/S02-score-trajectory/notes.md)**
   for the T1 finding: the trajectory-level pattern stands as a
   trajectory finding; the daily-resolution version is refuted.
 - **A first empirical data point for Wiggers H1** — even though
@@ -251,5 +251,5 @@ cross-correlation test was run and refuted in one direction.
 
 *S02b executed 2026-06-07. Spec at [hypothesis.md](hypothesis.md);
 pre-committed bar locked before execution; REFUTED outcome reported
-faithfully against that bar without drift. Sibling [S02c](../S02c-may2026-divergence/)
+faithfully against that bar without drift. Sibling [S02c (archived 2026-06-13)](../_archive/S02c-may2026-divergence/)
 addresses S02's T2 trigger separately.*

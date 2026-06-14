@@ -1,6 +1,6 @@
 # Investigation plan — testing the "kind of crash changed" theory
 
-*Companion to [synthesis.md](synthesis.md). Plan-only document — no
+*Companion to [_archive/synthesis.md](_archive/synthesis.md) (archived 2026-06-13). Plan-only document — no
 tests have been pre-registered yet under this thread. The H## numbering
 is reserved for first-batch precursor hypotheses; this thread uses
 **K## (kind)** for hypotheses about how crashes themselves differ

@@ -62,6 +62,40 @@ Daily entry must not be more friction than the current sheet. The minimum flow i
 | [tests/](tests/) | Playwright API + e2e specs (`tests/api/`, `tests/e2e/`) |
 | [directus/](directus/) | Dockerfile, fly.toml, and idempotent schema/permissions scripts |
 | [.claude/](.claude/) | Project-local Claude Code config: conventions, testing doctrine, security checklist, slash commands |
+| [docs/research/](docs/research/) | Long COVID PEM self-research corpus: pipeline, methodology MDs, hypothesis tests, peer-review reports |
+
+## Research-discipline methodology
+
+The `docs/research/` track sits alongside the app and produces
+analyses on a 1.363+ day personal corpus (gevoelscore + per-day
+intensity + Garmin biometrics + notes + medical records). Because
+the corpus is observational, single-subject, and time-series with
+strong temporal dependence, no established reporting checklist
+(SCRIBE 2016, CENT 2015, STROBE 2007, WWC 2022 SCED) cleanly
+covers the shape of the work.
+
+The project's own research-discipline guardrails:
+
+- [docs/research/CONVENTIONS.md](docs/research/CONVENTIONS.md) —
+  role split (producer vs reviewer), discipline gates, pre-flight
+  audit hooks, project-wide anchors.
+- [docs/research/reviews/](docs/research/reviews/) — a 4-layer
+  peer-review checklist that adapts what transfers from each
+  established standard (and explicitly states what does not) plus
+  project-specific audit hooks. Verdicts must be reasoned, not
+  labels.
+- [docs/research/literature/methodology/](docs/research/literature/methodology/)
+  — local PDFs of the standards we inherit from (CENT, STROBE,
+  Daza 2018 on self-tracked n-of-1 counterfactual analysis, WWC
+  2022 SCED handbook, Natesan Batley 2023 systematic review).
+
+The act of building these review standards — adapted for
+observational n=1 time-series rather than copy-pasted from
+intervention-focused SCED checklists — is itself part of the
+project's methodology. The 2023 systematic review found that only
+3.48% of published n-of-1 medical studies meet WWC SCED evidence
+standards; documenting our own adaptations is how we avoid
+joining the 96.52%.
 
 ## Tech stack
 

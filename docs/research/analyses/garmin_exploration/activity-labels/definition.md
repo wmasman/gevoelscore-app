@@ -324,8 +324,8 @@ Consumable by downstream analyses:
 - **Garmin's activity-detection algorithm is opaque and has
   evolved across firmware versions** (7.x → 10.4 on FR245).
   Vigorous-minutes detection sensitivity may have shifted across
-  the 5-year window. Stabilisation-arc analyses should
-  cross-reference with S01.
+  the 5-year window. Multi-year analyses should account for this
+  algorithm drift.
 - **Self-reported fields cover only 20% of activities**. Their
   meaning is not standardised across the participant's logging
   practice. Use as sanity check, not primary classifier.

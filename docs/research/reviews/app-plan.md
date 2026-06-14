@@ -7,7 +7,7 @@ world: 2026-06-07 late-evening, after S02 + S02b + S02c + the
 threshold-monotonicity v2 rescue round.*
 
 *Both source documents are archived at
-[archive/](archive/) and superseded by this one. Methodology framework
+[_archive/](_archive/) and superseded by this one. Methodology framework
 piece [2026-06-07-research-to-app-methodology.md](2026-06-07-research-to-app-methodology.md)
 remains active.*
 
@@ -32,9 +32,9 @@ phase.
 
 **Replaces:**
 - `pem-pacing-indicators.md` (the research-side curated indicator
-  catalogue) — archived at [archive/pem-pacing-indicators.md](archive/pem-pacing-indicators.md).
+  catalogue) — archived at [_archive/pem-pacing-indicators.md](_archive/pem-pacing-indicators.md).
 - `2026-06-07-trajectory-and-events-app-plan.md` (the Families 1+2
-  app plan) — archived at [archive/2026-06-07-trajectory-and-events-app-plan.md](archive/2026-06-07-trajectory-and-events-app-plan.md).
+  app plan) — archived at [_archive/2026-06-07-trajectory-and-events-app-plan.md](_archive/2026-06-07-trajectory-and-events-app-plan.md).
 
 ---
 
@@ -589,10 +589,10 @@ A reflection tool, not a daily-pacing one.
 ### Pending — 7-day push burden (descriptive shape, awaiting further research)
 
 The original
-[pem-pacing-indicators](archive/pem-pacing-indicators.md) §3.2
+[pem-pacing-indicators](_archive/pem-pacing-indicators.md) §3.2
 proposed shipping a 7-day push-burden count as a descriptive card
 ("3 zware dagen, jouw mediaan is 1"). The original
-[trajectory-and-events-app-plan](archive/2026-06-07-trajectory-and-events-app-plan.md)
+[trajectory-and-events-app-plan](_archive/2026-06-07-trajectory-and-events-app-plan.md)
 §4 excluded all push-pattern surfaces (Family 6) on the grounds that
 any push-pattern card risks being read as a predictive warning
 regardless of framing.
@@ -900,9 +900,9 @@ can't. Calibrate as you go.
 ### Archived source documents
 
 This plan merges and supersedes:
-- [archive/pem-pacing-indicators.md](archive/pem-pacing-indicators.md)
+- [_archive/pem-pacing-indicators.md](_archive/pem-pacing-indicators.md)
   (research-side curated indicators).
-- [archive/2026-06-07-trajectory-and-events-app-plan.md](archive/2026-06-07-trajectory-and-events-app-plan.md)
+- [_archive/2026-06-07-trajectory-and-events-app-plan.md](_archive/2026-06-07-trajectory-and-events-app-plan.md)
   (Families 1+2 app plan).
 
 Both archived 2026-06-07. Content preserved verbatim for audit-trail

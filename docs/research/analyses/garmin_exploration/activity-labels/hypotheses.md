@@ -144,8 +144,8 @@ crosses absolute bars. Mirrors how H02b-on-dips was interpreted.
   not predict crashes for this person. Useful negative result;
   may justify revisiting at finer (per-hour) resolution.
 - **Train-supported, validate-refuted**: matches H02b's
-  "kind of crash changed" trajectory. Activity precursors
-  evident pre-stabilisation, absent post. Card supports
+  "kind of crash changed" multi-year pattern. Activity precursors
+  evident in the train era, absent in the validate era. Card supports
   retrospective framing for pre-2024 crashes.
 - **HA05 supported**: crashes-vs-dips distinct in activity
   precursor signature. Strengthens crash_v2 tier separation.

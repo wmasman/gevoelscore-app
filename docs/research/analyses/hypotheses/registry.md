@@ -695,21 +695,22 @@ spine or doesn't:
 ## 4a. Synthesis
 
 After all five hypotheses closed, a cross-batch synthesis was written
-at [synthesis.md](synthesis.md). It reads each refuted hypothesis
+at [_archive/synthesis.md](_archive/synthesis.md) (archived 2026-06-13). It reads each refuted hypothesis
 productively (what the data does and does not say), lists
 caveats applying across the batch, and prioritises follow-ups. Living
 document, last updated 2026-06-06 with the crash_v2 phase.
 
 ## 4b. Closed since 2026-06-05 (post-synthesis-v1)
 
-- **H02b-trajectory** ([H02b-stress-spikes/trajectory-notes.md](H02b-stress-spikes/trajectory-notes.md))
+- **H02b-trajectory (archived 2026-06-13)** ([_archive/H02b-trajectory-sub-files/trajectory-notes.md](_archive/H02b-trajectory-sub-files/trajectory-notes.md))
   — rolling 12-month discrimination curve replacing the binary
   H02b verdict; smooth ~12-month decay from +31.8 pp peak
   (mid-2023) to near zero by mid-2024.
-- **S01 stabilisation trajectories** ([S01-stabilisation-trajectories/notes.md](S01-stabilisation-trajectories/notes.md))
+- **S01 (archived 2026-06-13)** ([_archive/S01-stabilisation-trajectories/notes.md](_archive/S01-stabilisation-trajectories/notes.md))
   — 90-day rolling means of 4 metrics across the full Garmin
-  window; cleanest pendulum signal in max stress-spike duration.
-- **S02 score trajectory** ([S02-score-trajectory/notes.md](S02-score-trajectory/notes.md),
+  window. Archived because the trajectory framing was qualitative,
+  not a validated analytical era.
+- **S02 score trajectory (archived 2026-06-13)** ([_archive/S02-score-trajectory/notes.md](_archive/S02-score-trajectory/notes.md),
   run 2026-06-07) — 90d rolling trimmed mean + median + score-level
   distribution of daily gevoelscore + pre-registered same-day rank
   correlation (§3.8) + four pre-registered S02b triggers (§7.2).
@@ -745,7 +746,7 @@ document, last updated 2026-06-06 with the crash_v2 phase.
   empirically-observed score-leads direction refuted. Methodology
   lesson banked: rolling-curve turnaround-date mismatches can occur
   without daily-resolution lead/lag signals.
-- **S02c May 2026 channel divergence** ([S02c-may2026-divergence/notes.md](S02c-may2026-divergence/notes.md),
+- **S02c May 2026 channel divergence (archived 2026-06-13)** ([_archive/S02c-may2026-divergence/notes.md](_archive/S02c-may2026-divergence/notes.md),
   run 2026-06-07) — daily-resolution z-score characterisation of
   the perturbation period (2026-03-08 → 2026-06-05, n=90) against
   a 180-day pre-perturbation reference window (2025-09-08 →
@@ -1203,7 +1204,7 @@ document, last updated 2026-06-06 with the crash_v2 phase.
   Doc updates landed in the same session:
   [RESEARCH-REPORT-ADDENDUM.md §5.9](../../RESEARCH-REPORT-ADDENDUM.md),
   [STOCKTAKE.md §2a + §4 + §7](../../STOCKTAKE.md),
-  [synthesis.md](synthesis.md) "Update 2026-06-06 (later still)".
+  [_archive/synthesis.md](_archive/synthesis.md) "Update 2026-06-06 (later still)".
 
 - **HA01b per-axis decomposition diagnostic** ([HA01b-per-axis-diagnostic/result.md](HA01b-per-axis-diagnostic/result.md),
   run 2026-06-07) — pre-registered under the user-locked Option A

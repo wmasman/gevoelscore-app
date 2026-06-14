@@ -17,6 +17,7 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 - [.claude/security-checklist.md](.claude/security-checklist.md) — **Security checklist** (OWASP ASVS-aligned, curated for single-user Next.js PWA + Directus)
 - [docs/architecture/frontend-conventions.md](docs/architecture/frontend-conventions.md) — **Frontend conventions** (server-component default, copy discipline, design tokens, WCAG 2.2 AA + Brainfog extensions, focus management)
 - [docs/design/brief.md](docs/design/brief.md) — **Design brief** (Things-3 anchor, warm-earth palette, humanist sans, reflective Dutch tone, restrained visual cues, forbidden patterns, opt-in-reminder rules)
+- [docs/research/CONVENTIONS.md](docs/research/CONVENTIONS.md) — **Research conventions** (role split producer vs reviewer, discipline gates, statistical-hygiene audit hooks, project-wide anchors). Read before any work in `docs/research/`. Sister to `.claude/conventions.md`; that one governs app-engineering work, this one governs research.
 
 ## Key rules
 

@@ -49,7 +49,7 @@ Markers: ⬆/⬇ = shift of ±10 percentage points between early and late.
 ## How to read this
 
 - The first table answers: **which kinds of clauses are over-represented before vs during crashes?** vs the baseline of all notes.
-- The second table answers: **has the user's *language about crashes* shifted across the stabilisation transition?** Direct K## evidence at the level of subjective experience.
+- The second table answers: **has the user's *language about crashes* shifted across years?** Direct K## evidence at the level of subjective experience.
 - Both tables use **per-day category presence rates** (a day with the category mentioned in ≥1 clause counts as 1 for that category), not per-clause rates, because the day is the unit of analysis for crash labelling.
 
 ## Caveats

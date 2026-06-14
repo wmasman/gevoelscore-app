@@ -15,6 +15,7 @@
 .github/workflows/daily-calendar-sync.yml
 .github/workflows/verify.yml
 .gitignore
+.publish_manifest.txt
 .superdesign/design-system.md
 CLAUDE.md
 CONTRIBUTING.md
@@ -151,6 +152,11 @@ docs/features/day-entry/step-1-validate-date.md
 docs/features/day-entry/step-2-note-and-tag-ids.md
 docs/features/day-entry/step-3-sub-scores-and-sleep-hours.md
 docs/features/day-entry/step-4-day-entry-composer.md
+docs/features/exertion-tracking/README.md
+docs/features/exertion-tracking/step-1-domain-validate-exertion.md
+docs/features/exertion-tracking/step-2-directus-exertion-field.md
+docs/features/exertion-tracking/step-3-api-and-route.md
+docs/features/exertion-tracking/step-4-exertion-section-ui.md
 docs/features/inline-tag-creation/README.md
 docs/features/inline-tag-creation/step-1-inline-tag-creation.md
 docs/features/login/README.md
@@ -208,7 +214,7 @@ docs/research/README.md
 docs/research/RESEARCH-REPORT-ADDENDUM-II.md
 docs/research/RESEARCH-REPORT-ADDENDUM.md
 docs/research/RESEARCH-REPORT.md
-docs/research/STOCKTAKE.md
+docs/research/_archive/STOCKTAKE.md
 docs/research/analyses/README.md
 docs/research/analyses/garmin_exploration/README.md
 docs/research/analyses/garmin_exploration/activity-labels/definition.md
@@ -270,8 +276,6 @@ docs/research/analyses/hypotheses/H02b-stress-spikes/probe_monitoring_frame.py
 docs/research/analyses/hypotheses/H02b-stress-spikes/result.md
 docs/research/analyses/hypotheses/H02b-stress-spikes/specificity_check.py
 docs/research/analyses/hypotheses/H02b-stress-spikes/test.py
-docs/research/analyses/hypotheses/H02b-stress-spikes/trajectory-notes.md
-docs/research/analyses/hypotheses/H02b-stress-spikes/trajectory_per_year.py
 docs/research/analyses/hypotheses/H02d-stress-spikes-uncensored/extract_daily_max_spike_v2.py
 docs/research/analyses/hypotheses/H02d-stress-spikes-uncensored/hypothesis.md
 docs/research/analyses/hypotheses/H02d-stress-spikes-uncensored/result.md
@@ -350,17 +354,20 @@ docs/research/analyses/hypotheses/K02-crash-duration/fetch_day_entries.mjs
 docs/research/analyses/hypotheses/K02-crash-duration/hypothesis.md
 docs/research/analyses/hypotheses/K02-crash-duration/result.md
 docs/research/analyses/hypotheses/K02-crash-duration/test.py
-docs/research/analyses/hypotheses/S01-stabilisation-trajectories/compute_trajectories.py
-docs/research/analyses/hypotheses/S01-stabilisation-trajectories/notes.md
-docs/research/analyses/hypotheses/S02-score-trajectory/compute_trajectories.py
-docs/research/analyses/hypotheses/S02-score-trajectory/hypothesis.md
-docs/research/analyses/hypotheses/S02-score-trajectory/notes.md
 docs/research/analyses/hypotheses/S02b-score-lead/compute_lagged.py
 docs/research/analyses/hypotheses/S02b-score-lead/hypothesis.md
 docs/research/analyses/hypotheses/S02b-score-lead/notes.md
-docs/research/analyses/hypotheses/S02c-may2026-divergence/compute_divergence.py
-docs/research/analyses/hypotheses/S02c-may2026-divergence/hypothesis.md
-docs/research/analyses/hypotheses/S02c-may2026-divergence/notes.md
+docs/research/analyses/hypotheses/_archive/H02b-trajectory-sub-files/trajectory-notes.md
+docs/research/analyses/hypotheses/_archive/H02b-trajectory-sub-files/trajectory_per_year.py
+docs/research/analyses/hypotheses/_archive/S01-stabilisation-trajectories/compute_trajectories.py
+docs/research/analyses/hypotheses/_archive/S01-stabilisation-trajectories/notes.md
+docs/research/analyses/hypotheses/_archive/S02-score-trajectory/compute_trajectories.py
+docs/research/analyses/hypotheses/_archive/S02-score-trajectory/hypothesis.md
+docs/research/analyses/hypotheses/_archive/S02-score-trajectory/notes.md
+docs/research/analyses/hypotheses/_archive/S02c-may2026-divergence/compute_divergence.py
+docs/research/analyses/hypotheses/_archive/S02c-may2026-divergence/hypothesis.md
+docs/research/analyses/hypotheses/_archive/S02c-may2026-divergence/notes.md
+docs/research/analyses/hypotheses/_archive/synthesis.md
 docs/research/analyses/hypotheses/crash_v2-definition/comparison_to_v1.md
 docs/research/analyses/hypotheses/crash_v2-definition/definition.md
 docs/research/analyses/hypotheses/crash_v2-definition/h02b_on_dips_result.md
@@ -371,7 +378,6 @@ docs/research/analyses/hypotheses/crash_v2-definition/scripts/visualize_timeline
 docs/research/analyses/hypotheses/crash_v2-definition/specificity_retag.md
 docs/research/analyses/hypotheses/kind-of-crash-investigation.md
 docs/research/analyses/hypotheses/registry.md
-docs/research/analyses/hypotheses/synthesis.md
 docs/research/analyses/notes_categorization/categories-analysis-v1.md
 docs/research/analyses/notes_categorization/categories-analysis-v2.md
 docs/research/analyses/reviews/pwc_dossier_review_instructions.md
@@ -386,6 +392,7 @@ docs/research/literature/push crash research.md
 docs/research/literature/ui-ux-patterns-from-visible-welltory.md
 docs/research/methodology/README.md
 docs/research/methodology/garmin_indicators_audit.md
+docs/research/methodology/lc_phase_descriptive.md
 docs/research/methodology/methodology.md
 docs/research/methodology/nightly_attribution.md
 docs/research/methodology/queued_work.md
@@ -400,6 +407,9 @@ docs/research/pipeline/01_extract/export_calendar_triage.mjs
 docs/research/pipeline/01_extract/extract_daily_max_spike.py
 docs/research/pipeline/01_extract/extract_notes_candidates.py
 docs/research/pipeline/01_extract/extract_sleep_stress.py
+docs/research/pipeline/01_extract/garmin_intraday_hr_stress.py
+docs/research/pipeline/01_extract/garmin_sleep_extras.py
+docs/research/pipeline/01_extract/garmin_uds_extras.py
 docs/research/pipeline/01_extract/parse_reintegration_hours.py
 docs/research/pipeline/02_label/apply_v23_patches.py
 docs/research/pipeline/02_label/apply_v24_patches.py
@@ -428,11 +438,12 @@ docs/research/pipeline/README.md
 docs/research/pipeline/_archive/categorize_v1.py
 docs/research/pipeline/_archive/verify_findings.py
 docs/research/pipeline/_archive/verify_late_positive.py
-docs/research/review/2026-06-07-research-to-app-methodology.md
-docs/research/review/app-plan.md
-docs/research/review/archive/2026-06-07-trajectory-and-events-app-plan.md
-docs/research/review/archive/pem-pacing-indicators.md
-docs/research/review/longcovid_analysis_strategy from an independent advisor.md
+docs/research/pipeline/audit_for_publication.py
+docs/research/reviews/2026-06-07-research-to-app-methodology.md
+docs/research/reviews/_archive/2026-06-07-trajectory-and-events-app-plan.md
+docs/research/reviews/_archive/pem-pacing-indicators.md
+docs/research/reviews/app-plan.md
+docs/research/reviews/longcovid_analysis_strategy from an independent advisor.md
 docs/research/wiggers_progress_2026-06-07.md
 docs/research/wiggers_progress_2026-06-08.md
 docs/research/wiggers_response_article_2026-06-08.md
@@ -467,6 +478,7 @@ scripts/repro-edit-step-bug.mjs
 scripts/rotate-calendar-sync-secret.ps1
 scripts/rotate-cron-token.ps1
 scripts/run-auth-smoke.ps1
+scripts/run-calendar-binding-smoke.ps1
 scripts/run-calendar-historical-backfill.ps1
 scripts/run-directus-script.ps1
 scripts/run-episodes-smoke.ps1

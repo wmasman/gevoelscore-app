@@ -104,11 +104,25 @@ CALENDAR_COVERAGE_START = date(2022, 6, 17)
 # referenced by the *_lagged_lcera variant in 11_compute_lagged_baseline.py.
 CORONA_START = date(2022, 3, 21)
 LC_ERA_START = date(2022, 4, 4)
-# NOTE: an earlier draft included a `stabilisation_period` bool with
-# arbitrary boundaries (2024-01-01 → 2025-06-30). Removed 2026-06-11 per
-# user feedback: that boundary is not pre-registered, not data-driven, and
-# belongs in descriptive-analysis output rather than the schema. See
-# DATA_DICTIONARY.md update log.
+# NOTE: an earlier draft included a derived bool with arbitrary boundaries
+# based on qualitative trajectory framing. Removed 2026-06-11 per user
+# feedback: the boundaries were not pre-registered, not data-driven, and
+# any classification of that kind belongs in descriptive-analysis output
+# rather than the schema. See DATA_DICTIONARY.md update log.
+
+# Per-period umbrella booleans emitted alongside the descriptive `in_umbrella` OR.
+# Added 2026-06-12 after Layer 3 spot-investigation showed that the three
+# umbrella periods are semantically distinct (medication, work, relational)
+# and barely overlap in time, so `in_umbrella` as a single binary is
+# confounded by year. The per-period booleans below are the analytical
+# surface for any correlation / stratification on umbrella membership.
+# Substrings match the canonical name prefix in hand_curated_spans.yaml.
+UMBRELLA_FLAGS = {
+    "in_citalopram_traject": "Citalopram-traject",
+    "in_pwc_reintegratie_2023": "PwC reintegratie 2023",
+    "in_relational_spanning_2024": "Relational-spanning 2024",
+    "in_naproxen_interventie": "Naproxen-interventie",
+}
 
 # === v24 vocab ===
 V24_CATEGORIES = [
@@ -774,6 +788,11 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     umbrellas = umbrella_by_day.get(d, [])
     row["in_umbrella"] = bool(umbrellas)
     row["umbrella_labels"] = ";".join(umbrellas)
+    # Per-period umbrella booleans (the analytical surface — in_umbrella is
+    # too heterogeneous to correlate against because the three periods are
+    # semantically distinct and barely overlap in time).
+    for col, needle in UMBRELLA_FLAGS.items():
+        row[col] = any(needle in u for u in umbrellas)
 
     # --- PwC dossier events (subset) ---
     dossier_evs = dossier_by_day.get(d, [])

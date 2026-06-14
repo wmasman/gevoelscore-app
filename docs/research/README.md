@@ -74,10 +74,10 @@ the repo cannot reach it directly.
 docs/research/
 ├── README.md               (this file)
 ├── DATA_DICTIONARY.md      column-by-column schema for per_day_master.csv
-├── STOCKTAKE.md            cross-section snapshot of findings
 ├── RESEARCH-REPORT*.md     phase reports (H01-H05, crash_v2 addendum, etc.)
 ├── QUEUED-WORK.md          deferred research items + audit log
 ├── wiggers_*.md            independent-advisor exchanges
+├── _archive/               superseded top-level synthesis snapshots (e.g. STOCKTAKE.md, archived 2026-06-13)
 ├── literature/ (top-level .md files — see §5)
 │
 ├── methodology/            binding rules for analysts
@@ -186,6 +186,20 @@ person names, or medical-document content? If yes → external.
 
 ## 7. Key cross-references
 
+- [CONVENTIONS.md](CONVENTIONS.md) — how we work on research in this
+  folder: role split (producer vs reviewer), discipline gates,
+  pre-flight audit hooks, project-wide anchors. Read this before
+  proposing an analysis or hypothesis test.
+- [reviews/README.md](reviews/README.md) — the 4-layer peer-review
+  checklist for HA results and synthesis docs, anchored in SCRIBE
+  2016, CENT 2015, STROBE 2007, Daza 2018, WWC 2022 SCED, and the
+  Natesan Batley 2023 systematic review. Building our own review
+  standards (adapted for observational n=1 time-series, where no
+  existing checklist cleanly maps) is itself part of the project's
+  research-discipline methodology.
+- [literature/methodology/](literature/methodology/) — local PDFs
+  and index of the methodology standards the review checklist
+  inherits from.
 - [DATA_DICTIONARY.md](DATA_DICTIONARY.md) — every column in
   per_day_master.csv with source + dtype + missingness + variable
   class (daily_computed vs presence_conditioned_positive_evidence)
@@ -198,9 +212,11 @@ person names, or medical-document content? If yes → external.
   — the binding rule for sleep + RHR dating
 - [methodology/garmin_indicators_audit.md](methodology/garmin_indicators_audit.md)
   — per-column Garmin provenance + known issues
-- [STOCKTAKE.md](STOCKTAKE.md) — cross-section findings summary
 - [methodology/queued_work.md](methodology/queued_work.md) — what's
   next + what was decided
+- [REJECTED.md](REJECTED.md) — project-scope audit trail of
+  rejected / blocked / superseded hypotheses; one row per rejection
+  added at the time of rejection
 
 ---
 

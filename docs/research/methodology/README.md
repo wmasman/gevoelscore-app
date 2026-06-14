@@ -6,6 +6,29 @@ that analysts must respect to get correct answers from the data.
 
 ---
 
+## Discipline note: methodology drafted after corpus engagement
+
+The methodology decisions in this folder were drafted after substantial
+corpus engagement (multiple Garmin extractions, descriptive analyses,
+locked HA-numbered pre-regs). They are **pre-registration discipline
+going forward** — every future hypothesis test runs under the rules
+these MDs articulate — and **not** a pretence that the corpus has
+never been examined.
+
+The operative safeguard is the "decision frozen at pre-reg time, no
+re-tuning" rule that every MD in this folder upholds. Historical
+findings (HA01b, HA02c, HA08, HA11, H05) remain as the historical
+record; new hypothesis files cite the relevant methodology MD and
+follow its rules. Cross-checks between historical verdicts and the
+new framework are descriptive, never automatic re-locks.
+
+This framing is also embedded in
+[[feedback_methodology_decisions_documented_reasoning]]
+and [[feedback_caveats_vs_apriori]]: caveat what
+we haven't done, don't claim methods we haven't earned.
+
+---
+
 ## Read these in order
 
 1. **[methodology.md](methodology.md)** — overall research methodology
@@ -32,6 +55,30 @@ that analysts must respect to get correct answers from the data.
    deferred from triage sessions (Q1 brainfog/spierpijn HA pre-reg,
    Q2 hidden-dip review, Q3a allocation shift, Q3b umbrella review,
    Q5 cross-validation lens guidance).
+
+6. **[lc_era_temporal_segmentation.md](lc_era_temporal_segmentation.md)** —
+   data-given strata (pre-corona / corona-infection / LC-pre-gevoelscore
+   / LC-with-gevoelscore-and-crash-labels = Stratum 4) vs methodological
+   sub-segmentation. **Stratum 4 is the primary analytic surface** for
+   Wiggers pre-regs. No default sub-segmentation inside Stratum 4;
+   M1/M2/M3 warrant required.
+
+7. **[permutation_null_block_length.md](permutation_null_block_length.md)** —
+   block-length policy for stationary bootstrap + permutation null
+   tests on the day-resampling layer. Default **E[L] = 7 days**;
+   data-driven companion + pre-registered override rule. Event-level
+   permutation (n=29) is a separate layer with its own combinatorics.
+
+8. **[train_validate_split_fate.md](train_validate_split_fate.md)** —
+   **single-pool primary** for new Wiggers pre-regs; the historical
+   2023-12-31 split is preserved as a reproducibility artefact only;
+   optional M3 descriptive overlay. HA01b train-vs-validate divergence
+   is a number, not a narrative.
+
+9. **[_pending_literature_fetch.md](_pending_literature_fetch.md)** —
+   self-contained brief for a future agent to acquire, verify, and
+   integrate the statistical-methodology citations currently deferred
+   in MDs 6-8.
 
 ---
 

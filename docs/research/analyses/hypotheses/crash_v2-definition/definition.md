@@ -1,7 +1,10 @@
 # crash_v2 — two-tier crash / dip classification
 
 **Pre-registration written 2026-06-06, before any data was inspected
-under this definition.** Locked. Any subsequent change creates a `crash_v3`.
+under this definition.** Unlocked 2026-06-13 to remove trajectory-framing
+references in §3.4 and §4; the core definition (§2, §3.1-§3.3, §5) is
+unchanged from the 2026-06-06 lock. Any further change to the definition
+itself creates a `crash_v3`.
 
 ## 1. Purpose
 
@@ -149,9 +152,9 @@ recovery medians identically to score-3 days.
 
 ### 3.4 Multi-mode users (re-recovery + re-crash)
 After a `crash` episode ends, the next qualifying episode is its
-own episode regardless of subsequent score trajectory. Stabilisation
-across years (per S01) is captured by re-running classification
-per-era, not by varying the definition.
+own episode regardless of subsequent score values. Multi-year
+variation is captured by re-running classification per-era, not by
+varying the definition.
 
 ## 4. Counts (as run 2026-06-06)
 
@@ -181,9 +184,8 @@ Era split (informative, not in sanity-check):
 | 2022-09 → 2023-12 (train) | 14 | 26 | 1.9× |
 | 2024-01 → 2026-06 (validate) | 15 | 53 | 3.5× |
 
-The dip:crash ratio nearly doubles between eras — visually consistent
-with the stabilisation-pendulum narrative (fewer sustained crashes,
-more transient bad days).
+The dip:crash ratio nearly doubles between eras: fewer sustained
+crashes, more transient bad days.
 
 ## 5. Validation plan
 
