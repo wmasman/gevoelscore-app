@@ -274,6 +274,22 @@ HA-P7 used (b) for the primary + (a) for the descriptive Spearman.
 
 Fix opportunistically. Some side fixes propagate to siblings — e.g. the labels CSV path bug in HA-P7 §3 was also in HA-C4b §3 (HA-C4b locked first, so fixing it requires a v2 of HA-C4b — queued for a separate commit).
 
+### 4.6 Result-time — rolling-sum predictor structural autocorrelation factor-of-2 flag
+
+**Fires when**:
+- Predictor is a rolling sum / count over a non-trivial window W (e.g. `crash_count_Wd`, `push_burden_Wd`, `exertion_dose_Wd`).
+- Locked test.py emits a data-driven `E[L]*` (per [`permutation_null_block_length.md`](permutation_null_block_length.md) §2) at >= 2x the locked `E[L]` default (factor-of-2 flag fires post-result).
+
+**Why it's almost always fired on rolling-sum predictors**: the lag-1 autocorrelation of a rolling sum at window W approaches `(W-1)/W` by construction (consecutive days share `(W-1)/W` of their input days). The data-driven estimator recovers this structural autocorrelation, not a sampling artefact. For W = 14, expect `E[L]*` ~ 12 (HA-P7 observed); for W = 7, expect `E[L]*` ~ 6. Any rolling-sum predictor at W >= 10 is likely to trip the factor-of-2 flag.
+
+**Closure** — post-result verdict-review document per the [HA-P7 `verdict-review.md`](../analyses/hypotheses/HA-P7/verdict-review.md) template:
+- (a) Cite the structural rolling-sum explanation for the `E[L]*` divergence (the data-driven estimator is doing its job correctly; the locked `E[L] = 7` anchor targets day-level autocorrelation of raw series, not rolling-sum predictors).
+- (b) Run a sensitivity addendum (per [`HA-P7/sensitivity_block_length.py`](../analyses/hypotheses/HA-P7/sensitivity_block_length.py)) at `E[L]` in {locked, `E[L]*`-rounded, 2x locked}; report OR / CI / p-value at each.
+- (c) Verify whether any §5 falsification criterion (or §9 propagation trigger) flips at longer `E[L]`. If not, the verdict locks as-is at locked `E[L]`. The OR point is invariant to `E[L]` by MLE construction; CIs drift modestly; permutation p-values increase monotonically with `E[L]` (the theoretically-predicted direction — more autocorrelation in null → wider null distribution → more conservative p). Verdict robustness is the load-bearing read.
+- (d) `result.md` preserved verbatim; the review document is the audit trail.
+
+**Anticipatory drafting note**: pre-regs using a rolling-sum predictor should anticipate this flag at drafting — name it in §8 as a foreseen review trigger, not an unexpected event. HA-P7 §8 did NOT anticipate the rolling-sum `E[L]*` flag; the [`verdict-review.md`](../analyses/hypotheses/HA-P7/verdict-review.md) was the workaround. Future pre-regs of this class should pre-emptively cite §4.6 + the verdict-review closure template in their §8.
+
 ---
 
 ## 5. Sanity-check questions before lock
@@ -296,6 +312,9 @@ A seasoned researcher (or a strict re-auditor) should ask these. If the pre-reg 
 | Is the register row updated (pointer or non-supersession confirmation)? | every pre-reg that may supersede its register entry | one of: register row has a `→ superseded by: HA-<id> r<N> locked <date>` forward pointer (preferred), OR the lock-commit message explicitly confirms non-supersession | **yes (§3.8 gate 3)** |
 | Has a side-fix propagation check been done across siblings? | every r2 that includes side observations | for each side fix in r2, a grep across `analyses/hypotheses/HA-*/hypothesis.md` confirms either no sibling carries the same construct, OR siblings carrying it have been fixed (unlocked) / v2-queued (locked) per §3.5 propagation discipline | yes |
 | Are §7 sanity ranges anchored to the EXACT column being measured? | every pre-reg with a §7 anchor range | §7 ranges cite the descriptive card / `per_day_master.csv` statistic for the exact column under test (not a definitional cousin); the cited median / IQR is reproducible from a single script run against that column. **Rationale**: HA-C4b v1 locked an anchor range of [15, 60] for `stress_low_motion_min_count_S60_Mlow` derived from a definitional cousin's distribution; the actual column's unmedicated median was 78, tripping the §7 sanity gate at dry-run and forcing v2. The right check at lock-time would have been "anchor against this exact column's descriptive card." | yes |
+| Is the locked headline cell populatable across train AND validate eras? | every pre-reg with a both-eras headline lock + phase / eligibility / temporal stratification | the locked cell (phase x era x sensitivity-column x window) is verified at lock-time to have non-empty n on BOTH train and validate eras given the train/validate split + phase boundaries + eligibility rules — a 30-second arithmetic check is sufficient. **Rationale**: HA-C4b v1 locked a consolidation x train headline cell that was unsatisfiable by construction (consolidation phase starts 2024-06-20; train ends 2023-12-31 — zero overlap). The structural hole was caught at `--dry-run` instead of at lock, forcing a v2 redraft post-lock. | yes |
+| Is every category enumeration in the pre-reg algorithmically pre-spec'd? | every pre-reg with a category enumeration (shape classifiers in §4.8.x, status enums, outcome-shape labels in §9) | EVERY member of the enumeration has an algorithmic / operational pre-spec sufficient for reproducible classification from doc-only knowledge; not just the trivial / fallback / negative case. **Rationale**: HA-P6 r1 §4.8.3 enumerated 6 shape categories but only pre-spec'd `no-meaningful-change`; the remaining 5 (`monotonic-recovery`, `stair-step-recovery`, `overshoot-then-settle`, `slow-grind-incomplete`, `noisy-inconclusive`) had no operational definition, preventing reproducible `result.md` classification per the §9 downstream propagations. Closure in r2: full algorithmic pre-specs for all 6 in priority order with first-match wins. | yes |
+| Are all natural-language trigger phrases in §9 bound to specific operational machinery? | every pre-reg with §9 branching triggered by phrases like "differs in shape", "statistically-distinguishable", "matches matched-baseline", "survives detrending" | each natural-language trigger phrase in §9 is explicitly bound to specific CI machinery / threshold / operational criteria from §4 (e.g. "CI on median-difference excludes 0 on >= N of M days"; "block-permutation p < α"; "absolute z >= K SD"); the binding is reproducible from doc-only knowledge. **Rationale**: HA-P6 r1 §9 first-branch trigger "statistically-distinguishable median trajectory from matched control" was not bound to the §4.8.1 CI machinery — multiple plausible operationalisations existed (CI-non-overlap; CI excludes 0 on the difference; block-permutation p < α); result.md could not reproducibly fire one branch over another. Closure in r2: §9 head paragraph binds the trigger to per-day block-bootstrap CI on median-difference excludes 0 on >= 2 of 5 days. | yes |
 
 ---
 
@@ -347,7 +366,7 @@ Both audits took roughly 1 fresh-session of audit time + a few hundred KB of rep
 
 ## 8. Status
 
-**Drafted 2026-06-15** (v1) from the HA-C4b + HA-P7 retrospective. **Revised 2026-06-15 (v1.1)** to close the four §8 follow-ups identified in v1's retrospective. Working document — extend as the lock pattern evolves with subsequent pre-regs.
+**Drafted 2026-06-15** (v1) from the HA-C4b + HA-P7 retrospective. **Revised 2026-06-15 (v1.1)** to close the four §8 follow-ups identified in v1's retrospective. **Revised 2026-06-15 (v1.2)** to add four lessons from the HA-C4b run halt + HA-P6 audit closures + HA-P7 verdict review (see §8.4). Working document — extend as the lock pattern evolves with subsequent pre-regs.
 
 ### 8.1 v1.1 closures (2026-06-15)
 
@@ -375,3 +394,21 @@ The following are queued for a later revision; not in scope for v1.1:
 - **[CLOSED 2026-06-15-b] Personal register P7 forward pointer** — landed: top-level supersession blockquote added at [`personal_hypotheses.md`](../personal_hypotheses.md) P7 heading + Sample-cell footnote pointing to HA-P7 §4.2. Closes both the v1.1 §3.8 register-row pointer requirement AND the HA-P7 r2 queued Sample-cell pointer fix in one edit. First worked example of the new §3.8 register-row pointer discipline applied retroactively.
 - **Audit-MD acceptability bar for the option-A compression record** — the option-A initial pass compressed step 4 without documenting compression decisions in lock-commit messages (because the §3.6 acceptability criteria are new). The HA-C4b and HA-P7 lock commits did NOT cite §3.6 compression criteria; this is a documentation gap, not a methodological one. Acceptable to leave because v1.1 only binds prospectively (future pre-regs); the existing lock commits stand.
 - **Reviewer-mode-with-authorization handoff template for fresh-session audits** — the current trigger paragraphs (§3.4 and §3.6) work but could be turned into a slash-command (`/research-audit HA-<id> [--second-pass]`) for ergonomic invocation. Process improvement, not a methodology change.
+
+### 8.4 v1.2 closures (2026-06-15)
+
+v1.2 adds four lessons from the HA-C4b dry-run halt + HA-P6 audit closures + HA-P7 verdict review:
+
+- **§5 row added — structural-completeness check across train/validate eras**. Closes the HA-C4b v1 structural-hole lesson: the locked headline cell `consolidation x train` was unsatisfiable by phase-boundary construction (consolidation starts 2024-06-20; train ends 2023-12-31; zero overlap). The structural hole would have been caught by a 30-second lock-time arithmetic check; instead it was caught at `--dry-run` post-lock, forcing the v2 redraft. Lock-blocking; not a §3.8 gate (caught at the §5 sanity-check pass).
+- **§5 row added — enumeration-completeness rule**. Closes the HA-P6 r1 §4.8.3 lesson: 6 shape categories were enumerated but only 1 (`no-meaningful-change`) was algorithmically pre-spec'd; the other 5 had no operational definition, preventing reproducible `result.md` classification. Generalises to any category enumeration (shape classifiers, status enums, branch labels in §9). Lock-blocking.
+- **§5 row added — trigger-phrase binding rule**. Closes the HA-P6 r1 §9 lesson: the natural-language trigger "statistically-distinguishable median trajectory from matched control" was not bound to specific CI machinery from §4.8.1, leaving multiple plausible operationalisations and preventing reproducible branch firing. Generalises to any natural-language trigger phrase in §9 ("differs in shape", "matches matched-baseline", "survives detrending"). Lock-blocking.
+- **§4.6 fire pattern added — rolling-sum predictor structural autocorrelation factor-of-2 flag**. Closes the HA-P7 verdict review lesson: rolling-sum predictors (e.g. `crash_count_14d`) structurally exceed the project E[L]=7 anchor by a factor proportional to W; the data-driven `E[L]*` recovers this rolling-sum structure correctly, not a sampling artefact. Result-time fire (not pre-lock); closure pattern cites the HA-P7 `verdict-review.md` template (structural explanation + sensitivity addendum at multiple E[L] + verdict-robustness verification). Drafters of pre-regs using rolling-sum predictors should anticipate the flag in §8 of their draft.
+
+The §3.8 lock-blocking gates remain four (the v1.2 row additions are §5 sanity-check rows, not §3.8 gates — they are caught at the §5 pass which is a precondition to the §3.8 commit-message confirmations).
+
+### 8.5 Open follow-ups (post-v1.2)
+
+The following are queued for a later revision; not in scope for v1.2:
+
+- **Methodology MD `permutation_null_block_length.md` §2 rolling-sum exception note** — the HA-P7 verdict review surfaced that rolling-sum predictors structurally exceed E[L]=7. The methodology MD's §2 should acknowledge this as a class-of-predictor exception with the factor-of-2 flag as expected behaviour rather than a halt signal. Queued for the next methodology MD touch.
+- **§4.6 fire pattern → §8 drafting checklist integration** — §4.6 says drafters using rolling-sum predictors should anticipate the flag in §8 of their draft. A natural next step is adding this to the §3.2 drafting checklist as a conditional bullet (if predictor is a rolling sum, §8 must include the anticipation note). Deferred until the next pre-reg with a rolling-sum predictor enters drafting.
