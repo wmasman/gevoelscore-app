@@ -13,7 +13,17 @@ The drafting was performed under the operationalisation-precision walkthrough pe
 
 Plus the handoff defaults (5d primary window `[t+1, t+5]` + sensitivity arm `[t+6, t+10]`; t0 = episode-end primary + last-below-threshold-day sensitivity; pooled headline + per-phase descriptive).
 
-**Status**: drafted, not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) must run in a fresh session (no shared drafting-session context); the review report lands in [`reviews/`](../../../reviews/) with the addendum *"Fresh session — no exposure to the drafting context; doc-only knowledge."*
+**Revision 2026-06-15-r2** (same session, post-audit). Four changes absorbed from the [fresh-session `/research-review` audit report at `docs/research/reviews/HA-P6-2026-06-15.md`](../../../reviews/HA-P6-2026-06-15.md) (verdict: REVISION RECOMMENDED). The audit ran on commit `8246fde` in a fresh session with doc-only knowledge; the report's four named closures are implemented in this r2:
+
+- **§8 power-calc dispatch added** (closes L1.5 Layer-1 substantive lock-blocking fire per [hypothesis_lock_process MD §3.2 step 4 / §3.8 gate 1](../../../methodology/hypothesis_lock_process.md#32-drafting-step-step-1-of-the-arc)). Descriptive-mode-adapted: cites Daza 2018 within-subject design AND frames the block-bootstrap CI machinery per §4.8.1 as the n=29 inference layer.
+- **§4.8.3 qualitative shape classifications fully pre-specified** (closes L1.3 Layer-1 substantive fire). Each of `monotonic-recovery`, `stair-step-recovery`, `overshoot-then-settle`, `slow-grind-incomplete`, `noisy-inconclusive` now has an algorithmic definition over (a) per-day z-scored medians, (b) first-differences, (c) block-bootstrap CI properties. The existing `no-meaningful-change` pre-spec is unchanged; categories evaluated in priority order with first-match wins.
+- **§9 head — "statistically-distinguishable" binding added** (closes L1.3 Layer-1 minor fire on the §9 first-branch trigger). Bound to per-day block-bootstrap 95% CI on median DIFFERENCE (crash minus matched-control) excludes 0 on >= 2 of 5 primary-window days; sensitivity arm at >= 3 of 5.
+- **§9 head — single-cell headline lock added for §4.8.4 secondary correlational propagations** (closes L3.3 Layer-3 minor fire). Pre-specifies pooled-LC x Arm-A x no-detrend x episode-end-t0 x primary-window as the §9-bullets-7-and-8-propagation-driving cell; all other cells diagnostic only. Matches the HA-C4b r2 + HA-P7 r2 closure pattern per [hypothesis_lock_process MD §4.2 closure (a)](../../../methodology/hypothesis_lock_process.md#42-layer-3-substantive--multi-comparison-discipline).
+- **Side observation §1.1 wording**: "differs in shape ... on at least one of three dimensions" reworded to align with the descriptive framing (no inferential-test connotation).
+
+The audit's strengthening recommendations #5 (per-phase minimum-n gate on §9 third-branch) and #6 (register-row pointer at lock) are NOT addressed in this r2 — recommendation #5 is r3 / v2 territory (needs a defined threshold + propagation logic); recommendation #6 is a lock-step action per §3.8 gate 3 (executed at lock, not before).
+
+**Status**: drafted + r2 audit closures applied, NOT YET LOCKED. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) must run in a fresh session (no shared drafting-session context); the review report lands in [`reviews/`](../../../reviews/) with the addendum *"Fresh session — no exposure to the drafting context; doc-only knowledge."*
 
 ---
 
@@ -27,7 +37,7 @@ HA-P6 closes the post-crash side of the multi-scale dynamics framing from the [l
 
 ### 1.1 Primary (descriptive characterisation)
 
-In the LC era (`date >= 2022-04-04`), for each of the 7 channels listed in §4.1, the per-day median + IQR trajectory across days `[t+1, t+5]` after crash_v2 episode-end (t0) **differs in shape** from a matched non-crash trajectory on at least one of three dimensions:
+In the LC era (`date >= 2022-04-04`), for each of the 7 channels listed in §4.1, the per-day median + IQR trajectory across days `[t+1, t+5]` after crash_v2 episode-end (t0) **is characterised along three dimensions** (with the matched non-crash trajectory as comparator; "differs from comparator" reads bind to the §9 head operational binding):
 
 - **Depth** — magnitude of the per-channel deviation from the lagged baseline at the minimum
 - **Duration** — number of days until the channel returns to within 0.5 SD of the lagged baseline
@@ -183,7 +193,21 @@ Per channel × phase × matched-baseline-arm: the **median day at which the chan
 
 #### 4.8.3 Per-channel qualitative shape descriptions per phase
 
-For each (channel × phase) cell, classify the median trajectory shape as one of: `monotonic-recovery`, `stair-step-recovery`, `overshoot-then-settle`, `slow-grind-incomplete`, `no-meaningful-change`, `noisy-inconclusive`. **Pre-spec for `no-meaningful-change` classification**: ALL of (a) per-day median deviation from lagged baseline < 0.3 SD for all 5 days, (b) per-day block-bootstrap CI overlap with baseline > 50%, (c) §3.7 detrend residual flat.
+For each (channel × phase) cell, classify the median trajectory shape into one of six categories. The classifier operates on the Arm-B lagged-baseline z-scored median trajectory `z_ch(t+k)` for k in {1, 2, 3, 4, 5} (per §4.5 step 6) with first-differences `dz(k) = z_ch(t+k) - z_ch(t+k-1)` for k in {2, 3, 4, 5} and per-day block-bootstrap 95% CIs from §4.8.1. Categories are evaluated in priority order; the FIRST matching category wins:
+
+1. **`no-meaningful-change`** — ALL of (a) per-day median |z_ch(t+k)| < 0.3 for every k in {1..5}, (b) per-day block-bootstrap 95% CI on the median includes 0 on every k in {1..5}, (c) §3.7 detrend residual on the median trajectory has slope |beta| < 0.05 SD/day.
+
+2. **`overshoot-then-settle`** — ALL of (a) the median trajectory CROSSES the lagged baseline within the primary window (a sign-change between `z_ch(t+k)` and `z_ch(t+k+1)` for at least one k in {1..4}), AND (b) the post-crossing absolute z stays < 0.5 for every day from the crossing to t+5 (lands at baseline; does not oscillate back across).
+
+3. **`monotonic-recovery`** — ALL of (a) the first-differences `dz(2), dz(3), dz(4), dz(5)` are sign-consistent (all > 0 if z_ch(t+1) is negative; all < 0 if z_ch(t+1) is positive — i.e. consistent direction toward baseline), AND (b) either |z_ch(t+1)| - |z_ch(t+5)| >= 1.0 (recovers at least 1.0 SD across the window) OR |z_ch(t+5)| < 0.5 (lands within 0.5 SD of baseline by t+5).
+
+4. **`stair-step-recovery`** — ALL of (a) |z_ch(t+1)| - |z_ch(t+5)| >= 0.5 (net progress toward baseline of at least 0.5 SD across the window), AND (b) at least one |dz(k)| < 0.15 (one or more "flat" days mid-window), AND (c) the remaining first-differences are sign-consistent toward baseline (the recovery is interrupted by a flat plateau but resumes; does NOT reverse).
+
+5. **`slow-grind-incomplete`** — ALL of (a) |z_ch(t+5)| < |z_ch(t+1)| (net progress toward baseline), AND (b) |z_ch(t+5)| >= 0.5 (incomplete recovery; still > 0.5 SD from baseline at end of window), AND (c) the cell did not match categories 1-4 above.
+
+6. **`noisy-inconclusive`** — fallback. Fires if (a) the per-day block-bootstrap 95% CI half-width is > 1.0 SD on >= 3 of 5 days, OR (b) none of categories 1-5 match (signature of an oscillating / non-monotonic / non-classifiable trajectory). If a cell is flagged as `noisy-inconclusive` AND condition (a) is satisfied, the cell is annotated `noisy-CI-driven`; if only (b) is satisfied, the cell is annotated `noisy-shape-driven`. Result.md surfaces the annotation alongside the category.
+
+The classifier emits the matched category PER (channel x phase x matched-baseline-arm x detrend-arm x t0-anchor x window-arm) cell in the result CSV; §9 propagations cite the **pooled-LC x Arm-A x no-detrend x episode-end-t0 x primary-window** headline cell per channel (per the §9 head single-cell lock).
 
 #### 4.8.4 Secondary correlational sub-hypothesis (block-bootstrap CIs)
 
@@ -249,6 +273,8 @@ If sanity check fails on the dry-run, the spec needs review BEFORE running the f
 
 - **n=29 LC-era episodes is sparse**. Per-channel per-day post-crash distributions have wide block-bootstrap CIs by construction. Descriptive characterisation is informative regardless; predictive sub-claims (§4.8.4) need careful framing — the CIs WILL be wide; reporting honestly is the discipline.
 
+- **Power-calc dispatch** (per [hypothesis_lock_process MD §3.2 step 4 / §3.8 gate 1](../../../methodology/hypothesis_lock_process.md#32-drafting-step-step-1-of-the-arc)). Power calc inapplicable per Daza 2018 within-subject design (see [Daza 2018 PDF](../../../literature/methodology/daza_2018_self_tracked_n_of_1_counterfactual.pdf) for the within-subject counterfactual framing); additionally, HA-P6 is Layer 1 descriptive characterisation per [CONVENTIONS §2.1](../../../CONVENTIONS.md#21-descriptive-before-inference) with no SUPPORTED bar to power against. The block-bootstrap CIs per §4.8.1 are the inference machinery; their honest width at n=29 is the discipline.
+
 - **Crash_v2 episode boundaries depend on the t0 definition**. The §4.3 t0-sensitivity arm (episode-end-t0 vs last-below-threshold-day-t0) reports concordance; divergence between arms is a t0-sensitivity finding for downstream consumers.
 
 - **Self-reported crash labels** via crash_v2. The label generator (`gevoelscore` self-report) has the same instrument-level bias as P7 caveat 5. Any systematic drift in self-reporting propagates into both the episode boundaries AND the §4.8.4 secondary correlations.
@@ -271,7 +297,11 @@ If sanity check fails on the dry-run, the spec needs review BEFORE running the f
 
 The §9 section enumerates pre-spec'd downstream implications per observation shape. **There are no SUPPORTED / NOT-SUPPORTED verdicts**; the result.md produces a trajectory characterisation, and the shape it produces triggers one or more of the following downstream propagations:
 
-- **Distinct recovery shape across multiple channels (≥ 3 of 7 channels in the pooled LC × Arm-A × no-detrend cell show statistically-distinguishable median trajectory from matched control)** → **P6 has characterised a real post-crash signature**. Downstream propagations:
+**Operational binding for the §9 first-branch trigger** ("statistically-distinguishable median trajectory from matched control"): per channel, the per-day block-bootstrap 95% CI on the median DIFFERENCE (crash trajectory minus matched-control trajectory, computed via the §4.8.1 paired stationary-bootstrap machinery at E[L]=7 days, B=10000) excludes 0 on **>= 2 of 5 primary-window days**. A sensitivity arm at the stricter **>= 3 of 5 days** threshold is reported alongside. The "channel is statistically distinguishable" predicate is evaluated PER channel; the "≥ 3 of 7 channels" gate in the first bullet then aggregates across channels. The trigger is evaluated only on the pooled-LC x Arm-A x no-detrend x episode-end-t0 x primary-window cell per channel (per the single-cell lock below).
+
+**Single-cell headline lock for §9 bullets 7 and 8 (secondary correlational propagations)**: the §4.8.4 secondary correlations are computed for every (channel x phase x matched-baseline-arm x detrend-arm) cell, but §9 bullets 7 and 8 fire on ONE pre-specified cell only — **pooled-LC x Arm-A x no-detrend x episode-end-t0 x primary-window**. All other cells are reported but cannot fire §9 bullets 7 or 8 independently. This matches the HA-C4b r2 + HA-P7 r2 single-cell-lock pattern per [hypothesis_lock_process MD §4.2 closure (a)](../../../methodology/hypothesis_lock_process.md#42-layer-3-substantive--multi-comparison-discipline). Cells outside the locked cell that show CI excludes 0 on §4.8.4 are reported in the result CSV under a `secondary_cell_signal` column but flagged as diagnostic-only.
+
+- **Distinct recovery shape across multiple channels (≥ 3 of 7 channels in the pooled LC × Arm-A × no-detrend cell show statistically-distinguishable median trajectory from matched control, per the §9-head operational binding)** → **P6 has characterised a real post-crash signature**. Downstream propagations:
   - Update the [`crash_episode_descriptive.md`](../../../methodology/crash_episode_descriptive.md) MD with the empirical per-channel timing estimates from §4.8.2.
   - Emit a per-channel timing table (channel × phase × recovery-completion-day-estimate) for downstream hypothesis-test mechanism-matching.
   - Inform HA-P7's window-length assumption: if the median recovery-completion-day-estimate across channels falls within `[3, 5]` days, P7's 14d window is a *generic period covering recovery* + further; if it extends to 7-10+ days, P7's 14d window is *recovery-specific*.
