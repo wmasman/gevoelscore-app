@@ -4,7 +4,12 @@
 
 **Drafted 2026-06-15** by Claude (Opus 4.6) in reviewer-mode-with-authorization per [CONVENTIONS §1.2](../../../CONVENTIONS.md#12-reviewer-mode-claude-reads--critiques--explains-does-not-edit-unless-asked). Authorising user: Willem. Drafting session had shared context with Session E (the [`stress_low_motion_primitive` MD](../../../methodology/stress_low_motion_primitive.md) + the extraction script) and Session D (the [`citalopram_phase_stratification` framework](../../../methodology/citalopram_phase_stratification.md)); pre-reg follows the [HA11 pre-reg pattern](../HA11-stress-udip/hypothesis.md).
 
-**Status**: drafted, not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) must run in a fresh session (no shared drafting-session context); the review report lands in [`reviews/`](../../../reviews/) with the addendum *"Fresh session — no exposure to the drafting context; doc-only knowledge."*
+**Revision 2026-06-15-r1** (same session, post-viz). Three changes absorbed from the [stress_low_motion_viz session findings](C:/Users/Gebruiker/Documents/gevoelscore-data/analyses/stress_low_motion_viz/viz-notes.md) BEFORE the fresh-session audit gate ran (per CONVENTIONS §1.2 the pre-reg may be revised freely until lock):
+- **§4.3 wake-window coverage gate added** (1b.i and 1b.ii sub-gates). The viz Family A 2024-11-26 case showed the HA11-inherited 600-sample gate admits days with multi-hour device-off gaps; HA-C4b strictens to ≥ 900 total + per-quartile coverage to ensure comparable per-day coverage.
+- **§4.11 construct-disambiguation reordered**. The viz Family D2a finding showed ρ(primary, `stress_high_duration_min`) = 0.79 — a closer sibling than HA11's `u_dip_count` (ρ = 0.556). The motion-filter-doing-analytical-work question is more critically tested against `stress_high_duration_min`; that sibling becomes the PRIMARY disambiguation, with `u_dip_count` repositioned to SECONDARY. The original ρ = 0.556 construct-validity finding stands as the closest WITHIN-DAY-SHAPE sibling check.
+- **§4.11 u_dip_count gap note added**. HA11's source CSV last extracted 2026-06-07; days 2026-06-08+ in `per_day_master.csv` have `u_dip_count == ""`. Since the validate window ends 2026-06-05, this does NOT affect HA-C4b's test sample but is documented for downstream consumers.
+
+**Status**: drafted + revised post-viz (revision 1), not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) must run in a fresh session (no shared drafting-session context); the review report lands in [`reviews/`](../../../reviews/) with the addendum *"Fresh session — no exposure to the drafting context; doc-only knowledge."*
 
 ---
 
@@ -66,15 +71,21 @@ For each day `d`:
 
 This restricts the test sample to the "after overexertion" condition that Wiggers C4 specifies.
 
-### 4.3 Day validity
+### 4.3 Day validity (revised post-viz 2026-06-15)
 
 A day is **valid for HA-C4b** if **all** of:
 
-1. The primitive's stress-sample day-validity gate passes (≥ 600 in-range stress samples; the `valid` flag from the extraction is 1).
+1. The primitive's stress-sample day-validity gate passes (≥ 600 in-range stress samples; the `valid` flag from the extraction is 1). **HA11 inherits this 600 gate; HA-C4b strengthens it (see 1b).**
+1b. **Wake-window coverage strictness** (HA-C4b-specific gate, added 2026-06-15 post-viz). The Session E validation gate (≥ 600 samples) is permissive: per the [stress_low_motion_viz session](C:/Users/Gebruiker/Documents/gevoelscore-data/analyses/stress_low_motion_viz/viz-notes.md) Family A 2024-11-26 case, a day with a **9-hour mid-day stress gap** passed the 600-sample gate at 662 samples — but its primary count of 0 is ambiguous between "genuinely quiet wake-period" vs "device off during the active part of the day". For HA-C4b a stricter gate applies:
+   - **(1b.i) Total in-range samples ≥ 900** (stricter than HA11's 600) — catches partial-day device-off cases.
+   - **(1b.ii) Wake-window quartile coverage**: when `sleep_start_gmt` and `sleep_end_gmt` are both available, divide the day's non-sleep period into 4 equal-length quartiles. Each quartile must contain ≥ 50 in-range stress samples. When sleep boundaries are NOT available, fall back to fixed-time quartiles `[06:00-12:00, 12:00-18:00, 18:00-22:00, 22:00-02:00]` (local time), each ≥ 50 samples.
+   - Days failing 1b.i OR 1b.ii are flagged *wake-coverage-insufficient* and excluded. Report fractions.
 2. The exertion-conditioning rule (§4.2) is satisfied.
 3. The day has a `crash_v2` label (i.e. is not a censored day).
 
 Days failing any of these are flagged and excluded from the test sample. Report fractions.
+
+**Why HA-C4b strictens beyond HA11**: HA-C4b's predictor is a **count-of-low-motion-minutes** that defaults "no record" minutes to "low motion" per §3.2 of the primitive MD. A day with extensive device-off coverage during the wake period would systematically under-count the primary (because device-off minutes do not contribute stress samples at all, not even to the no-record-default low-motion class). This biases the test in two directions: low counts on partial-coverage days look like "rest days" but are really "missing-data days", and the lagged baseline includes those biased-low days, lowering μ and inflating future z-scores. The wake-window gate ensures the comparison is on **comparable coverage** across days.
 
 ### 4.4 Citalopram phase-stratified treatment (per §5.B framework, locked)
 
@@ -156,8 +167,18 @@ Within-row monotonicity in S (S=50 ≥ S=60 ≥ S=75 frequency) and across-motio
 For each calendar day `d` in the test sample:
 
 1. **Same-day gevoelscore correlation**: Spearman(stress_low_motion_min_count_S60_Mlow, gevoelscore) per phase + pooled LC era. Median count per gevoelscore value. Report split by era (train vs validate) AND by Citalopram phase. **Descriptive only; no SUPPORTED bar.**
-2. **HA11 construct-disambiguation**: For each crash episode in the lead-up, flag (HA-C4b fires, HA11 fires) — produce a 2×2 contingency. If HA-C4b fires on episodes HA11 does not (the "off-diagonal" cell), document those specific episodes — the within-day motion filter is doing analytical work distinct from the within-day shape pattern.
-3. **Respiration-companion sensitivity**: For each crash episode where HA-C4b fires, report whether `n_minutes_resp_above_18` in the lead-up is also above its lagged baseline (z > 0). If HA-C4b fires AND respiration is also elevated, the apparent "low motion" minutes may have been motion-or-arousal-confounded; if HA-C4b fires AND respiration is NOT elevated, the signal is more credibly "genuine sympathetic at rest". This is a methodological sensitivity, not a verdict.
+
+2. **Construct-disambiguation against `stress_high_duration_min`** (PRIMARY sibling — added post-viz revision 2026-06-15). Per the [stress_low_motion_viz session findings](C:/Users/Gebruiker/Documents/gevoelscore-data/analyses/stress_low_motion_viz/viz-notes.md) Family D2a, Spearman ρ between the primary column and `stress_high_duration_min` = **0.79** — the closest sibling in the per_day_master.csv. The Family B4a time-series visualisation showed the two lines track closely on the twin axes; **most day-to-day variance is shared.** This raises the critical disambiguation question: **is the motion filter actually doing analytical work, or is the all-day stress-time count sufficient?** For each crash episode in the lead-up:
+   - Flag (HA-C4b fires, `stress_high_duration_min` ≥ its own lagged-baseline-z threshold) → 2×2 contingency.
+   - The "off-diagonal" cells are the load-bearing reads:
+     - HA-C4b fires AND `stress_high_duration_min` does NOT → the motion-filter refinement caught an episode the all-day-stress-time-count missed. **This is the strongest empirical case for the motion filter as a discriminative refinement.**
+     - `stress_high_duration_min` fires AND HA-C4b does NOT → the motion filter filtered OUT a real precursor signal; the motion-filter refinement may be overly restrictive. **This is the strongest empirical case against the motion filter.**
+   - Concordant on episodes → the motion filter is incremental, not essential; the all-day-stress-time-count is sufficient.
+
+3. **Construct-disambiguation against HA11's `u_dip_count`** (SECONDARY sibling — original intent, post-viz repositioned to secondary). Per Session E validation, ρ(primary, u_dip_count) = **0.556** — moderate; same construct family. The disambiguation question is distinct from #2: u_dip_count picks up within-day SHAPE patterns (pre-dip-post temporal trajectory), HA-C4b picks up within-day CONCURRENCE patterns (stress + low motion at same moment). For each crash episode in the lead-up, flag (HA-C4b fires, HA11 fires) — 2×2 contingency. The off-diagonal episodes are documented for cross-construct understanding.
+   - **Note**: HA11's `udip_counts.csv` last extraction was 2026-06-07 (per viz-notes follow-up); days 2026-06-08+ in the master have `u_dip_count == ""`. Since the validate window ends 2026-06-05, this gap does NOT affect HA-C4b's test sample.
+
+4. **Respiration-companion sensitivity**: For each crash episode where HA-C4b fires, report whether `n_minutes_resp_above_18` in the lead-up is also above its lagged baseline (z > 0). If HA-C4b fires AND respiration is also elevated, the apparent "low motion" minutes may have been motion-or-arousal-confounded; if HA-C4b fires AND respiration is NOT elevated, the signal is more credibly "genuine sympathetic at rest". This is a methodological sensitivity, not a verdict.
 
 ## 5. Pre-registered falsification criterion
 
@@ -208,7 +229,11 @@ If either sanity check fails on the dry-run, the spec needs review BEFORE runnin
 - **Citalopram dose-modulates the underlying stress channel** per [citalopram_dose_response §5.6](../../../methodology/citalopram_dose_response_stress_mean_sleep.md#56-v3-amendment--multi-channel-confirmation-added-2026-06-14). HA-C4b's per-phase treatment is the dose-confound control; cross-phase aggregation without the per-phase split would be wrong. The per-phase verdicts are NOT directly comparable on raw count magnitudes — only on the `(z, frequency)` precursor-signal level.
 - **The `below_moderate` motion class is currently identical to `low_or_below`** ([stress_low_motion_primitive §3.2](../../../methodology/stress_low_motion_primitive.md)). The S{50,60,75}_Mbelow_mod columns will produce identical results to the corresponding S_Mlow columns by construction. The 9-column ladder effectively reduces to 6 unique columns in v1.
 - **Exertion-conditioning shrinks n**. Heavy-exertion-day subset is estimated 100-200 days LC-era pooled; per-phase n's are smaller. Per-phase headline verdicts may be inconclusive on the low-n phases (buildup, afbouw).
-- **Construct relation to HA11 is moderate** (ρ = 0.556). HA-C4b SUPPORTED while HA11 NOT-SUPPORTED on the same episodes would be a notable construct-divergence finding; HA-C4b NOT-SUPPORTED while HA11 SUPPORTED would suggest the motion filter is filtering out signal rather than noise.
+- **Construct relations to sibling channels are heterogeneous** (per the viz-notes Family D2a/D2b/Session E validation):
+  - vs `stress_high_duration_min`: **ρ = 0.79** (close sibling; "minutes-in-high-stress" cousin). The primary disambiguation question is whether the motion filter adds analytical value beyond the all-day-stress-time-count. **The most empirically critical disambiguation** because if ρ is this high, the motion filter may not be discriminative on its own.
+  - vs `u_dip_count` (HA11): ρ = 0.556 (within-day SHAPE sibling; information-additive).
+  - vs `stress_mean_sleep` (the load-bearing dose-response anchor channel): **ρ = 0.15** (essentially independent at day-scale). Primary IS dose-modulated by the same mechanism but measures different aspect (all-day stress-at-rest burden vs sleep-window-mean stress level).
+  HA-C4b SUPPORTED while `stress_high_duration_min` does NOT discriminate on the same episodes = strongest empirical case for the motion-filter refinement. HA-C4b NOT-SUPPORTED while `stress_high_duration_min` discriminates = motion filter may be filtering OUT signal. Documented per-episode in §4.11 / §9.
 - **The participant has been operationally using the rest-stress trigger** per [garmin_pacing_practice §3.3](../../../methodology/garmin_pacing_practice.md#33-stress-when-at-rest) — protocol DISTURBS the test. If the participant successfully acts on rest-stress (early bed, active rest), the downstream crash may be prevented, and the test conflates protocol-positive-with-action vs protocol-positive-with-pushed-through. The protocol's lived stabilisation in recent months also matches the consolidation phase, which is where the headline verdict lives. Document this; do NOT redefine the verdict.
 - **`crash_v2` mixes mechanisms** (per the standard cross-test caveat). A multi-mechanism crash population dilutes any one-mechanism precursor signal.
 - **Multi-comparison**. HA-C4b is the next pre-registered hypothesis in the HA series. The held-out validate window is the primary defence; the per-phase split adds a phase-multiplicity concern that the consolidation-headline + unmedicated-confirmation pattern is meant to address.
@@ -226,10 +251,14 @@ The outcome space is per-phase × {SUPPORTED, NOT-SUPPORTED, INCONCLUSIVE}. The 
 
 - **Consolidation NOT-SUPPORTED in both windows** → motion-filtered stress-elevated-minute count does NOT carry crash-precursor signal at the population level. **The motion filter is doing analytical work** if the corresponding HA11 secondary descriptive outcome shows HA11 fires on episodes HA-C4b does not (or vice versa); the rest-stress trigger is real but not directly precursor-discriminative on its own. The lived protocol's value may be PROTECTIVE (the participant acts on the trigger and prevents the crash) rather than PREDICTIVE — flag as a follow-up question for the [garmin_pacing_practice MD](../../../methodology/garmin_pacing_practice.md) to address. **Strongly recommend** writing the result.md with the protocol-protective hypothesis as the primary alternative reading.
 
-- **Construct-disambiguation against HA11 differs from primary headline**:
-  - HA-C4b SUPPORTED on episodes HA11 NOT-SUPPORTED → the motion filter IS the discriminative refinement. Document those specific episodes. This is the strongest construct-validation result for the lived-experience pacing trigger.
-  - HA11 SUPPORTED on episodes HA-C4b NOT-SUPPORTED → the within-day SHAPE pattern dominates the within-day CONCURRENCE pattern. The motion filter may be FILTERING OUT signal rather than noise. Document; consider relaxing the motion filter in HA-C4c.
-  - Concordant on episodes → both are valid precursor metrics; report ρ at the episode level (not just the day level).
+- **Construct-disambiguation against `stress_high_duration_min` differs from primary headline** (PRIMARY sibling per §4.11.2, ρ = 0.79):
+  - HA-C4b fires AND `stress_high_duration_min` does NOT discriminate on the same episodes → **the motion-filter refinement caught episodes the all-day-stress-time-count missed**. This is the strongest empirical case for the motion filter as a discriminative refinement. Worth documenting the specific episodes — they have the most analytical value for follow-up.
+  - `stress_high_duration_min` discriminates AND HA-C4b does NOT on the same episodes → the motion filter is **filtering OUT real precursor signal**; the all-day-stress-time-count is the better discriminator. The motion-filter refinement may be overly restrictive. Strong case to test HA-C4c with a relaxed motion definition (e.g., intensity ≤ 2 instead of ≤ 1, or removing the no-record default).
+  - Concordant on episodes → motion filter is **incremental, not essential**; the all-day-stress-time-count is sufficient. The pacing protocol's "stress at rest" framing may be experientially salient but not analytically distinct from "high stress time" period.
+- **Construct-disambiguation against HA11's u_dip_count differs from primary headline** (SECONDARY sibling per §4.11.3, ρ = 0.556):
+  - HA-C4b fires AND HA11 NOT-SUPPORTED on the same episodes → the within-day CONCURRENCE pattern (stress + low motion at same moment) discriminates episodes the within-day SHAPE pattern (pre-dip-post trajectory) misses. Document specific episodes.
+  - HA11 SUPPORTED AND HA-C4b NOT on same episodes → the SHAPE pattern carries precursor information the CONCURRENCE pattern misses; they're complementary, not redundant.
+  - Concordant on episodes → both within-day metrics carry similar precursor signal; report joint ρ at episode level.
 
 - **Respiration-companion sensitivity differs from primary headline**:
   - HA-C4b SUPPORTED + respiration above_18 ALSO elevated in lead-up → the "low motion" minutes may have been motion-or-arousal-confounded; the result is consistent with sympathetic arousal but the motion filter alone did not isolate it. Document; consider the v2 sleep+activity companion as a tightening.
