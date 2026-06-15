@@ -458,6 +458,8 @@ The participant's lived-experience operational protocol (per [garmin_pacing_prac
 
 ## P7. Recent-crash-density predicts elevated crash risk
 
+> **→ Superseded by [HA-P7 pre-reg](analyses/hypotheses/HA-P7/hypothesis.md) r3 locked 2026-06-15 at commit `7f1ecc8`.** The pre-reg revised the eligibility rule from "d not in episode" to "d-1 not in episode" (the register version excluded the outcome `is_crash at d` by construction; see [HA-P7 §4.2](analyses/hypotheses/HA-P7/hypothesis.md)). Register text below is the historical genesis; for canonical operationalisation, falsification bar, and the 4-layer-clean audit lineage see the pre-reg. Per [`methodology/hypothesis_lock_process.md`](methodology/hypothesis_lock_process.md) §3.8 v1.1 register-row pointer discipline.
+
 **Hypothesis:** Within the LC era, on a day `d` not currently in a crash episode, the count of crash-days in the preceding 14 days predicts elevated probability of crash at `d` (or in the days immediately following `d`).
 
 ### Prior sources
@@ -479,7 +481,7 @@ The participant's lived-experience operational protocol (per [garmin_pacing_prac
 | Predictor (primary) | `count(is_crash) over [d-14, d-1]` |
 | Predictor (sensitivity) | Same metric with windows {7d, 30d} |
 | Outcome | `is_crash` at `d` (primary); `any(is_crash) over [d, d+3]` (secondary) |
-| Sample | LC era (`date >= 2022-04-04`) days where `d` itself is NOT in a crash episode (exclude within-episode autocorrelation) |
+| Sample | LC era (`date >= 2022-04-04`) days where `d` itself is NOT in a crash episode (exclude within-episode autocorrelation). *[Revised in [HA-P7 §4.2](analyses/hypotheses/HA-P7/hypothesis.md) to "d-1 not in episode" — see top-of-section supersession pointer.]* |
 | Unit (primary) | Day |
 | Test method | Logistic regression with crash_count_14d as continuous predictor; report odds ratio + Wilson CI on cell frequencies for crash_count_14d ∈ {0, 1, 2, 3+} bins |
 | Scale | Situational multi-day window, 14d primary + 7d/30d sensitivity arms. Mechanistically anchored to PEM-recovery tail (recovery-debt mechanism) per [`methodology/time_resolution.md` §2.3, §6](methodology/time_resolution.md). Neighbouring-scale check: `is_crash` itself has a 2-day aggregation window baked in (§5 of `time_resolution.md`); the 14d count over `is_crash` is a multi-day window applied to a label that already aggregates 2-day stretches — the test does not own the 2-day baked-in aggregation as a mechanism. |
