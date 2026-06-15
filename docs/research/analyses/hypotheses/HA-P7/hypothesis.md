@@ -20,7 +20,9 @@ The drafting was performed under the operationalisation-precision walkthrough sp
 - **Side fixes**: broken labels CSV path replaced with `crash_v2-definition/definition.md` for scheme + `$GEVOELSCORE_DATA_PATH/processed/crash_labels/labels_crash_v2.csv` for file (path was wrong in original; also wrong in HA-C4b §3 — propagated copy-paste; HA-C4b is locked, would need v2 to fix); early-LC-era coverage shadow surfaced in §4.2 condition 4; secondary outcome slice corrected from `[d : d + 3]` to `[d : d + 4]` to match 4-day-forward-window prose; buildup-buffer date arithmetic corrected from 22 to 21 days (2024-04-09 → 2024-04-29 inclusive, "strictly before 2024-04-30"); caveat-4 compression replaced with the more specific register quote (Session C's small detrend-surviving step at 2026-03-20 stands; v3 multi-channel did not extend to gevoelscore).
 - **Side fix queued not in this revision**: personal_hypotheses.md P7 register-row "Sample" cell pointer to HA-P7 §4.2 for revised eligibility. Will land in a separate small commit.
 
-**Status**: drafted + revised post-audit (r2), not locked. Lock requires explicit user acceptance. The audit fires are all addressed; the SUPPORTED bar is now defensible against the autocorrelation-driven inflation Natesan Batley 2023 flags as the dominant n=1 failure mode.
+**Revision 2026-06-15-r3** (same session, lock signal). No content changes from r2; this entry exists to record explicit user acceptance.
+
+**Status: LOCKED 2026-06-15 by user acceptance.** The pre-registration is locked at the state of revision r3 (this file's HEAD). The audit fires (L3.1/L3.4 BLOCKING + L3.3 substantive + L4.4 + L4.6 + 6 side observations) are all closed in r2; the substantive Layer-4 recommendation #2 (covariate sensitivity at §4.5.4) is also incorporated. Further modifications create HA-P7-v2 with v1 archived. The next session writes `test.py` + runs + emits `result.md` per §10.
 
 ---
 
