@@ -77,6 +77,35 @@ In reviewer mode the job is:
 Push hardest where claims are strongest: headline verdicts, synthesis
 reframes, cross-channel coherence claims.
 
+#### Drafting under reviewer-mode-with-authorization
+
+The default ("Claude does NOT edit reviewer-mode artefacts unless
+asked") admits an exception: the user can explicitly authorize Claude
+to **draft** a reviewer-mode artefact in a given session. This is the
+practical pattern for pre-reg files where the operationalisation has
+been worked through in chat — methodology MDs already approved,
+register entries verified, constraint structure landed.
+
+When Claude drafts a reviewer-mode artefact under authorization:
+
+- The artefact carries an `## Authorship` block at the top recording
+  the drafting session, the authorising user, and the date.
+- The artefact is NOT considered locked until the user explicitly
+  accepts. Before lock the file may be revised freely.
+- After lock, the `/research-review` (or equivalent peer review) must
+  run in a **different session** — a new conversation, no shared
+  context with the drafting session. The fresh-session reviewer reads
+  the artefact and the methodology MDs cold; that is the project's
+  standard for peer-review independence on artefacts that Claude
+  drafted.
+- The review report's "Reviewer mode" line records this with the
+  addendum *"Fresh session — no exposure to the drafting context;
+  doc-only knowledge."*
+
+This pattern preserves the peer-review check at the **session-context
+level** when strict agent-identity separation isn't practical. Same
+LLM, different conversation, doc-only knowledge for the reviewer.
+
 Review reports themselves land in [reviews/](reviews/) — a 4-layer
 checklist anchored in established standards (SCRIBE 2016, CENT 2015,
 STROBE 2007, Daza 2018, WWC 2022 SCED, Natesan Batley 2023) plus
