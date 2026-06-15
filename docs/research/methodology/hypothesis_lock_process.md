@@ -14,23 +14,25 @@ Applies to: any Claude-drafted reviewer-mode pre-reg (`analyses/hypotheses/HA*-*
 
 ---
 
-## 2. The 9-step arc (option A discipline)
+## 2. The arc (canonical + option-A compression)
 
-For each hypothesis, the discipline is: 3 sessions × 3 stages. The arc is sequential per hypothesis but multiple hypotheses can be at different stages in parallel.
+For each hypothesis, the **canonical** discipline is: 4 sessions × 5 stages (1 drafting + 2 fresh-session audits + 1 revision + 1 lock). The **option-A compression** collapses the second audit (re-audit r2 before lock) into the lock signal itself — acceptable for the initial-pass discipline work HA-C4b + HA-P7 lived in, not the default for load-bearing claims going forward. The arc is sequential per hypothesis but multiple hypotheses can be at different stages in parallel.
 
 | stage | session type | output | locking signal |
 |---|---|---|---|
 | **1. Draft** | drafting (may be shared-context with research session) | `hypothesis.md` with `## Authorship` block at top | commit, but NOT a lock signal yet |
 | **2. Audit** | **fresh session, no shared drafting context** | `reviews/HA-<id>-<date>.md` (audit report) | n/a |
-| **3. Revise + lock** | shared-context (typically same drafting session continues) | revised `hypothesis.md` + explicit lock signal | commit with "LOCKED" status in Authorship |
+| **3. Revise (r2)** | shared-context (typically same drafting session continues) | revised `hypothesis.md` (r2) | commit, but NOT a lock signal yet |
+| **4. Re-audit (canonical)** | **fresh session, no shared drafting context** | `reviews/HA-<id>-<date>-v2.md` (re-audit report) | n/a |
+| **5. Lock** | shared-context | hypothesis.md status: LOCKED + register-row pointer | commit with "LOCKED" status in Authorship + register pointer |
 
-The next stage after lock is the test-execution session (not part of the 3-stage lock arc):
+The next stage after lock is the test-execution session (not part of the 5-stage lock arc):
 
 | post-lock | session type | output |
 |---|---|---|
-| **4. Run** | shared-context test-execution session | `test.py` + `result.md` |
+| **6. Run** | shared-context test-execution session | `test.py` + `result.md` |
 
-So for N hypotheses, the option-A arc is **3N sessions to lock** + N more to run. HA-C4b and HA-P7 each took ~3 sessions in this thread to reach lock (some compressed because the drafting + revision happened in the same shared-context session, with only the audit step requiring fresh context).
+So for N hypotheses, the **canonical arc** is **4N + N sessions** (4 lock-arc + 1 run). The **option-A compression** is **3N + N sessions** (skip step 4 with a documented compression decision per §3.6). HA-C4b and HA-P7 each took ~3 sessions in this thread to reach lock under option-A compression; the canonical 4-session arc is recommended for any subsequent load-bearing pre-reg.
 
 ---
 
@@ -71,7 +73,7 @@ Register entries are reviewer-mode artefacts. They state intent + predictor + ou
    - §5 Pre-registered falsification criterion
    - §6 Exclusion rules
    - §7 Expected effect size if true (sanity-check ranges)
-   - §8 Caveats result.md must explicitly acknowledge
+   - §8 Caveats result.md must explicitly acknowledge — **MUST include a power-calc dispatch**: either the one-line "power calc inapplicable per Daza 2018 within-subject design — see [Daza 2018 PDF](../../literature/methodology/daza_2018_self_tracked_n_of_1_counterfactual.pdf) for the within-subject counterfactual framing" OR an explicit power calculation with assumptions named (effect size, α, β, n-per-arm). The dispatch is non-optional; the absence of any §8 power-calc line is itself a Layer 1 fire (silent power-calc invokes asymptotic-power assumptions that don't hold at n=1)
    - §9 What we do with each outcome (branching pre-spec)
    - §10 Detection script architecture (run protocol)
 
@@ -112,7 +114,7 @@ The audit report's filename convention: `HA-<id>-<YYYY-MM-DD>.md` (or `-v2.md` e
 - "What would strengthen this finding" recommendations (may include substantive Layer-4 additions that aren't strictly fires)
 - Verdict: REVISION RECOMMENDED / DEFENSIBLE / DEFENSIBLE-with-revision / etc.
 
-### 3.5 Revise step (r2 — the bulk of methodological strengthening)
+### 3.5 Revise step (Stage 3 of the arc — r2 — the bulk of methodological strengthening)
 
 The audit's fires drive r2 in the drafting session (shared-context with the original draft is fine here — the audit was the independence step). **All r2 changes must be tracked in the Authorship block** as a separate revision entry.
 
@@ -128,30 +130,83 @@ The audit's fires drive r2 in the drafting session (shared-context with the orig
 
 - **L4.6 (CONVENTIONS §3.6 named-counts triplet)** — fires when count phrasings lack the predicate + source-file. Fix: add the scheme + unit + source-file in the same phrasing.
 
-- **Side observations** (paths, off-by-ones, date arithmetic, monotonicity tolerance, label ambiguity) — fix opportunistically; some side fixes may propagate to already-locked sibling pre-regs and require a v2 of those siblings.
+- **Side observations** (paths, off-by-ones, date arithmetic, monotonicity tolerance, label ambiguity) — fix opportunistically AND check sibling pre-regs for propagation.
 
-### 3.6 Optional r3 (interpretability augmentation)
+  **Propagation discipline** (added 2026-06-15 from the HA-C4b labels-CSV-path retrospective):
+  - **Step 1**: for each side fix in r2, grep the same construct (file path, regex pattern, off-by-one, date arithmetic) across all `analyses/hypotheses/HA-*/hypothesis.md` siblings.
+  - **Step 2 — sibling unlocked**: fix in the same r2 commit. Commit message names the propagation explicitly (e.g. `"Side-fix: labels CSV path corrected in HA-C4b + HA-P7 (caught in HA-P7 audit, propagated to sibling)"`).
+  - **Step 3 — sibling locked**: pick one of:
+    - **(a) Same-session v2** — open v2 of the sibling in the same drafting session, separate commit. Preferred when the side fix is unambiguous (e.g. broken file path).
+    - **(b) Tracked queue** — add a TODO marker in the sibling's `## Authorship` block under a `### Pending v2 fixes` heading with the source (which audit / which date), AND record the queue entry in this MD's §8 follow-ups list with a date.
+  - **Step 4 — never defer silently**. Silent deferral is how the HA-C4b labels CSV path bug propagated past the lock window without any audit-able trace. The Authorship block is the audit-able record.
 
-After r2 closes the audit fires, the user may ask for additional reporting that doesn't change the falsification bar but improves external interpretability. **Heuristic for "approach change vs reporting layer"**:
+### 3.6 Re-audit step (Stage 4 of the arc — canonical, can be compressed)
 
-- **Approach change**: new conjunct in the falsification bar, new covariate that changes the headline, new statistical machinery (e.g. switching from logistic to ITS). These require a new audit gate.
+After r2 closes the first audit's fires, the **canonical** lock arc adds a second audit in a **fresh session** before lock. This verifies that r2 actually closed the fires (rather than merely paraphrasing them) and catches issues that r2 may have introduced. The HA-C4b + HA-P7 initial pass compressed this step; the §8 retrospective concluded the compression was acceptable for option-A but not the canonical default.
+
+**To trigger** (paste into a fresh Claude session):
+
+> Run `/research-review` on `docs/research/analyses/hypotheses/HA-<id>/hypothesis.md` at revision r2. This is a **second-pass audit** on a revised Claude-drafted pre-reg under reviewer-mode-with-authorization per CONVENTIONS §1.2; produce the review report at `docs/research/reviews/HA-<id>-<date>-v2.md` with the addendum "Fresh session, second-pass audit on revision r2; doc-only knowledge; verifying r2 closed the fires from `reviews/HA-<id>-<original-date>.md`."
+
+**Expected outcomes**:
+
+- **No new fires + r2 closures verified** → proceed to §3.7 (optional r3) or §3.8 lock.
+- **New fires (r2 introduced something) + r2 closures verified** → r4 to close, then re-audit again. The cycle continues until clean.
+- **r2 closures NOT verified** → either r2 didn't actually close the fire, OR the r2 closure introduced a different fire pattern. Back to §3.5 with explicit notes in the Authorship block describing what the second-pass audit caught.
+
+**Compression option** (used in option-A initial pass for HA-C4b + HA-P7): skip the re-audit, go straight to lock. **Acceptable for**:
+
+- Pre-regs whose r2 fixes were mechanical (citation additions, single-cell-lock decision, column-list edits) with no architectural change.
+- Low-stakes pre-regs where the v1 result will be treated as descriptive-only.
+- Initial-pass discipline work (the option-A pattern) where the lock-process itself is being developed.
+
+**NOT acceptable for**:
+
+- Load-bearing project claims (crash-predictor architectures, mechanism-of-action claims).
+- r2 that introduces new statistical machinery (e.g. swap of inference method, new transformation of the predictor).
+- r2 that changes the falsification bar.
+
+When compressing, the lock-commit message MUST include a one-line compression justification: `Compression: re-audit skipped per §3.6 acceptability criteria — <one-sentence reason naming which criterion>.` This makes the compression decision audit-able and recoverable later.
+
+### 3.7 Optional r3 (interpretability augmentation)
+
+After r2 (and re-audit, if not compressed) closes the audit fires, the user may ask for additional reporting that doesn't change the falsification bar but improves external interpretability. **Heuristic for "approach change vs reporting layer"**:
+
+- **Approach change**: new conjunct in the falsification bar, new covariate that changes the headline, new statistical machinery (e.g. switching from logistic to ITS). These require a new audit gate (back to §3.4 + §3.6).
 - **Reporting layer** (no approach change): different formulation of an already-locked quantity, additional sensitivity arm that does NOT promote to SUPPORTED, descriptive companion output. These do NOT require a new audit gate.
 
 **Example from this thread**: HA-C4b's r3 added Odds Ratio (OR) + Risk Difference (RD) with bootstrap CIs alongside the existing 15pp RD gate. The (a)+(b)+(c) falsification bar was unchanged; the OR was a more interpretable formulation of the existing (b) discrimination. **Reporting layer, not approach change.** No new audit gate needed.
 
-### 3.7 Lock step (Step 3 of the arc)
+### 3.8 Lock step (Stage 5 of the arc)
 
 **Lock signal**: explicit user acceptance + a commit message naming the lock + the Authorship block status updated to `**Status: LOCKED <date> by user acceptance.**`
 
 **The lock commit's message** should:
 
-- Name the revision number being locked (r2, r3, etc.)
-- Confirm all audit fires are closed (or explicitly note any that are deferred to v2)
-- State the next session writes `test.py` + runs + emits `result.md`
+- Name the revision number being locked (r2, r3, etc.).
+- Confirm all audit fires are closed (or explicitly note any deferred to v2 with TODO markers per §3.5 propagation discipline).
+- State whether the canonical re-audit (§3.6) was completed OR was compressed with the one-line justification per §3.6.
+- State the next session writes `test.py` + runs + emits `result.md`.
+
+**Register-row pointer update** (added 2026-06-15 from the HA-P7 register-staleness retrospective): if the pre-reg supersedes the register entry that spawned it (e.g. eligibility revision, predictor refinement, outcome reframe), the lock-step is NOT complete until the register row is updated. Two acceptable patterns:
+
+- **(a) Inline pointer (preferred)**: in the same lock commit, edit the register row in [`personal_hypotheses.md`](../personal_hypotheses.md) (P-entry) or [`wiggers_testable_hypotheses.md`](../wiggers_testable_hypotheses.md) (Wiggers entry) to add a `→ superseded by: see [HA-<id>/hypothesis.md](analyses/hypotheses/HA-<id>/hypothesis.md) r<N> locked <date>` forward pointer. The register entry text itself stays (it's the historical genesis), but the pointer makes the supersession discoverable to future sessions.
+- **(b) Companion commit**: same-session, separate commit, explicitly named (`"Register-row pointer: P7 → HA-P7 r2 locked"`). Acceptable when the register update needs more than a single-line pointer (e.g. summarising the revision rationale alongside the pointer).
+
+**Not acceptable**: silent supersession (locking the pre-reg without touching the register entry). This is how HA-P7's eligibility revision left [`personal_hypotheses.md`](../personal_hypotheses.md) P7 stale post-lock.
+
+**Lock-commit confirmation gates** (the four items the lock commit message MUST explicitly confirm; other §5 conditions are verified by the audit step at §3.4/§3.6 and need not re-appear in the commit message):
+
+1. Power-calc dispatch present in §8 (per §3.2 step 4) — confirm dispatch type used.
+2. Single-cell headline lock OR explicit Bonferroni-style correction (per §4.2) — confirm which.
+3. Register-row pointer updated OR explicit non-supersession confirmation (per the register-row sub-section above).
+4. Re-audit completed clean OR compression decision documented per §3.6 — confirm which.
+
+If any of the four is unmet, the lock signal is not given.
 
 **After lock**: further modifications create v2 with v1 archived per the project's locked-pre-reg discipline. **The v1 result (if it lands first) is the canonical citation**; any subsequent v2 result is reported as a separate verdict with its own audit lineage.
 
-### 3.8 Run step (post-lock)
+### 3.9 Run step (post-lock)
 
 Separate session (shared-context with the lock session is fine):
 
@@ -223,19 +278,24 @@ Fix opportunistically. Some side fixes propagate to siblings — e.g. the labels
 
 ## 5. Sanity-check questions before lock
 
-A seasoned researcher (or a strict re-auditor) should ask these. If the pre-reg can answer "yes" or "explicitly dispatched", it's ready for lock.
+A seasoned researcher (or a strict re-auditor) should ask these. If the pre-reg can answer "yes" or "explicitly dispatched", it's ready for lock. The `lock-blocking?` column marks every row that must pass before the lock signal is given; the **bolded `yes (§3.8 gate N)`** rows additionally require explicit confirmation in the lock-commit message per §3.8.
 
-| sanity check | applies to | pass condition |
-|---|---|---|
-| Is block-aware inference applied? | any test on time-series data | stationary bootstrap E[L]=7 + block-permutation null cited & applied |
-| Is the headline cell unique and pre-specified? | any test with multiple sensitivity arms | single-cell §5.0 lock OR explicit Bonferroni correction |
-| Is causal-attribution ambiguity surfaced if applicable? | any test where multiple causal stories fit | §8 caveat explicit + §9 outcome branching surfaces alternatives |
-| Are effect sizes in community-standard formulation? | any inferential test | OR / RD / Cohen's d / Hedges' g reported with CIs |
-| Are §3.4 / §3.7 / project audit hooks engaged or explicitly dispatched? | any Layer 4+ analysis | one of: applied, OR explicit one-sentence dispatch |
-| Is the eligibility rule self-consistent? | any pre-reg with eligibility + outcome | rule does NOT exclude every possible positive outcome (the contradiction P7's audit caught) |
-| Are FIT files / CSV paths verified? | any pre-reg citing source files | path exists in the audit-able tree OR is documented as external |
-| Does the §9 branching enumerate all outcome paths? | every pre-reg | {SUPPORTED both, train-only, validate-only, refuted both, inconclusive, dry-run-fails, sensitivity-arm-diverges} all have explicit pre-spec |
-| Does the §10 run protocol include a dry-run halt? | every pre-reg | "If sanity check fails → halt + revise spec → v2" |
+| sanity check | applies to | pass condition | lock-blocking? |
+|---|---|---|---|
+| Is block-aware inference applied? | any test on time-series data | stationary bootstrap E[L]=7 + block-permutation null cited & applied | yes |
+| Is the headline cell unique and pre-specified? | any test with multiple sensitivity arms | single-cell §5.0 lock OR explicit Bonferroni correction | **yes (§3.8 gate 2)** |
+| Is causal-attribution ambiguity surfaced if applicable? | any test where multiple causal stories fit | §8 caveat explicit + §9 outcome branching surfaces alternatives | yes |
+| Are effect sizes in community-standard formulation? | any inferential test | OR / RD / Cohen's d / Hedges' g reported with CIs | yes |
+| Is the §8 power-calc dispatch present? | every pre-reg | one of: explicit calc with assumptions named, OR the one-line "power calc inapplicable per Daza 2018 within-subject design" dispatch | **yes (§3.8 gate 1)** |
+| Are §3.4 / §3.7 / project audit hooks engaged or explicitly dispatched? | any Layer 4+ analysis | one of: applied, OR explicit one-sentence dispatch | yes |
+| Is the eligibility rule self-consistent? | any pre-reg with eligibility + outcome | rule does NOT exclude every possible positive outcome (the contradiction P7's audit caught) | yes |
+| Are FIT files / CSV paths verified? | any pre-reg citing source files | path exists in the audit-able tree OR is documented as external | yes |
+| Does the §9 branching enumerate all outcome paths? | every pre-reg | {SUPPORTED both, train-only, validate-only, refuted both, inconclusive, dry-run-fails, sensitivity-arm-diverges} all have explicit pre-spec | yes |
+| Does the §10 run protocol include a dry-run halt? | every pre-reg | "If sanity check fails → halt + revise spec → v2" | yes |
+| Is the canonical re-audit (§3.6) clean OR compressed with documented justification? | every pre-reg pre-lock | one of: r2 re-audit completed with no fires + r2-closure verified, OR the lock-commit message includes the one-line `Compression: re-audit skipped per §3.6 acceptability criteria — <reason>` | **yes (§3.8 gate 4)** |
+| Is the register row updated (pointer or non-supersession confirmation)? | every pre-reg that may supersede its register entry | one of: register row has a `→ superseded by: HA-<id> r<N> locked <date>` forward pointer (preferred), OR the lock-commit message explicitly confirms non-supersession | **yes (§3.8 gate 3)** |
+| Has a side-fix propagation check been done across siblings? | every r2 that includes side observations | for each side fix in r2, a grep across `analyses/hypotheses/HA-*/hypothesis.md` confirms either no sibling carries the same construct, OR siblings carrying it have been fixed (unlocked) / v2-queued (locked) per §3.5 propagation discipline | yes |
+| Are §7 sanity ranges anchored to the EXACT column being measured? | every pre-reg with a §7 anchor range | §7 ranges cite the descriptive card / `per_day_master.csv` statistic for the exact column under test (not a definitional cousin); the cited median / IQR is reproducible from a single script run against that column. **Rationale**: HA-C4b v1 locked an anchor range of [15, 60] for `stress_low_motion_min_count_S60_Mlow` derived from a definitional cousin's distribution; the actual column's unmedicated median was 78, tripping the §7 sanity gate at dry-run and forcing v2. The right check at lock-time would have been "anchor against this exact column's descriptive card." | yes |
 
 ---
 
@@ -287,10 +347,31 @@ Both audits took roughly 1 fresh-session of audit time + a few hundred KB of rep
 
 ## 8. Status
 
-**Drafted 2026-06-15** from the HA-C4b + HA-P7 retrospective. Working document — extend as the lock pattern evolves with subsequent pre-regs.
+**Drafted 2026-06-15** (v1) from the HA-C4b + HA-P7 retrospective. **Revised 2026-06-15 (v1.1)** to close the four §8 follow-ups identified in v1's retrospective. Working document — extend as the lock pattern evolves with subsequent pre-regs.
 
-**Open follow-ups** for the lock process itself:
-- Power-calc dispatch added to the §3.2 drafting checklist
-- Re-audit-r2-before-lock as the canonical pattern (currently compressed)
-- Auto-propagation of side fixes to sibling locked artefacts (currently manual)
-- Register-row pointer update as a lock-step requirement (currently queued)
+### 8.1 v1.1 closures (2026-06-15)
+
+The four v1 §8 follow-ups are closed in this revision:
+
+- **Power-calc dispatch added to the §3.2 drafting checklist** — closed. The §8 line in the pre-reg's section list now mandates a power-calc dispatch (explicit calc OR the one-line "power calc inapplicable per Daza 2018 within-subject design" dispatch); absence of the dispatch is itself a Layer 1 fire. §5 carries a lock-blocking sanity-check row for this; §3.8 marks it as gate 1 of the lock-blocking checklist.
+- **Re-audit-r2-before-lock as canonical pattern** — closed. New §3.6 documents the second-pass-audit step in a fresh session with `/research-review` on r2 (report at `reviews/HA-<id>-<date>-v2.md`). §2 reframes the arc as 4 canonical sessions × 5 stages, with the option-A compression (skip step 4) acceptable for mechanical r2 fixes / low-stakes pre-regs / initial-pass discipline work. Compression decisions must be documented in the lock-commit message. §5 carries a lock-blocking row; §3.8 marks it as gate 4.
+- **Side-fix auto-propagation discipline** — closed. §3.5's side-observation bullet now mandates a sibling-grep step + per-status (unlocked / locked) propagation procedure + an explicit "never defer silently" clause. Sibling fixes go in the same r2 commit if unlocked; v2 commit if locked. §5 carries a sanity-check row for the propagation grep.
+- **Register-row pointer update as a lock-step requirement** — closed. New §3.8 sub-section on register-row pointers documents two acceptable patterns (inline pointer or companion commit) + an explicit non-acceptance clause for silent supersession. §5 carries a lock-blocking row; §3.8 marks it as gate 3.
+
+### 8.2 v1.1 lock-blocking gates (§3.8 summary)
+
+The lock signal is not given until all four gates pass:
+
+1. Power-calc dispatch present in §8.
+2. Single-cell headline lock OR Bonferroni correction.
+3. Register-row pointer updated OR explicit non-supersession confirmation.
+4. Re-audit completed clean OR compression decision documented.
+
+### 8.3 Open follow-ups (post-v1.1)
+
+The following are queued for a later revision; not in scope for v1.1:
+
+- **HA-C4b labels CSV path propagation v2** — the labels-CSV-path side fix caught in HA-P7's audit was not propagated to HA-C4b in the same session (HA-C4b had locked first). Under the new §3.5 propagation discipline this would have been caught and fixed in-session; the retro-fix is queued as `HA-C4b/hypothesis_v2.md` with the Authorship-block TODO marker per §3.5 step 3(b). To be actioned alongside the next HA-C4b touch.
+- **Personal register P7 forward pointer** — `personal_hypotheses.md` P7 still lacks the `→ superseded by: HA-P7 r2 locked 2026-06-15` pointer mandated by the new §3.8. To be added before any subsequent HA-P-family pre-reg lock to prevent the same pattern.
+- **Audit-MD acceptability bar for the option-A compression record** — the option-A initial pass compressed step 4 without documenting compression decisions in lock-commit messages (because the §3.6 acceptability criteria are new). The HA-C4b and HA-P7 lock commits did NOT cite §3.6 compression criteria; this is a documentation gap, not a methodological one. Acceptable to leave because v1.1 only binds prospectively (future pre-regs); the existing lock commits stand.
+- **Reviewer-mode-with-authorization handoff template for fresh-session audits** — the current trigger paragraphs (§3.4 and §3.6) work but could be turned into a slash-command (`/research-audit HA-<id> [--second-pass]`) for ergonomic invocation. Process improvement, not a methodology change.
