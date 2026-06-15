@@ -19,7 +19,10 @@
 
 The 5th audit recommendation ("anchor the post-viz revision's cited values in the repo") is acknowledged but not addressed in this revision — the viz-notes.md at `$GEVOELSCORE_DATA_PATH/analyses/stress_low_motion_viz/viz-notes.md` remains external to the audit-able tree. The cited ρ values (0.79 and 0.556) ARE reproducible from a single script run; queued as a separate documentation task for the next pre-reg-touching commit.
 
-**Status**: drafted + revised post-viz (r1) + revised post-audit (r2), not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) may run in a follow-up fresh session to verify r2 closure of the audit fires (optional; the r2 changes are surgical and the original audit was substantive — a re-audit on r2 would verify the L3.1 / L3.4 / L3.3 / L4.3 / L4.4 closures are clean).
+**Revision 2026-06-15-r3** (same session, pre-lock interpretability augmentation). Per seasoned-peer-review sanity check + user direction:
+- **§5.1 (b-interp) added**: report Risk Difference (RD) and Odds Ratio (OR) with bootstrap 95% CIs alongside the (b) 15pp gate, plus a worked-example interpretation block. This is an interpretability augmentation for external readers, NOT a new falsification conjunct (the (a)+(b)+(c) bar is unchanged). Uses the same B = 10,000 stationary-bootstrap resamples already specified in §4.9. Closes the community-standard external-interpretability gap identified in the sanity check.
+
+**Status: LOCKED 2026-06-15 by user acceptance.** The pre-registration is locked at the state of revision r3 (this file's HEAD). Further modifications create HA-C4b-v2 with v1 archived. The next session writes `test.py` + runs + emits `result.md` per §10.
 
 ---
 
@@ -260,6 +263,18 @@ Identical three-criterion bar shape to H02b / HA01b / HA06b / H02d / HA10 / HA11
 **(a) Frequency**: at least **60%** of consolidation-phase crash episodes have `max signed_z ≥ 1.5` (one-sided) in their lead-up window.
 
 **(b) Discrimination**: the consolidation-phase crash-episode frequency from (a) is at least **15 percentage points higher** than the consolidation-phase **stationary-bootstrap-null frequency** (per §4.9 — block-permutation null at `E[L] = 7`, NOT the inherited random-reference-date null).
+
+**(b-interp) Effect-size reporting (added r3 2026-06-15 for external interpretability).** Criterion (b) is a risk-difference gate at 15pp; the same underlying `p_crash` vs `p_null` discrimination is reported in two community-standard formulations alongside the gate:
+
+- **Risk difference (RD)**: `RD = p_crash − p_null`. Already gated at ≥ 0.15 by criterion (b). Report point estimate + bootstrap 95% CI from the same B = 10,000 stationary-bootstrap resamples specified in §4.9.
+- **Odds ratio (OR)**: `OR = (p_crash / (1 − p_crash)) / (p_null / (1 − p_null))`. Report point estimate + bootstrap 95% CI. **Reporting threshold (not a separate falsification conjunct)**: at the §5 (b) gate of `RD = 0.15` with a typical `p_null ∈ [0.10, 0.20]`, the equivalent OR ranges 2.15 to 3.00. An OR < 1.5 with 95% CI containing 1 alongside an apparently-passing RD would be suspect — flag for review.
+
+**Interpretation, worked example**. Suppose the consolidation-phase headline gives `p_null = 0.12` and `p_crash = 0.35` (illustrative; not a prediction):
+- RD = 0.35 − 0.12 = **0.23** (23 percentage points; passes the 15pp gate comfortably)
+- OR = (0.35 / 0.65) / (0.12 / 0.88) = 0.538 / 0.136 = **3.95** (crash-episode odds are ~4× higher than null odds)
+- Reading: "When a heavy-exertion-conditioned crash episode occurs in the consolidation phase, its 4-day lead-up contains a `stress_low_motion_min_count_S60_Mlow` z ≥ 1.5 deviation about 35% of the time, vs ~12% in matched non-crash null windows. The odds of seeing the deviation in a crash lead-up are roughly four times the odds in a null window."
+
+The OR and RD are reported alongside the §5.1 (a)(b)(c) verdicts on the locked headline cell. They are **interpretability augmentation, not additional falsification conjuncts** — the (a)+(b)+(c) bar is what determines SUPPORTED / NOT-SUPPORTED.
 
 **(c) Magnitude**: the median `max signed_z` across consolidation-phase crash episodes is at least **0.75** (N_std / 2 = 1.5 / 2).
 
