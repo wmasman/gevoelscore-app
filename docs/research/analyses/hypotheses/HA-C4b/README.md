@@ -26,7 +26,11 @@ Three structural paths surfaced at the halt:
 
 3. **Pool train + validate inside consolidation.** n = 5 episodes total. Cost: still underpowered, with the additional confound that the train/validate split's purpose (independent replication) is abandoned.
 
-Plus an orthogonal calibration fix that v2 inherits regardless of which path is picked: the §7 anchor range [15, 60] was inherited from a definitional cousin's distribution; the actual column's median is 78. v2's §7 ranges must anchor to the exact column's descriptive card (see [`methodology/hypothesis_lock_process.md` §5](../../../methodology/hypothesis_lock_process.md#5-sanity-check-questions-before-lock) calibration-anchor row).
+Plus two orthogonal fixes that v2 inherits regardless of which structural path is picked:
+
+1. **§7 calibration-anchor fix.** The §7 anchor range [15, 60] was inherited from a definitional cousin's distribution; the actual column's median is 78. v2's §7 ranges must anchor to the exact column's descriptive card (see [`methodology/hypothesis_lock_process.md` §5](../../../methodology/hypothesis_lock_process.md#5-sanity-check-questions-before-lock) calibration-anchor row).
+
+2. **§3 labels CSV path fix** (caught in HA-P7's audit per `reviews/HA-P7-2026-06-15.md` side-fix #5; queued in [`methodology/hypothesis_lock_process.md` §8.3](../../../methodology/hypothesis_lock_process.md#83-open-follow-ups-post-v11)). v1-archived §3 cites `crash_v2-definition/labels_crash_v2.csv` as the labels source; the file at that in-repo path is the *definition MD*, not the labels CSV. The labels CSV lives external at `$GEVOELSCORE_DATA_PATH/processed/crash_labels/labels_crash_v2.csv` per the privacy boundary. v2's §3 (and §4.5 where it's also cited in v1) must point to the external path, with the in-repo `crash_v2-definition/definition.md` cited separately for the scheme. v1-archived is NOT being edited — the locked-pre-reg discipline holds; this fix lands in v2 only. First worked example of the new §3.5 side-fix propagation discipline being **absorbed by an already-archived sibling's v2 drafting** rather than retro-fixed as a standalone v2 (the queue path is supplanted when an unrelated v2 is already required).
 
 ## Next action
 
