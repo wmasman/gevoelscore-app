@@ -394,6 +394,8 @@ The participant's lived-experience operational protocol (per [garmin_pacing_prac
 
 ## P6. Post-crash window — distinctive autonomic-recovery shape
 
+> **→ Superseded by [HA-P6 pre-reg](analyses/hypotheses/HA-P6/hypothesis.md) r2 locked 2026-06-15 under option-A compression.** The pre-reg substantively narrows the channel set to 7 (stress_mean_sleep, all_day_stress_avg, bb_lowest, bb_overnight_gain, resting_hr, gevoelscore, stress_low_motion_min_count_S60_Mlow) and locks Option C dual matched-baseline (matched-deep-trough Arm A + lagged personal baseline Arm B); reframed as Layer 1 descriptive characterisation per [CONVENTIONS §2.1](CONVENTIONS.md#21-descriptive-before-inference) with no SUPPORTED bar (§5 is "findings shape", not a falsification criterion; §9 enumerates downstream propagations per observation shape, not verdict branching). Register text below is the historical genesis; for canonical operationalisation, the algorithmic shape classifier, and the §9 propagation triggers see the pre-reg. Per [`methodology/hypothesis_lock_process.md`](methodology/hypothesis_lock_process.md) §3.8 v1.1 register-row pointer discipline.
+
 **Hypothesis (primary, descriptive):** Within the LC era, days `t+1` through `t+5` after a crash episode-end show channel-specific recovery trajectories (on RHR, BB overnight gain, stress, sleep efficiency) that differ in shape from matched non-crash days.
 
 **Hypothesis (secondary, predictive):** Recovery shape characteristics (recovery rate, recovery completeness) co-vary with same-episode crash duration and with next-crash interval.
