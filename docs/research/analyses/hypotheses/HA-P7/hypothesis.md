@@ -10,7 +10,17 @@ The drafting was performed under the operationalisation-precision walkthrough sp
 2. **Train/validate split + phase stratification**: HA11 family split (train 2022-09-03 → 2023-12-31; validate 2024-01-01 → 2026-06-05) + pooled LC era headline + phase-stratified sensitivity arms.
 3. **Density encoding + null pre-spec**: Continuous logistic regression (OR + 95% CI) as primary statistical machinery + binned tabulation (`crash_count_14d ∈ {0, 1, 2, 3+}`) with Wilson CIs as descriptive companion + 3-criterion null pre-spec.
 
-**Status**: drafted, not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) must run in a fresh session (no shared drafting-session context); the review report lands in [`reviews/`](../../../reviews/) with the addendum *"Fresh session — no exposure to the drafting context; doc-only knowledge."*
+**Revision 2026-06-15-r2** (same session, post-audit). Mirrors HA-C4b's r2 closure pattern. Eight changes absorbed from the [fresh-session `/research-review` audit report at `docs/research/reviews/HA-P7-2026-06-15.md`](../../../reviews/HA-P7-2026-06-15.md) (verdict: REVISION RECOMMENDED). The audit ran on r1 (commit `4a9cbfa`) in a fresh session with doc-only knowledge; the report's "What would strengthen this finding" list is implemented in this r2:
+- **§4.5.1 / §4.5.2 / §4.5.3 statistical machinery replaced** with stationary-bootstrap CIs + block-permutation null at `E[L] = 7` per [`methodology/permutation_null_block_length.md`](../../../methodology/permutation_null_block_length.md) (closes L3.1 / L3.4 BLOCKING Layer-3 fire). The original Wald-CI + Wilson-CI + "no external null needed" framing assumed i.i.d. on a serially-correlated predictor (overlapping 14-day rolling counts). Wald CI replaced with block-bootstrap percentile CI at `E[L] = 7`; Wilson CIs replaced with block-bootstrap percentile CIs; §4.5.3 "no null" reversed and replaced with block-permutation null at `E[L] = 7`. Data-driven `E[L]*` companion + factor-of-2 flag rule added per the methodology MD's operational consequences §2.
+- **§4.5.4 covariate sensitivity added** per the audit's substantive Layer-4 recommendation #2: secondary logistic adding `gevoelscore_lagged_mean_14d` to disambiguate "recovery-debt" from "shared-cause-via-recent-low-gevoelscore" readings of the §8 caveat 1. Secondary sensitivity, not a primary spec change — the §5 headline is still on `crash_count_14d` alone.
+- **§5.0 multi-comparison discipline added** as a hard rule: the headline locks on a single pre-specified cell (pooled LC × W=14 × primary outcome × stationary-bootstrap CI); per-phase and secondary-outcome arms are diagnostic / sensitivity ONLY (cannot promote to SUPPORTED). Window-sensitivity criterion (c) remains a falsification conjunct because it tests cross-arm agreement, not per-phase verdict. Closes L3.3 substantive Layer-3 fire.
+- **§5.1(b) monotonicity tolerance revised** from absolute 5pp to relative 50% per side observation "§5(b) loose at small bin rates" — the original 5pp tolerance effectively waived (b) at small expected baseline rates (2-5%). Relative tolerance preserves the monotonicity intent. Companion Wilson-CI-overlap test added.
+- **§8 §3.4 inapplicable-to-primary dispatch added** per L4.4 minor closure: explicit one-sentence dispatch explaining why §3.4 cannot apply to a test whose outcome IS `is_crash` (dropping `is_crash == True` rows eliminates every positive case); the descriptive same-day Spearman is the §3.4-binding venue.
+- **§3 named-counts triplet phrasing tightened** per L4.6 minor closure: ~700-1000 LC-era pooled estimate now names the predicate (`is_crash[d-1] == False` AND date in LC range AND coverage gates) + source file (`per_day_master.csv` ← `labels_crash_v2.csv`).
+- **Side fixes**: broken labels CSV path replaced with `crash_v2-definition/definition.md` for scheme + `$GEVOELSCORE_DATA_PATH/processed/crash_labels/labels_crash_v2.csv` for file (path was wrong in original; also wrong in HA-C4b §3 — propagated copy-paste; HA-C4b is locked, would need v2 to fix); early-LC-era coverage shadow surfaced in §4.2 condition 4; secondary outcome slice corrected from `[d : d + 3]` to `[d : d + 4]` to match 4-day-forward-window prose; buildup-buffer date arithmetic corrected from 22 to 21 days (2024-04-09 → 2024-04-29 inclusive, "strictly before 2024-04-30"); caveat-4 compression replaced with the more specific register quote (Session C's small detrend-surviving step at 2026-03-20 stands; v3 multi-channel did not extend to gevoelscore).
+- **Side fix queued not in this revision**: personal_hypotheses.md P7 register-row "Sample" cell pointer to HA-P7 §4.2 for revised eligibility. Will land in a separate small commit.
+
+**Status**: drafted + revised post-audit (r2), not locked. Lock requires explicit user acceptance. The audit fires are all addressed; the SUPPORTED bar is now defensible against the autocorrelation-driven inflation Natesan Batley 2023 flags as the dominant n=1 failure mode.
 
 ---
 
@@ -43,10 +53,10 @@ A bidirectional sensitivity arm reports the |OR − 1| result for transparency. 
 
 ## 3. Data sources
 
-- **Crash labels**: `crash_v2` from [`crash_v2-definition/labels_crash_v2.csv`](../crash_v2-definition/labels_crash_v2.csv), surfaced as the `is_crash` boolean column in `per_day_master.csv`.
+- **Crash labels**: `crash_v2` scheme defined in [`crash_v2-definition/definition.md`](../crash_v2-definition/definition.md); the labels CSV `labels_crash_v2.csv` lives at `$GEVOELSCORE_DATA_PATH/processed/crash_labels/labels_crash_v2.csv` (gitignored external data path) and is propagated into `per_day_master.csv` as the `is_crash` boolean column by the [`build_unified_dataset.py`](../../../pipeline/03_consolidate/build_unified_dataset.py) pipeline. Path corrected post-audit 2026-06-15 (the original `crash_v2-definition/labels_crash_v2.csv` path was wrong — that folder contains the scheme MD, not the labels CSV).
 - **Phase membership**: `dose_plasma_mg` column in `per_day_master.csv` (PK-smoothed per [`citalopram_phase_stratification §3`](../../../methodology/citalopram_phase_stratification.md#3-the-four-phase-citalopram-traject-stratification)); phase derivable from the date via the `citalopram_phase(d)` function in that MD §3.
 - **gevoelscore for secondary correlation**: `gevoelscore` column in `per_day_master.csv`.
-- **Analysis window + train/validate split**: same as HA11 / HA06b / HA10 / HA-C4b (train 2022-09-03 → 2023-12-31, validate 2024-01-01 → 2026-06-05). Total eligible (gap-day-d-1) days estimated at ~700-1000 LC-era pooled; per-phase n estimates given in §4.4.
+- **Analysis window + train/validate split**: same as HA11 / HA06b / HA10 / HA-C4b (train 2022-09-03 → 2023-12-31, validate 2024-01-01 → 2026-06-05). Total eligible (gap-day-d-1) days estimated at **~700-1000 LC-era pooled** — predicate: `is_crash[d-1] == False` AND date in `[2022-04-04, 2026-06-05]` AND coverage gates per §4.2; source: `is_crash` column in `per_day_master.csv` (built from `$GEVOELSCORE_DATA_PATH/processed/crash_labels/labels_crash_v2.csv`). Per-phase n estimates given in §4.4 follow the same predicate restricted to phase-window dates.
 
 **No FIT extraction required.** All inputs are existing per-day columns in the consolidated master.
 
@@ -73,7 +83,7 @@ A day `d` is **eligible for HA-P7** if **all** of:
 1. `d` is in the LC era (`d >= 2022-04-04`).
 2. **`is_crash at d - 1 == False`** — yesterday is a gap day (NOT inside a crash episode). This is the load-bearing eligibility rule per the Option A locking. The rule does NOT exclude days where `d` itself is a crash-start (Option A explicitly allows `d` to be a new-crash-start, which is the primary outcome).
 3. `d` has a valid `is_crash` label (i.e. is inside the `crash_v2` coverage window — not censored).
-4. The 14-day primary window `[d - 14, d - 1]` is fully within the `crash_v2` coverage window. (Sensitivity windows have their own coverage requirements — see §6 exclusion rules.)
+4. The 14-day primary window `[d - 14, d - 1]` is fully within the `crash_v2` coverage window. (Sensitivity windows have their own coverage requirements — see §6 exclusion rules.) **`crash_v2` coverage starts 2022-09-03** per DATA_DICTIONARY; the W=14 coverage gate excludes the first ~5 months of LC era (2022-04-04 through 2022-09-16); W=30 excludes through 2022-10-02. The §3 ~700-1000 pooled estimate already absorbs this; surfaced here so the §10.1 dry-run is not surprised.
 
 Days failing any of these are excluded from the test sample. Report fractions per cause.
 
@@ -86,7 +96,7 @@ Days failing any of these are excluded from the test sample. Report fractions pe
 For each eligible day `d`:
 
 - **Primary outcome**: `is_crash at d` (boolean). This is the "new crash starts at d" event under the §4.2 eligibility rule (since yesterday was a gap day).
-- **Secondary outcome**: `any_crash_in_next_3d(d) = any(is_crash[d : d + 3])` — covers d, d+1, d+2, d+3 (4-day forward window). Broader; captures "is the immediate forward window dangerous". Reported as descriptive companion; the SUPPORTED bar is on the primary.
+- **Secondary outcome**: `any_crash_in_next_4d(d) = any(is_crash[d : d + 4])` — Python half-open slice covering d, d+1, d+2, d+3 (4-day forward window). Broader; captures "is the immediate forward window dangerous". Reported as descriptive companion; the SUPPORTED bar is on the primary. *(Slice corrected from `[d : d + 3]` post-audit 2026-06-15; original off-by-one between prose and Python slice.)*
 
 ### 4.4 Phase-stratified sensitivity arms (per phase_strat §3)
 
@@ -105,9 +115,15 @@ Per-phase n's are estimates; actual counts gate at the §10.1 dry-run.
 
 **No §5.B dose-adjustment is applied to the predictor**. The predictor is a count of crash-days, not a Garmin channel value; the §5.B covariate-adjustment framework operates at the per-mg-plasma level on continuous channels. Phase-stratification is the appropriate handling.
 
-### 4.5 Statistical machinery (locked: continuous logistic + binned tabulation + 3-criterion null)
+### 4.5 Statistical machinery (revised post-audit 2026-06-15: block-bootstrap + block-permutation throughout)
 
-#### 4.5.1 Primary: continuous logistic regression
+**Revised from plain-Wald + Wilson-CIs original** per the [`/research-review` audit 2026-06-15](../../../reviews/HA-P7-2026-06-15.md) Layer-3 BLOCKING finding [L3.1 / L3.4]. The original §4.5 assumed i.i.d. Bernoulli residuals on a predictor (`crash_count_14d`) whose construction is by-design serially correlated:
+1. Adjacent eligible-day predictor values share 13 of 14 input days → near-identical
+2. Crash episodes cluster temporally (the "shared underlying cause" §8 caveat 1 failure mode IS the temporal-clustering pattern)
+
+Wald CIs and Wilson CIs both fail under autocorrelation; the §5 (a) bar OR-CI is the precisely affected quantity. Adopting the project canonical [`methodology/permutation_null_block_length.md`](../../../methodology/permutation_null_block_length.md) — stationary bootstrap with `E[L] = 7` days — closes both the BLOCKING fire and the binding [`citalopram_phase_stratification §6 "Independent obligations"`](../../../methodology/citalopram_phase_stratification.md#6-pre-registration-template-for-new-hypothesis-mds) clause.
+
+#### 4.5.1 Primary: continuous logistic regression with block-bootstrap CIs (locked)
 
 For each window `W ∈ {7, 14, 30}` and each phase + the pooled LC era:
 
@@ -115,29 +131,65 @@ For each window `W ∈ {7, 14, 30}` and each phase + the pooled LC era:
 logit(P(is_crash at d == 1)) = β_0 + β_1 * crash_count_W(d)
 ```
 
-- Fit on all eligible days (§4.2).
-- Report `OR = exp(β_1)`, 95% Wald CI on OR, p-value (one-sided positive).
-- **Headline verdict comes from the W=14 pooled LC-era logistic**.
+- Fit on all eligible days (§4.2) via standard maximum-likelihood logistic regression. **The point estimate `OR = exp(β_1)` is the standard logistic fit.**
+- **CI on OR**: **stationary-bootstrap 95% percentile CI at `E[L] = 7` days** per the canonical methodology MD. NOT a Wald CI. Block lengths drawn from Geometric(1/7); resampled samples carry the within-block dependence; logistic refit on each resample; `B = 10,000` resamples for the headline; report percentile CI.
+- **p-value**: **block-permutation p-value at `E[L] = 7`** (see §4.5.3) — NOT the asymptotic Wald p-value.
+- **Headline verdict comes from the pooled LC-era × W=14 logistic.** (Per §5.0 single-cell lock.)
+- **Data-driven `E[L]*` companion** per the methodology MD's "Operational consequences" §2: compute the data-driven block-length estimator on `crash_count_14d` over the pooled LC-era eligible-day pool. **Report rule**: if `|E[L]* − 7| / 7 > 0.5` (i.e. outside `[3.5, 10.5]` days), **flag for review before locking the verdict**.
 
-#### 4.5.2 Companion descriptive: binned tabulation
+#### 4.5.2 Companion descriptive: binned tabulation with block-bootstrap CIs
 
-For the primary window `W = 14` (and reported descriptively for 7d / 30d):
+For the primary window `W = 14` (and reported descriptively for 7d / 30d), report the per-bin rate with **block-bootstrap percentile 95% CIs** (NOT Wilson CIs — Wilson assumes i.i.d.):
 
-| crash_count_W bin | n eligible days | n with is_crash at d == True | rate | Wilson 95% CI |
+| crash_count_W bin | n eligible days | n with is_crash at d == True | rate | block-bootstrap 95% CI |
 |---|---|---|---|---|
 | 0 | ... | ... | ... | ... |
 | 1 | ... | ... | ... | ... |
 | 2 | ... | ... | ... | ... |
 | 3+ | ... | ... | ... | ... |
 
-- Wilson CIs because the rates are likely small and bins may be small.
-- The bin rates should be **monotonically non-decreasing** across bins 0 → 1 → 2 → 3+ (within a 5 percentage-point tolerance) if the recovery-debt mechanism is real.
+CIs computed via the same stationary-bootstrap procedure as §4.5.1 (block lengths ~ Geometric(1/7), `B = 10,000` resamples; per-bin rate computed on each resample; report percentile CI).
 
-#### 4.5.3 Null sample (for the discrimination check)
+**Monotonicity check (revised post-audit per side observation §5(b)-tolerance-too-loose-at-small-rates)**: bin rates should be monotonically non-decreasing across bins 0 → 1 → 2 → 3+, evaluated as:
 
-Logistic regression already provides an internal null comparison (the H0: β_1 = 0). No external null sample is needed for the primary headline.
+- **Relative-tolerance gate** (replaces the original 5pp absolute tolerance): for any consecutive pair (i, i+1), `rate(i+1) ≥ 0.50 × rate(i)` — i.e. each higher-count bin's rate is at least half the prior bin's rate. (At small expected baseline rates of 2-5%, the original 5pp absolute tolerance effectively waived the criterion; 50% relative tolerance preserves the monotonicity intent while accommodating small-rate noise.)
+- **Companion: Wilson-CI-overlap test**: if 95% block-bootstrap CIs of consecutive bins overlap by more than 50% of the narrower interval, monotonicity is descriptively-non-violated regardless of the point-estimate ordering (sample noise dominates).
 
-For the binned tabulation's discrimination check, the *implicit* null is the bin-0 cell rate (i.e. the baseline crash rate on eligible gap-day-d-1 days with no recent crashes in the window). Higher-bin rates are compared against bin-0 rate, not against a randomly-drawn null sample.
+**Crash-drop sensitivity for the descriptive same-day Spearman** (post-audit L4.4 closure): the descriptive same-day Spearman `crash_count_14d` vs `gevoelscore at d` is reported per CONVENTIONS §3.4 audit hook on PEM-pacing-variable correlations. Report ρ TWICE per cell (phase × era):
+- Once on the full eligible sample
+- Once with `is_crash at d == True` rows dropped (`|Δρ| > 0.10` flagged as a finding)
+
+#### 4.5.3 Block-permutation null (replaces "no external null needed" claim)
+
+**Revised from the original "no external null needed" claim.** The audit fire [L3.1 / L3.4] specifically rejected the original §4.5.3 as positively assuming i.i.d. residuals contrary to the policy MD. Block-permutation null is adopted:
+
+- **Block-permute the day-level `is_crash` time series** at `E[L] = 7` days (geometric block lengths drawn from the same distribution as §4.5.1's bootstrap). Block-permutation preserves within-block autocorrelation in the resampled labels.
+- **Refit the logistic on each permuted relabeling**; record the permuted `β_1`.
+- **p-value** = fraction of `B = 10,000` permutations where the permuted `β_1 ≥ observed β_1` (one-sided positive).
+- **Per-bin p-values**: for the binned tabulation, the implicit null is "is bin-i+ rate plausibly equal to bin-0 rate under the autocorrelation-aware null"; compute per-bin block-permutation p-values via the same procedure.
+- **Random seed**: `20260615` (HA-P7-specific, distinct from HA-C4b's `20260615` because the resampling is independent — actually, since HA-P7's resampling is independent from HA-C4b's both can use the same seed without cross-test correlation; seed reuse documented).
+- **Per-phase**: the block-permutation operates within the per-phase eligible pool (no cross-phase resampling).
+
+#### 4.5.4 Covariate sensitivity for the §8 caveat-1 alternative-readings disambiguation
+
+Per the audit's substantive Layer 4 recommendation #2: pre-register a **secondary logistic** that adds a `gevoelscore_lagged_mean_14d` covariate to the §4.5.1 primary regression:
+
+```
+gevoelscore_lagged_mean_14d(d) = mean(gevoelscore[d-14 : d-1])
+                                  on eligible non-NaN days only
+```
+
+Secondary logistic:
+```
+logit(P(is_crash at d == 1)) = β_0 + β_1 * crash_count_14d(d) + β_2 * gevoelscore_lagged_mean_14d(d)
+```
+
+- Report `β_1, β_2`, both block-bootstrap 95% CIs (same procedure as §4.5.1).
+- **Disambiguation reading**:
+  - If `β_1 → 0` in the secondary model (with `β_2` large and CI excluding 0) → the §4.5.1 primary "recent-crash count" signal was just "recent low-gevoelscore" signal. The recovery-debt mechanism reading is NOT supported beyond the trivial label-density-tracks-gevoelscore-trajectory reading.
+  - If `β_1` survives in the secondary model (CI still excludes 0) → the recent-crash count carries information BEYOND recent gevoelscore mean. The recovery-debt mechanism reading is supported by a non-trivial signal that mere gevoelscore-trajectory cannot explain.
+  - If both `β_1` and `β_2` are non-significant → the secondary model is under-identified at this n; the primary §4.5.1 verdict stands but the §8 caveat-1 disambiguation is NOT achieved.
+- This is a **secondary sensitivity** not a primary spec change — the §5 headline is still on `crash_count_14d` alone. The covariate analysis constrains post-result interpretation per §9, not the SUPPORTED bar.
 
 ### 4.6 Phase-stratified per-phase tests
 
@@ -145,25 +197,47 @@ Repeat §4.5.1 + §4.5.2 within each phase, with eligibility restricted to dates
 
 ## 5. Pre-registered falsification criterion (3-criterion null pre-spec)
 
-Locked from the user-confirmed `## Authorship` decision-3. The hypothesis is **NOT-SUPPORTED in the pooled LC-era headline** if **ALL of (a), (b), (c)** hold:
+### 5.0 Multi-comparison discipline — single-cell headline lock (added post-audit 2026-06-15)
 
-**(a) Continuous logistic OR CI fails to discriminate**: in the pooled LC-era `W=14` logistic regression, the 95% Wald CI on OR contains 1.
+**Revised from implicit-discipline original** per the [`/research-review` audit 2026-06-15](../../../reviews/HA-P7-2026-06-15.md) Layer-3 substantive finding [L3.3]. The original §5 + §4.4 phrasings made the per-phase verdicts "descriptive" and the per-window arms part of criterion (c), but did not lock the per-phase verdicts as non-promotable.
 
-**(b) Binned monotonicity violated**: in the pooled LC-era `W=14` binned tabulation, the per-bin rate is NOT monotonically non-decreasing across {0, 1, 2, 3+} within a 5-percentage-point tolerance. Specifically: for any consecutive pair of bins (`i, i+1`), `rate(i+1) < rate(i) - 0.05` constitutes monotonicity-violation.
+**HA-P7's headline locks on a SINGLE pre-specified cell**:
 
-**(c) Window-sensitivity disagrees**: AT LEAST 2 of the 3 window arms (7d / 14d / 30d) have ORs with 95% CI containing 1.
+> Pooled LC era × W=14 × primary outcome (`is_crash at d`) × one-sided positive direction × stationary-bootstrap CI at E[L]=7 (§4.5.1).
 
-If ALL of (a) + (b) + (c) hold → **NOT-SUPPORTED at the pooled LC-era headline**.
+**Hard rule**: ALL OTHER cells in the family (3 windows × {pooled, per-phase} × {primary outcome, secondary `any_crash_in_next_3d`} × {one-sided positive, bidirectional}) are **diagnostic / sensitivity arms ONLY**. They are reported in the result.md, but **none can promote to a SUPPORTED verdict on their own**.
+
+If the result.md narrative wants to invoke a sensitivity-arm finding ("the consolidation-phase verdict also fired"), it does so as a *diagnostic finding* informing the headline's *robustness* or *generalisability* — not as a SUPPORTED claim in its own right.
+
+**Window-sensitivity criterion (c)** below remains a falsification conjunct because it tests cross-arm AGREEMENT (a discriminating signal at W=14 alone, contradicted by W=7 and W=30, is window-fragile and not the recovery-debt mechanism the §1 claim names). This is different from per-phase verdicts being descriptive: window-sensitivity is part of the falsification structure; per-phase verdicts are not.
+
+### 5.1 Three-criterion bar (applied to the single locked headline cell)
+
+The hypothesis is **NOT-SUPPORTED at the locked headline cell** if **ALL of (a), (b), (c)** hold:
+
+**(a) Continuous logistic OR block-bootstrap CI fails to discriminate**: in the pooled LC-era × W=14 logistic regression (§4.5.1), the **stationary-bootstrap 95% percentile CI on OR at E[L]=7** contains 1.
+
+**(b) Binned monotonicity violated under relative-tolerance gate**: in the pooled LC-era × W=14 binned tabulation (§4.5.2), the per-bin rate is NOT monotonically non-decreasing across {0, 1, 2, 3+} under the **relative 50% tolerance**. Specifically: for any consecutive pair of bins (i, i+1), `rate(i+1) < 0.50 × rate(i)` constitutes monotonicity-violation.
+
+**(c) Window-sensitivity disagrees**: AT LEAST 2 of the 3 window arms (W ∈ {7, 14, 30}) have ORs with **stationary-bootstrap 95% CI** containing 1.
+
+If ALL of (a) + (b) + (c) hold → **NOT-SUPPORTED at the locked headline cell**.
 
 If only (a) but not (b) or (c) → **inconclusive on the magnitude** but the directional signal is present in companion arms; report as INCONCLUSIVE.
 
-If (a) does not hold (OR CI excludes 1) AND (b) holds (monotonicity holds) AND fewer than 2 windows disagree → **SUPPORTED at the pooled LC-era headline**.
+If (a) does not hold (block-bootstrap CI excludes 1) AND (b) holds (monotonicity holds under relative tolerance) AND fewer than 2 windows disagree → **SUPPORTED at the locked headline cell**.
 
-**Inconclusive bars**:
+### 5.2 Diagnostic / sensitivity arms (no independent SUPPORTED bar)
+
+- **Per-phase logistic verdicts** (unmedicated / buildup-post-CPAP-buffer / consolidation / afbouw): reported as descriptive companion verdicts. Consolidation agreement with pooled = **independent-confirmation** descriptive read. Consolidation divergence = **concerning-divergence** descriptive read. Neither shifts the headline.
+- **Secondary outcome `any_crash_in_next_3d`** at the pooled LC era × W=14: reported as transparency arm. The headline OR-CI is on `is_crash at d` only.
+- **Bidirectional sensitivity arm**: report OR with both-sided 95% CI. Do NOT redefine the headline verdict on this arm; counter-prior direction (OR < 1) honestly documented.
+- **Covariate sensitivity (§4.5.4)**: secondary logistic adding `gevoelscore_lagged_mean_14d` as covariate. The β_1 disambiguation between "recovery-debt" and "recent-low-gevoelscore" readings (§4.5.4 interpretation rules) is descriptive context for §9 outcome-branching, NOT a SUPPORTED-bar conjunct.
+
+### 5.3 Inconclusive bars
+
 - If pooled LC-era eligible n is fewer than 200 → **inconclusive** (low power; expected n is ~700-1000, so this would indicate a coverage-issue).
 - If any single bin (0, 1, 2, 3+) has fewer than 5 days in the pooled LC-era → that bin is reported descriptively but excluded from the monotonicity check (criterion b).
-
-**Bidirectional sensitivity arm**: report the same test with the OR direction flipped (negative-only). If the data show recent-crash-density REDUCES next-crash risk (counter-prior direction), document honestly; do NOT redefine the headline verdict on the bidirectional arm.
 
 ## 6. Exclusion rules
 
@@ -171,7 +245,7 @@ If (a) does not hold (OR CI excludes 1) AND (b) holds (monotonicity holds) AND f
 - Days where `is_crash at d - 1 == True` are excluded from the test sample (§4.2 eligibility).
 - Days where the W-day window `[d - W, d - 1]` is not fully within the `crash_v2` coverage window are excluded for that W. (Different W's may exclude different days at the LC-onset edge.)
 - Days where the `is_crash at d` label is missing are excluded.
-- **Buildup-phase days before 2024-04-30 (first 22 days of buildup) are excluded** (CPAP-end confound buffer per [intervention_effects §8.1](../../../methodology/intervention_effects_descriptive.md#81-effective-analyzable-scope-5-of-8-boundaries-usable)). The exclusion applies in the phase-stratified sensitivity arms; the pooled LC-era headline INCLUDES these days but flags them.
+- **Buildup-phase days strictly before 2024-04-30 (first 21 days of buildup: 2024-04-09 through 2024-04-29 inclusive) are excluded** from the phase-stratified sensitivity arms (CPAP-end confound buffer per [intervention_effects §8.1](../../../methodology/intervention_effects_descriptive.md#81-effective-analyzable-scope-5-of-8-boundaries-usable)). The pooled LC-era headline INCLUDES these days but flags them. *(Date arithmetic corrected post-audit 2026-06-15: 2024-04-09 → 2024-04-29 is 21 days, not 22.)*
 - **2024-04-09 to 2024-04-16 (boundary cluster)** is excluded from BOTH the pooled headline AND the phase-stratified arms (structurally unanalyzable per same reference).
 
 ## 7. Expected effect size if hypothesis is true
@@ -196,7 +270,7 @@ If either sanity check fails on the dry-run, the spec needs review BEFORE runnin
 
 - **Self-reported crash labels** via crash_v2. crash_v2's definition requires `gevoelscore ≤ 3 for ≥ 2 consecutive days`; any noise / inconsistency in the gevoelscore self-report propagates into the labels. Single-rater coding; no ground-truth physiological confirmation.
 
-- **gevoelscore is mildly dose-modulated** per [intervention_effects §8](../../../methodology/intervention_effects_descriptive.md#8-findings-session-c-run-2026-06-14) (small detrend-surviving step at 2026-03-20). The crash-label threshold-crossing rate may shift across Citalopram phases. The phase-stratified sensitivity arm in §4.4 addresses this; the pooled headline does NOT apply a §5.B-style dose-adjustment because the predictor is a count, not a continuous value. If the per-phase OR is heterogeneous, the dose-modulation may be doing analytical work.
+- **gevoelscore's dose-response status** per [P7 register caveat 4](../../../personal_hypotheses.md) (compressed-quote fixed post-audit 2026-06-15). The v3 multi-channel dose-response test did NOT extend to `gevoelscore` (which is the outcome-channel side per parent §3b and is out of scope for the dose-response MD). [Session C's finding for `gevoelscore`](../../../methodology/intervention_effects_descriptive.md#8-findings-session-c-run-2026-06-14) (small detrend-surviving step UP around 2026-03-20) stands unchanged; the v3 work does not refine or contradict it. The crash-label threshold-crossing rate may shift across Citalopram phases as a downstream consequence of this small step. The phase-stratified sensitivity arm in §4.4 addresses this; the pooled headline does NOT apply a §5.B-style dose-adjustment because the predictor is a count, not a continuous channel.
 
 - **gevoelscore is the SAME instrument generating both predictor and outcome**. Both `crash_count_14d` and `is_crash at d` derive from the same per-day score. Any systematic instrument-level bias (e.g. drift, mood-state-dependent reporting) affects predictor and outcome together. This is a fundamental limitation of self-report-only designs and cannot be addressed within this test.
 
@@ -206,7 +280,9 @@ If either sanity check fails on the dry-run, the spec needs review BEFORE runnin
 
 - **Multi-comparison**. HA-P7 is the second Personal-register pre-registered hypothesis after HA-C4b. The HA family has 15+ tests; the held-out validate window is the primary defence against multi-comparison inflation.
 
-- **No Garmin channel covariates**. P7's predictor is labels-only. A future P7-variant could add Garmin-channel covariates (e.g. "crash density + average BB lowest over the same window") but is out of scope for v1. The labels-only test is the cheapest path to a verdict on the recovery-debt mechanism alone.
+- **No Garmin channel covariates** in the primary test. P7's primary predictor is labels-only (`crash_count_14d`). The §4.5.4 covariate sensitivity adds ONE non-Garmin covariate (`gevoelscore_lagged_mean_14d`) to address the §8 caveat-1 alternative readings, but no Garmin channel enters either the primary or the covariate sensitivity. A future P7-variant could add Garmin-channel covariates (e.g. "crash density + average BB lowest over the same window") but is out of scope for v1.
+
+- **CONVENTIONS §3.4 crash-drop sensitivity hook — inapplicable to the primary test by construction; applied to the descriptive same-day Spearman** (added post-audit 2026-06-15 per L4.4 finding). The §3.4 hook binds correlations / regressions on PEM-pacing variables to report results with and without `is_crash == True` rows. **For HA-P7's primary inferential test** (logistic OR of `is_crash at d` on `crash_count_14d`), the §3.4 hook is **inapplicable by construction** — the outcome IS `is_crash at d`; dropping `is_crash == True` rows would eliminate every positive case and the test would have nothing to discriminate on. **For the §4.5.2-adjacent descriptive same-day Spearman** between `crash_count_14d` and `gevoelscore at d`, §3.4 applies and is honored (§4.5.2 reports ρ both with and without `is_crash == True` rows, `|Δρ| > 0.10` flagged). The hook is therefore explicitly dispatched: inapplicable-to-primary by-construction, applied-to-descriptive as the §3.4-binding venue.
 
 - **Per-phase ns are small for buildup + afbouw**. Per-phase headline verdicts are not the design's target; pooled-LC headline is the headline. Buildup and afbouw verdicts will likely be INCONCLUSIVE; report as such, do not retroactively narrow the phase boundaries to recover power.
 
@@ -255,7 +331,7 @@ Same `--dry-run` mode as HA11 / HA-C4b: prints first-3-episodes (or first-3-cras
 
 ### 10.3 Stage 3 — `result.md`
 
-Headline verdict block at top (pooled LC-era, W=14, primary). Train/validate split table. Per-window sensitivity arm table. Per-phase sensitivity arm table. Binned tabulation with Wilson CIs. Same-day gevoelscore correlation (descriptive). Caveats per §8.
+Headline verdict block at top (pooled LC-era × W=14 × primary outcome × stationary-bootstrap CI). Train/validate split table. Per-window sensitivity arm table (W=7, 30 reported as diagnostics per §5.0 lock). Per-phase sensitivity arm table (diagnostic, no SUPPORTED bar per §5.0). Binned tabulation with block-bootstrap CIs (NOT Wilson, per §4.5.2 audit-closure). Same-day gevoelscore correlation with crash-drop sensitivity row (descriptive). Covariate sensitivity (§4.5.4 secondary logistic). Caveats per §8.
 
 ### 10.4 Run protocol
 
