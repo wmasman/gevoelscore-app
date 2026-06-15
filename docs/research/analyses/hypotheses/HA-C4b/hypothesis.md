@@ -9,7 +9,17 @@
 - **§4.11 construct-disambiguation reordered**. The viz Family D2a finding showed ρ(primary, `stress_high_duration_min`) = 0.79 — a closer sibling than HA11's `u_dip_count` (ρ = 0.556). The motion-filter-doing-analytical-work question is more critically tested against `stress_high_duration_min`; that sibling becomes the PRIMARY disambiguation, with `u_dip_count` repositioned to SECONDARY. The original ρ = 0.556 construct-validity finding stands as the closest WITHIN-DAY-SHAPE sibling check.
 - **§4.11 u_dip_count gap note added**. HA11's source CSV last extracted 2026-06-07; days 2026-06-08+ in `per_day_master.csv` have `u_dip_count == ""`. Since the validate window ends 2026-06-05, this does NOT affect HA-C4b's test sample but is documented for downstream consumers.
 
-**Status**: drafted + revised post-viz (revision 1), not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) must run in a fresh session (no shared drafting-session context); the review report lands in [`reviews/`](../../../reviews/) with the addendum *"Fresh session — no exposure to the drafting context; doc-only knowledge."*
+**Revision 2026-06-15-r2** (same session, post-audit). Six changes absorbed from the [fresh-session `/research-review` audit report at `docs/research/reviews/HA-C4b-2026-06-15.md`](../../../reviews/HA-C4b-2026-06-15.md) (verdict: REVISION RECOMMENDED). The audit ran post-r1 on commit `aec1312` in a fresh session with doc-only knowledge; the report's "What would strengthen this finding" list is implemented in this r2:
+- **§4.9 null sample replaced** with stationary-bootstrap permutation null at `E[L] = 7` per [`methodology/permutation_null_block_length.md`](../../../methodology/permutation_null_block_length.md) (closes L3.1 / L3.4 substantive Layer-3 fires). HA11 family null inherited the pre-MD random-non-overlapping-reference-date construction; HA-C4b is post-MD and adopts the canonical default. Data-driven `E[L]*` companion + factor-of-2 flag rule added per the MD's operational consequences §2.
+- **§5.0 multi-comparison discipline added** as a hard rule: the headline locks on a single pre-specified cell (consolidation × `S60_Mlow` × `N_std = 1.5` × primary 4d × one-sided); all other 9-column × 3-tier × 4-phase × {primary, secondary} × {one-sided, bidirectional} arms are diagnostic / sensitivity ONLY, no independent SUPPORTED bar. Closes L3.3 substantive Layer-3 fire.
+- **§4.11.1 Spearman crash-drop sensitivity row added** per CONVENTIONS §3.4 binding audit hook (closes L4.4 Layer-4 minor fire). Reports ρ on full sample AND with `is_crash == True` dropped; `|Δρ| > 0.10` flagged.
+- **§4.10 sensitivity ladder rewritten** to acknowledge 6 unique columns + 3 identical-by-construction duplicate columns (the M=below_mod placeholder per [stress_low_motion_primitive §3.2](../../../methodology/stress_low_motion_primitive.md)); closes L4.3 Layer-4 minor fire per CONVENTIONS §3.3.
+- **Side observation date arithmetic fixed**: buildup CPAP-end buffer is 21 days (not 22) — "first 21 days of buildup: 2024-04-09 through 2024-04-29 inclusive"; eligibility is "strictly before 2024-04-30" — updated in §4.4 + §6.
+- **Side observation afbouw label clarified**: §4.4 table row relabelled "afbouw (post-afbouw merged, see prose)" to remove ambiguity in the merge.
+
+The 5th audit recommendation ("anchor the post-viz revision's cited values in the repo") is acknowledged but not addressed in this revision — the viz-notes.md at `$GEVOELSCORE_DATA_PATH/analyses/stress_low_motion_viz/viz-notes.md` remains external to the audit-able tree. The cited ρ values (0.79 and 0.556) ARE reproducible from a single script run; queued as a separate documentation task for the next pre-reg-touching commit.
+
+**Status**: drafted + revised post-viz (r1) + revised post-audit (r2), not locked. Lock requires explicit user acceptance. After lock, [`/research-review`](../../../reviews/README.md) may run in a follow-up fresh session to verify r2 closure of the audit fires (optional; the r2 changes are surgical and the original audit was substantive — a re-audit on r2 would verify the L3.1 / L3.4 / L3.3 / L4.3 / L4.4 closures are clean).
 
 ---
 
@@ -96,13 +106,13 @@ The primary test is **per-phase stratified** ([phase_stratification §5.A](../..
 | unmedicated | LC start 2022-04-04 → 2024-04-08 | ~50-100 |
 | buildup | 2024-04-09 → 2024-06-19 | ~10-20 |
 | consolidation (30mg plateau) | 2024-06-20 → 2026-03-19 | ~80-150 |
-| afbouw + post-afbouw | 2026-03-20 → 2026-06-05 | ~10-20 |
+| afbouw (post-afbouw merged, see prose) | 2026-03-20 → 2026-06-05 | ~10-20 |
 
 Per-phase n's are estimates; actual counts gate at §10.1 dry-run.
 
 **Rationale for per-phase rather than dose-adjusted-predictor (§5.B) primary**: dose-adjustment of a COUNT metric is non-trivial — `β_dose = +0.57/mg` (the all_day_stress_avg confirmed coefficient) acts on per-minute stress values, not on per-day counts. To apply §5.B properly the threshold would need to shift per-day (`S_adj(d) = 60 + 0.57 × dose_plasma_mg(d)`), requiring a re-extraction of the primitive. **For HA-C4b v1 the per-phase test is the primary**; a dose-adjusted-threshold sensitivity arm is queued as future work (would require a §5.B-aware re-extraction).
 
-**Buildup + afbouw + post-afbouw n is small** (~10-30 each). For buildup specifically, the 2024-04 boundary-collision per [intervention_effects_descriptive §8.1](../../../methodology/intervention_effects_descriptive.md#81-effective-analyzable-scope-5-of-8-boundaries-usable) makes the first ~22 days of the phase confounded with CPAP-end. Apply [phase_stratification §5.A's optional ±N-day boundary buffer](../../../methodology/citalopram_phase_stratification.md#5a-per-phase-stratification-the-default-lowest-risk) — exclude buildup days before 2024-04-30 (the first 22 days of buildup). Report buildup separately as "buildup post-CPAP-buffer". The 9-day post-afbouw window before data-cut is too short for an independent test; merge with afbouw or report as descriptive-only.
+**Buildup + afbouw + post-afbouw n is small** (~10-30 each). For buildup specifically, the 2024-04 boundary-collision per [intervention_effects_descriptive §8.1](../../../methodology/intervention_effects_descriptive.md#81-effective-analyzable-scope-5-of-8-boundaries-usable) makes the first ~21 days of the phase confounded with CPAP-end. Apply [phase_stratification §5.A's optional ±N-day boundary buffer](../../../methodology/citalopram_phase_stratification.md#5a-per-phase-stratification-the-default-lowest-risk) — exclude buildup days **strictly before** 2024-04-30 (the first 21 days of buildup: 2024-04-09 through 2024-04-29). Report buildup separately as "buildup post-CPAP-buffer". The 9-day post-afbouw window before data-cut is too short for an independent test; **merge into afbouw** (table label below: "afbouw (post-afbouw merged, see prose)") rather than reporting as a separate phase.
 
 The **headline verdict** is the **consolidation-phase verdict** (largest n, longest plateau, dose-state stable). Unmedicated is the secondary independent confirmation. Buildup-post-CPAP-buffer + afbouw report as low-power complements.
 
@@ -150,23 +160,72 @@ Three pre-registered thresholds, consistent with HA06b / HA10 / HA11:
 
 The **primary tier (N_std = 1.5) determines the headline verdict**; secondary and sensitivity check are reported alongside.
 
-### 4.9 Null sample
+### 4.9 Null sample — stationary bootstrap with E[L] = 7 (revised post-audit 2026-06-15)
 
-200 random non-overlapping reference dates per phase, same construction + seed (`20260605`) as HA06b / HA10 / HA11. Per-window null trigger flag computed exactly as in §4.7. Only days satisfying §4.3 validity (same phase, eligible exertion class) AND §4.5 baseline-availability are eligible as reference dates.
+**Revised from inherited HA11/HA06b/HA10 random-non-overlapping-reference-date construction** per the [`/research-review` audit 2026-06-15](../../../reviews/HA-C4b-2026-06-15.md) Layer-3 substantive finding [L3.1 / L3.4]. The original HA11-family null machinery predates the project-default block-permutation policy in [`methodology/permutation_null_block_length.md`](../../../methodology/permutation_null_block_length.md) and was silent on within-window serial dependence. HA-C4b is a new pre-reg post-MD and adopts the canonical default.
 
-Per-phase null sample size: 200 reference dates ÷ 4 phases = 50 per phase minimum. If a phase has fewer than 100 eligible non-crash heavy-exertion days, reduce its null sample size to `min(50, n_eligible / 2)` and report the reduction.
+#### 4.9.1 Project-default null machinery (locked)
 
-### 4.10 Sensitivity ladder report
+Per [`permutation_null_block_length.md` "Operational consequences" §2](../../../methodology/permutation_null_block_length.md):
 
-Report the §5 falsification criterion (a)(b)(c) for **all 9 stress × motion columns**, not just the primary. The headline verdict comes from `S60_Mlow`; the others are sensitivity arms. A finding that fires only at `S60_Mlow` but not at the surrounding cells is buffer-dependent and weaker; a finding that fires across most cells of the ladder is robust.
+- **Stationary-bootstrap permutation null** with **expected block length `E[L] = 7` days** as the project-wide default. Block lengths drawn from a geometric distribution with mean `E[L]`.
+- **Block-permute the crash / null episode labels** across the per-phase eligible pool (preserving within-block dependence of the predictor time-series).
+- **B = 10,000 resamples** for the headline; B = 1,000 for the sensitivity-ladder diagnostics.
+- **Random seed**: `20260615` (HA-C4b-specific, distinct from HA11's `20260605` because the resampling machinery is different — fresh seed to avoid spurious cross-test correlation in the null draws).
 
-Within-row monotonicity in S (S=50 ≥ S=60 ≥ S=75 frequency) and across-motion-classes monotonicity (strict ≤ low ≤ below_mod frequency) must hold; violations are bugs and require investigation before the headline verdict locks.
+For each (phase × N_std tier × window B/sensitivity column) cell evaluated:
+- Compute the observed crash-episode trigger frequency on the actual labels (per §4.7).
+- Repeat B times: draw a stationary-bootstrap relabeling of the per-day `is_crash` time series (block lengths ~ Geometric(1/7)); recompute the trigger frequency under the relabeled sample; record.
+- p-value = fraction of B null draws where the bootstrap trigger frequency ≥ observed trigger frequency.
+
+#### 4.9.2 Data-driven block-length confirmation (companion)
+
+Per the methodology MD's "data-driven confirmation step is the safeguard against this default being wrong for a specific metric": **report `E[L]*`** — the data-driven estimated block length for the primary column's autocorrelation structure across the consolidation-phase eligible-day pool — alongside the headline `E[L] = 7` result.
+
+- Compute `E[L]*` via the canonical empirical-ACF-based automatic block-length estimator (specific algorithm queued in [`_pending_literature_fetch.md`](../../../methodology/_pending_literature_fetch.md); first-principles fallback implementation if not yet landed).
+- **Report rule**: if `|E[L]* − 7| / 7 > 0.5` (i.e. `E[L]*` is outside `[3.5, 10.5]` days), **flag for review before locking the verdict** per the methodology MD. The flag is a hard halt on the headline; the verdict requires re-evaluation at `E[L]*` with the user's approval.
+
+#### 4.9.3 Why this matters
+
+The audit's L3.1 / L3.4 concern: under correlated lead-up windows, the random-non-overlapping-reference-date null underestimates the null trigger frequency, inflating apparent discrimination. The §5 (b) 15-percentage-point margin under the stationary-bootstrap null may compress materially. The block-permutation null preserves within-block autocorrelation in the resampled crash-vs-non-crash labels, restoring the null's calibration.
+
+This adoption simultaneously satisfies the [`citalopram_phase_stratification.md` §6 "Independent obligations"](../../../methodology/citalopram_phase_stratification.md#6-pre-registration-template-for-new-hypothesis-mds) binding that framework adopters engage autocorrelation handling — HA-C4b is a framework adopter via §4.4 and was previously silent on this obligation.
+
+#### 4.9.4 Per-phase eligibility for the null
+
+Only days satisfying §4.3 validity AND §4.5 baseline-availability are eligible as block-permutation inputs. Per-phase eligible pool sizes are reported at the §10.1 dry-run gate; the stationary bootstrap operates within the per-phase eligible pool (no cross-phase resampling).
+
+### 4.10 Sensitivity ladder report (revised post-audit 2026-06-15)
+
+**Revised from 9-column-as-independent-arms framing** per the [`/research-review` audit 2026-06-15](../../../reviews/HA-C4b-2026-06-15.md) Layer-4 finding [L4.3]. The 9-column ladder reduces to **6 unique columns in v1** because the M=below_mod definition is currently identical to M=low (per [`methodology/stress_low_motion_primitive.md` §3.2](../../../methodology/stress_low_motion_primitive.md) — `any_below_moderate` is a placeholder slot for future refinement and currently emits identical values to `low_or_below`). Listing 3 M=below_mod columns as independent sensitivity arms would violate [CONVENTIONS §3.3 "one column per definitional pair"](../../../CONVENTIONS.md#33-one-column-per-definitional-pair).
+
+The sensitivity ladder is therefore reported as **6 unique columns + 3 identical-by-construction duplicate columns**:
+
+| stress threshold | motion class | column name | unique or duplicate |
+|---:|---|---|---|
+| 50 | strict | `stress_low_motion_min_count_S50_Mstrict` | unique |
+| 50 | low | `stress_low_motion_min_count_S50_Mlow` | unique |
+| 50 | below_mod | `stress_low_motion_min_count_S50_Mbelow_mod` | **identical-by-construction to `_Mlow` in v1** |
+| 60 | strict | `stress_low_motion_min_count_S60_Mstrict` | unique |
+| **60** | **low** | **`stress_low_motion_min_count_S60_Mlow`** | **unique — HEADLINE CELL** |
+| 60 | below_mod | `stress_low_motion_min_count_S60_Mbelow_mod` | **identical-by-construction to `_Mlow` in v1** |
+| 75 | strict | `stress_low_motion_min_count_S75_Mstrict` | unique |
+| 75 | low | `stress_low_motion_min_count_S75_Mlow` | unique |
+| 75 | below_mod | `stress_low_motion_min_count_S75_Mbelow_mod` | **identical-by-construction to `_Mlow` in v1** |
+
+Per the §5.2 multi-comparison discipline, only the headline cell drives the SUPPORTED verdict; the other 5 unique columns are diagnostic sensitivity arms. The 3 identical-by-construction duplicate columns are emitted into the result CSV for completeness but **are not counted as independent sensitivity arms** (the result.md table caption explicitly states this).
+
+**Within-row monotonicity check (per-day count level)**: for each phase × era, the **per-day median qualifying-minute count** must satisfy S=50 ≥ S=60 ≥ S=75 at each motion class; the trigger-frequency (the §5.1 (a) numerator) inherits this monotonicity by construction (lower threshold → ≥ counts → ≥ frequency at the same N_std), but the per-day count is the more fundamental check. **Across-motion-classes monotonicity**: strict ≤ low ≤ below_mod (the M=below_mod row equals M=low by construction in v1).
+
+Violations of either monotonicity are bugs and require investigation before the headline verdict locks.
 
 ### 4.11 Secondary descriptive outcomes
 
 For each calendar day `d` in the test sample:
 
 1. **Same-day gevoelscore correlation**: Spearman(stress_low_motion_min_count_S60_Mlow, gevoelscore) per phase + pooled LC era. Median count per gevoelscore value. Report split by era (train vs validate) AND by Citalopram phase. **Descriptive only; no SUPPORTED bar.**
+
+   **Crash-drop sensitivity row** (added post-audit 2026-06-15 per [CONVENTIONS §3.4](../../../CONVENTIONS.md#34-crash-drop-sensitivity-for-correlations-and-regressions) audit hook): for each Spearman cell (phase × era), report ρ TWICE — once on the full eligible sample, once with `is_crash == True` rows dropped. Surface `|Δρ| > 0.10` as a finding (the correlation was driven materially by crash days, not by the broader distributional relationship). The §3.4 audit hook applies because `stress_low_motion_min_count_S60_Mlow` is a PEM-pacing variable and the §4.11.1 Spearman is a Layer-4 same-day correlation.
 
 2. **Construct-disambiguation against `stress_high_duration_min`** (PRIMARY sibling — added post-viz revision 2026-06-15). Per the [stress_low_motion_viz session findings](C:/Users/Gebruiker/Documents/gevoelscore-data/analyses/stress_low_motion_viz/viz-notes.md) Family D2a, Spearman ρ between the primary column and `stress_high_duration_min` = **0.79** — the closest sibling in the per_day_master.csv. The Family B4a time-series visualisation showed the two lines track closely on the twin axes; **most day-to-day variance is shared.** This raises the critical disambiguation question: **is the motion filter actually doing analytical work, or is the all-day stress-time count sufficient?** For each crash episode in the lead-up:
    - Flag (HA-C4b fires, `stress_high_duration_min` ≥ its own lagged-baseline-z threshold) → 2×2 contingency.
@@ -182,25 +241,40 @@ For each calendar day `d` in the test sample:
 
 ## 5. Pre-registered falsification criterion
 
-Identical three-criterion bar shape to H02b / HA01b / HA06b / H02d / HA10 / HA11, applied **per phase** with the headline verdict at the **consolidation phase** (largest n):
+### 5.0 Multi-comparison discipline — single-cell headline lock (added post-audit 2026-06-15)
 
-**(a) Frequency**: at least **60%** of consolidation-phase crash episodes have `max signed_z ≥ N_std` (one-sided primary) in their lead-up window.
+**Revised from implicit-discipline original** per the [`/research-review` audit 2026-06-15](../../../reviews/HA-C4b-2026-06-15.md) Layer-3 substantive finding [L3.3]. The original §5 phrased the headline as "consolidation phase × N_std primary tier" and reported the other 9-column × 3-tier × 4-phase cells "alongside", which left room for narrative-level upgrading.
 
-**(b) Discrimination**: the consolidation-phase crash-episode frequency from (a) is at least **15 percentage points higher** than the consolidation-phase null-sample frequency.
+**HA-C4b's headline locks on a SINGLE pre-specified cell**:
 
-**(c) Magnitude**: the median `max signed_z` across consolidation-phase crash episodes is at least **N_std / 2** (0.75 / 1.0 / 1.25 for N_std = 1.5 / 2.0 / 2.5 respectively).
+> Consolidation phase × `S60_Mlow` column × `N_std = 1.5` × primary 4-day lead-up × one-sided elevated direction.
 
-Any one of (a), (b), (c) failing on the consolidation phase at the primary tier (N_std = 1.5) in either train or validate → **headline refuted for the consolidation phase**.
+**Hard rule**: ALL OTHER cells in the family (3 stress thresholds × 3 motion classes × 3 N_std tiers × 4 phases × {primary 4d, secondary 5d} × {one-sided, bidirectional}) are **diagnostic / sensitivity arms ONLY**. They are reported in the result.md, but **none of them can promote to a SUPPORTED verdict on their own**. The headline verdict is the single-cell verdict, full stop.
 
-**Per-phase secondary verdicts**:
-- Unmedicated phase: same (a)(b)(c) bar; reported as independent confirmation if it agrees with consolidation, OR as concerning divergence if it does not.
-- Buildup-post-CPAP-buffer + afbouw: low power (n < 30); report (a)(b)(c) descriptively but no SUPPORTED bar at the primary tier.
+If the result.md narrative wants to invoke a sensitivity-arm verdict ("the unmedicated phase also fired"), it does so as a *diagnostic finding* that informs the headline's *robustness* or *generalisability* — not as a SUPPORTED claim in its own right. This is the project pattern for multi-arm sensitivity ladders: lock the headline cell, the rest are descriptive.
 
-**Inconclusive bars**:
-- If consolidation has fewer than 10 clean crash episodes per train or validate window after exclusions → **inconclusive on consolidation** at that window. Re-evaluation possible after additional crashes accumulate.
-- If unmedicated has fewer than 5 clean crash episodes → **inconclusive on unmedicated**; verdict carried by consolidation alone.
+### 5.1 Three-criterion bar (applied to the single locked headline cell)
 
-**Bidirectional sensitivity arm**: report `|z| ≥ N_std` per the same three-criterion bar. Do NOT redefine the headline verdict on this arm; report honestly as a secondary diagnostic.
+Identical three-criterion bar shape to H02b / HA01b / HA06b / H02d / HA10 / HA11, applied **to the single locked cell** (consolidation × S60_Mlow × N_std=1.5 × primary 4d × one-sided):
+
+**(a) Frequency**: at least **60%** of consolidation-phase crash episodes have `max signed_z ≥ 1.5` (one-sided) in their lead-up window.
+
+**(b) Discrimination**: the consolidation-phase crash-episode frequency from (a) is at least **15 percentage points higher** than the consolidation-phase **stationary-bootstrap-null frequency** (per §4.9 — block-permutation null at `E[L] = 7`, NOT the inherited random-reference-date null).
+
+**(c) Magnitude**: the median `max signed_z` across consolidation-phase crash episodes is at least **0.75** (N_std / 2 = 1.5 / 2).
+
+Any one of (a), (b), (c) failing at the locked headline cell in either train or validate → **headline refuted**.
+
+### 5.2 Diagnostic / sensitivity arms (no independent SUPPORTED bar)
+
+- **N_std = 2.0 and N_std = 2.5 tiers** applied to the same consolidation × S60_Mlow × primary 4d × one-sided cell: reported as **fragility checks**. A finding that fires at N_std = 1.5 but NOT at 2.0 is fragile-to-threshold; one that fires across all three tiers is robust. None of these promote independently.
+- **Other 8 stress × motion cells** at N_std = 1.5: reported as sensitivity-ladder diagnostics for **threshold-monotonicity** (§4.10) and to distinguish whether the motion filter is doing analytical work.
+- **Other 3 phases** (unmedicated, buildup-post-CPAP-buffer, afbouw): reported as descriptive companion verdicts. Unmedicated agreement with consolidation = **independent-confirmation** descriptive read. Unmedicated divergence = **concerning-divergence** descriptive read. Neither shifts the headline.
+- **Secondary 5d lead-up** + **bidirectional sensitivity arm**: reported as transparency arms. None promote to a SUPPORTED verdict on their own.
+
+### 5.3 Inconclusive bar
+
+- If consolidation has fewer than 10 clean crash episodes per train or validate window after exclusions → **inconclusive on the headline cell** at that window. Re-evaluation possible after additional crashes accumulate.
 
 ## 6. Exclusion rules
 
@@ -208,7 +282,7 @@ Any one of (a), (b), (c) failing on the consolidation phase at the primary tier 
 - Days not satisfying the §4.2 exertion-conditioning rule are excluded (NOT in test sample; the test is on the heavy-exertion-conditioned subset only — this is the C4 spec).
 - Days where the lagged-same-phase baseline σ ≤ 5 minutes are flagged *low-variability* and excluded.
 - Days where fewer than 40 of 60 prior same-phase valid days are available are excluded (insufficient baseline).
-- **Buildup phase days before 2024-04-30** (first 22 days of buildup phase) are excluded from the test sample (CPAP-end confound per [intervention_effects_descriptive §8.1](../../../methodology/intervention_effects_descriptive.md#81-effective-analyzable-scope-5-of-8-boundaries-usable)). Report buildup separately as "buildup post-CPAP-buffer".
+- **Buildup phase days strictly before 2024-04-30** (first 21 days of buildup phase: 2024-04-09 through 2024-04-29 inclusive) are excluded from the test sample (CPAP-end confound per [intervention_effects_descriptive §8.1](../../../methodology/intervention_effects_descriptive.md#81-effective-analyzable-scope-5-of-8-boundaries-usable)). Report buildup separately as "buildup post-CPAP-buffer".
 - **2024-04-09 to 2024-04-16** (the structurally-unanalyzable 2024-04 boundary cluster per same reference) are excluded from all phase tests.
 - **Days in the lead-up window of a confirmed crash episode** are excluded from the null sample (avoid contamination of the null distribution with crash-precursor minutes).
 
