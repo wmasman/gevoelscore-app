@@ -68,6 +68,7 @@ DAILY_MAX_SPIKE = DATA_PATH / "processed/garmin/daily_max_spike.csv"
 UDS_EXTRAS = DATA_PATH / "processed/garmin/uds_extras_daily.csv"
 SLEEP_EXTRAS = DATA_PATH / "processed/garmin/sleep_extras_daily.csv"
 INTRADAY_HR_STRESS = DATA_PATH / "processed/garmin/intraday_hr_stress_daily.csv"
+STRESS_LOW_MOTION = DATA_PATH / "processed/garmin/stress_low_motion_minutes.csv"
 LABELS_CRASH = DATA_PATH / "processed/crash_labels/labels_crash_v2.csv"
 V24_CLAUSES = DATA_PATH / "processed/notes/notes-categorized-v24-clauses.csv"
 PER_DAY_INTENSITY = DATA_PATH / "processed/manual_triage/per_day_intensity.csv"
@@ -342,6 +343,8 @@ def main():
     print(f"  sleep_extras: {len(sleep_extras)}")
     intraday_hr_stress = load_csv_by_date(INTRADAY_HR_STRESS)
     print(f"  intraday_hr_stress: {len(intraday_hr_stress)}")
+    stress_low_motion = load_csv_by_date(STRESS_LOW_MOTION)
+    print(f"  stress_low_motion: {len(stress_low_motion)}")
     crash = load_csv_by_date(LABELS_CRASH)
     print(f"  crash labels: {len(crash)}")
     intensity = load_csv_by_date(PER_DAY_INTENSITY)
@@ -394,6 +397,7 @@ def main():
             d, day_entries, uds, af, sleep, spike, crash, intensity,
             sub_dips, pwc_hours, v24_per_day, events_by_day, umbrella_by_day,
             dossier_by_day, uds_extras, sleep_extras, intraday_hr_stress,
+            stress_low_motion,
         )
         rows.append(row)
 
@@ -602,8 +606,10 @@ def main():
 def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
               sub_dips, pwc_hours, v24_per_day, events_by_day,
               umbrella_by_day, dossier_by_day, uds_extras=None,
-              sleep_extras=None, intraday_hr_stress=None):
+              sleep_extras=None, intraday_hr_stress=None,
+              stress_low_motion=None):
     intraday_hr_stress = intraday_hr_stress or {}
+    stress_low_motion = stress_low_motion or {}
     uds_extras = uds_extras or {}
     sleep_extras = sleep_extras or {}
     row = {"date": d.isoformat()}
@@ -885,6 +891,24 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["stress_post_peak_time_to_rest_min"] = ihs.get("stress_post_peak_time_to_rest_min") or ""
     row["stress_high_duration_min"] = ihs.get("stress_high_duration_min") or ""
     row["stress_recovery_pct_within_2h"] = ihs.get("stress_recovery_pct_within_2h") or ""
+
+    # --- C4b primitive: stress-with-low-motion minute counts (Session E) ---
+    # Per methodology/stress_low_motion_primitive.md.
+    # Per-day count of minutes where stress >= S AND motion class qualifies as
+    # low (Garmin intensity-based classification). 9 stress*motion columns
+    # (3 stress thresholds * 3 motion classes) + 2 respiration companion
+    # columns. Source: pipeline/01_extract/stress_low_motion_extract.py from
+    # monitoring_b FIT files. Day-validity gate: >= 600 in-range stress samples
+    # (matches HA11). The valid flag itself is NOT propagated (the column
+    # being 0 vs the column being NaN distinguishes valid-zero from
+    # missing-data via the per-row 'sample_count' if needed).
+    slm = stress_low_motion.get(d, {})
+    for s in (50, 60, 75):
+        for m in ("strict", "low", "below_mod"):
+            col = f"stress_low_motion_min_count_S{s}_M{m}"
+            row[col] = slm.get(col) or ""
+    row["n_minutes_resp_above_18"] = slm.get("n_minutes_resp_above_18") or ""
+    row["n_minutes_resp_in_rest_band_10_18"] = slm.get("n_minutes_resp_in_rest_band_10_18") or ""
 
     # --- v24 rollup (presence-conditioned on has_note) ---
     if row["has_note"] and d in v24_per_day:

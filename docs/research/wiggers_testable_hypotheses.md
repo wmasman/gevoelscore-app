@@ -282,7 +282,7 @@ for derivation and limits.
 | C2 | `all_day_stress_avg` (TOTAL aggregator) | `bb_overnight_gain` (paired-night) AND `gevoelscore` next-day | two-stage correlation | ✅ |
 | C3 | `all_day_stress_avg` (binned at 0-20, 20-30, 30-40, 40-60, 60+) | `gevoelscore` | binned mean comparison or natural-spline regression; **NOT linear correlation** (the hypothesis itself rejects linearity) | ✅ |
 | C4 | **primary**: `stress_post_peak_time_to_rest_min` (NaN-on-failure = C4-positive), `stress_post_peak_drop_avg`. **secondary (walls)**: `stress_high_duration_min` on T (Wiggers: "complete walls of orange"). **secondary (t+1 reactivity)**: `awake_stress_avg` on T+1 (Wiggers: "the day after you've done too much you can see stress spikes much faster, despite resting"). All conditioned on `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on T | within-day decay (primary) + within-day walls + next-day reactivity | stratified comparison on each metric: heavy days vs non-heavy days | ✅ (operationalised Wave 4; expanded 2026-06-12 to add walls + t+1 per source — see verification log) |
-| C4b | per-day count of minutes where `stress >= 60` AND `steps_per_minute <= 5`, on T conditional on `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on T or T-1 | `is_crash` at t+1 (primary); dip secondary | frequency comparison: heavy-exertion crash vs heavy-exertion non-crash days; Wilson CI + Cohen's d; sensitivity ladder on {stress 50/60/75} × {motion 0/5/10} | 🆕 queued 2026-06-14; primitive extraction needed (monitoring_b stress-with-motion-bin); see verification log for origin |
+| C4b | **primary**: `stress_low_motion_min_count_S60_Mlow` (per-day count of minutes where `stress >= 60` AND Garmin intensity-class ≤ 1, OR no intensity record covers the minute); conditioned on `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on T or T-1. Per-minute step counts are NOT in monitoring_b — see [`methodology/stress_low_motion_primitive.md` §3.1](methodology/stress_low_motion_primitive.md). Spec text revised 2026-06-15 (was "`steps_per_minute <= 5`"). | `is_crash` at t+1 (primary); dip secondary | frequency comparison: heavy-exertion crash vs heavy-exertion non-crash days; Wilson CI + Cohen's d; sensitivity ladder on {stress 50/60/75} × {strict/low/below_mod motion class} = 9 columns; respiration companion columns (`n_minutes_resp_above_18`, `n_minutes_resp_in_rest_band_10_18`) as orthogonal covariates | 🆕 primitive extracted 2026-06-15 (Session E); methodology + extraction script live; downstream test runnable |
 
 ### D. Body Battery
 
@@ -532,11 +532,12 @@ Relationship to C4:
 
 Operational anchor:
 
-- Predictor: per-day count of minutes with `stress >= 60` AND `steps_per_minute <= 5`, on T conditional on `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on T or T-1.
+- Predictor: per-day count of minutes with `stress >= 60` AND `intensity <= 1` (Garmin's sedentary/low classification) OR no intensity record. Primary column `stress_low_motion_min_count_S60_Mlow`, on T conditional on `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on T or T-1.
 - Outcome: `is_crash` at t+1 (primary); dip secondary.
 - Sample: LC era (`date >= 2022-04-04`), heavy-exertion-conditioned subset.
-- Sensitivity ladder: {stress threshold 50, 60, 75} × {motion threshold 0, 5, 10} steps/min.
-- Sources: monitoring_b FIT files already parsed for HA11. New primitive extraction (per-minute stress-with-motion concurrence count) needed; pipeline pattern from HA11 reusable.
+- Sensitivity ladder: {stress threshold 50, 60, 75} × {strict_sedentary, low_or_below, any_below_moderate} = 9 columns. Plus respiration companion columns (`n_minutes_resp_above_18`, `n_minutes_resp_in_rest_band_10_18`) as orthogonal covariates.
+- Sources: monitoring_b FIT files already parsed for HA11. **Primitive extracted 2026-06-15 (Session E)** by [`pipeline/01_extract/stress_low_motion_extract.py`](pipeline/01_extract/stress_low_motion_extract.py); methodology + four-input reasoning + FIT-data investigation (why per-minute steps were NOT used) in [`methodology/stress_low_motion_primitive.md`](methodology/stress_low_motion_primitive.md). Construct-validity check: Spearman ρ vs HA11 u_dip_count = 0.556 (moderate; information-additive, not redundant).
+- **Dose-adjustment caveat for cross-phase tests**: per [`methodology/citalopram_phase_stratification.md §5.B`](methodology/citalopram_phase_stratification.md#5b-dose-adjusted-predictor-recommended-for-cross-phase-tests) C4b's raw stress threshold corresponds to different autonomic states across Citalopram-traject phases (β_dose for `all_day_stress_avg` = +0.57/mg p=0.0003 confirmed). Cross-phase aggregation requires §5.B treatment on the predictor side; the primitive itself is dose-naive by design.
 
 Caveats (anticipated, to be locked at pre-reg time):
 

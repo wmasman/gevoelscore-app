@@ -457,6 +457,55 @@ colour coding).
 | `stress_high_duration_min` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `stress_high_duration_min` | int | minutes | 2021-08-16 → today (1737 / 1755 = 99.0%) | NaN on day with no monitoring_b stress samples | Distinct waking minutes with stress > 75. **Re-uses the H02b daily-max-spike threshold** but extends it from "longest single spike" (§8 `max_spike_minutes`) to "total time in the high zone". |
 | `stress_recovery_pct_within_2h` | daily_computed | `processed/garmin/intraday_hr_stress_daily.csv` | `stress_recovery_pct_within_2h` | float64 | percent (negative if stress rose) | 2021-08-16 → today (1526 / 1755 = 86.9%) | NaN if peak occurred too late in the day to have a sample in the [peak + 2h − 15min, peak + 2h + 15min] window | `(peak − stress_at_peak+2h) / peak × 100`. Direct rate-of-recovery metric. Pair with `time_to_rest_min` to distinguish slow-but-complete recovery from fast-then-stall. |
 
+### Section 8C — stress-with-low-motion minute counts (C4b primitive; 11 columns)
+
+**Section preamble**: 9 per-day integer counts of minutes where stress
+is elevated AND motion is classified as "low" by Garmin's per-bin
+intensity classification, plus 2 respiration-rate companion columns.
+Source: [`pipeline/01_extract/stress_low_motion_extract.py`](pipeline/01_extract/stress_low_motion_extract.py)
+which parses monitoring_b FIT files. Full methodology + four-input
+reasoning in [`methodology/stress_low_motion_primitive.md`](methodology/stress_low_motion_primitive.md);
+implementation notes including the §3.1 FIT-data investigation
+(per-minute step counts are NOT in monitoring_b — the `intensity`
+classification is used instead) live there. Day-validity gate:
+≥ 600 in-range stress samples (matches HA11 / H02d).
+
+Construct-validity check (2026-06-15 run): Spearman ρ vs HA11
+`u_dip_count` = 0.556 (moderate; same family, information-additive,
+not redundant). Spearman ρ between `n_minutes_resp_above_18` and
+u_dip_count = 0.044 (orthogonal — respiration adds a genuinely
+independent signal).
+
+| name | class | source | source column | dtype | units | coverage | missingness | notes |
+|---|---|---|---|---|---|---|---|---|
+| `stress_low_motion_min_count_S50_Mstrict` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | 2021-08-16 → today (1739 / 1755 = 99.1%; ≥ 600-sample gate: 1722 valid) | NaN on days without monitoring_b file; 0 (not NaN) on days below the 600-sample gate | Count of minutes with `stress ≥ 50` AND `intensity == 0` OR no-record. **Sensitivity arm** for the S60_Mlow primary. |
+| `stress_low_motion_min_count_S50_Mlow` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Count with `stress ≥ 50` AND `intensity ≤ 1` OR no-record. Sensitivity arm. |
+| `stress_low_motion_min_count_S50_Mbelow_mod` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Equivalent to `_Mlow` in v1 (placeholder for future refinement: a separate intensity-class boundary may make this `intensity ≤ 2`). Sensitivity arm. |
+| `stress_low_motion_min_count_S60_Mstrict` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Sensitivity arm of the primary. |
+| **`stress_low_motion_min_count_S60_Mlow`** | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | **PRIMARY C4b column.** Count with `stress ≥ 60` (Garmin's "elevated" band) AND `intensity ≤ 1` OR no-record. Distribution on valid days: median 56, mean 67.5, 90th pct 133, max 364. Loaded for the Wiggers C4b hypothesis test. |
+| `stress_low_motion_min_count_S60_Mbelow_mod` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Equivalent to primary in v1; placeholder. |
+| `stress_low_motion_min_count_S75_Mstrict` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Conservative arm (Garmin's "high" band). |
+| `stress_low_motion_min_count_S75_Mlow` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Conservative arm. |
+| `stress_low_motion_min_count_S75_Mbelow_mod` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Equivalent to S75_Mlow in v1; placeholder. |
+| `n_minutes_resp_above_18` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | 2021-08-16 → today (1739 / 1755 = 99.1%) | NaN on days without monitoring_b file | Per-day count of minutes where respiration rate > 18 / min (elevated above typical adult-rest range 12-18). Captures motion AND sympathetic arousal. **Orthogonal to u_dip count** (ρ = 0.044) — adds genuinely independent signal for downstream tests. |
+| `n_minutes_resp_in_rest_band_10_18` | daily_computed | `processed/garmin/stress_low_motion_minutes.csv` | same | int | minutes | same | same | Per-day count of minutes where 10 ≤ respiration ≤ 18 (normal-rest band). Distribution: median 1217 of ~1440 minutes/day. Use as a "genuinely-restful minutes" baseline; ratio against waking-minute count distinguishes high-quality-rest days from low. |
+
+**Dose-adjustment caveat for consumers** ([`methodology/stress_low_motion_primitive.md` §1.3](methodology/stress_low_motion_primitive.md)):
+the raw `stress >= S` thresholds correspond to different underlying
+autonomic states across the Citalopram-traject phases (per
+[`citalopram_dose_response §5.6`](methodology/citalopram_dose_response_stress_mean_sleep.md#56-v3-amendment--multi-channel-confirmation-added-2026-06-14):
+all_day_stress_avg has β = +0.57/mg confirmed dose-response). Any
+cross-phase test on these counts MUST apply [`citalopram_phase_stratification §5.B`](methodology/citalopram_phase_stratification.md#5b-dose-adjusted-predictor-recommended-for-cross-phase-tests)
+dose-adjustment on the predictor side. The primitive itself is
+dose-naive by design (reusable across multiple tests).
+
+**v2 future-work** ([`methodology/stress_low_motion_primitive.md` §3.3a](methodology/stress_low_motion_primitive.md)):
+sleep-window membership and recorded-activity-session membership are
+known additional motion indicators queued for a v2 of this primitive;
+not in v1 to avoid pipeline-ordering complications. Until then,
+downstream tests should report sleep/awake-conditioned analyses
+separately using existing `sleep_start_gmt` / `sleep_end_gmt` columns.
+
 ---
 
 ## Section 9 — note categorization rollup (presence-conditioned)
