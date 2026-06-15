@@ -63,17 +63,17 @@ A short note has been queued for [`methodology/permutation_null_block_length.md`
 
 ## 6. Status
 
-**Verdict status**: NOT-SUPPORTED (per [`result.md`](result.md) Sec 5.1; reviewed and cleared at this document).
+**Verdict status**: **NOT-SUPPORTED** (per [`result.md`](result.md) Sec 5.1; reviewed and cleared at this document).
 
-**Lock status**: Awaiting explicit user acceptance per [`methodology/hypothesis_lock_process.md` §3.8](../../../methodology/hypothesis_lock_process.md#38-lock-step-stage-5-of-the-arc). The lock-commit message must confirm:
+**Lock status**: **LOCKED 2026-06-15 by user acceptance.** All four [`hypothesis_lock_process.md` §3.8](../../../methodology/hypothesis_lock_process.md#38-lock-step-stage-5-of-the-arc) gates resolved at the verdict-lock:
 
-1. Power-calc dispatch present in pre-reg §8 (already in locked hypothesis.md §8).
-2. Single-cell headline lock per Sec 5.0 (already in locked hypothesis.md §5.0).
-3. Register-row pointer to be added at lock in [`personal_hypotheses.md`](../../../personal_hypotheses.md) P7 entry (queued; this is an open follow-up from [`hypothesis_lock_process.md` §8.3](../../../methodology/hypothesis_lock_process.md#83-open-follow-ups-post-v11)).
-4. Re-audit completed clean OR compression decision documented per §3.6 (the original lock used option-A compression; this verdict lock inherits the same compression with the §6 follow-up note).
+1. **Power-calc dispatch in pre-reg §8**: NOT present in the locked hypothesis.md (the locked pre-reg pre-dates the v1.1 power-calc-dispatch requirement; see lock-process MD [§8.3 "v1.1 only binds prospectively"](../../../methodology/hypothesis_lock_process.md#83-open-follow-ups-post-v11)). Existing pre-v1.1 lock commit stands; gate noted-but-not-blocking per §8.3.
+2. **Single-cell headline lock per Sec 5.0**: present in locked hypothesis.md §5.0 (pooled-LC x W=14 x primary outcome `is_crash at d`).
+3. **Register-row pointer**: in place at [`personal_hypotheses.md`](../../../personal_hypotheses.md) P7 — top-level supersession blockquote + Sample-cell footnote pointing to HA-P7 §4.2 (landed per lock-process MD [§8.3 [CLOSED 2026-06-15-b]](../../../methodology/hypothesis_lock_process.md#83-open-follow-ups-post-v11)).
+4. **Re-audit clean OR compression decision documented**: original pre-reg lock used option-A compression per the §3.6 acceptability criteria (mechanical r2 fixes — citation additions, single-cell-lock, column-list edits, no architectural change). This verdict-lock follows the rolling-sum verdict-review closure template per lock-process MD [§4.6](../../../methodology/hypothesis_lock_process.md#46-result-time--rolling-sum-predictor-structural-autocorrelation-factor-of-2-flag), canonicalised in v1.2 partly from this very review.
 
-When the user signals lock, the lock commit applies the register-row pointer + the verdict-lock status update.
+**Net result**: HA-P7 verdict is locked at NOT-SUPPORTED. [`result.md`](result.md) preserved verbatim as the canonical run output. This document is the audit trail of the E[L]* factor-of-2 flag closure. Further modifications create HA-P7-v2 with this v1 archived.
 
 ---
 
-*Review drafted 2026-06-15. Awaiting lock signal.*
+*Review drafted 2026-06-15. Verdict locked 2026-06-15 by user acceptance.*
