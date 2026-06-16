@@ -1,12 +1,18 @@
 # HA-C4b — folder status
 
-**Pre-registration (current)**: [`hypothesis.md`](hypothesis.md) — v2 **LOCKED 2026-06-16** commit `2417043` (relock to unmedicated pooled, r2 closures, fresh-session audit PASS-with-caveats). Test session executed 2026-06-16 in a fresh agent context per [`hypothesis_lock_process.md` §3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock); the lock-session was contaminated with v1 per-episode z-scores so the run handed off to a clean context.
+**Pre-registration (current)**: [`hypothesis.md`](hypothesis.md) — v3 **DRAFTED 2026-06-16**, awaiting fresh-session `/research-review` audit per [`hypothesis_lock_process.md` §3.4](../../../methodology/hypothesis_lock_process.md#34-audit-step-step-2-of-the-arc). v3 is a §3.3 same-session operationalisation refinement of v2 (drops §4.3 1b.ii wake-window quartile-coverage gate; symmetrises §10.2 dry-run / full-run gating; adds §8 pacing-behaviour confounder caveat; augments §9 outcome interpretation with the confounder reads). **Headline cell UNCHANGED** from v2 (`unmedicated × pooled × S60_Mlow × N_std=1.5 × primary 4d × one-sided elevated`).
 
-**Detection script (current)**: [`test.py`](test.py) — implements v2.
+**Test handoff for the v3 run-session**: [`session-c4b-v3-test-handoff-2026-06-16.md`](../../../../../../.claude/plans/session-c4b-v3-test-handoff-2026-06-16.md) — paste-into-fresh-session brief for implementing the v3 `test.py` + running the §10.4 protocol + emitting v3 `result.md`.
 
-**Dry-run report (current)**: [`dry-run-report.md`](dry-run-report.md) — v2 dry-run output / sanity-gate evaluation.
+## v2 archive
 
-**Result (current)**: [`result.md`](result.md) + [`result-data.json`](result-data.json) — v2 verdict **INCONCLUSIVE** (2026-06-16). v2 dry-run sanity gates passed at n = 10 (1b.i only); the full run applied §4.3 1b.ii (wake-window quartile-coverage) and dropped one train episode (`2023-02-04`, the highest-z episode in the train arm) → pooled n = 9 < §5.3 bar (n ≥ 10). Per v2 §9 INCONCLUSIVE branch: no SUPPORTED claim; descriptive companions reported; v3 path is a user decision (see [`result.md`](result.md) "Critical methodological finding" block).
+**Pre-registration (archived)**: [`hypothesis-v2-archived.md`](hypothesis-v2-archived.md) — locked 2026-06-16 commit `2417043` (relock to unmedicated pooled, r2 closures, fresh-session audit PASS-with-caveats). Test session executed 2026-06-16 in a fresh agent context per [`hypothesis_lock_process.md` §3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock); the v2 lock-session was contaminated with v1 per-episode z-scores so the v2 run handed off to a clean context.
+
+**Detection script (archived as v2 artefact)**: [`test.py`](test.py) — implements v2. Will be renamed `test-v2-archived.py` at v3 lock; the v3 test-session writes a new `test.py` per the v3 spec.
+
+**Dry-run report (v2 artefact)**: [`dry-run-report.md`](dry-run-report.md) — v2 dry-run output. Will be renamed `dry-run-report-v2-archived.md` at v3 lock.
+
+**Result (v2)**: [`result.md`](result.md) + [`result-data.json`](result-data.json) — v2 verdict **INCONCLUSIVE** (2026-06-16, commit `83a64b2`). v2 dry-run sanity gates passed at n = 10 (1b.i only); the full run applied §4.3 1b.ii (wake-window quartile-coverage) and dropped one train episode (`2023-02-04`, the highest-z episode in the train arm) → pooled n = 9 < §5.3 bar (n ≥ 10). Per v2 §9 INCONCLUSIVE branch: no SUPPORTED claim; descriptive companions reported. The v2 result.md "Critical methodological finding" block surfaced the §10.2 dry-run / full-run gate asymmetry as the v3 trigger.
 
 ## v1 archive
 
