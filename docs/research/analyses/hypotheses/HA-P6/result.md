@@ -213,4 +213,60 @@ The §4.8.4 secondary Spearman CIs use the per-channel day-level E[L] from §4.8
 
 ---
 
-*Result emitted by `script.py` on the v3 LOCKED pre-registration. Raw result data in `result-data.json`; full multi-arm per-day-per-cell trajectory data in `result.csv`; per-channel × phase trajectory PNGs in `plots/`. Any post-result modification of the spec creates HA-P6-v4 with this v3 archived.*
+## Reader's notes (reviewer-mode-with-authorization, 2026-06-17)
+
+*Interpretive overlay written 2026-06-17 by Claude (Opus 4.7 1M) in reviewer-mode-with-authorization at user request after a live review of the script-emitted result above. NOT a post-hoc spec modification. NOT a pre-registered finding. Names four readings that the mechanical output above states numerically but does not interpret. Per CONVENTIONS §1.2 these are reading-discipline notes on top of the locked v3 result, not new analyses.*
+
+### Note 1 -- gevoelscore is technically `slow-grind-incomplete` but actually relapses-and-recovers
+
+The pooled-LC × Arm-B × no-detrend × episode-end × primary cell classifies gevoelscore as `slow-grind-incomplete`. The §4.8.3 first-match-wins algorithm reaches that label correctly: |z(t+5)|=0.65 < |z(t+1)|=1.01 (net progress toward baseline) AND |z(t+5)|≥0.5 (incomplete; >0.5 SD off at end of window) AND no match on categories 1-4.
+
+But the per-day median z-trajectory is **not a slow grind**:
+
+| day | median z | 95% CI | CI excludes 0? |
+|---|---:|---|---|
+| t+1 | -1.009 | [-1.187, -0.319] | **yes** |
+| t+2 | -0.306 | [-1.150, 0.651] | no |
+| t+3 | -1.046 | [-1.443, -0.112] | **yes** |
+| t+4 | -0.156 | [-1.009, 0.795] | no |
+| t+5 | +0.651 | [-0.319, 0.795] | no |
+
+The actual shape is **dip → near-baseline → dip → near-baseline → above-baseline**. The two below-baseline dips at t+1 and t+3 are statistically distinguishable from the 90-day baseline (CIs exclude 0). The formal episode-end is not where felt-state is back to normal; it's the start of a ~3-day fragile window where felt-state drops significantly below baseline twice before stabilising.
+
+The v3 spec §7 prior anticipated this exact shape: *"by construction of episode-end definition, gevoelscore returns to above-threshold ON the episode-end day. Trajectory on [t+1, t+5] is the post-recovery gevoelscore — should remain near or above baseline. **Any dip indicates a 'stair-step' recovery pattern (partial recovery + relapse)**."* The empirical trajectory matches the prior; the §4.8.3 classifier just doesn't find the right label because the dips at t+1 and t+3 are full sign-reversals of the first-differences, not the sign-consistent-with-one-flat-day pattern that §4.8.3 cat-4 stair-step requires.
+
+**Reading discipline**: read gevoelscore as a **relapse-and-recover** trajectory, NOT a slow grind. The `slow-grind-incomplete` label in the headline table above is the closest algorithmic match but is lossy on the dip-pattern character that the spec's §7 prior specifically pre-named.
+
+### Note 2 -- §4.8.4 completeness ↔ next-interval on `all_day_stress_avg` is the OPPOSITE direction from naive recovery debt
+
+The §9 bullet 8 spec predicate reads: *"Secondary correlational sub-hypothesis (§4.8.4) finds OR on recovery-completeness ↔ next-crash-interval → recovery debt is empirically supported."* The bullet was drafted with an implicit POSITIVE direction in mind: high completeness → long next-interval (recovering well buys you a longer gap).
+
+The observed ρ on `all_day_stress_avg` is **-0.338 [-0.493, -0.168]** (n=18). Negative. **More complete daytime-stress recovery is associated with SHORTER gap to next crash.**
+
+This is the inverse of naive recovery debt. The §9 bullet 8 propagation should be read accordingly: signal exists (CI excludes 0), but in the opposite direction; **the §9 bullet 8 propagation should NOT be read as supporting the recovery-debt mechanism for this channel.** Three candidate readings of the inverse-direction signal:
+
+1. **Exuberance / push-through**: when daytime-stress normalises quickly, the participant probably feels okay enough to resume activity sooner; resuming activity sooner brings the next crash sooner. Matches the lived-experience PEM pattern documented in [lived_experience_garmin_pacing_2026-06-14.md](../../../lived_experience_garmin_pacing_2026-06-14.md).
+2. **Tight feedback loop**: fast normalisation reflects autonomic elasticity that also enables fast re-loading; the system returns to baseline but is more responsive to incoming load.
+3. **Measurement artefact**: if the next crash starts soon after t+5, the run-up may overlap the [t+1, t+5] window in a way that distorts the completeness measure (completeness compares channel value at t0 vs t+5; if t+5 sits in the next crash's pre-run-up, the t+5 reading can pass through baseline en route up).
+
+The data alone cannot pick between these. The honest report: signal real, direction inverse-of-recovery-debt, mechanism ambiguous.
+
+### Note 3 -- the §4.8.4 rate ↔ duration findings ARE within-episode recovery-debt-shaped
+
+Two channels have CI-excludes-0 on rate ↔ duration:
+- `all_day_stress_avg`: ρ = +0.285 [+0.021, +0.585], n=22
+- `stress_low_motion_min_count_S60_Mlow`: ρ = +0.389 [+0.013, +0.709], n=22
+
+Rate is the OLS slope on the z-trajectory across [t+1, t+5]. Negative slope = recovering toward baseline; near-zero or positive slope = staying elevated or moving further away. Positive correlation with duration means: **longer crashes go with flatter or rising post-crash stress trajectories** — bigger crashes leave bigger autonomic disturbances that don't resolve in the 5-day window. This IS recovery-debt-shaped, but it's a **within-episode-tail** recovery debt (the longer the crash, the slower the post-episode autonomic decay), distinct from the **across-episode** recovery debt that Note 2's completeness↔next-interval bullet was drafted to test.
+
+Both stress-family channels show the same pattern, `stress_low_motion_min_count_S60_Mlow` slightly stronger (+0.389 vs +0.285).
+
+### Note 4 -- corrected summary of §4.8.4 recovery-debt reads
+
+- **Within-episode-tail recovery debt: empirically supported** for both stress-family channels via Note 3's rate↔duration findings.
+- **Across-episode recovery debt: NOT supported** for `all_day_stress_avg` via Note 2's completeness↔next-interval finding; the signal exists but in the inverse direction (mechanism per Note 2's three candidate readings).
+- All three §4.8.4 CI-excludes-0 readings hold under the v3 spec's deliberately wide CIs (E[L]=21 for `all_day_stress_avg` cap-binding per closure #3; day-level-E[L]-on-per-episode-summary over-conservatism per closure #7). Signals strong enough to survive the spec's honest pessimism on the bootstrap.
+
+---
+
+*Result emitted by `script.py` on the v3 LOCKED pre-registration. Reader's notes above are interpretive overlay per CONVENTIONS §1.2, added 2026-06-17 in a separate post-run pass after user-driven review of the script output. Raw result data in `result-data.json`; full multi-arm per-day-per-cell trajectory data in `result.csv`; per-channel × phase trajectory PNGs in `plots/`. Any post-result modification of the spec creates HA-P6-v4 with this v3 archived.*
