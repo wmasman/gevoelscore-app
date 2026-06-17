@@ -1,0 +1,208 @@
+# Research stocktake — cross-cutting view
+
+*Living cross-cutting index of the Garmin × gevoelscore × notes research. Snapshot dated **2026-06-17**, revived from [`_archive/STOCKTAKE.md`](_archive/STOCKTAKE.md) (last snapshot 2026-06-06, archived 2026-06-13 in the "methodology wave" commit `32d9231` because per-card + per-MD outputs replaced it; revived because the cross-cutting view is now needed again — see §3 structural gap).*
+
+**This file is NOT a content store.** Canonical content lives in methodology MDs, hypothesis folders, per-card outputs. This file is the **map + status + synthesis** layer. Update protocol in §8.
+
+---
+
+## 1. The corpus
+
+| dimension | value | source |
+|---|---|---|
+| Date range | 2021-08-16 → 2026-06-04 (98.8% Garmin coverage) | `per_day_master.csv` |
+| Row count | 1755 rows (one per calendar day) | per_day_master |
+| Column count | 88 (grouped by source: identity, subjective, manual triage, Garmin daily/HR/exertion/sleep-stress/spikes, notes categorisation, timeline events, PwC log + dossier, coverage flags) | [`DATA_DICTIONARY.md`](DATA_DICTIONARY.md) |
+| Day_entries | 1372 with score (2022-09-03 → 2026-06-04, 100% on 1-6 scale) | Directus |
+| Notes | 686 day_entries have written notes (50% coverage; uneven by year, peak 71% in 2024) | Directus |
+| Crashes (`crash_v2` tier-1) | **29 episodes**, 101 crash-days | [`crash_v2-definition/`](analyses/hypotheses/crash_v2-definition/) |
+| Dips (`crash_v2` tier-2) | **79 isolated single-day dips**; dip:crash ratio 1.9× train → 3.5× validate | `labels_crash_v2.csv` |
+| Stratum 4 (LC + gevoelscore + crash labels) | 2022-09-03 → as-of-date; **primary analytic surface** | [`methodology/lc_era_temporal_segmentation.md`](methodology/lc_era_temporal_segmentation.md) |
+| Citalopram-CONFIRMED-modulated channels | 3: `stress_mean_sleep`, `all_day_stress_avg`, `bb_lowest` (v3 2026-06-14) | [`methodology/citalopram_dose_response_stress_mean_sleep.md`](methodology/citalopram_dose_response_stress_mean_sleep.md) §5.6 |
+
+---
+
+## 2. Hypothesis pipeline status
+
+### 2a. Register-only (operationalisation pending)
+
+**Personal register** ([`personal_hypotheses.md`](personal_hypotheses.md)) — P1-P7. Status as of 2026-06-16:
+
+| ID | claim | status |
+|---|---|---|
+| P1 | sleep-stress elevated on crashes | descriptively confirmed (d=+0.90 episode-level); no formal HA pre-reg by Personal-register discipline |
+| P2 | exertion-axis signals in 4d pre-crash window | weakly supported via HA01b/HA01c; awaits Q10 single-pool recompute |
+| P3 | within-day RHR recovery | **routed → Wiggers A4** (2026-06-14) |
+| P4a, P4b | end-of-day BB floor / late-afternoon drain | **blocked** on per-minute BB primitive (H04b path C) |
+| P5a | post-exertion rest-stress with motion filter | **routed → Wiggers C4b** (HA-C4b v3 NOT-SUPPORTED 2026-06-17, see §2d) |
+| P5b | prevailing rest-stress with evening amplification | **blocked** on stress-with-motion-by-time-of-day primitive |
+| P6 | post-crash recovery shape | **HA-P6 LOCKED, awaits run** (§2c) |
+| P7 | recent-crash-density predicts crash | **HA-P7 NOT-SUPPORTED** (§2d) |
+
+**Wiggers register** ([`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md)) — A-F sections per Wiggers PDF.
+
+- **Tier 1**: **C3** (non-linear stress → fatigue) — no HA-folder yet, drafting pending. **C4** (3-channel stress decay triad) — **HA-C4 v1 drafted + r2 LOCKED 2026-06-17** (`da79387`); **dry-run halted 2026-06-17** (`19d33e4`) on Ch3 validate heavy n=25 < 30 sanity bar; v2 reframe in flight per [`session-c4-v2-reframe-handoff-2026-06-17.md`](file:///C:/Users/Gebruiker/.claude/plans/session-c4-v2-reframe-handoff-2026-06-17.md). Source-verified, columns ready.
+- **Tier 2** (HA pre-reg pending, with stop-rules): **A1**, **A4**, **B1**, **H5**.
+- **Tier 3** (descriptive prereq before pre-reg): **G3** (parked Q18), **H1** (HRV blocked on FR245), **H4** (needs reframing post HA10 ≡ −HA07c collapse).
+- **Out-of-priority pool**: A2, A3, B2-B5, C1, C2, D1-D5, E1-E3, F1, F2, F4, G1, G4, H2, H3.
+
+### 2b. Drafted but not yet locked
+
+**None.** Every HA-folder is either LOCKED or superseded by a locked successor.
+
+### 2c. Locked, halted at dry-run (v2 redraft required)
+
+- **[HA-C4](analyses/hypotheses/HA-C4/hypothesis.md)** — v1 drafted (`b76b1e0`) + r2 LOCKED 2026-06-17 (`da79387`); dry-run HALTED 2026-06-17 (`19d33e4`) on Ch3 validate heavy n=25 < 30 sanity bar. **v2 reframe in flight** in parallel agent per [`session-c4-v2-reframe-handoff-2026-06-17.md`](file:///C:/Users/Gebruiker/.claude/plans/session-c4-v2-reframe-handoff-2026-06-17.md). 3-channel Wiggers C4 confirmatory triad (Tier 1).
+
+### 2d. Tested with result
+
+**Overall SUPPORTED under canonical both-eras bar (only one):**
+- **[HA07d](analyses/hypotheses/HA07d-sleep-stress-variability/result.md)** — variability of sleep-stress, train +19.6 pp / validate +21.7 pp, RESCUE confirmed in v2 diagnostic. *First project test to clear both eras at primary.*
+
+**Train-only SUPPORTED → overall NULL, RESCUED via diagnostic-v2 as load-bearing-train-only (4):** HA06b (RHR z-score), HA07c (sleep-stress mean delta), HA08c (sleep-stress slope), HA11 (stress u-dip).
+
+**Validate-only SUPPORTED with directionality reversal (1):**
+- **HA10** (BB overnight recharge) — train −20.5 pp / validate **+16.2 pp**. v2 diagnostic restored validate-era SUPPORTED.
+
+**Diagnostic ambiguity → load-bearing WITHHELD:** HA01b (effective-exertion composite), HA01c (effective-exertion shock).
+
+**NOT-SUPPORTED:**
+- **[HA-P7](analyses/hypotheses/HA-P7/result.md)** — recent-crash-density. Pooled LC × W=14: OR 1.130 [0.875, 1.266], p=0.17. All 3 §5.1 criteria fail. **§4.5.4 covariate sensitivity diagnostic**: β_crash_count_14d attenuates to 0.941 when `gevoelscore_lagged_mean_14d` added → marginal signal reads as **recent-low-gevoelscore proxy**, NOT independent recovery-debt mechanism. Verdict robust across E[L] ∈ {7, 12, 14}.
+- **[HA-C4b v3](analyses/hypotheses/HA-C4b/result.md)** — stress-with-low-motion minute count as crash precursor (unmedicated pooled headline). Pooled n=10 (8 train + 2 validate, with 2023-02-04 restored after v3's §4.3 1b.ii drop): (a) 40% **FAIL** (≥60%), (b) -10pp **FAIL** (≥+15pp; obs 40% vs null median 50%), (c) +1.21 PASS. RD -0.100; OR 0.67; p=0.6250 (one-sided, E[L]=7). Train-only (a)=50% (4/8); validate-only (a)=0% (0/2). LOO: k=4 BELOW BOUNDARY (k≤5); 0 load-bearing episodes (boundary-distance signal per §4.11.5). E[L]\*=3.34 (factor-of-2 flag but descriptive-only since verdict is NOT-SUPPORTED). v3 dropped §4.3 1b.ii and symmetrised the §10.2 dry-run / full-run gate; the 1b.ii drop is honestly framed as a deliberate override of a real 2023-02-04 catch (audit Layer 2.5 substantive concern named in §8). Per v3 §9 NOT-SUPPORTED branch: two alternative readings stay open — (i) the lived rest-stress trigger may be **PROTECTIVE rather than PREDICTIVE** (participant acts on it and prevents crashes); (ii) §4.2-admitted crashes may be disproportionately **emotionally / cognitively triggered with incidental physical exertion** in the lead-up (v3 §8 pacing-behaviour confounder). v2 lineage: v1 dry-run halted 2026-06-15; v2 INCONCLUSIVE 2026-06-16 (dropped 2023-02-04 under 1b.ii → n=9 < §5.3 bar; spec-design asymmetry, not data finding); v3 closed the asymmetry → NOT-SUPPORTED on the same byte-identical headline cell.
+
+**Descriptive characterisation (Layer 1 per CONVENTIONS §2.1 — no SUPPORTED/NOT-SUPPORTED bar; findings-shape verdict):**
+- **[HA-P6 v3](analyses/hypotheses/HA-P6/result.md)** — post-crash 7-channel recovery shape with Option C dual matched-baseline. Test-executed 2026-06-17 (`a980b1c`). **§9 first-branch fires** — 4/7 channels distinguishable from Arm-A matched control (matched deep-trough non-crash days). Lineage today: v1 (locked 2026-06-15) → v2 (`ef4f105`) → v3 (`97b74df`) → test (`a980b1c`). **Substantive recovery-shape signal exists**; informs HA-P7 NOT-SUPPORTED reinterpretation — see §6.
+
+**Historical rejections** ([`REJECTED.md`](REJECTED.md)) — ~25 entries (H01-K02 + HA01-HA05 3d-variants + HA01b-recomputed lagged-baseline correction + intervention work INT-NARROW + RESP-SSRI + HA-P7).
+
+---
+
+## 3. Descriptive work — the structural gap
+
+**There is no `analyses/descriptive/` folder.** Descriptive characterisation lives in four scattered locations:
+
+| location | content |
+|---|---|
+| [`_archive/S01-stabilisation-trajectories/`](analyses/hypotheses/_archive/S01-stabilisation-trajectories/) + [`_archive/S02-score-trajectory/`](analyses/hypotheses/_archive/S02-score-trajectory/) | 90d rolling autonomic + gevoelscore distribution shift; archived 2026-06-13 as descriptive-only |
+| [`garmin_exploration/cards/`](analyses/garmin_exploration/cards/) | `cross-channel-correlation.md`, `card-b-train-specificity.md`, `card-b2-validate-specificity.md`, `primary-verdict-statistics.md`. **Decisive Tier 2 audits.** |
+| [`garmin_exploration/hrv_proxy_validation/`](analyses/garmin_exploration/hrv_proxy_validation/) + [`stress_low_motion_viz/`](analyses/garmin_exploration/stress_low_motion_viz/) + [`activity-labels/`](analyses/garmin_exploration/activity-labels/) + [FIT taxonomy](analyses/garmin_exploration/README.md) | Primitive validation + viz runs |
+| [`methodology/crash_episode_descriptive.md`](methodology/crash_episode_descriptive.md), [`methodology/crash_episode_prolonged.md`](methodology/crash_episode_prolonged.md), [`methodology/lc_era_temporal_segmentation.md`](methodology/lc_era_temporal_segmentation.md), [`methodology/symptom_mention_asymmetry.md`](methodology/symptom_mention_asymmetry.md) | Cohort topology + label semantics |
+
+**The original [adaptive-foraging-hamming.md plan](file:///C:/Users/Gebruiker/.claude/plans/adaptive-foraging-hamming.md) explicitly named the descriptive layer as a follow-on requirement** ("no hypothesis testing happens until both consolidation AND the descriptive analysis layer have landed"). The layer was never built as a structured artefact; a per-test descriptive-on-demand pattern emerged instead.
+
+**Key audit findings from the scattered descriptive work:**
+
+1. **Cross-channel correlation collapses the "6-channel convergence" reading.** H02b ≡ H02d at ρ=+1.000; HA10 ≡ −HA07c at ρ=−0.922. Load-bearing list is ~3-4 independent clusters, not 9.
+2. **All 9 load-bearing anchors land in Tier C** (lift <2×, precision <5%) per specificity tables — retrospective-only surfaces, not prospective predictors.
+3. **Only H02d clears honest effective-N Bonferroni** (α=0.0125).
+
+**Plan to fix the structural gap**: see [`C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md`](file:///C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md) (v2 framing: **descriptive research programme**, not card-per-group documentation layer). Two strands co-exist: Strand A operationalisation-support (reusable per-channel analyses HA pre-regs cite), Strand B multi-year-trajectory (recovery arc, intervention cross-channel view, era boundaries, cohort topology). Mirrors existing `garmin_exploration/<topic>/` per-topic folder pattern. Phased build-out: infrastructure → index existing work → first 2-3 analyses → lock-process integration.
+
+---
+
+## 4. Intervention findings — citalopram arc
+
+The arc as of 2026-06-16 (canonical in [`methodology/intervention_effects_descriptive.md`](methodology/intervention_effects_descriptive.md) + [`methodology/citalopram_dose_response_stress_mean_sleep.md`](methodology/citalopram_dose_response_stress_mean_sleep.md) + [`methodology/citalopram_phase_stratification.md`](methodology/citalopram_phase_stratification.md)):
+
+1. **Session C single-channel finding (2026-06-14)**: `stress_mean_sleep` × 2026-03-20 boundary, median diff −3.06, survives detrend at B={7,14,28}, marginal at B=42. Plausible direct SSRI-withdrawal effect. Only 2 of ~25 detrend-surviving channel-boundary pairs.
+
+2. **INT-NARROW SUPERSEDED** (REJECTED.md, 2026-06-14): the pre-v3 narrow reading was widened by:
+
+3. **v3 multi-channel confirmation (2026-06-14)** via `multi_channel_check.py`, 6 channels × three-pronged test (afbouw 2026 + buildup 2024 post-CPAP-buffer + spring 2025 control):
+   - **CONFIRMED**: `stress_mean_sleep` (+0.43/mg, p=0.001), `all_day_stress_avg` (+0.57/mg, p=0.000), `bb_lowest` (−1.13/mg, p=0.000)
+   - **REJECTED**: `respiration_avg_sleep` (β=−0.002, p=0.57) → **RESP-SSRI DESCRIPTIVE-FAIL** in REJECTED.md
+   - Buildup S2 carries the case; afbouw alone marginal; spring 2025 control flat → seasonality alibi unsupported.
+
+4. **`citalopram_phase_stratification.md` v2 (2026-06-14)**: operationalises four-phase axis (unmedicated / buildup / consolidation / afbouw / post_afbouw) with §5.A per-phase stratification + §5.B dose-adjusted predictor (recommended) + §5.C joint model. **§6 pre-registration template binds any new hypothesis MD touching a CONFIRMED channel.**
+
+**Structural consequence**: every test crossing the 2024-04-09 or 2026-03-20 phase boundary on the 3 CONFIRMED channels now inherits a quantified-confound + §5.B treatment obligation. The "rolling lagged baseline absorbs everything" assumption is **empirically dead** on these channels.
+
+---
+
+## 5. Methodology lockings — structural map
+
+~15 MDs at [`methodology/`](methodology/), grouped by what they lock:
+
+| group | MDs |
+|---|---|
+| **Discipline + workflow** | `methodology.md`, `hypothesis_lock_process.md` (v1.1 — canonical 4-stage arc), `train_validate_split_fate.md` (single-pool primary) |
+| **Statistical conventions** | `permutation_null_block_length.md` (E[L]=7 stationary bootstrap + block-permutation null project-wide), `time_resolution.md` |
+| **Data semantics** | `nightly_attribution.md` (wake-up-date), `symptom_mention_asymmetry.md` (presence-conditioned vs daily-computed), `symptom_categorization_v24.md`, `garmin_indicators_audit.md` |
+| **Cohort surfaces** | `lc_era_temporal_segmentation.md` (Stratum 4 = primary), `crash_episode_descriptive.md`, `crash_episode_prolonged.md` |
+| **Proxies** | `hrv_proxy_via_stress.md` (sleep-window stress as HRV proxy), `bb_overnight_gain_proxy.md` (r=0.989 vs truth post-2024-09-18; sensitivity-only for 2024-07-08→2024-09-17 bridge), `stress_low_motion_primitive.md` (Session E lock) |
+| **Operational** | `garmin_pacing_practice.md` (§7.4 intervention-period baseline-calibration now resolved) |
+| **Intervention arc** | `intervention_effects_descriptive.md`, `citalopram_dose_response_stress_mean_sleep.md`, `citalopram_phase_stratification.md` (see §4) |
+| **Queue** | `queued_work.md`, `_pending_literature_fetch.md` |
+
+---
+
+## 6. Cross-section synthesis
+
+**The pattern across SUPPORTED-load-bearing tests** (HA07d + HA10's validate-side + HA11's train-side after diagnostic RESCUE) is more about **second-order autonomic flexibility — variability and reversal patterns** than about absolute level. All three had prior Wiggers + lived-experience motivation, so the SUPPORTED reads are **confirmatory per CONVENTIONS §4.1**, not originating from data peeking.
+
+**Two calibration lessons now canonicalised:**
+1. **HA01b-recomputed correction** → §3.1 personal-baseline must use **lagged**, not rolling-window-inclusive-of-day. Original v3.1 inflated +13.3 pp on the validate era; v3.2 lagged-baseline correction flipped verdict to REFUTED.
+2. **HA-C4b v1 halt** → §7 anchor ranges must bind to **the exact column's descriptive card**, not a definitional cousin's distribution. Now §5 sanity-check row in [`hypothesis_lock_process.md`](methodology/hypothesis_lock_process.md).
+
+**HA-P7's NOT-SUPPORTED is informative falsification.** The recovery-debt mechanism on a 14d window does not survive the §4.5.4 covariate-sensitivity check; what looked like crash-density predicting next-crash collapses to "recent-low-gevoelscore predicts next-low-gevoelscore", which is autocorrelation not mechanism.
+
+**HA-P6 has now landed (4/7 channels distinguishable, 2026-06-17) and answers the deferred HA-P7 question**: yes, a real measurable post-crash recovery signature exists on 4 of 7 channels. HA-P7's null was therefore NOT "no recovery mechanism exists" but rather "the 14d-crash-density count is too coarse an operationalisation to capture what the recovery trajectories actually do". The combined HA-P6 + HA-P7 + HA-C4b v3 reading: post-crash recovery has a real measurable shape (HA-P6 confirms), AND prospective precursor signals from PEM-pacing channels don't predict crashes in this corpus (HA-C4b v3 NOT-SUPPORTED + HA-P7 NOT-SUPPORTED). The body's recovery dynamics carry signal; the simple "more recent bad days → more upcoming bad days" mechanism does not. HA-C4b v3's PROTECTIVE-not-PREDICTIVE alternative reading (§9) is a third strand in this synthesis worth disambiguating in a fresh interpretation pass.
+
+**Citalopram-as-confound for HA07c (caveat-class, not confirmatory):** HA07c's train SUPPORTED +23.2pp / validate REFUTED −6.0pp divergence straddles the 2024-04-09 buildup boundary. The v3 dose-response confirmation is now a non-rejected confound-class candidate for the divergence on this channel, **alongside** (not replacing) the era-as-moderator narrative. Forward citations of HA07c's "train SUPPORTED" sub-finding require explicit acknowledgement that the channel is dose-modulated.
+
+**What's still open:**
+- Exertion → crash family (P2 / HA01b / HA01c) awaits Q10 single-pool recompute.
+- BB-floor + rest-stress P5b family (P4 / P5b) await per-minute primitive. HA-C4b v3 closed NOT-SUPPORTED 2026-06-17 (see §2d); the v3 §8 pacing-behaviour confounder on emotional / cognitive triggers is queued as a future primitive (methodology MD documenting construct validity + sparsity + how to read the `cat_belasting_emotioneel` / `cat_belasting_cognitief` / `state_symptoom_*` proxies; sparsity caveats per DATA_DICTIONARY §9).
+- HA-P6's recovery-shape run is the load-bearing input to whether HA-P7's 14d window has any anchoring.
+- Wiggers Tier 1 (C3, C4) have no HA-folder yet — natural next pre-regs per the Wiggers Tier 1 execution plan.
+
+---
+
+## 7. Open follow-ups + actionable next steps
+
+### Actionable now (low activation energy)
+1. **Descriptive research programme lock** — [`descriptive/README.md`](analyses/descriptive/README.md) drafted r2 with audit closures applied; status `drafted, not yet locked`; awaits user lock signal. Locking unblocks Phase 1 execution.
+2. **HA-C3 pre-reg drafting** — Tier 1 Wiggers, sister to HA-C4 (now in v2 reframe). No HA-folder yet. Use full v1.1 canonical 4-stage arc per `hypothesis_lock_process.md`. Bucket C.5 of the Wiggers Tier 1 plan.
+
+### Actionable after parallel work lands
+3. **HA-C4 v2 result reading** — v2 reframe in flight per [`session-c4-v2-reframe-handoff-2026-06-17.md`](file:///C:/Users/Gebruiker/.claude/plans/session-c4-v2-reframe-handoff-2026-06-17.md). Wait for result, then read.
+4. **Phase 1 descriptive execution** (after lock signal) — first 3 analyses per [`descriptive/README.md §6`](analyses/descriptive/README.md): `operationalisation_support/stress_mean_sleep/` + `trajectory/recovery_arc/` + `operationalisation_support/stress_low_motion_min_count_S60_Mlow/`.
+5. **Cross-test interpretation pass** — light synthesis tying HA-P6 (4/7 channels recovery-shape signal) + HA-C4b v3 (NOT-SUPPORTED, PROTECTIVE-not-PREDICTIVE reading) + HA-P7 (recent-low-gevoelscore proxy collapse) together. **User-deferred for later** ("when we are going to do a full set of new sessions where we interpret the results of multiple hypotheses, in isolation and also in context of each other").
+6. **HA-C4b v3 §9 alternative-readings disambiguation** — when interpretation pass runs: (i) PROTECTIVE-rather-than-PREDICTIVE (testable on `crash_episode_descriptive.md` per-episode depth + duration); (ii) emotional / cognitive trigger confounder (queued primitive — see §6 "What's still open"). The v3 result feeds [`methodology/garmin_pacing_practice.md`](methodology/garmin_pacing_practice.md) — operational rest-stress trigger remains useful as within-day pacing signal regardless of v3's precursor-aggregate verdict.
+
+### Open follow-ups in `hypothesis_lock_process.md` §8.3
+- Audit-MD compression-record gap (binds prospectively only; existing HA-C4b/HA-P7 lock commits stand).
+- `/research-audit HA-<id> [--second-pass]` slash-command ergonomic improvement (deferred).
+
+### Open structural work
+- **Descriptive research programme build-out** — see [`C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md`](file:///C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md) (v2 research-programme framing).
+- **STOCKTAKE refresh discipline** — see §8.
+
+---
+
+## 8. Update protocol
+
+This file is a **living cross-cutting view**, refreshed on these triggers:
+
+| trigger | what to refresh |
+|---|---|
+| New HA-* result.md lands | §2d table row + §6 synthesis if cross-test pattern shifts |
+| New HA-* pre-reg locked | §2c (locked-awaiting-run); §2a if it supersedes a register entry |
+| New methodology MD locked OR existing MD revised (binding) | §5 structural map + §6 implications |
+| Intervention arc revision (new dose-response / new channel CONFIRMED / new REJECTED) | §4 entirety + §6 citalopram-as-confound paragraph |
+| Cross-channel correlation re-run shifts the independence story | §3 audit findings + §6 second-order autonomic flexibility synthesis |
+| Quarterly snapshot | full refresh with date update in preamble |
+
+**Refresh process** (per the v1.1 §3.2 reviewer-mode-with-authorization pattern, since STOCKTAKE is reviewer-mode per CONVENTIONS §1.2):
+
+1. User explicitly requests refresh (or one of the triggers above clearly fires).
+2. Read this file end-to-end + the canonical artefacts that have changed since last snapshot date.
+3. Edit in-place; update preamble snapshot-date + add a one-line entry to the revision log below.
+4. Lock with commit message naming the trigger.
+
+### Revision log
+
+- **2026-06-17 (continued)** — HA-P6 v3 test-executed (`a980b1c`); §9 first-branch fires (4/7 channels distinguishable from Arm-A matched control). Lineage today: v1 (locked 2026-06-15) → v2 (`ef4f105`) → v3 (`97b74df`) → test (`a980b1c`). HA-C4 v1 drafted + r2 LOCKED (`da79387`) + dry-run HALTED (`19d33e4`) on Ch3 validate heavy n=25 < 30 bar; v2 reframe in flight per `session-c4-v2-reframe-handoff-2026-06-17.md`. §2a Wiggers Tier 1 C4 entry updated (no longer "no HA-folder yet"); §2c label changed from "Locked, awaiting test run" to "Locked, halted at dry-run (v2 redraft required)" — HA-P6 moved out to §2d (new descriptive-characterisation sub-bucket); HA-C4 v1 added to §2c; §6 HA-P7 paragraph extended with HA-P6 + HA-C4b v3 triangulation ("body's recovery dynamics carry signal; simple recent-bad-days→next-bad-days mechanism does not"); §7 restructured (HA-P6 test removed from "actionable now"; descriptive-programme lock + HA-C3 drafting now top of queue; HA-C4 v2 result reading + cross-test interpretation pass added). Trigger: "New HA-* result.md lands" + "New HA-* pre-reg locked" per §8.
+- **2026-06-17** — HA-C4b v3 LOCKED + test-executed NOT-SUPPORTED (commits `32ba3b9` + `df05e83`). v3 dropped §4.3 1b.ii and symmetrised the §10.2 dry-run / full-run gate (closing v2's INCONCLUSIVE-by-spec-design-asymmetry); restored 2023-02-04 to the pooled cell; (a) 40% FAIL, (b) -10pp FAIL, (c) +1.21 PASS. §2c HA-C4b v2 entry removed (no longer awaiting); §2d NOT-SUPPORTED entry added; §6 "What's still open" updated; §7 actionable-now/after re-numbered with v3 downstream synthesis as the new HA-C4b follow-up. Trigger: "New HA-* result.md lands" per §8.
+- **2026-06-16** — Revived from `_archive/STOCKTAKE.md` (archived 2026-06-13). New cross-cutting view structured around 5 buckets (corpus / pipeline / descriptive-gap / intervention / methodology) + synthesis. Captures: HA-C4b v2 locked + tested 2026-06-16; HA-P7 NOT-SUPPORTED; HA07d as only canonical-SUPPORTED; v3 citalopram multi-channel CONFIRMED 3 channels + REJECTED respiration; cross-channel collapse to 3-4 clusters; descriptive-layer structural gap surfaced. First worked example of the lock-process MD §3.8 register-row pointer discipline applied retroactively (the archived STOCKTAKE entry remains for audit trail).
+- *2026-06-06 (archived)* — last snapshot before archiving; covered crash_v2 phase consolidation + activity-labels v3.1 lock + dip-cluster overlay. See `_archive/STOCKTAKE.md`.
