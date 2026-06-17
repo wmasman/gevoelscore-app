@@ -1,4 +1,4 @@
-# HA-C4 v1 — Stress fails to drop during rest periods after overexertion ("stuck sympathetic"), 3-channel confirmatory triad
+# HA-C4 — Stress fails to drop during rest periods after overexertion ("stuck sympathetic"), 3-channel confirmatory triad
 
 ## Authorship
 
@@ -13,9 +13,9 @@
 
 **Crucially**, the drafter has NOT seen HA-C4's specific channel values (`stress_post_peak_time_to_rest_min`, `stress_post_peak_drop_avg`, `stress_high_duration_min`, `awake_stress_avg`) on individual days. The C4b column the drafter has seen is a *different aggregation* of the same underlying monitoring_b FIT data. The exposure spillover to HA-C4 is partial: which heavy-T days are crashes (a meta-fact relevant for the Channel-3 chain-T+1 handling) is known; the channel-value distributions are not.
 
-**The §3.2 strictest-discipline path** would be a fresh-session redraft of HA-C4 v1 with the HA-C4b exposure held out. The pragmatic path taken here is shared-context drafting under explicit user direction ("lets plan and execute all steps to execute the research according to our standards") with the data-exposure boundary documented above + the fresh-session [`/research-review`](../../../reviews/README.md) audit (§3.4) as the integrity check. **The §3.4 audit should specifically verify that none of the §4 / §5 operational choices below were biased by knowledge of the 10 crash-day identities**.
+**The §3.2 strictest-discipline path** would be a fresh-session redraft of HA-C4 with the HA-C4b exposure held out. The pragmatic path taken here is shared-context drafting under explicit user direction ("lets plan and execute all steps to execute the research according to our standards") with the data-exposure boundary documented above + the fresh-session [`/research-review`](../../../reviews/README.md) audit (§3.4) as the integrity check. **The §3.4 audit should specifically verify that none of the §4 / §5 operational choices below were biased by knowledge of the 10 crash-day identities**.
 
-**Status**: drafted, NOT locked. Per [`hypothesis_lock_process.md` §3.4](../../../methodology/hypothesis_lock_process.md#34-audit-step-step-2-of-the-arc) the next step is a fresh-session `/research-review` audit against this v1 draft. Lock signal awaits user acceptance after the audit completes + r2 absorption (if applicable).
+**Status**: drafted, NOT locked. Per [`hypothesis_lock_process.md` §3.4](../../../methodology/hypothesis_lock_process.md#34-audit-step-step-2-of-the-arc) the next step is a fresh-session `/research-review` audit against this draft. Lock signal awaits user acceptance after the audit completes + r2 absorption (if applicable).
 
 The four [§3.8 lock-blocking gates](../../../methodology/hypothesis_lock_process.md#38-lock-step-stage-5-of-the-arc) are pre-stated for the auditor:
 
@@ -26,7 +26,7 @@ The four [§3.8 lock-blocking gates](../../../methodology/hypothesis_lock_proces
 
 ---
 
-**Pre-registration drafted 2026-06-17, BEFORE any test run on the HA-C4 channels.** Locked at user acceptance after audit absorption. Any subsequent change creates HA-C4-v2 with v1 archived.
+**Pre-registration drafted 2026-06-17, BEFORE any test run on the HA-C4 channels.** Locked at user acceptance after audit absorption. Any subsequent change creates HA-C4-v2 with this pre-reg archived as v1.
 
 HA-C4 tests Wiggers' **"After overexertion, stress fails to drop during rest periods — stuck sympathetic"** claim (PDF lines 1112-1119, 1140-1143, 1223-1231, 1306-1314, source-verified per the [register entry](../../../wiggers_testable_hypotheses.md#c4--stress-fails-to-drop-during-rest-periods-after-overexertion-stuck-sympathetic) batch 2 2026-06-12). The claim has three temporal scales — same-day decay failure, walls-of-orange sustained-high, and next-day stress-spike reactivity — operationalised as a **3-channel confirmatory triad** per the design MD's expansion (single-metric C4 missed two source-named channels).
 
@@ -40,9 +40,9 @@ On heavy-exertion days (`exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on
 
 The directional prediction in all three channels: heavy-T degrades the recovery. Each channel's confirmation requires both a statistically discriminative effect (block-permutation p < 0.05) AND a non-negligible effect size (|Cliff's delta| > 0.20), in the predicted direction, replicated independently in the train era (2022-09-03 → 2023-12-31) AND the validate era (2024-01-01 → 2024-04-08) within the unmedicated phase.
 
-**v1 headline triad cell**: unmedicated phase × {Ch1 + Ch2 + Ch3} × heavy-T-vs-non-heavy-T × Mann-Whitney + Cliff's delta × block-permutation null E[L]=7 × pass-2-of-3 verdict rule applied within each era.
+**Headline triad cell**: unmedicated phase × {Ch1 + Ch2 + Ch3} × heavy-T-vs-non-heavy-T × Mann-Whitney + Cliff's delta × block-permutation null E[L]=7 × pass-2-of-3 verdict rule applied within each era.
 
-**v1 verdict**: SUPPORTED if ≥ 2 channels confirmed in BOTH train AND validate eras; PARTIAL if 1 channel confirmed in both eras, OR ≥ 2 channels confirmed in only one era; REJECTED if 0 channels confirmed in either era. See §5.3 + §9.
+**Verdict rule**: SUPPORTED if ≥ 2 channels confirmed in BOTH train AND validate eras; PARTIAL if 1 channel confirmed in both eras, OR ≥ 2 channels confirmed in only one era; REJECTED if 0 channels confirmed in either era. See §5.3 + §9.
 
 ## 2. Why we think this
 
@@ -113,7 +113,7 @@ A day `T` enters the comparison if:
 
 ### 4.4 Citalopram phase treatment (locked)
 
-**v1 primary scope**: unmedicated phase only (LC era start 2022-04-04 → 2024-04-08). Rationale: avoids the [`citalopram_dose_response §5.6`](../../../methodology/citalopram_dose_response_stress_mean_sleep.md#56-v3-amendment--multi-channel-confirmation-added-2026-06-14) dose-modulation confound on the stress channel (β = +0.57/mg for `all_day_stress_avg`; β = +0.43/mg for `stress_mean_sleep`). At 30 mg plasma the stress baseline shifts by ~12-17 points, which would contaminate the Channel 2 (>75 minutes count) and Channel 3 (`awake_stress_avg` directly) comparisons if pooled across phases.
+**Primary scope**: unmedicated phase only (LC era start 2022-04-04 → 2024-04-08). Rationale: avoids the [`citalopram_dose_response §5.6`](../../../methodology/citalopram_dose_response_stress_mean_sleep.md#56-v3-amendment--multi-channel-confirmation-added-2026-06-14) dose-modulation confound on the stress channel (β = +0.57/mg for `all_day_stress_avg`; β = +0.43/mg for `stress_mean_sleep`). At 30 mg plasma the stress baseline shifts by ~12-17 points, which would contaminate the Channel 2 (>75 minutes count) and Channel 3 (`awake_stress_avg` directly) comparisons if pooled across phases.
 
 **Sensitivity arms** (descriptive only, no SUPPORTED-bar promotion): per-phase tests on consolidation, buildup, afbouw with the §5.B dose-adjustment applied per the methodology MD. Reported in result.md alongside the primary unmedicated verdict; not part of the §5 SUPPORTED-bar decision.
 
@@ -121,7 +121,7 @@ A day `T` enters the comparison if:
 
 `stress_post_peak_time_to_rest_min` has NaN semantics that **invert the usual rule**: NaN means "stress never dropped below the 25 'rest' threshold within the same calendar day" — the C4-POSITIVE case, not a coverage problem (per [DATA_DICTIONARY §C4](../../../DATA_DICTIONARY.md)).
 
-**v1 encoding**: NaN values for Channel 1 are coded as **1080 minutes** (= 18 hours, an upper bound on the typical waking window) for the purpose of Mann-Whitney U + Cliff's delta computation. This ensures NaN-as-positive observations contribute to the heavy-T-vs-non-heavy-T comparison rather than being silently dropped.
+**Encoding**: NaN values for Channel 1 are coded as **1080 minutes** (= 18 hours, an upper bound on the typical waking window) for the purpose of Mann-Whitney U + Cliff's delta computation. This ensures NaN-as-positive observations contribute to the heavy-T-vs-non-heavy-T comparison rather than being silently dropped.
 
 **Sensitivity check**: report the per-arm (heavy-T vs non-heavy-T) NaN fraction in result.md as a descriptive companion. If heavy-T NaN fraction is substantially higher than non-heavy-T NaN fraction, that itself is direct C4 evidence (the C4-positive case is more common after heavy exertion). The 1080-encoding is one way to surface this within the Mann-Whitney framework; the raw NaN-fraction contrast is the alternative descriptive read.
 
@@ -136,7 +136,7 @@ A day `T` enters the comparison if:
 
 **Channel 3 (t+1 reactivity) specifically requires chained-regime handling** because the test compares `awake_stress_avg[T+1]` for heavy-T-on-T vs heavy-T-not-on-T. If `T+1` is itself a heavy day (i.e. the participant overdid it for two consecutive days), the comparison is confounded.
 
-**v1 rule**: for the Channel 3 comparison, EXCLUDE heavy-T days `T` where `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on `T+1`. This restricts Channel 3 to "heavy-T followed by non-heavy-T+1" — the cleanest test of "the day AFTER overdoing it" claim.
+**Rule**: for the Channel 3 comparison, EXCLUDE heavy-T days `T` where `exertion_class_lagged_lcera ∈ {heavy, very_heavy}` on `T+1`. This restricts Channel 3 to "heavy-T followed by non-heavy-T+1" — the cleanest test of "the day AFTER overdoing it" claim.
 
 **Channel 1 and Channel 2 are not affected** by this adjustment (they test on T only).
 
@@ -163,7 +163,7 @@ The independence assumption for raw Mann-Whitney U is violated by the autocorrel
 3. For each null draw, recompute the Mann-Whitney U statistic on the resampled labels.
 4. Empirical one-sided p-value = `(1 + #{U_null >= U_observed}) / (B + 1)`.
 
-**Seed**: `RANDOM_SEED = 20260617` (HA-C4 v1 seed, distinct from HA-C4b v3's `20260615`).
+**Seed**: `RANDOM_SEED = 20260617` (HA-C4 seed, distinct from HA-C4b v3's `20260615`).
 
 **E[L]\* companion + factor-of-2 flag**: data-driven `E[L]*` estimator per [`permutation_null_block_length.md`](../../../methodology/permutation_null_block_length.md) Operational consequences. Compute E[L]* on each channel's value series; flag if `|E[L]* - 7| / 7 > 0.5`. The flag fires only on SUPPORTED verdicts (per the methodology MD); for PARTIAL or REJECTED, the flag is descriptive context only.
 
@@ -257,7 +257,7 @@ The 3-channel triad p-values per era are corrected for multiplicity via **Holm s
 
 ## 8. Caveats `result.md` must explicitly acknowledge
 
-- **Drafting under shared-context with HA-C4b test session** (per §Authorship). The data-exposure boundary is documented: the drafter knows the identity of 10 heavy-T days that are also crash episodes; the drafter has NOT seen the HA-C4 channel values on individual days. The fresh-session audit (§3.4) is the integrity check on §4 / §5 operational choices. A v2 fresh-session redraft of the eligibility + statistical-test choices (with the 10-crash-identity held out) would be the strictest-discipline path; v1 declines that escalation and accepts the §3.2-clause shared-context drafting concern as priced in.
+- **Drafting under shared-context with HA-C4b test session** (per §Authorship). The data-exposure boundary is documented: the drafter knows the identity of 10 heavy-T days that are also crash episodes; the drafter has NOT seen the HA-C4 channel values on individual days. The fresh-session audit (§3.4) is the integrity check on §4 / §5 operational choices. A fresh-session redraft of the eligibility + statistical-test choices (with the 10-crash-identity held out) would be the strictest-discipline path; this pre-reg declines that escalation and accepts the §3.2-clause shared-context drafting concern as priced in.
 
 - **Power-calc dispatch**: power calculation is inapplicable per [Daza 2018](../../../literature/methodology/daza_2018_self_tracked_n_of_1_counterfactual.pdf) within-subject design — the n-of-1 corpus does not have separate treatment and control arms in the classical sense. The block-permutation null at E[L]=7 (§4.9) is the within-subject inferential machinery; the §5.1 (a) discrimination + (b) effect-size gates determine per-channel confirmation rather than a power-thresholded p-value.
 
@@ -265,7 +265,7 @@ The 3-channel triad p-values per era are corrected for multiplicity via **Holm s
 
 - **Chained-regime adjustment for Channel 3** (§4.7): heavy-T-followed-by-heavy-T+1 days are excluded from the Channel 3 primary. This may reduce the heavy-T sample size in Channel 3; report the n-loss. If the chain exclusion drops Channel 3 below the §5.4 inconclusive bar, Channel 3 is INCONCLUSIVE and the triad reduces to Ch1 + Ch2.
 
-- **Citalopram dose-modulation** (§4.4): the v1 primary scope is unmedicated only specifically to avoid the dose-confound on the stress channel. Cross-phase sensitivity arms require §5.B dose-adjustment per [`citalopram_phase_stratification.md`](../../../methodology/citalopram_phase_stratification.md). v1 does not attempt cross-phase aggregation.
+- **Citalopram dose-modulation** (§4.4): the primary scope is unmedicated only specifically to avoid the dose-confound on the stress channel. Cross-phase sensitivity arms require §5.B dose-adjustment per [`citalopram_phase_stratification.md`](../../../methodology/citalopram_phase_stratification.md). This pre-reg does not attempt cross-phase aggregation.
 
 - **No motion filter** (unlike HA-C4b): HA-C4 tests `awake_stress_avg`, `stress_high_duration_min`, and `stress_post_peak_time_to_rest_min` without conditioning on motion. The Garmin-stress-is-partly-motion-sensitive caveat applies (per [`hrv_proxy_via_stress.md §2`](../../../methodology/hrv_proxy_via_stress.md#2-how-garmin-stress-is-derived)); some of the channel signal may be motion-artefact rather than true sympathetic load. Result.md must acknowledge this and cross-reference HA-C4b's motion-filter test.
 
@@ -318,11 +318,11 @@ The Wiggers C4 pattern does NOT show systematic post-exertion degradation at the
 - **Chain-T+1-excluded Ch3 diverges from chain-included Ch3**: the chained-regime sequences are doing analytical work; report both.
 - **NaN-fraction contrast for Ch1 disagrees with 1080-encoded Mann-Whitney**: the encoding choice matters more than the underlying signal; report both with explanatory paragraph.
 
-### 9.5 Spec sanity-check fails on v1 dry-run
+### 9.5 Spec sanity-check fails on dry-run
 
 If any per-channel sample (heavy-T arm or non-heavy-T arm) in any era has < 30 days post-§4.3 exclusions, OR if per-channel median falls outside the §7 ±50% tolerance:
 
-DO NOT run the full test. Document the failure in the v1 dry-run report; revise the spec creating HA-C4-v2 with v1 archived per [`hypothesis_lock_process.md` §3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock).
+DO NOT run the full test. Document the failure in the dry-run report; revise the spec creating HA-C4-v2 with this pre-reg archived as v1 per [`hypothesis_lock_process.md` §3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock).
 
 ## 10. Detection script architecture
 
@@ -334,20 +334,20 @@ All channel columns and the heavy-T classification are already in `$GEVOELSCORE_
 
 Loads `per_day_master.csv`, applies §4 eligibility filtering (LC era + unmedicated phase + April 2024 exclusion + non-NaN channel values + heavy-T classification non-NaN), computes per-channel × per-era Mann-Whitney U + Cliff's delta + block-permutation p-value at E[L]=7, applies §5 triad verdict rule + Holm step-down correction.
 
-**v1 spec-sanity-gate at dry-run**: confirms per-channel × per-era sample sizes ≥ 30 in both arms; per-channel medians within §7 ±50% tolerance. If any fail → halt + revise per §9 spec-sanity-check-fails branch.
+**Spec-sanity-gate at dry-run**: confirms per-channel × per-era sample sizes ≥ 30 in both arms; per-channel medians within §7 ±50% tolerance. If any fail → halt + revise per §9 spec-sanity-check-fails branch.
 
 **Same null-seed `RANDOM_SEED = 20260617`** for reproducibility.
 
 ### 10.3 Stage 3 — `result.md`
 
-Reports the v1 triad verdict block at top (one cell: 2-of-3 / 1-of-3 / 0-of-3 in each era), followed by per-channel × per-era contingency tables with (a) p-value, (b) Cliff's delta, (c) Holm-corrected p-value. Then secondary descriptive outcomes per §4.11 (drop-avg companion, recovery-pct companion, NaN-fraction contrast, chain-T+1 sensitivity). Then sister-test cross-reference table. Caveats per §8 including the data-exposure context disclosure prominent at top.
+Reports the triad verdict block at top (one cell: 2-of-3 / 1-of-3 / 0-of-3 in each era), followed by per-channel × per-era contingency tables with (a) p-value, (b) Cliff's delta, (c) Holm-corrected p-value. Then secondary descriptive outcomes per §4.11 (drop-avg companion, recovery-pct companion, NaN-fraction contrast, chain-T+1 sensitivity). Then sister-test cross-reference table. Caveats per §8 including the data-exposure context disclosure prominent at top.
 
-### 10.4 Run protocol (v1)
+### 10.4 Run protocol
 
 1. **Dry-run** (`python test.py --dry-run`): prints sample sizes per channel × era × arm; checks §10.2 sanity gates. **If sanity check fails → halt + revise spec → HA-C4-v2.**
-2. **Full run** (`python test.py`): emits v1 `result.md` directly into this folder.
+2. **Full run** (`python test.py`): emits `result.md` directly into this folder.
 3. **No iteration on the spec after the dry-run passes.** Any post-dry-run revision creates HA-C4-v2 with the v1 result archived.
 
 ---
 
-*Pre-registration v1 drafted 2026-06-17 by Claude (Opus 4.7) in reviewer-mode-with-authorization, in the same Claude session that has executed the sister test HA-C4b v3 to NOT-SUPPORTED. Per [`hypothesis_lock_process.md` §3.2 clause](../../../methodology/hypothesis_lock_process.md#32-drafting-step-step-1-of-the-arc) shared-context drafting is permitted; the data-exposure boundary is documented in the Authorship block; the fresh-session `/research-review` audit (§3.4) is the integrity check. Lock requires user acceptance + audit clearance + the four §3.8 gate confirmations.*
+*Pre-registration drafted 2026-06-17 by Claude (Opus 4.7) in reviewer-mode-with-authorization, in the same Claude session that has executed the sister test HA-C4b v3 to NOT-SUPPORTED. Per [`hypothesis_lock_process.md` §3.2 clause](../../../methodology/hypothesis_lock_process.md#32-drafting-step-step-1-of-the-arc) shared-context drafting is permitted; the data-exposure boundary is documented in the Authorship block; the fresh-session `/research-review` audit (§3.4) is the integrity check. Lock requires user acceptance + audit clearance + the four §3.8 gate confirmations.*
