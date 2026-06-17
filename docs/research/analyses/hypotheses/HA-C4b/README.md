@@ -8,11 +8,11 @@
 
 **Pre-registration (archived)**: [`hypothesis-v2-archived.md`](hypothesis-v2-archived.md) — locked 2026-06-16 commit `2417043` (relock to unmedicated pooled, r2 closures, fresh-session audit PASS-with-caveats). Test session executed 2026-06-16 in a fresh agent context per [`hypothesis_lock_process.md` §3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock); the v2 lock-session was contaminated with v1 per-episode z-scores so the v2 run handed off to a clean context.
 
-**Detection script (archived as v2 artefact)**: [`test.py`](test.py) — implements v2. Will be renamed `test-v2-archived.py` at v3 lock; the v3 test-session writes a new `test.py` per the v3 spec.
+**Detection script (archived as v2 artefact)**: [`test-v2-archived.py`](test-v2-archived.py) — implements v2 (renamed from `test.py` at v3 test-session start, 2026-06-17). The v3 test-session writes a new `test.py` per the v3 spec.
 
-**Dry-run report (v2 artefact)**: [`dry-run-report.md`](dry-run-report.md) — v2 dry-run output. Will be renamed `dry-run-report-v2-archived.md` at v3 lock.
+**Dry-run report (v2 artefact)**: [`dry-run-report-v2-archived.md`](dry-run-report-v2-archived.md) — v2 dry-run output (renamed at v3 test-session start, 2026-06-17).
 
-**Result (v2)**: [`result.md`](result.md) + [`result-data.json`](result-data.json) — v2 verdict **INCONCLUSIVE** (2026-06-16, commit `83a64b2`). v2 dry-run sanity gates passed at n = 10 (1b.i only); the full run applied §4.3 1b.ii (wake-window quartile-coverage) and dropped one train episode (`2023-02-04`, the highest-z episode in the train arm) → pooled n = 9 < §5.3 bar (n ≥ 10). Per v2 §9 INCONCLUSIVE branch: no SUPPORTED claim; descriptive companions reported. The v2 result.md "Critical methodological finding" block surfaced the §10.2 dry-run / full-run gate asymmetry as the v3 trigger.
+**Result (v2)**: [`result-v2-archived.md`](result-v2-archived.md) + `result-data-v2-archived.json` (gitignored) — v2 verdict **INCONCLUSIVE** (2026-06-16, commit `83a64b2`); renamed at v3 test-session start, 2026-06-17. v2 dry-run sanity gates passed at n = 10 (1b.i only); the full run applied §4.3 1b.ii (wake-window quartile-coverage) and dropped one train episode (`2023-02-04`, the highest-z episode in the train arm) → pooled n = 9 < §5.3 bar (n ≥ 10). Per v2 §9 INCONCLUSIVE branch: no SUPPORTED claim; descriptive companions reported. The v2 result.md "Critical methodological finding" block surfaced the §10.2 dry-run / full-run gate asymmetry as the v3 trigger.
 
 ## v1 archive
 
