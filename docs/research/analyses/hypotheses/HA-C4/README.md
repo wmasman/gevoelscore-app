@@ -1,6 +1,6 @@
 # HA-C4 — folder status
 
-**Pre-registration (current)**: [`hypothesis.md`](hypothesis.md) — v1 **DRAFTED 2026-06-17**, awaiting fresh-session `/research-review` audit per [`hypothesis_lock_process.md` §3.4](../../../methodology/hypothesis_lock_process.md#34-audit-step-step-2-of-the-arc).
+**Pre-registration (current)**: [`hypothesis.md`](hypothesis.md) — **LOCKED 2026-06-17 at r2** by user acceptance. Fresh-session `/research-review` audit completed ([report](../../../reviews/HA-C4-v1-2026-06-17.md), verdict REVISION RECOMMENDED); 3 substantive fires (L1.4 §7-anchor specificity, L4.4 crash-drop sensitivity, L2.5 shared-context drafting) + 3 minor fires (L3.1, L4.5, L4.7) all absorbed in r2 as mechanical closures. §3.6 re-audit compressed per the criteria (no architectural change; no falsification-bar change). User accepted L2.5 boundary as priced-in + L4.4 closure option (a) sensitivity arm at r2.
 
 **Headline cell (drafted, not locked)**: unmedicated phase × 3-channel triad × heavy-T-vs-non-heavy-T × Mann-Whitney + Cliff's delta × block-permutation null E[L]=7 × **pass-2-of-3 verdict rule** applied independently per era.
 
@@ -31,12 +31,13 @@ Same pattern as HA-C4b v3's test handoff: paste-into-fresh-session brief, mechan
 
 ## Lock arc
 
-| stage | status | session venue |
-|---|---|---|
-| 1. Draft | DONE (commit pending) | this session (shared-context per §3.2 clause) |
-| 2. Audit (§3.4) | pending | **fresh session** (paste audit handoff) |
-| 3. Revise r2 (§3.5) | pending | this session continues OR new session |
-| 4. Re-audit (§3.6) | optional / compressible | **fresh session** OR compression decision |
-| 5. Lock (§3.8) | pending | this session |
-| 6. Test execution (§3.9) | pending | **fresh session** (paste test handoff) |
-| 7. Result review | pending | this session |
+| stage | status | session venue | commit |
+|---|---|---|---|
+| 1. Draft (§3.2) | DONE | this session (shared-context per §3.2 clause) | `b76b1e0` |
+| 1.5 Naming fix | DONE | this session | `1b7dcd3` |
+| 2. Audit (§3.4) | DONE — REVISION RECOMMENDED | fresh session | committed in audit branch (see [report](../../../reviews/HA-C4-v1-2026-06-17.md)) |
+| 3. Revise r2 (§3.5) | DONE — six closures | this session continues | LOCK COMMIT |
+| 4. Re-audit (§3.6) | COMPRESSED per criteria | n/a | n/a |
+| 5. Lock (§3.8) | DONE 2026-06-17 | this session | LOCK COMMIT |
+| 6. Test execution (§3.9) | pending | **fresh session** (paste test handoff at [`.claude/plans/session-c4-test-handoff-2026-06-17.md`](../../../../../../.claude/plans/session-c4-test-handoff-2026-06-17.md)) | — |
+| 7. Result review | pending | this session | — |

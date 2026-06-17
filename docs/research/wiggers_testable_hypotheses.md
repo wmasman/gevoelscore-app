@@ -89,7 +89,7 @@ Source: [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators
 | C1 | Night "orange" (high) stress is elevated on PEM/crash days and lead-in | Night stress (mean or % orange) | Night stress↑ from `t-1`, high at `t0` |
 | C2 | High total daily stress predicts **worse next-day recharge** | Daily stress score, overnight BB gain | Stress(`t`)↑ ⇒ BB gain(`t→t+1`)↓ and gevoelscore(`t+1`)↓ |
 | C3 ⚠️ | The stress→fatigue relationship is **non-linear/convex** (a 30→40 step costs far more than it looks) | Daily stress, gevoelscore | Marginal effect of stress on gevoelscore increases at higher stress; test with binning / spline, not just linear r |
-| C4 | After overexertion, stress fails to drop during rest periods ("stuck sympathetic") | Intraday stress | Needs intraday export; reduced within-day recovery dips on `t+1` |
+| C4 | After overexertion, stress fails to drop during rest periods ("stuck sympathetic") | Intraday stress | Needs intraday export; reduced within-day recovery dips on `t+1`. **Formal pre-reg LOCKED 2026-06-17 at [`analyses/hypotheses/HA-C4/hypothesis.md`](analyses/hypotheses/HA-C4/hypothesis.md)** (r2; fresh-session §3.4 audit absorbed; §3.6 re-audit compressed). 3-channel triad (decay / walls / t+1 reactivity) with pass-2-of-3 verdict rule. |
 | C4b | C4 with **motion filter**: condition the rest-stress signal on concurrent low motion (discriminates true sympathetic-arousal-during-rest from motion-artefact stress) | Intraday stress + intraday steps | Per-day count of stress-with-low-motion minutes elevated before crashes vs matched non-crash heavy-exertion days |
 
 ## D. Body battery (BB)
