@@ -246,7 +246,59 @@ brainfog-only-dip count is a lower bound by data sparsity, not by rule.
 
 ---
 
-*End of crash_v2 geometry descriptive overlay. The user reviews and
-decides whether to fold the proposed prolonged-episode rule into
-`per_day_master.csv` (adding a `prolonged_episode_id` column +*
-*DATA_DICTIONARY.md entry).*
+## 8. HA-P6 v3 per-channel post-episode-end timing characterisation (added 2026-06-17)
+
+*Per HA-P6 v3 §9 first-branch propagations #1 + #2 (recovery-completion-day estimates per channel + per-channel × phase timing table for downstream mechanism-matching). Source:* [`analyses/hypotheses/HA-P6/result.md`](../analyses/hypotheses/HA-P6/result.md) *at commit `19d33e4` (collision-commit; HA-P6 files attributable to v3) + audit-trail commit `a980b1c` + reader's notes addendum commit `bbcb478`. Drawn from 29 LC-era crash episodes (no isolation filter applied; the §3 strict-isolation population n=1 is preserved as-is). Pure observation per the no-interpretive-marks rule.*
+
+**Operationalisation note (distinct from §3).** HA-P6's recovery-completion-day = "median day at which the channel returns within 0.5 SD of the lagged personal baseline" (lagged baseline computed per-channel from `[t0-90, t0-30]` non-crash same-phase days; the lagged-baseline reference frame matches CONVENTIONS §3.2). §3's op (A) and op (B) use `gevoelscore`-vs-rolling-30d-median and `gevoelscore`-vs-v2-`tail_median` crossings respectively. §8 day numbers are NOT comparable to §3 day numbers — they answer different questions (cross-channel return-to-personal-baseline vs `gevoelscore`-specific return-to-recent-typical).
+
+### 8.1 Pooled-LC headline (Arm-B × no-detrend × episode-end × primary `[t+1, t+5]`)
+
+| channel | n eps | n w/ baseline | recovery-completion-day | depth (median \|z\|) |
+|---|---:|---:|---:|---:|
+| `stress_mean_sleep` | 29 | 21 | 3.0 | 3.88 |
+| `all_day_stress_avg` | 29 | 22 | 3.0 | 2.50 |
+| `bb_lowest` | 29 | 22 | 2.0 | 2.45 |
+| `bb_overnight_gain` | 5 | 3 | 2.0 | 2.79 |
+| `resting_hr` | 29 | 22 | 1.0 | 2.02 |
+| `gevoelscore` | 29 | 19 | 1.0 | 1.44 |
+| `stress_low_motion_min_count_S60_Mlow` | 29 | 22 | 2.0 | 2.14 |
+
+The 4 channels statistically-distinguishable from Arm-A matched-deep-trough control (HA-P6 v3 §9 first-branch FIRES at ≥2 of 5 days CI on paired-stationary-bootstrap median-difference excludes 0): `stress_mean_sleep`, `all_day_stress_avg`, `bb_lowest`, `stress_low_motion_min_count_S60_Mlow`. Median recovery-completion-day across these 4 = **2.5 days**. The remaining 3 channels (`bb_overnight_gain`, `resting_hr`, `gevoelscore`) are not statistically-distinguishable on the §9-head paired-difference cell — for them the timing estimate above is descriptive only.
+
+### 8.2 Per-channel × phase
+
+Wide CIs at low-n phases per HA-P6 §4.7 honesty caveat; `—` = `bb_overnight_gain` uncovered phase or single-episode-cell where n=2 produces no stable estimate within `[t+1, t+5]`. afbouw and post-afbouw populations across all channels too small for stable per-phase timing per HA-P6 §4.7.
+
+| channel | phase | n eps | recovery-completion-day | depth (median \|z\|) |
+|---|---|---:|---:|---:|
+| `stress_mean_sleep` | unmedicated | 18 | 3.0 | 3.82 |
+| `stress_mean_sleep` | consolidation | 6 | 2.0 | 4.05 |
+| `all_day_stress_avg` | unmedicated | 18 | 2.0 | 2.42 |
+| `all_day_stress_avg` | buildup | 3 | 3.0 | 4.97 |
+| `all_day_stress_avg` | consolidation | 6 | 3.0 | 2.85 |
+| `bb_lowest` | unmedicated | 18 | 2.0 | 2.44 |
+| `bb_lowest` | buildup | 3 | 2.0 | 3.76 |
+| `bb_lowest` | consolidation | 6 | 2.5 | 3.80 |
+| `bb_overnight_gain` | consolidation | 3 | 2.0 | 2.79 |
+| `resting_hr` | unmedicated | 18 | 1.0 | 1.78 |
+| `resting_hr` | buildup | 3 | 1.0 | 0.88 |
+| `resting_hr` | consolidation | 6 | 1.0 | 3.10 |
+| `gevoelscore` | unmedicated | 18 | 1.0 | 1.46 |
+| `gevoelscore` | buildup | 3 | 2.0 | 0.97 |
+| `gevoelscore` | consolidation | 6 | 2.0 | 1.19 |
+| `stress_low_motion_min_count_S60_Mlow` | unmedicated | 18 | 2.0 | 2.11 |
+| `stress_low_motion_min_count_S60_Mlow` | buildup | 3 | 3.0 | 7.87 |
+| `stress_low_motion_min_count_S60_Mlow` | consolidation | 6 | 1.5 | 2.08 |
+
+### 8.3 gevoelscore reading-discipline note (per HA-P6 reader's notes Note 1, commit `bbcb478`)
+
+The `gevoelscore` pooled recovery-completion-day = 1.0 above is the algorithmic crossing on the median z-trajectory. Per the HA-P6 reader's notes Note 1, the per-day median z-trajectory is actually a relapse-and-recover oscillation: dip at t+1 (z=-1.009 [-1.187, -0.319]; CI excludes 0) → near-baseline t+2 → dip again at t+3 (z=-1.046 [-1.443, -0.112]; CI excludes 0) → near-baseline t+4 → above-baseline t+5. For downstream mechanism-matching the relapse pattern is the load-bearing characterisation, not the headline day-1 crossing. See [`analyses/hypotheses/HA-P6/result.md`](../analyses/hypotheses/HA-P6/result.md) Reader's notes for the full breakdown.
+
+### 8.4 Cross-test bridge to HA-P7
+
+Per HA-P6 v3 §9 first-branch propagation #3: median recovery-completion-day across the 4 distinguishable channels = 2.5 days; this places HA-P7's 14d-window assumption in the regime where the window covers **recovery + a long tail** (NOT recovery-specific). Downstream readers consuming HA-P7's NOT-SUPPORTED verdict should interpret this nuance — the 14d window is not failing to find a *recovery-period* effect; it is failing to find a *generic-period* effect that includes recovery + further.
+
+---
+
+*End of crash_v2 geometry descriptive overlay. §1-§7 cover crash_v2 episode geometry per the original 2026-06-12 scope; §8 added 2026-06-17 per HA-P6 v3 §9 first-branch propagation. The user reviews and decides whether to fold the proposed prolonged-episode rule into `per_day_master.csv` (adding a `prolonged_episode_id` column + DATA_DICTIONARY.md entry).*
