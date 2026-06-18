@@ -1,6 +1,6 @@
 # Research stocktake — cross-cutting view
 
-*Living cross-cutting index of the Garmin × gevoelscore × notes research. Snapshot dated **2026-06-17**, revived from [`_archive/STOCKTAKE.md`](_archive/STOCKTAKE.md) (last snapshot 2026-06-06, archived 2026-06-13 in the "methodology wave" commit `32d9231` because per-card + per-MD outputs replaced it; revived because the cross-cutting view is now needed again — see §3 structural gap).*
+*Living cross-cutting index of the Garmin × gevoelscore × notes research. Snapshot dated **2026-06-18**, revived from [`_archive/STOCKTAKE.md`](_archive/STOCKTAKE.md) (last snapshot 2026-06-06, archived 2026-06-13 in the "methodology wave" commit `32d9231` because per-card + per-MD outputs replaced it; revived 2026-06-16 because the cross-cutting view is now needed again — see §3 descriptive layer status).*
 
 **This file is NOT a content store.** Canonical content lives in methodology MDs, hypothesis folders, per-card outputs. This file is the **map + status + synthesis** layer. Update protocol in §8.
 
@@ -48,11 +48,11 @@
 
 ### 2b. Drafted but not yet locked
 
-**None.** Every HA-folder is either LOCKED or superseded by a locked successor.
+- **[HA-C4 v2](analyses/hypotheses/HA-C4/hypothesis.md)** — drafted 2026-06-18 (`59fae4b` + `73cb2d4`) per composite-path recommendation (Option A explicit-INCONCLUSIVE handling in §5.3 + §7.3 arithmetic rebuild + new §4.11.3 chain-T+1-relaxed sensitivity arm; Option B/D/E-second-half rejected). v1 archived (`hypothesis-v1-archived.md` + `test-v1-archived.py` + `dry-run-report-v1-archived.md`). **Next step in lock arc**: fresh-session `/research-review` audit per [`hypothesis_lock_process.md §3.4`](methodology/hypothesis_lock_process.md#34-audit-step-stage-2-of-the-arc).
 
-### 2c. Locked, halted at dry-run (v2 redraft required)
+### 2c. Historical lineage — locked + halted at dry-run (v1, archived; superseded by v2)
 
-- **[HA-C4](analyses/hypotheses/HA-C4/hypothesis.md)** — v1 drafted (`b76b1e0`) + r2 LOCKED 2026-06-17 (`da79387`); dry-run HALTED 2026-06-17 (`19d33e4`) on Ch3 validate heavy n=25 < 30 sanity bar. **v2 reframe in flight** in parallel agent per [`session-c4-v2-reframe-handoff-2026-06-17.md`](file:///C:/Users/Gebruiker/.claude/plans/session-c4-v2-reframe-handoff-2026-06-17.md). 3-channel Wiggers C4 confirmatory triad (Tier 1).
+- **HA-C4 v1** — drafted (`b76b1e0`) + r2 LOCKED 2026-06-17 (`da79387`); dry-run HALTED 2026-06-17 (`19d33e4`) on Ch3 validate heavy n=25 < 30 sanity bar (the §5.4 inconclusive bar). §4.7 chain-T+1 exclusion dropped 16 of 41 validate heavy-T days → 25 remain. Triage analysis (fresh-session 2026-06-18) identified 5 v2 options + recommended composite path; superseded by v2 (see §2b). v1 stays archived for audit-trail continuity per the locked-pre-reg discipline.
 
 ### 2d. Tested with result
 
@@ -77,26 +77,37 @@
 
 ---
 
-## 3. Descriptive work — the structural gap
+## 3. Descriptive research programme — gap closing
 
-**There is no `analyses/descriptive/` folder.** Descriptive characterisation lives in four scattered locations:
+**Status as of 2026-06-18**: descriptive research programme is **bootstrapped + first analysis landed**. The 2026-06-16 "no `analyses/descriptive/` folder" gap is closing:
+
+- [`analyses/descriptive/README.md`](analyses/descriptive/README.md) — programme scoping doc **LOCKED 2026-06-18 r3** (commit `ccbd12e` under §3.6 compression). Two-strand framing: Strand A operationalisation-support + Strand B multi-year-trajectory (three-phase: pre-illness healthy → infection/acute → LC trajectory). 16+ research questions enumerated; Phase 1 first 3 analyses scoped.
+- [`analyses/descriptive/operationalisation_support/stress_mean_sleep/`](analyses/descriptive/operationalisation_support/stress_mean_sleep/) — **first Strand A analysis LANDED 2026-06-18** (commit `84b9801`); answers Q3.1.a-i for the most-cited CONFIRMED-citalopram channel. Outputs: `README.md` + `findings.md` + `run.py` + `summary.json` + `plots/`. Interpretation pass pending.
+
+### 3.1 Existing descriptive work (still scattered, but now indexed from programme README §5)
 
 | location | content |
 |---|---|
-| [`_archive/S01-stabilisation-trajectories/`](analyses/hypotheses/_archive/S01-stabilisation-trajectories/) + [`_archive/S02-score-trajectory/`](analyses/hypotheses/_archive/S02-score-trajectory/) | 90d rolling autonomic + gevoelscore distribution shift; archived 2026-06-13 as descriptive-only |
-| [`garmin_exploration/cards/`](analyses/garmin_exploration/cards/) | `cross-channel-correlation.md`, `card-b-train-specificity.md`, `card-b2-validate-specificity.md`, `primary-verdict-statistics.md`. **Decisive Tier 2 audits.** |
-| [`garmin_exploration/hrv_proxy_validation/`](analyses/garmin_exploration/hrv_proxy_validation/) + [`stress_low_motion_viz/`](analyses/garmin_exploration/stress_low_motion_viz/) + [`activity-labels/`](analyses/garmin_exploration/activity-labels/) + [FIT taxonomy](analyses/garmin_exploration/README.md) | Primitive validation + viz runs |
-| [`methodology/crash_episode_descriptive.md`](methodology/crash_episode_descriptive.md), [`methodology/crash_episode_prolonged.md`](methodology/crash_episode_prolonged.md), [`methodology/lc_era_temporal_segmentation.md`](methodology/lc_era_temporal_segmentation.md), [`methodology/symptom_mention_asymmetry.md`](methodology/symptom_mention_asymmetry.md) | Cohort topology + label semantics |
+| [`_archive/S01-stabilisation-trajectories/`](analyses/hypotheses/_archive/S01-stabilisation-trajectories/) + [`_archive/S02-score-trajectory/`](analyses/hypotheses/_archive/S02-score-trajectory/) | 90d rolling autonomic + gevoelscore distribution shift; archived 2026-06-13 as descriptive-only; will be consolidated into `trajectory/recovery_arc/` (Phase 1 second analysis) |
+| [`garmin_exploration/cards/`](analyses/garmin_exploration/cards/) | `cross-channel-correlation.md`, `card-b-train-specificity.md`, `card-b2-validate-specificity.md`, `primary-verdict-statistics.md`. **Decisive Tier 2 audits.** Indexed from descriptive/README §5 |
+| [`garmin_exploration/hrv_proxy_validation/`](analyses/garmin_exploration/hrv_proxy_validation/) + [`stress_low_motion_viz/`](analyses/garmin_exploration/stress_low_motion_viz/) + [`activity-labels/`](analyses/garmin_exploration/activity-labels/) + [FIT taxonomy](analyses/garmin_exploration/README.md) | Primitive validation + viz runs; indexed |
+| [`methodology/crash_episode_descriptive.md`](methodology/crash_episode_descriptive.md), [`methodology/crash_episode_prolonged.md`](methodology/crash_episode_prolonged.md), [`methodology/lc_era_temporal_segmentation.md`](methodology/lc_era_temporal_segmentation.md), [`methodology/lc_phase_descriptive.md`](methodology/lc_phase_descriptive.md), [`methodology/symptom_mention_asymmetry.md`](methodology/symptom_mention_asymmetry.md), [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators_audit.md) | Cohort topology + label semantics + Q3.x.a/h delegate targets |
 
-**The original [adaptive-foraging-hamming.md plan](file:///C:/Users/Gebruiker/.claude/plans/adaptive-foraging-hamming.md) explicitly named the descriptive layer as a follow-on requirement** ("no hypothesis testing happens until both consolidation AND the descriptive analysis layer have landed"). The layer was never built as a structured artefact; a per-test descriptive-on-demand pattern emerged instead.
+### 3.2 Programme-status snapshot
 
-**Key audit findings from the scattered descriptive work:**
+| analysis | strand | status |
+|---|---|---|
+| [`operationalisation_support/stress_mean_sleep/`](analyses/descriptive/operationalisation_support/stress_mean_sleep/) | A | **LANDED 2026-06-18** (`84b9801`); answers Q3.1.a-i; interpretation pass pending |
+| `trajectory/recovery_arc/` | B | pending — requires user operationalisation interview per descriptive/README §7b (4 choice points: COVID infection-date / acute-phase endpoint / channel set per phase / event overlays) |
+| `operationalisation_support/stress_low_motion_min_count_S60_Mlow/` | A | pending — Strand A template-driven; handoff can be drafted on the same pattern as stress_mean_sleep |
+
+### 3.3 Key audit findings from the existing scattered work (carry forward)
 
 1. **Cross-channel correlation collapses the "6-channel convergence" reading.** H02b ≡ H02d at ρ=+1.000; HA10 ≡ −HA07c at ρ=−0.922. Load-bearing list is ~3-4 independent clusters, not 9.
 2. **All 9 load-bearing anchors land in Tier C** (lift <2×, precision <5%) per specificity tables — retrospective-only surfaces, not prospective predictors.
 3. **Only H02d clears honest effective-N Bonferroni** (α=0.0125).
 
-**Plan to fix the structural gap**: see [`C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md`](file:///C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md) (v2 framing: **descriptive research programme**, not card-per-group documentation layer). Two strands co-exist: Strand A operationalisation-support (reusable per-channel analyses HA pre-regs cite), Strand B multi-year-trajectory (recovery arc, intervention cross-channel view, era boundaries, cohort topology). Mirrors existing `garmin_exploration/<topic>/` per-topic folder pattern. Phased build-out: infrastructure → index existing work → first 2-3 analyses → lock-process integration.
+**Programme companion plan**: see [`C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md`](file:///C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md) (v2 framing: research programme, not card-per-group documentation layer). Phased build-out: infrastructure (DONE) → index existing work (DONE) → first 2-3 analyses (1 of 3 landed; 2 pending) → lock-process integration (Phase 4; awaits ≥3 analyses).
 
 ---
 
@@ -163,14 +174,25 @@ The arc as of 2026-06-16 (canonical in [`methodology/intervention_effects_descri
 ## 7. Open follow-ups + actionable next steps
 
 ### Actionable now (low activation energy)
-1. **Descriptive research programme lock** — [`descriptive/README.md`](analyses/descriptive/README.md) drafted r2 with audit closures applied; status `drafted, not yet locked`; awaits user lock signal. Locking unblocks Phase 1 execution.
-2. **HA-C3 pre-reg drafting** — Tier 1 Wiggers, sister to HA-C4 (now in v2 reframe). No HA-folder yet. Use full v1.1 canonical 4-stage arc per `hypothesis_lock_process.md`. Bucket C.5 of the Wiggers Tier 1 plan.
+1. **HA-C4 v2 fresh-session audit** — v2 drafted today (`59fae4b` + `73cb2d4`); next step in lock arc is `/research-review` on the v2 hypothesis.md per `hypothesis_lock_process.md §3.4` (fresh-session, doc-only knowledge). Audit report lands at `reviews/HA-C4-v2-2026-06-18.md`.
+2. **stress_mean_sleep findings interpretation pass** — first Strand A analysis landed today (`84b9801`); needs a read + cross-test re-interpretation check (HA07c train/validate divergence in light of phase-stratified distribution is the obvious trigger). Could land as a small `reviews/` doc or fold into the larger cross-test pass.
+3. **HA-C3 pre-reg drafting** — Tier 1 Wiggers, sister to HA-C4. No HA-folder yet. Use full v1.1 canonical 4-stage arc per `hypothesis_lock_process.md`. Bucket C.5 of the Wiggers Tier 1 plan.
+4. **Phase 1 third analysis dispatch** — `operationalisation_support/stress_low_motion_min_count_S60_Mlow/` (Strand A template-driven; same pattern as stress_mean_sleep handoff).
 
-### Actionable after parallel work lands
-3. **HA-C4 v2 result reading** — v2 reframe in flight per [`session-c4-v2-reframe-handoff-2026-06-17.md`](file:///C:/Users/Gebruiker/.claude/plans/session-c4-v2-reframe-handoff-2026-06-17.md). Wait for result, then read.
-4. **Phase 1 descriptive execution** (after lock signal) — first 3 analyses per [`descriptive/README.md §6`](analyses/descriptive/README.md): `operationalisation_support/stress_mean_sleep/` + `trajectory/recovery_arc/` + `operationalisation_support/stress_low_motion_min_count_S60_Mlow/`.
-5. **Cross-test interpretation pass** — light synthesis tying HA-P6 (4/7 channels recovery-shape signal) + HA-C4b v3 (NOT-SUPPORTED, PROTECTIVE-not-PREDICTIVE reading) + HA-P7 (recent-low-gevoelscore proxy collapse) together. **User-deferred for later** ("when we are going to do a full set of new sessions where we interpret the results of multiple hypotheses, in isolation and also in context of each other").
-6. **HA-C4b v3 §9 alternative-readings disambiguation** — when interpretation pass runs: (i) PROTECTIVE-rather-than-PREDICTIVE (testable on `crash_episode_descriptive.md` per-episode depth + duration); (ii) emotional / cognitive trigger confounder (queued primitive — see §6 "What's still open"). The v3 result feeds [`methodology/garmin_pacing_practice.md`](methodology/garmin_pacing_practice.md) — operational rest-stress trigger remains useful as within-day pacing signal regardless of v3's precursor-aggregate verdict.
+### Actionable after user interview
+5. **Phase 1 second analysis** `trajectory/recovery_arc/` — Strand B; requires user operationalisation interview per descriptive/README §7b (4 choice points: COVID infection-date / acute-phase endpoint / channel set per phase / event overlays). Interview happens here in main session; handoff drafted after lock.
+
+### Actionable after HA-C4 v2 lock + test
+6. **HA-C4 v2 lock** — after audit + r2 + (re-audit OR §3.6 compression) signals.
+7. **HA-C4 v2 test execution** — separate post-lock session per §3.9.
+8. **HA-C4 v2 result reading** — after test lands.
+
+### Deferred per user — "full set of new sessions when we interpret the results of multiple hypotheses, in isolation and also in context of each other"
+9. **Cross-test interpretation pass** — synthesis across HA-P6 (4/7 channels recovery-shape signal) + HA-C4b v3 (NOT-SUPPORTED, PROTECTIVE-not-PREDICTIVE reading) + HA-P7 (recent-low-gevoelscore proxy collapse) + stress_mean_sleep findings + HA-C4 v2 result when it lands.
+10. **HA-C4b v3 §9 alternative-readings disambiguation** — folds into (9): (i) PROTECTIVE-rather-than-PREDICTIVE (testable on `crash_episode_descriptive.md` per-episode depth + duration); (ii) emotional / cognitive trigger confounder (queued primitive — see §6 "What's still open"). v3 result feeds [`methodology/garmin_pacing_practice.md`](methodology/garmin_pacing_practice.md) — operational rest-stress trigger remains useful as within-day pacing signal regardless of v3's precursor-aggregate verdict.
+
+### Polish (non-blocking)
+- **HA-P6 v3 result.md compressible recommendations** — 3 polish items per the [2026-06-18 review report](reviews/HA-P6-2026-06-18-v3-result.md) §4: complete §9 evaluation surface (4 missing bullets); add §4.8.4 spec-lock-identifier parenthetical; synthesise "almost-everywhere-fails-detrend" pattern. Non-blocking; can land any time.
 
 ### Open follow-ups in `hypothesis_lock_process.md` §8.3
 - Audit-MD compression-record gap (binds prospectively only; existing HA-C4b/HA-P7 lock commits stand).
@@ -204,6 +226,7 @@ This file is a **living cross-cutting view**, refreshed on these triggers:
 
 ### Revision log
 
+- **2026-06-18 (third wave)** — HA-C4 v2 drafted (`59fae4b` + `73cb2d4`) per composite-path recommendation; v1 archived. stress_mean_sleep first Strand A descriptive analysis LANDED (`84b9801`); answers Q3.1.a-i; first analysis under the locked descriptive research programme. Descriptive programme README locked at `ccbd12e` earlier today + r3 closures + first analysis = programme bootstrapped. §1 corpus snapshot date bumped to 2026-06-18. §2b "drafted but not yet locked" no longer "None" (HA-C4 v2). §2c restructured to "Historical lineage" (HA-C4 v1 archived, superseded by v2). §3 restructured: "the structural gap" → "gap closing"; descriptive programme programme-status snapshot table added; first analysis landed; existing-work indexed via descriptive/README §5. §7 actionable steps re-numbered: HA-C4 v2 audit + stress_mean_sleep interpretation + HA-C3 drafting + Phase 1 third analysis at top of queue; cross-test interpretation explicitly deferred per user "for later when we are going to do a full set of new sessions". Trigger: "New HA-* pre-reg locked" + "New HA-* result.md lands" + "New descriptive analysis lands" per §8.
 - **2026-06-18** — HA-P6 v3 fresh-session result review (`reviews/HA-P6-2026-06-18-v3-result.md`) verdict **PASS** (strongest in the project for autocorrelation discipline; 5 minor recommendations + 0 substantive; NO v4 trigger). 4 §9 downstream propagation commits identified: `9103163` (register row), `94a4bb3` (`crash_episode_descriptive.md §8` per-channel timing), `eb42888` (`time_resolution.md §2.3`), `a1395e1` (HA-P7 cross-test note); reader's notes addendum (`bbcb478`) absorbed. §2d HA-P6 v3 entry extended with the 4 distinguishable channels named + review verdict + 4 propagation commits + reader's notes addendum. §6 synthesis extended with Reader's Notes Note 2 nuance: `all_day_stress_avg` completeness↔next-interval signal (CI excludes 0) is INVERSE direction from naive recovery-debt (3 candidate mechanism readings stay open; data alone cannot pick); plus the empirical "almost-everywhere-fails-detrend" pattern (25/28 §3.7 cells shift under detrend, more pervasive than spec §9 bullet 3 anticipation; load-bearing finding is detrend-independent Arm-A trigger by construction). Trigger: "New HA-* result.md lands" per §8.
 - **2026-06-17 (continued)** — HA-P6 v3 test-executed (`a980b1c`); §9 first-branch fires (4/7 channels distinguishable from Arm-A matched control). Lineage today: v1 (locked 2026-06-15) → v2 (`ef4f105`) → v3 (`97b74df`) → test (`a980b1c`). HA-C4 v1 drafted + r2 LOCKED (`da79387`) + dry-run HALTED (`19d33e4`) on Ch3 validate heavy n=25 < 30 bar; v2 reframe in flight per `session-c4-v2-reframe-handoff-2026-06-17.md`. §2a Wiggers Tier 1 C4 entry updated (no longer "no HA-folder yet"); §2c label changed from "Locked, awaiting test run" to "Locked, halted at dry-run (v2 redraft required)" — HA-P6 moved out to §2d (new descriptive-characterisation sub-bucket); HA-C4 v1 added to §2c; §6 HA-P7 paragraph extended with HA-P6 + HA-C4b v3 triangulation ("body's recovery dynamics carry signal; simple recent-bad-days→next-bad-days mechanism does not"); §7 restructured (HA-P6 test removed from "actionable now"; descriptive-programme lock + HA-C3 drafting now top of queue; HA-C4 v2 result reading + cross-test interpretation pass added). Trigger: "New HA-* result.md lands" + "New HA-* pre-reg locked" per §8.
 - **2026-06-17** — HA-C4b v3 LOCKED + test-executed NOT-SUPPORTED (commits `32ba3b9` + `df05e83`). v3 dropped §4.3 1b.ii and symmetrised the §10.2 dry-run / full-run gate (closing v2's INCONCLUSIVE-by-spec-design-asymmetry); restored 2023-02-04 to the pooled cell; (a) 40% FAIL, (b) -10pp FAIL, (c) +1.21 PASS. §2c HA-C4b v2 entry removed (no longer awaiting); §2d NOT-SUPPORTED entry added; §6 "What's still open" updated; §7 actionable-now/after re-numbered with v3 downstream synthesis as the new HA-C4b follow-up. Trigger: "New HA-* result.md lands" per §8.
