@@ -11,7 +11,18 @@
   - First 3 analyses: `stress_mean_sleep` (Strand A) + `recovery_arc` (Strand B) + a third TBD by HA-P6 result / HA-C3 drafting needs
   - Phase 4 lock-blocking: soft sanity-check first; promote to lock-blocking later
   - S01/S02 migration: leave archived, consolidate into `trajectory/recovery_arc/` from scratch
-- **Status**: **drafted, not yet locked. Review-pending — user reads + accepts the r2-amended scope (audit closures + first-3 list change) before execution starts.**
+- **Status**: **LOCKED 2026-06-18 by user acceptance at revision r3 (compressed §3.6 re-audit per acceptability criteria).** Programme scoping artefact, not a falsification-bar pre-reg. **Compression justification**: r3 changes (Strand B operationalisation interview discipline + three-phase recovery_arc reframe) are scope additions, not architectural; no new statistical machinery; no falsification-bar change (descriptive programme has none); first programme-scoping doc so the discipline pattern is itself being established. Further modifications create v2 with v1 archived per the locked-pre-reg discipline. **§3.8 lock-commit gates**: (1) power-calc dispatch N/A — programme scoping doc, no §8 caveats; (2) headline cell N/A — no falsification bar; (3) register-row pointer N/A — descriptive/README is sui generis programme scoping artefact, non-supersession confirmed; (4) re-audit COMPRESSED per §3.6 (justification above). **Next**: Phase 1 execution per §6 unblocked — first analysis [`operationalisation_support/stress_mean_sleep/`](operationalisation_support/) can begin.
+
+### Revision r3 — Strand B operationalisation + three-phase trajectory reframe (2026-06-18)
+
+Two user-driven changes (no audit fire driver; direct user feedback after r2-amended scope review):
+
+- **Strand B operationalisation interview discipline** → new §7b documents the protocol: Claude drafts a question-and-options brief; user picks; locked operationalisation enters the analysis README before script.py is written. Default canonical; compression (skip interview) is documented exception only. §2 Two-strand framing extended with the discipline distinction (Strand A template-driven vs Strand B operationalisation-requires-user). §6.2 recovery_arc updated to name the §7b pre-spin-up requirement. *(Rationale: Strand B questions are open and cross-cutting; multiple defensible operationalisations per choice point; user owns the choice.)*
+- **Q4.1 recovery arc reframed as three-phase** (pre-illness healthy → immediate infection/acute → LC trajectory) → §2 Two-strand framing extended with the three-phase paragraph; §4.1 question text extended; §6.2 recovery_arc scope + inputs + outputs + dependencies + effort all updated to reflect the three-phase coverage. *(Rationale: the Garmin corpus covers ~5 years 2021-08-16 → present, with ~13+ months of pre-illness healthy baseline that has never been formally characterised; S01/S02 only used the LC era. Pre-illness data is a stronger comparison than early-LC-as-proxy-for-healthy.)*
+
+§7 numbering also corrected (broken intermediate state with duplicate §7c labels + empty §7d → cleaned to §7a / §7b / §7c / §7d sequential).
+
+Authorship "Locked design choices" bullet about first-3-analyses still holds: §6.2 recovery_arc remains the second analysis; scope is broader but the analysis identity is unchanged.
 
 ### Revision r2 — audit closures (2026-06-16)
 
@@ -58,6 +69,15 @@ Reusable per-channel analyses that any HA pre-reg drafting session can cite to m
 Standalone scientific descriptive analyses of the corpus's bigger-picture story. Answers cross-cutting questions about the multi-year arc, intervention effects across channels, era boundaries, cohort topology. Output is refreshable as more data accrues.
 
 **Folder**: `descriptive/trajectory/<topic>/`
+
+**Discipline (r3 added 2026-06-18)**: Strand B analyses **require a user operationalisation interview before script.py is written**. Unlike Strand A (per-channel template Q3.x.a-i drives operationalisation deterministically), Strand B questions are open and cross-cutting — every analysis has multiple defensible operationalisations (which channels? which window? which events to overlay? which boundary dates? what counts as "healthy baseline"?). The user owns the operationalisation choice per Strand B analysis; Claude drafts a question-and-options brief, user picks, then script.py is written to the locked operationalisation. See §7c for the protocol.
+
+**Three-phase trajectory framing (r3 added 2026-06-18)**: the Garmin corpus covers ~5 years (2021-08-16 → present) and spans **three distinct epochs** that should be honoured by trajectory analyses:
+1. **Pre-illness healthy baseline** (2021-08-16 → COVID infection date) — ~13+ months of healthy Garmin data BEFORE the LC onset. No gevoelscore (that started 2022-09-03). The strongest available "healthy comparison" for everything that follows.
+2. **Immediate infection / acute phase** (COVID infection date → onset of sustained illness) — the period of acute infection + early recovery. Operational boundary requires user input (first symptoms vs PCR-confirmed vs sustained symptom onset vs official diagnosis — choices give different windows).
+3. **LC trajectory** (Stratum 4: 2022-09-03 → as-of-date) — the multi-year recovery arc. Currently the primary analytic surface per `lc_era_temporal_segmentation.md`; trajectory analyses extend the framing to include phases 1 + 2 above.
+
+Trajectory analyses (Q4.1 recovery arc; Q4.3 era boundaries) should leverage all three phases — pre-illness data is a stronger baseline than early-LC-as-proxy-for-healthy.
 
 ---
 
@@ -124,15 +144,21 @@ Candidates (current HA-* anchors not in the CONFIRMED-citalopram set):
 
 Each question is cross-cutting. Listed roughly in priority order.
 
-### 4.1 Recovery arc (the multi-year shape)
+### 4.1 Recovery arc (three-phase: healthy → infection → trajectory)
 
-**Question**: What is the multi-year shape of the recovery? Where are the inflection points? How do they line up with documented events (CPAP, Ergotherapie start, citalopram phases)?
+**Question (r3-extended 2026-06-18)**: What is the **three-phase** shape of the data? (a) **Pre-illness healthy baseline** (2021-08-16 → COVID infection date) — what does healthy look like in the Garmin signals? (b) **Immediate infection / acute phase** (infection → onset of sustained illness) — how do the signals shift during acute infection + early recovery? (c) **LC trajectory** (2022-09-03 → present) — the multi-year recovery arc, inflection points, alignment with documented events (CPAP, Ergotherapie, citalopram phases). The healthy-baseline (a) is a **stronger comparison** than early-LC-as-proxy-for-healthy.
 
-**Existing**: [`_archive/S01-stabilisation-trajectories/`](../hypotheses/_archive/S01-stabilisation-trajectories/) (90d rolling autonomic) + [`_archive/S02-score-trajectory/`](../hypotheses/_archive/S02-score-trajectory/) (gevoelscore distribution shift) + [`_archive/S02c-may-2026-divergence/`] (channel divergence). All archived; content load-bearing but no longer surfaceable to fresh readers.
+**Existing**: [`_archive/S01-stabilisation-trajectories/`](../hypotheses/_archive/S01-stabilisation-trajectories/) (90d rolling autonomic on LC era only) + [`_archive/S02-score-trajectory/`](../hypotheses/_archive/S02-score-trajectory/) (gevoelscore distribution shift) + [`_archive/S02c-may-2026-divergence/`] (channel divergence). All archived; **all framed only on the LC era** — none of them leveraged the pre-illness healthy baseline.
 
-**Missing**: a non-archived, refreshable home + a current-corpus refresh (S01/S02 last computed pre-2026-06-13).
+**Missing**: (i) a non-archived, refreshable home; (ii) a current-corpus refresh (S01/S02 last computed pre-2026-06-13); (iii) **the pre-illness healthy baseline + acute-infection phase extensions** (the r3-added scope — strongest gap, since pre-illness data has never been formally characterised).
 
-**Proposed analysis**: `trajectory/recovery_arc/`. Consolidates S01 + S02 + S02c into one refreshable analysis. Headline finding: the peak-2023 → trough-2025 → uptick-May-2026 arc with documented event overlays.
+**Operationalisation requires user interview (per Strand B discipline §7c)**:
+- Which date marks the COVID infection boundary? (first symptoms / PCR-confirmed / sustained onset / official diagnosis — all are defensible)
+- Which Garmin channels are in scope for each phase? (some channels may have coverage gaps in different phases)
+- How is the acute-infection phase boundary defined? (fixed window vs symptom-driven vs autonomic-signal-driven)
+- Which documented events get overlaid? (CPAP, Ergotherapie, citalopram phases — full list to be confirmed)
+
+**Proposed analysis**: `trajectory/recovery_arc/`. Consolidates S01 + S02 + S02c + the new pre-illness + acute-infection extensions into one refreshable three-phase analysis. Headline finding: full arc (healthy → infection → LC trajectory) with documented event overlays + cross-phase channel comparisons. Effort bump from v2-original 4-5h estimate to ~6-8h reflecting the scope extension.
 
 ### 4.2 Intervention cross-channel view (the citalopram integrated picture)
 
@@ -269,21 +295,27 @@ After this README is locked, the first three analyses to execute (per plan v2 §
 
 **Estimated effort**: 2-3 hours.
 
-### 6.2 `trajectory/recovery_arc/` (Strand B, second)
+### 6.2 `trajectory/recovery_arc/` (Strand B, second — three-phase scope per r3 2026-06-18)
 
-**Scope**: Q4.1 (multi-year recovery shape with documented event overlays).
+**Scope**: Q4.1 (three-phase trajectory: pre-illness healthy baseline → immediate infection/acute → LC trajectory recovery shape, with documented event overlays). Per the r3-extended Q4.1 framing in §2 + §4.1, this analysis now leverages **all ~5 years of Garmin data** (2021-08-16 → present), not just the LC era (2022-09-03 →).
 
-**Inputs**: full `per_day_master.csv` corpus + S01/S02 archived findings as historical reference + intervention phase axis.
+**Pre-spin-up requirement (Strand B discipline per §7b)**: user operationalisation interview MUST happen before script.py. Key choice points to surface in the Q&A brief:
+- **COVID infection-date boundary**: which date marks the pre-illness → acute transition (first symptoms / PCR-confirmed / sustained symptom onset / official diagnosis)?
+- **Acute-phase endpoint**: how to define the acute → LC transition (fixed window vs symptom-driven vs autonomic-signal-driven)?
+- **Channel set per phase**: which Garmin channels are in scope for each phase (some have coverage gaps; e.g. gevoelscore doesn't exist pre-2022-09-03)?
+- **Event overlays**: which documented events to overlay (CPAP / Ergotherapie / citalopram phases / other)?
+
+**Inputs**: full `per_day_master.csv` corpus + S01/S02 archived findings as historical reference (note: S01/S02 were both framed only on the LC era, so the pre-illness + acute extensions are net-new) + intervention phase axis + COVID-infection-date + documented events list (both surfaced via the operationalisation interview).
 
 **Outputs**:
-- `run.py` — refreshed analysis on current corpus (S01/S02 last ran pre-2026-06-13)
-- `findings.md` — the multi-year story headline (peak 2023 → trough 2025 → uptick May 2026) with event overlays + inflection-point identification + comparison-to-S01/S02-archived
+- `run.py` — refreshed three-phase analysis on current corpus
+- `findings.md` — three-phase story: (a) pre-illness healthy Garmin baseline characterisation (first time formalised), (b) acute-infection phase shifts vs healthy baseline, (c) LC-trajectory recovery shape vs healthy baseline + acute-phase. Headline + event overlays + inflection-point identification + comparison-to-S01/S02-archived for the LC-era sub-finding.
 
-**Dependencies**: S01/S02 archived for reference; current corpus.
+**Dependencies**: S01/S02 archived for reference; current corpus; **locked operationalisation from §7b user interview** (no script.py without it).
 
-**Why second**: load-bearing trajectory story is currently invisible to fresh readers; consolidates scattered work; refreshable as cadence work.
+**Why second**: load-bearing trajectory story is currently invisible to fresh readers; consolidates scattered work; refreshable as cadence work; pre-illness baseline characterisation is the single largest gap (never formally surfaced).
 
-**Estimated effort**: 4-5 hours.
+**Estimated effort**: 6-8 hours (r3 bump from 4-5h; reflects the pre-illness + acute-phase scope extension + user interview round-trip).
 
 ### 6.3 `operationalisation_support/stress_low_motion_min_count_S60_Mlow/` (Strand A, third — per r2 closure D1.8)
 
@@ -317,14 +349,41 @@ Each analysis folder's README answers, in plain prose (no rigid template):
 
 Mirrors the existing [`garmin_exploration/<topic>/README.md`](../garmin_exploration/) pattern. No standardised section template forced.
 
-### 7b. Integration with HA-* discipline (Phase 4 — after ≥3 analyses land)
+### 7b. Strand B operationalisation interview (r3 added 2026-06-18)
+
+**Strand B analyses require a user operationalisation interview before script.py is written.** The default is canonical; compression (skip interview) is the documented exception, not the rule.
+
+**Why**: Strand A is template-driven (per-channel Q3.x.a-i questions are deterministic; spin up + run). Strand B questions are open and cross-cutting — every analysis has multiple defensible operationalisations:
+- Q4.1 recovery arc: which date marks COVID infection? Which channels per phase? Acute-phase boundary definition?
+- Q4.2 intervention cross-channel: which boundary (2024-04 buildup / 2026-03 afbouw)? Which channels in scope? Pre/post window length?
+- Q4.3 era boundaries: which alternatives to compare against the current Stratum 4?
+- Q4.4 cohort topology: dip-cluster proximity rule? Recovery-window length?
+- Q4.7 notes patterns: which categorisation slices? Time-series resolution?
+- Q4.9 subjective↔objective coupling: which Garmin channel set? Coupling measure?
+
+Different operationalisations yield different findings. The user owns the choice.
+
+**Protocol**:
+1. **Claude drafts a question-and-options brief** for the analysis — what the question asks, 2-4 defensible operationalisation options per choice point, the trade-offs of each.
+2. **User picks** (or proposes a fourth option). Use the AskUserQuestion tool pattern for the round-trip.
+3. **Locked operationalisation goes into the analysis README** before script.py is written (Authorship-block-equivalent record).
+4. **script.py implements the locked operationalisation** — no on-the-fly choices.
+5. After result lands, descriptive interpretation: any operationalisation-sensitive finding is flagged as such.
+
+**Compression (skip interview)** is acceptable for:
+- Pure refresh analyses where the operationalisation is unchanged from a prior locked run (just rerun with new data).
+- Mechanically derivative analyses (e.g. extending an existing analysis by one more channel where the per-channel mechanics are already locked).
+
+When compressed, the analysis README must include a one-line `Compression: operationalisation-interview skipped because <reason>` justification.
+
+### 7c. Integration with HA-* discipline (Phase 4 — after ≥3 analyses land)
 
 Amendments to [`hypothesis_lock_process.md`](../../methodology/hypothesis_lock_process.md):
 - §3.2 step 4 §3 (Data sources): "cite the relevant Strand A descriptive analysis for each column-cluster used; if none exists, spin one up first"
 - §5 sanity-check row: "Are descriptive analyses cited for §3 columns + their distributions referenced for §7 anchor calibration?" (initially soft; promote to lock-blocking once 3+ analyses are landed and the discipline is proven)
 - §3.8 (deferred): potential 5th lock-commit confirmation gate
 
-### 7c. Refresh cadence
+### 7d. Refresh cadence
 
 - **Strand A** analyses refresh when the underlying column's distribution shifts materially (new data alters base rates by > 20%, or new intervention boundary lands). Trigger: HA-* result re-interpretation flag.
 - **Strand B** analyses refresh on cadence:
