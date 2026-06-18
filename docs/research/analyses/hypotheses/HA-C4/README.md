@@ -1,17 +1,18 @@
 # HA-C4 — folder status
 
-**Pre-registration (current)**: [`hypothesis.md`](hypothesis.md) — **v2 drafted 2026-06-18, NOT YET LOCKED**. Composite-path post-v1-dry-run-halt revision per the v1 dry-run report's "Recommendation for HA-C4-v2" triage section. Three integrated structural changes: §5.3 explicit INCONCLUSIVE handling (Option A) + §7.3 arithmetic rebuild (Option E first half — bug fix only) + new §4.11.3 Ch3 validate sensitivity arm with chain-T+1 relaxed (Option C as descriptive sensitivity, NOT promoted to primary).
+**Pre-registration (current)**: [`hypothesis.md`](hypothesis.md) — **v2 r2 LOCKED 2026-06-18 by user acceptance**. Composite-path post-v1-dry-run-halt revision per the v1 dry-run report's "Recommendation for HA-C4-v2" triage section. Three integrated structural changes: §5.3 explicit INCONCLUSIVE-aware verdict bands (Option A) + §7.3 arithmetic rebuild (Option E first half — bug fix only) + new §4.11.3 Ch3 validate sensitivity arm with chain-T+1 relaxed (Option C as descriptive sensitivity, NOT promoted to primary). Fresh-session §3.4 audit landed PASS-with-caveats ([report](../../../reviews/HA-C4-v2-2026-06-18.md)); four side-observation closures applied as mechanical r2 wording fixes; §3.6 re-audit compressed per the criteria (no architectural change). L2.5 substantive concern: user accepted at lock that v1 r2 "priced-in" disposition carries forward (v2's structural inheritance from v1's pre-dry-run bands weakens the calibration-bias link).
 
 **v2 lock arc** (per [`hypothesis_lock_process.md`](../../../methodology/hypothesis_lock_process.md)):
 
 | stage | status | session venue | output |
 |---|---|---|---|
-| 1. Draft (§3.2) | **DONE 2026-06-18** | this session (fresh) per composite-path handoff brief at [`.claude/plans/session-c4-v2-draft-handoff-2026-06-18.md`](../../../../../../.claude/plans/session-c4-v2-draft-handoff-2026-06-18.md) | this commit |
-| 2. Audit (§3.4) | pending | **fresh session** (paste `/research-review` brief) | `reviews/HA-C4-v2-<date>.md` |
-| 3. Revise r2 (§3.5) | pending | shared-context with drafting | revised `hypothesis.md` |
-| 4. Re-audit (§3.6) | pending or compress | **fresh session** OR §3.6 compression decision | `reviews/HA-C4-v2-<date>-v2.md` (canonical) |
-| 5. Lock (§3.8) | pending | shared-context | LOCK COMMIT + register-row pointer + 4 §3.8 gate confirmations |
-| 6. Test execution (§3.9) | pending | **fresh session** | new `test.py` + `result.md` |
+| 1. Draft (§3.2) | DONE 2026-06-18 | fresh session per composite-path handoff brief | commit `59fae4b` |
+| 2. Audit (§3.4) | DONE — PASS-with-caveats | fresh session | [`reviews/HA-C4-v2-2026-06-18.md`](../../../reviews/HA-C4-v2-2026-06-18.md) |
+| 3. Revise r2 (§3.5) | DONE — four wording closures + pre-lock data-presence check | shared-context (this session) | commit `dee5885` |
+| 4. Re-audit (§3.6) | COMPRESSED per criteria | n/a | n/a |
+| 5. Lock (§3.8) | DONE 2026-06-18 by user acceptance | shared-context (this session) | THIS LOCK COMMIT |
+| 6. Test execution (§3.9) | pending | **fresh session** (paste test handoff at [`.claude/plans/session-c4-v2-test-handoff-2026-06-18.md`](../../../../../../.claude/plans/session-c4-v2-test-handoff-2026-06-18.md)) | new `test.py` + `result.md` |
+| 7. Result review | pending | this session | verdict + downstream synthesis |
 
 **Headline cell (drafted, not locked)**: unmedicated phase × 3-channel triad × heavy-T-vs-non-heavy-T × Mann-Whitney + Cliff's delta × block-permutation null E[L]=7 × **v2 INCONCLUSIVE-aware triad verdict rule** (per-channel: CONFIRMED 1.0 / CONFIRMED-PARTIAL 0.5 / REFUTED 0; triad sum bands: 3.0 SUPPORTED-strong / 2.0-2.5 SUPPORTED / 1.0-1.5 PARTIAL / <1.0 REJECTED).
 
