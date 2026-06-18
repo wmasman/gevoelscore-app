@@ -3,7 +3,7 @@
 ## Authorship
 
 - **Drafted**: 2026-06-16 by Claude (Opus 4.7), in reviewer-mode-with-authorization per [CONVENTIONS §1.2](../../CONVENTIONS.md#12-reviewer-mode-claude-reads--critiques--explains-does-not-edit-unless-asked)
-- **Authorising user**: Willem Masman
+- **Authorising user**: user (name redacted for publication-safety per `audit_for_publication.py` discipline)
 - **Drafting-session context**: post-STOCKTAKE revival ([`STOCKTAKE.md §3`](../../STOCKTAKE.md#3-descriptive-work--the-structural-gap)) + plan v2 ([`structured-descriptive-analysis-2026-06-16.md`](file:///C:/Users/Gebruiker/.claude/plans/structured-descriptive-analysis-2026-06-16.md), v2 reframe accepted: research programme, not card-per-group documentation layer)
 - **Locked design choices** (from plan v2 §9, user-accepted 2026-06-16):
   - Folder name: `descriptive/`
