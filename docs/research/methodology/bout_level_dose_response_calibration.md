@@ -20,7 +20,7 @@
 4. **Per-feature β coefficients become the inheritance defaults** for [`bout_level_recovery_dynamics.md` §5.3 Approach A](bout_level_recovery_dynamics.md). The downstream HA pre-regs using Approach A use the **buildup post-CPAP β** (tighter CI per parent MD pattern); afbouw β reported for transparency.
 5. **Independent substantive finding framed honestly per [CONVENTIONS §4.2](../CONVENTIONS.md#42-caveats-yes-a-priori-claims-no)**: the recalibration's per-feature β pattern (does citalopram act more on `peak_height` than `recovery_half_life`? more on `level` than `dynamics`?) is a research finding in its own right. The finding is reported here (when the calibration runs); it informs but does not gate the parent MD's lock.
 
-**Status**: drafted r1, NOT LOCKED. Lock requires the fresh-session `/research-methodology-review` audit per [CONVENTIONS §2.2](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice). The recalibration itself does not run until both this MD and the parent lock (pipeline construction is a separate downstream session per [`bout_level_recovery_dynamics.md` §7.4](bout_level_recovery_dynamics.md)).
+**Status**: **r2 LOCKED 2026-06-19** per [CONVENTIONS §2.2 + §2.3](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) audit hooks + [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression. Fresh-session audit ([`reviews/bout_level_recovery_dynamics-2026-06-19.md`](../reviews/bout_level_recovery_dynamics-2026-06-19.md), single report covering parent + sub-MD) verdict PASS-with-caveats. The recalibration itself does not run until pipeline construction (a separate downstream session per [`bout_level_recovery_dynamics.md` §7.4](bout_level_recovery_dynamics.md)). Co-locked with parent [`bout_level_recovery_dynamics.md`](bout_level_recovery_dynamics.md) at the same commit.
 
 ---
 
@@ -42,7 +42,7 @@ Does citalopram modulate **per-bout recovery-dynamics features** in a graded dos
 
 - **LC recovery trajectory confound** (per parent MD §1.3) carries forward. The afbouw and buildup windows overlap a multi-year LC recovery slope; the linear `days_from_<window>_start` covariate absorbs the local slope inside each regression. The per-feature β estimates are "consistent with a dose-graded modulation of recovery-dynamics on the per-bout feature, after absorbing the local LC-recovery slope", NOT isolated pharmacological causation.
 - **Other confounds co-varying with the afbouw window** (seasonality, Breinvoeding) per parent MD §1.3 carry forward. The spring 2025 control + the symmetric buildup test are the principal sensitivity arms.
-- **CPAP-end at 2024-04-16 inside buildup** — addressed via the post-CPAP-buffer spec per parent MD §5.5.2 (drop first 22 days of buildup).
+- **CPAP-end at 2024-04-16 inside buildup** — addressed via the post-CPAP-buffer spec per [`citalopram_dose_response_stress_mean_sleep.md §5.5.2`](citalopram_dose_response_stress_mean_sleep.md#552-post-cpap-buffer-spec-s2-row) (drop first 22 days of buildup; the post-CPAP buildup window is 2024-05-01 → 2024-06-19, n ≈ 50 days). The "parent MD" antecedent in earlier drafts was ambiguous between this MD's local-parent (`bout_level_recovery_dynamics.md`) and the upstream-parent dose-response MD; the upstream-parent dose-response MD is meant — `bout_level_recovery_dynamics.md` has no §5.5.2 of equivalent semantics (r2 absorb 2026-06-19, audit L2 minor antecedent clarification).
 - **Bout sparsity per day** (~3-8 bouts/day; some days zero) means the per-bout regression has a non-uniform observation rate across days. The day-level random effect / clustering absorbs within-day correlation; the day-level n drives effective sample size (not bout-level n). At ~70 days per window × ~5 bouts/day ≈ 350 bouts/window but effective n ≈ 70 day-clusters per window. The CI estimates reflect this.
 
 ### 1.4 Framing — confirmatory per [CONVENTIONS §4.3](../CONVENTIONS.md#43-prior-driven-hypotheses-are-confirmatory-not-exploratory)
@@ -55,26 +55,69 @@ The bout-level dose-response question is downstream of the confirmed daily-aggre
 
 Per [CONVENTIONS §4.3](../CONVENTIONS.md#43-prior-driven-hypotheses-are-confirmatory-not-exploratory), confirmatory framing is justified.
 
+### 1.5 Four-input bar at the sub-MD layer (r2 absorb 2026-06-19, audit L1 MEDIUM)
+
+Per [CONVENTIONS §2.2](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice), the four-input bar binds at the sub-MD layer too — not only by inheritance from the parent dose-response MD or from [`bout_level_recovery_dynamics.md`](bout_level_recovery_dynamics.md) §2. The audit (L1.1 + L1.3) flagged that best-practices were implicit by inheritance + structured trade-off vision was absent. This subsection makes both explicit.
+
+#### 1.5.1 Best-practices standards
+
+- **Linear mixed-effects regression with day-level random intercept + cluster-robust SE** is the standard n-of-1 self-tracked counterfactual-inference pattern per [Daza 2018](../literature/methodology/daza_2018_self_tracked_n_of_1_counterfactual.pdf) (referenced via [`citalopram_phase_stratification §1.3`](citalopram_phase_stratification.md#13-the-anchor-claim-the-finding-this-framework-implements)). The day-cluster absorbs within-day correlation across bouts; cluster-robust SE handles heteroskedasticity across days without specifying the within-day correlation structure parametrically.
+- **Per-feature independent regressions** (rather than joint multivariate / partial-pooling) is the project-canonical pattern at the daily-aggregate layer (parent dose-response MD §4.6 multi-channel runs are per-channel independent regressions reported alongside Holm step-down companions). Inheriting the same pattern at per-bout layer preserves discipline-coherence + interpretability per feature.
+- **Three-pronged spec** (afbouw primary + buildup post-CPAP secondary + spring 2025 control) inherits verbatim from [`citalopram_dose_response_stress_mean_sleep.md §5`](citalopram_dose_response_stress_mean_sleep.md#5-the-five-pronged-spec-locked) and is the project's anchor for citalopram dose-response identification in within-subject observational data.
+
+#### 1.5.2 Established literature
+
+- The parent dose-response MD's literature anchors carry forward verbatim (Daza 2018 named above; PK/PD pharmacokinetics for SSRI plasma half-life modelled per [`citalopram_dose_response_stress_mean_sleep.md §2.3`](citalopram_dose_response_stress_mean_sleep.md#23-pk-smoothed-plasma-proxy-primary-exposure)).
+- **Per-bout dose-response calibration literature is honestly downgraded to deferred-but-named** — no direct n-of-1 anchor for per-event recovery-feature dose calibration exists in the project's literature folder. Candidate anchors (queued for fetch via `_pending_literature_fetch.md`): Stanley/Buchheit/Plews 2013 on per-event HRV-recovery features (per parent MD §2.2 deferral). The methodology stands on the established daily-aggregate dose-response literature applied at finer-resolution operand.
+
+#### 1.5.3 Tradeoff vision
+
+Three alternatives to the chosen specification:
+
+| dimension | linear-extension assumption (no recalibration) | **per-feature independent fit (CHOSEN)** | joint multivariate with shrinkage |
+|---|---|---|---|
+| Power | high (uses daily-aggregate β at full daily-aggregate n) | medium (per-feature n at bout level; effective n ≈ 70 day-clusters/window) | medium-high (cross-feature pooling) |
+| Interpretability per feature | low (β assumed identical to daily) | high (per-feature β with own CI) | medium (per-feature shrunken toward joint mean) |
+| Robustness to feature-specific dose-response heterogeneity | low (assumes uniform) | high (each feature has its own β) | medium (shrinkage biases toward joint mean even if feature β differs) |
+| Audit-defensibility for downstream Approach A inheritance | low (assumption unaudited) | high (per-feature CIs auditable) | medium (shrinkage prior is itself a choice) |
+| Cost / complexity | none (re-uses daily β) | low (parent MD's spec form re-applied) | medium-high (Bayesian or partial-pooling machinery) |
+| n=1 single-subject suitability | poor (linearity-of-extension is the question) | good | good but adds prior choice |
+
+**Per-feature independent fit wins on robustness + audit-defensibility + interpretability** at moderate cost. Linear-extension (no recalibration) is the substantive null this sub-MD exists to falsify or confirm; assuming it is what the sub-MD's question rejects on first principles. Joint-with-shrinkage is the principled alternative if cross-feature pooling were known to help, but the n=1 design + the substantive-finding question "does citalopram act differently on level vs dynamics?" makes per-feature independence the right framing — shrinkage would bias the level-vs-dynamics read.
+
+The implicit handling at §3.7 (Holm step-down across the 5 per-bout features as descriptive overlay) is the multiplicity-companion to per-feature independence; per-pre-reg multiplicity discipline is deferred to downstream HA pre-regs per parent MD §5.2 (PM-confirmed 2026-06-19).
+
+#### 1.5.4 Research limitations + objectives
+
+- **Per-bout n is the binding constraint**. ~70 days × ~5 bouts/day ≈ 350 bouts/window, but effective n ≈ 70 day-clusters per window after cluster-robust SE. CIs are wider than daily-aggregate CIs proportionally.
+- **Model-form assumptions**: linear additive dose effect per feature (no Emax / hill curve); compound-symmetry day-level random intercept (no within-day AR(1) at primary; §3.3 Sensitivity H adds the AR(1) alternative). Both surfaced at §3.1 + §7 caveats.
+- **Firstbeat-input opacity inherits from parent MD §2.4** (r2-absorbed at parent): per-bout features at minute resolution AMPLIFY Firstbeat-algorithm-derived artefacts that daily aggregate smooths. A CONFIRMED per-feature β is a statement about the per-minute-trace operand's dose-modulation, not autonomic-recovery physiology directly (§7 caveat 4 carries this verbatim at this MD).
+- **Cross-bout independence assumption within day is rejected** by the day-cluster framing — bouts within a day share day-state. Block-bootstrap (Sensitivity A) at 7-day blocks per [`permutation_null_block_length.md`](permutation_null_block_length.md) preserves the day as the resampling unit; within-day bout structure rides intact.
+
+**Specific objectives the sub-MD serves**: produce per-feature β + 95% CI for the 5 per-bout primary features + 2 per-day bout aggregations, suitable for direct inheritance by [`bout_level_recovery_dynamics.md §5.3 Approach A`](bout_level_recovery_dynamics.md) at downstream HA pre-reg lock time; produce the independent substantive level-vs-dynamics read per §5.5; produce the per-feature inheritance assignment per §6 (which features Approach A dose-adjusts at lock vs uses dose-naive).
+
 ---
 
 ## 2. The per-bout features in scope
 
 Per [`bout_level_recovery_dynamics.md` §4](bout_level_recovery_dynamics.md), the five primary recovery-dynamics features:
 
-| feature | unit | prior expected sign (higher plasma → ?) | rationale |
-|---|---|---|---|
-| `peak_height` | Garmin 0-100 | **+1** (higher plasma → higher peak) | inherits direction from daily-aggregate `all_day_stress_avg` and `stress_mean_sleep` CONFIRMED-positive; per-bout peak should track per-day mean's dose-response |
-| `pre_bout_baseline` | Garmin 0-100 | **+1** (higher plasma → higher baseline) | same mechanism as above; baseline stress sits higher under elevated serotonergic tone |
-| `recovery_half_life` | minutes | **+1** (higher plasma → slower recovery) | mechanism: elevated sympathetic tone slows parasympathetic re-engagement → longer half-life. Wiggers' "stuck sympathetic" + the inherited dose-modulation evidence on stress channels both point this way |
-| `decay_slope` | stress/min (negative) | **+1** in absolute value (higher plasma → less negative slope) | mechanism: slower recovery = shallower decay; same mechanism as half-life. Implementation: report β on absolute value of slope (less negative = closer to zero under higher plasma) |
-| `AUC_above_baseline` | stress·min | **+1** (higher plasma → larger AUC) | composite: higher peak + slower recovery → larger area. Should track the most strongly |
+| feature | unit | prior expected sign (higher plasma → ?) | admits `_lagged_lcera` variant? | rationale |
+|---|---|---|---|---|
+| `peak_height` | Garmin 0-100 | **+1** (higher plasma → higher peak) | **yes** — `peak_height_lagged_lcera = peak_height − μ_peak,lcera_lagged(d)` | inherits direction from daily-aggregate `all_day_stress_avg` and `stress_mean_sleep` CONFIRMED-positive; per-bout peak should track per-day mean's dose-response. Lagged-lcera variant is well-defined (per-day mean of peak_height on `[d-90, d-30]` LC-era days) |
+| `pre_bout_baseline` | Garmin 0-100 | **+1** (higher plasma → higher baseline) | **yes** — same construction as peak_height | same mechanism as above; baseline stress sits higher under elevated serotonergic tone. Lagged-lcera variant well-defined |
+| `recovery_half_life` | minutes | **+1** (higher plasma → slower recovery) | **yes** — `recovery_half_life_lagged_lcera = recovery_half_life − μ_halflife,lcera_lagged(d)` | mechanism: elevated sympathetic tone slows parasympathetic re-engagement → longer half-life. Wiggers' "stuck sympathetic" + the inherited dose-modulation evidence on stress channels both point this way. Lagged-lcera variant well-defined |
+| `decay_slope` | stress/min (negative) | **+1** in absolute value (higher plasma → less negative slope) | **no** — feature is itself a derivative; per [CONVENTIONS §3.2](../CONVENTIONS.md#32-lagged-baseline-for-sustained-push-hypotheses) lagged-baseline pattern applies to LEVEL features, not slopes. Sensitivity C reports as N/A for decay_slope; raw value used as primary | mechanism: slower recovery = shallower decay; same mechanism as half-life. Implementation: report β on absolute value of slope (less negative = closer to zero under higher plasma) |
+| `AUC_above_baseline` | stress·min | **+1** (higher plasma → larger AUC) | **yes** — `AUC_above_baseline_lagged_lcera = AUC_above_baseline − μ_AUC,lcera_lagged(d)`; integrates per-day mean AUC | composite: higher peak + slower recovery → larger area. Should track the most strongly. Lagged-lcera variant well-defined (integral of a level feature is itself a level-like feature) |
 
 And the two per-day bout aggregations:
 
-| aggregation | unit | prior expected sign | rationale |
-|---|---|---|---|
-| `bout_count_day` | int | **+1** (higher plasma → more bouts) | higher baseline sympathetic tone → more frequent 60-crossings; mechanism is the same that drives `peak_height` directional prior |
-| `bout_n_fast_recovery_day` | int | **−1** (higher plasma → fewer fast-recovery bouts) | mechanism: SSRI-induced slower recovery → fewer bouts meeting the `recovery_half_life ≤ 15 min` AND `tail_length ≤ 45 min` thresholds. **This is the framework-validity operand**; its dose-modulation is a SECONDARY check that the framework-validity gate's reference frame is internally consistent. (The gate itself is restricted to unmedicated stratum per parent §6.) |
+| aggregation | unit | prior expected sign | admits `_lagged_lcera` variant? | rationale |
+|---|---|---|---|---|
+| `bout_count_day` | int | **+1** (higher plasma → more bouts) | **yes** — `bout_count_day_lagged_lcera = bout_count_day − μ_count,lcera_lagged(d)` | higher baseline sympathetic tone → more frequent 60-crossings; mechanism is the same that drives `peak_height` directional prior. Per-day count is itself level-like; lagged variant well-defined |
+| `bout_n_fast_recovery_day` | int | **−1** (higher plasma → fewer fast-recovery bouts) | **yes** — analogous construction; mirrors HA11 v1's u_dip_count lagged-lcera pattern | mechanism: SSRI-induced slower recovery → fewer bouts meeting the `recovery_half_life ≤ 15 min` AND `tail_length ≤ 45 min` thresholds. **This is the framework-validity operand**; its dose-modulation is a SECONDARY check that the framework-validity gate's reference frame is internally consistent. (The gate itself is restricted to unmedicated stratum per parent §6.) |
+
+**Per-feature lagged-lcera variant admission column added at r2 (2026-06-19, audit L3 MEDIUM)**: pins which features admit Sensitivity C (lagged-lcera variant) per [CONVENTIONS §3.2](../CONVENTIONS.md#32-lagged-baseline-for-sustained-push-hypotheses). `decay_slope` is the sole non-admitter (derivative feature, not level); §3.4 null-finding pre-spec condition 4 collapses to three conditions for `decay_slope` accordingly (the four-condition pre-spec from §3.4 applies for the six features that admit the variant).
 
 **The prior expected signs are PRE-SPECIFIED**. A confirmed β in the predicted direction strengthens the dose-response framework; a β in the unexpected direction (or null) is a diagnostic finding about which features citalopram does/does not modulate. Per [CONVENTIONS §4.2](../CONVENTIONS.md#42-caveats-yes-a-priori-claims-no), both directions are interpretable; the predicted direction is the prior-consistent reading.
 
@@ -133,6 +176,7 @@ Inherits the sensitivity-sweep structure from parent dose-response MD §4.3 verb
 - **Sensitivity E — crash-drop** (CONVENTIONS §3.4 audit hook): re-fit with `is_crash == True` rows dropped from the day pool.
 - **Sensitivity F — nonlinear time term**: 4-knot natural cubic spline on `days_from_window_start` replacing the linear time covariate.
 - **Sensitivity G (bout-level specific)** — exclude motion-confounded bouts (`motion_confound_flag == True`). The primary includes all bouts per [`bout_level_recovery_dynamics.md` §3.4](bout_level_recovery_dynamics.md); this sensitivity arm tests whether the dose-response is motion-driven.
+- **Sensitivity H (bout-level specific, r2 absorb 2026-06-19, audit L3 MEDIUM)** — within-day AR(1) residual structure as alternative covariance specification. The §3.1 primary uses compound-symmetry (day-level random intercept absorbs the day-mean shift component of within-day correlation, but NOT the autocorrelation component if consecutive bouts within a day share state beyond day-mean — e.g. a heavy-T morning followed by a slower-recovery afternoon means bouts share "today is heavy-T" state). Sensitivity H re-fits each per-bout feature regression with AR(1) residual structure within day-blocks (alongside the day-level random intercept; specifically: `vc_formula={'AR1': '0 + C(date)'}` or equivalent via `MixedLM` with `cov_struct=AR(1)` on time-ordered within-day bout sequence) and reports whether β estimates + 95% CIs shift meaningfully relative to compound-symmetry. Headline retains compound-symmetry; H is descriptive overlay. **Estimability caveat**: within-day bout n ≈ 3-8; the AR(1) parameter is noisy per day-block. If the per-day AR(1) parameter cannot be reliably estimated, Sensitivity H reports as "diagnostic-only — within-day n too small for stable AR(1) estimation; CIs compared narratively rather than statistically tested for difference". Directly addresses §7 caveat 1 ("A different covariance structure could shift the CIs") at sensitivity-arm level.
 
 **Visual companion — monotonicity scatter** (per parent MD §4.3): 4-point plot per feature with the four prescribed-dose plateau values on the x-axis and the per-plateau residuals on the y-axis. Same construction as parent MD; one panel per feature for the at-a-glance read.
 
@@ -182,7 +226,7 @@ feature, window, spec, n_bouts, n_days, beta_dose, beta_dose_lo95, beta_dose_hi9
 where:
 - `feature` ∈ {peak_height, pre_bout_baseline, recovery_half_life, decay_slope, AUC_above_baseline, bout_count_day, bout_n_fast_recovery_day}
 - `window` ∈ {afbouw_2026, buildup_post_cpap_2024, spring_2025_control}
-- `spec` ∈ {primary, sens_A_block_bootstrap, sens_B_prescribed_step, sens_C_lagged_lcera, sens_D_alt_lag, sens_E_crash_drop, sens_F_nonlinear_time, sens_G_motion_clean}
+- `spec` ∈ {primary, sens_A_block_bootstrap, sens_B_prescribed_step, sens_C_lagged_lcera, sens_D_alt_lag, sens_E_crash_drop, sens_F_nonlinear_time, sens_G_motion_clean, sens_H_within_day_ar1}
 - `verdict` ∈ {CONFIRMED, weakly_consistent, partial, REJECTED, NULL}
 
 The "headline inheritance β" per feature is the row with `window = buildup_post_cpap_2024 AND spec = primary`. Downstream HA pre-regs using Approach A read those rows directly.
@@ -268,13 +312,14 @@ Per [CONVENTIONS §4.2](../CONVENTIONS.md#42-caveats-yes-a-priori-claims-no):
 
 ## 8. Status + revision log
 
-**Status**: drafted r1 2026-06-19. NOT LOCKED. Awaiting fresh-session `/research-methodology-review` audit per [CONVENTIONS §2.2](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice). The recalibration itself does not run until both this sub-MD and the parent [`bout_level_recovery_dynamics.md`](bout_level_recovery_dynamics.md) lock; pipeline construction is a separate downstream session.
+**Status**: **r2 LOCKED 2026-06-19** per [CONVENTIONS §2.2 + §2.3](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) + [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression. Audit ([`reviews/bout_level_recovery_dynamics-2026-06-19.md`](../reviews/bout_level_recovery_dynamics-2026-06-19.md)) verdict PASS-with-caveats; r2 absorbs are mechanical. Co-locked with parent at this commit. The recalibration itself does not run until pipeline construction (separate downstream session).
 
 ### Revision log
 
 | version | date | change |
 |---|---|---|
 | r1 | 2026-06-19 | Initial draft as sub-MD spun off from [`bout_level_recovery_dynamics.md` §5.4](bout_level_recovery_dynamics.md). Five per-bout primary features + two per-day aggregations in scope. Three-pronged spec inherited from parent dose-response MD (afbouw / buildup post-CPAP / spring 2025 control). Mixed-effects regression at bout-level with day-cluster SE; per-day aggregations at day-level via Newey-West HAC. §6 inheritance table is the empty schema; populates at result-time. |
+| r2 | 2026-06-19 | §3.6-compression r2 absorbing audit fires. Sub-MD absorbs (4): (11) §1.5 standalone four-input bar added with §1.5.1 best-practices / §1.5.2 literature deferred-but-named / §1.5.3 tradeoff vision table {linear-extension / per-feature independent (CHOSEN) / joint with shrinkage} / §1.5.4 limitations + objectives [L1 MEDIUM]; (12) §1.3 caveat 3 "parent MD §5.5.2" antecedent clarified to upstream `citalopram_dose_response_stress_mean_sleep §5.5.2` (not local-parent `bout_level_recovery_dynamics`) [L2 minor]; (13) §3.3 Sensitivity H added (within-day AR(1) residual structure as alternative covariance specification; diagnostic-only when within-day n too small for stable AR(1)) + §4 schema spec list extended [L3 MEDIUM]; (14) §2 features table extended with `admits _lagged_lcera variant?` column per feature (`decay_slope` only non-admitter as derivative feature; §3.4 null-finding pre-spec collapses to three conditions for `decay_slope`) [L3 MEDIUM]. **LOCKED** 2026-06-19 at co-lock-commit. |
 
 ---
 
