@@ -143,6 +143,7 @@ The arc as of 2026-06-16 (canonical in [`methodology/intervention_effects_descri
 | **Proxies** | `hrv_proxy_via_stress.md` (sleep-window stress as HRV proxy), `bb_overnight_gain_proxy.md` (r=0.989 vs truth post-2024-09-18; sensitivity-only for 2024-07-08→2024-09-17 bridge), `stress_low_motion_primitive.md` (Session E lock) |
 | **Operational** | `garmin_pacing_practice.md` (§7.4 intervention-period baseline-calibration now resolved) |
 | **Intervention arc** | `intervention_effects_descriptive.md`, `citalopram_dose_response_stress_mean_sleep.md`, `citalopram_phase_stratification.md` (see §4) |
+| **Bout-level recovery infrastructure** | `bout_level_recovery_dynamics.md` (drafted 2026-06-19 r1, pending audit) — per-bout recovery-dynamics operand for downstream HA11-bout-redo + HA-C4c after HA-C4 v2 REJECTED at daily-aggregate; narrow lock scope (C4 + HA11 only); cross-phase IS in scope via Approach A. `bout_level_dose_response_calibration.md` (drafted 2026-06-19 r1, pending audit) — sub-MD with per-bout β recalibration of the v3 citalopram-traject dose-response on the 5 per-bout primary features + 2 per-day bout aggregations; inheritance defaults for Approach A. |
 | **Queue** | `queued_work.md`, `_pending_literature_fetch.md` |
 
 ---
@@ -176,7 +177,7 @@ The arc as of 2026-06-16 (canonical in [`methodology/intervention_effects_descri
 ## 7. Open follow-ups + actionable next steps
 
 ### Actionable now (low activation energy)
-1. **HA-C4 v2 fresh-session audit** — v2 drafted today (`59fae4b` + `73cb2d4`); next step in lock arc is `/research-review` on the v2 hypothesis.md per `hypothesis_lock_process.md §3.4` (fresh-session, doc-only knowledge). Audit report lands at `reviews/HA-C4-v2-2026-06-18.md`.
+1. **Bout-level methodology MDs fresh-session audit** — `bout_level_recovery_dynamics.md` + `bout_level_dose_response_calibration.md` drafted today r1 (2026-06-19); next step is `/research-methodology-review` on each MD in fresh sessions per [CONVENTIONS §2.2](CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice). Audit reports land at `reviews/methodology-bout_level_recovery_dynamics-YYYY-MM-DD.md` + `reviews/methodology-bout_level_dose_response_calibration-YYYY-MM-DD.md`. After PASS / PASS-with-caveats, r2-absorb + lock. After both MDs lock: pipeline construction session (`pipeline/02_features/extract_stress_bouts.py` + per-bout dataset); then HA11-bout-redo pre-reg (framework-validity reproduction check, restricted to unmedicated stratum × train era × calm days). HALT if HA11 v1 reproduction fails — substantive HA-C4c cascade halts until methodology r2.
 2. **stress_mean_sleep findings interpretation pass** — first Strand A analysis landed today (`84b9801`); needs a read + cross-test re-interpretation check (HA07c train/validate divergence in light of phase-stratified distribution is the obvious trigger). Could land as a small `reviews/` doc or fold into the larger cross-test pass.
 3. **HA-C3 pre-reg drafting** — Tier 1 Wiggers, sister to HA-C4. No HA-folder yet. Use full v1.1 canonical 4-stage arc per `hypothesis_lock_process.md`. Bucket C.5 of the Wiggers Tier 1 plan.
 4. **Phase 1 third analysis dispatch** — `operationalisation_support/stress_low_motion_min_count_S60_Mlow/` (Strand A template-driven; same pattern as stress_mean_sleep handoff).
