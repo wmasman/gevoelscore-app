@@ -69,6 +69,11 @@ UDS_EXTRAS = DATA_PATH / "processed/garmin/uds_extras_daily.csv"
 SLEEP_EXTRAS = DATA_PATH / "processed/garmin/sleep_extras_daily.csv"
 INTRADAY_HR_STRESS = DATA_PATH / "processed/garmin/intraday_hr_stress_daily.csv"
 STRESS_LOW_MOTION = DATA_PATH / "processed/garmin/stress_low_motion_minutes.csv"
+# HA11 U-dip count: lives under analyses/ rather than processed/garmin/ because
+# the extractor is co-located with the hypothesis spec. Mirror semantics of the
+# stress_low_motion block (NaN when no monitoring_b file; 0 — not NaN — on
+# below-gate days, since the HA11 extractor forces u_dip_count=0 when valid=0).
+UDIP_COUNTS = DATA_PATH / "analyses/hypotheses/HA11-stress-udip/udip_counts.csv"
 LABELS_CRASH = DATA_PATH / "processed/crash_labels/labels_crash_v2.csv"
 V24_CLAUSES = DATA_PATH / "processed/notes/notes-categorized-v24-clauses.csv"
 PER_DAY_INTENSITY = DATA_PATH / "processed/manual_triage/per_day_intensity.csv"
@@ -345,6 +350,8 @@ def main():
     print(f"  intraday_hr_stress: {len(intraday_hr_stress)}")
     stress_low_motion = load_csv_by_date(STRESS_LOW_MOTION)
     print(f"  stress_low_motion: {len(stress_low_motion)}")
+    udip = load_csv_by_date(UDIP_COUNTS)
+    print(f"  udip_counts: {len(udip)}")
     crash = load_csv_by_date(LABELS_CRASH)
     print(f"  crash labels: {len(crash)}")
     intensity = load_csv_by_date(PER_DAY_INTENSITY)
@@ -397,7 +404,7 @@ def main():
             d, day_entries, uds, af, sleep, spike, crash, intensity,
             sub_dips, pwc_hours, v24_per_day, events_by_day, umbrella_by_day,
             dossier_by_day, uds_extras, sleep_extras, intraday_hr_stress,
-            stress_low_motion,
+            stress_low_motion, udip,
         )
         rows.append(row)
 
@@ -607,9 +614,10 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
               sub_dips, pwc_hours, v24_per_day, events_by_day,
               umbrella_by_day, dossier_by_day, uds_extras=None,
               sleep_extras=None, intraday_hr_stress=None,
-              stress_low_motion=None):
+              stress_low_motion=None, udip=None):
     intraday_hr_stress = intraday_hr_stress or {}
     stress_low_motion = stress_low_motion or {}
+    udip = udip or {}
     uds_extras = uds_extras or {}
     sleep_extras = sleep_extras or {}
     row = {"date": d.isoformat()}
@@ -909,6 +917,17 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
             row[col] = slm.get(col) or ""
     row["n_minutes_resp_above_18"] = slm.get("n_minutes_resp_above_18") or ""
     row["n_minutes_resp_in_rest_band_10_18"] = slm.get("n_minutes_resp_in_rest_band_10_18") or ""
+
+    # --- HA11 U-dip count (C4b sibling primitive) ---
+    # Per HA11-stress-udip/hypothesis.md §4.2: per-day count of stress U-dip
+    # events (sustained-stress -> ≥25-pt drop -> rebound). Spearman ρ vs
+    # stress_low_motion_min_count_S60_Mlow = 0.556 (DATA_DICTIONARY §8C):
+    # same family, information-additive. Day-validity gate: ≥600 in-range
+    # stress samples (matches the §8C gate). Below-gate days emit 0
+    # (the HA11 extractor forces u_dip_count=0 when valid=0); days with no
+    # monitoring_b file at all are absent from the source CSV and emit "".
+    ud = udip.get(d, {})
+    row["u_dip_count"] = ud.get("u_dip_count") or ""
 
     # --- v24 rollup (presence-conditioned on has_note) ---
     if row["has_note"] and d in v24_per_day:

@@ -506,6 +506,24 @@ not in v1 to avoid pipeline-ordering complications. Until then,
 downstream tests should report sleep/awake-conditioned analyses
 separately using existing `sleep_start_gmt` / `sleep_end_gmt` columns.
 
+### Section 8D — HA11 U-dip count (C4b sibling primitive; 1 column)
+
+**Section preamble**: per-day count of stress "U-dip" events —
+sustained-stress windows (S_pre ≥ 40) followed by a ≥25-point floor
+and rebound to baseline + 5. Locked spec in
+[`analyses/hypotheses/HA11-stress-udip/hypothesis.md`](analyses/hypotheses/HA11-stress-udip/hypothesis.md)
+§4.2. Source: HA11's `extract_udip_counts.py` (parses monitoring_b
+FIT files; same input corpus as §8C). Day-validity gate: ≥ 600
+in-range stress samples (matches §8C / H02d). Sibling to §8C
+stress-low-motion, NOT a replacement: Spearman ρ vs
+`stress_low_motion_min_count_S60_Mlow` = 0.556 (moderate;
+information-additive — same physiological family, different
+phenomenology). Use both when triangulating C4b.
+
+| name | class | source | source column | dtype | units | coverage | missingness | notes |
+|---|---|---|---|---|---|---|---|---|
+| `u_dip_count` | daily_computed | `analyses/hypotheses/HA11-stress-udip/udip_counts.csv` | `u_dip_count` | int | events/day | 2021-08-16 → today (1740 / 1755 = 99.1%; ≥ 600-sample gate: same gate as §8C) | NaN on days without monitoring_b file; 0 (not NaN) on days below the 600-sample gate (extractor forces count to 0 when `valid=0`) | Count of distinct U-dip events satisfying the locked HA11 spec (pre-window mean ≥ 40 stress, dip-window floor ≤ pre − 25, post-window mean ≥ pre + 5, 60-min refractory between events). |
+
 ---
 
 ## Section 9 — note categorization rollup (presence-conditioned)
