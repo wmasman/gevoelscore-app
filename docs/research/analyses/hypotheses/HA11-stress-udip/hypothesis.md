@@ -352,3 +352,21 @@ evaluation runs.
 HA10 with U-dip-count loading replacing morning-peak loading. Same
 `--dry-run` mode; same null seed (`20260605`); same lagged baseline
 machinery.*
+
+---
+
+## Future work — bout-level reproduction (added 2026-06-19 post-lock)
+
+*This section is a post-lock forward-pointer added 2026-06-19. It does NOT modify the §1-§10 locked spec or the result.md's verdict. It points downstream to infrastructure available for an HA11-bout-redo pre-reg.*
+
+The within-day stress U-dip count operationalisation HA11 v1 locked is **one** way to read the within-day recovery-shape signal Wiggers describes. HA11 v1 SUPPORTED-on-train (+22.8pp discrimination, median signed z = 2.168; see [`result.md`](result.md)) is project-trusted independent evidence that a within-day recovery signal exists on this corpus for the pre-cliff era.
+
+A **bout-level reframing** of the same within-day recovery-shape signal is now available as downstream infrastructure: [`methodology/bout_level_recovery_dynamics.md`](../../../methodology/bout_level_recovery_dynamics.md) (drafted 2026-06-19 r1, pending fresh-session audit per [CONVENTIONS §2.2](../../../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice)). The bout-level operand:
+
+- Replaces the §4.2 U-dip event definition (sharp drop + plateau at higher baseline) with a per-bout peak-detection + return-window rule (elevation onto medium-high stress + recovery dynamics).
+- Provides a `bout_n_fast_recovery_day` per-day aggregation as a direct sister to HA11's `u_dip_count` — bouts with `recovery_half_life ≤ 15 min` AND `tail_length ≤ 45 min` describe the same trajectory shape (sharp recovery + return to pre-bout baseline) HA11's U-dip detection captures, read at the bout layer.
+- Includes a load-bearing **framework-validity gate** ([§6 of the methodology MD](../../../methodology/bout_level_recovery_dynamics.md)): the bout-level `bout_n_fast_recovery_day` operand must reproduce HA11 v1's SUPPORTED-on-train signal at directional + effect-size + p-value comparability bars, restricted to the unmedicated stratum × train era × calm-day pool (preserving HA11 v1's calibration baseline). Failure to reproduce halts any downstream bout-level Wiggers test (HA-C4c) on the methodology.
+
+**Downstream HA pre-reg — HA11-bout-redo**: not yet drafted; cascade order per the methodology MD §11. The pre-reg would lock the bout-level framework-validity test as its primary; SUPPORTED would clear the methodology for downstream HA-C4c, REFUTED would halt the bout-level cascade and return the operand-definition question to revision.
+
+**This HA11 v1 result stands regardless**. The bout-level work is an additional, downstream operationalisation of the same construct; it does NOT supersede HA11 v1's SUPPORTED-on-train verdict at the U-dip-count level. Both operationalisations coexist in the project; the bout-level one is the canonical operand for *cross-test* infrastructure on within-day recovery dynamics.
