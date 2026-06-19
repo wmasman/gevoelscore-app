@@ -5,7 +5,7 @@
 - **Drafted**: 2026-06-19 by Claude (Opus 4.7), in producer-mode per [CONVENTIONS §1.1](../CONVENTIONS.md#11-producer-mode-claude-helps-the-user-build-the-research-artefact).
 - **Authorising user**: user (name redacted for publication-safety per `audit_for_publication.py` discipline).
 - **Drafting-session context**: directly follows the `trajectory/recovery_arc/` v1 landing (commit `24dad02`) where the v1 4-phase structure (healthy / acute / lc_pre_gevoelscore / lc_with_gevoelscore) lumped a clinically heterogeneous ~4-year LC era into one bin. User-flagged 2026-06-19 that descriptive work needs a **data-informed + lived-experience-grounded** axis as the canonical substrate, and that the same axis should be **opt-in for HA pre-regs**.
-- **Status**: **r1 drafted; awaits fresh-session methodology review** per [CONVENTIONS §2.2](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) audit hooks. Dates within phases 3-5 are structurally fixed by canonical sources cited inline; the phase-4-internal "pacing became effective" sub-boundary date is marked **TBD** and gated on a §7b operationalisation interview before lock.
+- **Status**: **r2 LOCKED 2026-06-19** per [CONVENTIONS §2.2 + §2.3](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) audit hooks + [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression. Dates within phases 3-5 are structurally fixed by canonical sources cited inline; the phase-4-internal habit-formation sub-boundary is locked at 2022-11-17 (8 weeks post-ergotherapie-start) per the §7b operationalisation interview cleared 2026-06-19 (see §3.4a + §3.4b).
 
 ---
 
@@ -39,26 +39,26 @@ Sits **orthogonal to** [`citalopram_phase_stratification.md`](citalopram_phase_s
 | **Middle (this MD)** | **LC recovery phase axis** | **THIS MD** | **M1 hypothesis-driven + M2 intervention-evidence sub-segmentation of the LC era** |
 | Inner | Citalopram dose-state | [`citalopram_phase_stratification.md`](citalopram_phase_stratification.md) §3 | Medication-state sub-axis; nested within the citalopram-modulated phase of THIS MD |
 
-Cross-classification example: a per-day row in Stratum 4 has (a) `lc_phase` = "lc" from the outer axis, (b) `recovery_phase` = (e.g.) "pacing_pre_citalopram" from this MD, and (c) `citalopram_phase` = "unmedicated" from the inner axis. The three axes are factorable.
+Cross-classification example: a per-day row in Stratum 4 has (a) `lc_phase` = "lc" from the outer axis, (b) `recovery_phase` = (e.g.) "pacing_habit_established" from this MD, and (c) `citalopram_phase` = "unmedicated" from the inner axis. The three axes are factorable.
 
 ---
 
 ## 2. The proposed phase structure (r1)
 
-**Six phases**: two inherited verbatim from [`lc_era_temporal_segmentation §1`](lc_era_temporal_segmentation.md#1-data-given-strata-background-not-a-methodological-choice) + four new within-LC phases.
+**Six phases**: two inherited verbatim from [`lc_era_temporal_segmentation §1`](lc_era_temporal_segmentation.md#1-data-given-strata-background-not-a-methodological-choice) + four new within-LC phases (phase 4 splits into sub-phases 4a + 4b per the §7b operationalisation lock 2026-06-19).
 
 | # | phase name (canonical kebab-case) | window | duration | warrant class | data scope |
 |---|---|---|---:|---|---|
 | 1 | `pre_illness_healthy` | 2021-08-16 → 2022-03-20 | ~217 days | data-given (Garmin extract start; COVID onset eve) | Garmin only |
 | 2 | `acute_infection` | 2022-03-21 → 2022-04-03 | 14 days | data-given (PCR-positive; "Monday after Fietsweekend Ardennen") | Garmin only |
 | 3 | `lc_pre_ergo` | 2022-04-04 → 2022-09-22 | ~171 days | **M1 lived-experience** (no pacing; no intervention; chronic patterns crystallising) | Garmin only (gevoelscore from 2022-09-03 → partial: last 19 days have gevoelscore) |
-| 4 | `pacing_pre_citalopram` | 2022-09-22 → 2024-04-09 | ~564 days | **M1 lived-experience** (pacing initiated via ergotherapie; pre-medication) | Garmin + gevoelscore (full); ergotherapie 2022-09-22 → 2022-12-22; CPAP 2024-01-10 → 2024-04-16 (overlaps tail) |
-| 4b *(potential sub-boundary)* | `pacing_effective` *(TBD if elicited at §7b interview)* | **TBD** → 2024-04-09 | TBD | **M1 lived-experience** if the user identifies a date when pacing became effective; otherwise absorbed into phase 4 | same as phase 4 |
+| 4a | `pacing_pre_citalopram_learning` | 2022-09-22 → 2022-11-17 | 56 days (8 weeks) | **M1 lived-experience** (ergotherapy onboarding + habit formation; CLEARED §7b 2026-06-19) | Garmin + gevoelscore (full); overlaps ergotherapie 2022-09-22 → 2022-12-22 partial |
+| 4b | `pacing_habit_established` | 2022-11-17 → 2024-04-09 | ~508 days | **M1 lived-experience** (pacing habit established; effectiveness still mediated by outside forces; CLEARED §7b 2026-06-19) | Garmin + gevoelscore (full); ergotherapie tail 2022-11-17 → 2022-12-22; CPAP 2024-01-10 → 2024-04-16 overlaps tail |
 | 5 | `citalopram_modulated` | 2024-04-09 → 2026-06-04 | ~787 days | **M2 documented confounder** ([`citalopram_dose_response §5.6`](citalopram_dose_response_stress_mean_sleep.md#56-v3-amendment--multi-channel-confirmation-added-2026-06-14) confirmed dose-modulation on 3 channels) | Garmin + gevoelscore; sub-axis = citalopram phase ([`citalopram_phase_stratification §3`](citalopram_phase_stratification.md#3-the-four-phase-citalopram-traject-stratification)) |
 
-**Note on phase 4b**: r1 marks it as a *potential* sub-boundary because the date is only knowable through the user's lived-experience report. The §7b operationalisation interview (Strand B discipline per [`descriptive/README §7b`](../analyses/descriptive/README.md#7b-strand-b-operationalisation-interview-r3-added-2026-06-18)) is the proper venue. If the user identifies no clear date, phase 4 remains undivided. If the user identifies a date, the canonical name is `pacing_effective` and the rest of phase 4 keeps `pacing_pre_citalopram` as the early sub-phase name with `_learning` suffix added for clarity.
+**Note on phase 4 sub-phases (CLEARED 2026-06-19 at r2 lock)**: the §7b operationalisation interview (Strand B discipline per [`descriptive/README §7b`](../analyses/descriptive/README.md#7b-strand-b-operationalisation-interview-r3-added-2026-06-18)) was completed 2026-06-19 in a user session. The locked operationalisation: **8-week post-ergotherapie-start duration anchor** splits phase 4 into `pacing_pre_citalopram_learning` (4a; 2022-09-22 → 2022-11-17) and `pacing_habit_established` (4b; 2022-11-17 → 2024-04-09). The 4b naming (replacing the r1 working name `pacing_effective`) is more precise: habit-established ≠ effectiveness-achieved, with pacing effectiveness still mediated by outside forces per the user's lived-experience report. The per-sub-phase warrants live at §3.4a + §3.4b. Falsifiability hook: the 8-week boundary's discriminative power on per-sub-phase channel medians is itself testable in descriptive Layer 1 (e.g. as a recovery_arc v2 sensitivity arm; no causal claim).
 
-**Note on phase 5 sub-axis**: within phase 5 the [`citalopram_phase_stratification.md §3`](citalopram_phase_stratification.md#3-the-four-phase-citalopram-traject-stratification) 4-phase sub-axis (unmedicated [absent in phase 5 by construction] / buildup / consolidation / afbouw / post_afbouw) applies. For descriptive work where citalopram sub-structure matters, use the cross-classification `(recovery_phase=citalopram_modulated, citalopram_phase=*)`. The afbouw sub-phase is the right edge of phase 5 (2026-03-20 → 2026-06-04, ~76 days); the post_afbouw sub-phase begins 2026-06-05 and is currently OUT-OF-CORPUS (Garmin data ends 2026-06-04 per [STOCKTAKE §1](../STOCKTAKE.md#1-the-corpus)) so this MD does NOT add a phase 6 for it.
+**Note on phase 5 sub-axis**: within phase 5 the [`citalopram_phase_stratification.md §3`](citalopram_phase_stratification.md#3-the-four-phase-citalopram-traject-stratification) 4-phase sub-axis (unmedicated [absent in phase 5 by construction] / buildup / consolidation / afbouw / post_afbouw) applies. For descriptive work where citalopram sub-structure matters, use the cross-classification `(recovery_phase=citalopram_modulated, citalopram_phase=*)`. The afbouw sub-phase is the right edge of phase 5 (2026-03-20 → 2026-06-05, 78 days, inclusive); the post_afbouw sub-phase begins 2026-06-06 per the `citalopram_phase()` helper in `citalopram_phase_stratification §3` and is currently OUT-OF-CORPUS (Garmin data ends 2026-06-04 per [STOCKTAKE §1](../STOCKTAKE.md#1-the-corpus)) so this MD does NOT add a phase 6 for it.
 
 ### 2.1 Computing the phase for an arbitrary date `d` (canonical helper)
 
@@ -66,21 +66,21 @@ Cross-classification example: a per-day row in Stratum 4 has (a) `lc_phase` = "l
 from datetime import date
 
 def lc_recovery_phase(d: date) -> str:
-    """Per lc_recovery_phase_axis.md §2. r1; subject to §7b date lock."""
+    """Per lc_recovery_phase_axis.md §2. r2 LOCKED 2026-06-19."""
     if d < date(2022, 3, 21):
         return "pre_illness_healthy"
     if d < date(2022, 4, 4):
         return "acute_infection"
     if d < date(2022, 9, 22):
         return "lc_pre_ergo"
+    if d < date(2022, 11, 17):
+        return "pacing_pre_citalopram_learning"
     if d < date(2024, 4, 9):
-        return "pacing_pre_citalopram"
+        return "pacing_habit_established"
     # Phase 5 — citalopram_modulated; sub-axis via citalopram_phase() per
     # citalopram_phase_stratification.md §3
     return "citalopram_modulated"
 ```
-
-The phase-4-internal `pacing_effective` boundary is intentionally absent from r1; the §7b interview determines whether to add it.
 
 ---
 
@@ -90,9 +90,19 @@ The phase-4-internal `pacing_effective` boundary is intentionally absent from r1
 
 **Warrant**: data-given. Inherited verbatim from [`lc_era_temporal_segmentation §1`](lc_era_temporal_segmentation.md#1-data-given-strata-background-not-a-methodological-choice). No methodological choice — the Garmin extract starts 2021-08-16; COVID infection is 2022-03-21.
 
+**Boundary endpoints**:
+- Left: 2021-08-16 (Garmin extract start, inherited from `lc_era_temporal_segmentation §1`).
+- Right: 2022-03-20 (eve of COVID infection).
+- **n_days**: ~217 days.
+
 ### 3.2 Phase 2 — `acute_infection` (inherited)
 
 **Warrant**: data-given. Same inheritance. Boundaries documented at [`lc_era_temporal_segmentation §1`](lc_era_temporal_segmentation.md): "Monday after Fietsweekend Ardennen" anchors the LC start at 2022-04-04.
+
+**Boundary endpoints**:
+- Left: 2022-03-21 (PCR-positive; COVID infection start per `lc_era_temporal_segmentation §1`).
+- Right: 2022-04-03 (eve of LC start).
+- **n_days**: 14 days.
 
 ### 3.3 Phase 3 — `lc_pre_ergo` (NEW — M1 lived-experience warrant)
 
@@ -103,22 +113,50 @@ The phase-4-internal `pacing_effective` boundary is intentionally absent from r1
 **Boundary endpoints**:
 - Left: 2022-04-04 (LC start, inherited from `lc_era_temporal_segmentation §1`).
 - Right: 2022-09-22 (Ergotherapie Rouschop start per [`intervention_effects_descriptive §3`](intervention_effects_descriptive.md#3-baseline-channel-step-change-check)). This is the canonical pacing-onset date because ergotherapie supplied the pacing framework per `garmin_pacing_practice §2`.
+- **n_days**: ~171 days.
 
 **Per-test usage hint**: descriptive analyses use phase 3 as the **untreated chronic-patterns-crystallising reference** for any "did intervention X alter trajectory" question.
 
-### 3.4 Phase 4 — `pacing_pre_citalopram` (NEW — M1 lived-experience warrant)
+### 3.4 Phase 4 — pacing (pre-citalopram era), split into sub-phases 4a + 4b via §7b operationalisation (M1 lived-experience)
 
 **Warrant class**: M1 per `lc_era_temporal_segmentation §2`.
 
-**Warrant body**: This phase covers LC days **with pacing practice active but pre-medication**. Pacing began with ergotherapie 2022-09-22; ergo ended ~2022-12-22 (~13 weeks, end-date approximate per `intervention_effects_descriptive §3`); pacing practice continued and evolved past the formal ergo programme through ~564 days of pre-medication LC. CPAP-interventie (2024-01-10 → 2024-04-16) sits in the tail of this phase but is not a phase boundary because per [`intervention_effects §8.3`](intervention_effects_descriptive.md#83-reading-per-the-5-decision-framework) "no corpus-wide M2 boundary is supported" for CPAP across channels — CPAP is an event-overlay, not a phase boundary. The user's lived-experience description (2026-06-19): "the phase where i started to do pacing (in the beginning not that effective of course)".
+**Warrant body (parent)**: This phase covers LC days **with pacing practice active but pre-medication**. Pacing began with ergotherapie 2022-09-22; ergo ended ~2022-12-22 (~13 weeks, end-date approximate per `intervention_effects_descriptive §3`); pacing practice continued and evolved past the formal ergo programme through ~564 days of pre-medication LC. CPAP-interventie (2024-01-10 → 2024-04-16) sits in the tail of this phase but is not a phase boundary because per [`intervention_effects §8.3`](intervention_effects_descriptive.md#83-reading-per-the-5-decision-framework) "no corpus-wide M2 boundary is supported" for CPAP across channels — CPAP is an event-overlay, not a phase boundary. The §7b operationalisation interview (CLEARED 2026-06-19 in user session) splits phase 4 into two sub-phases per the user's lived-experience boundary at 8 weeks post-ergotherapie-start: sub-phase 4a (`pacing_pre_citalopram_learning`) covers ergotherapy onboarding + habit formation; sub-phase 4b (`pacing_habit_established`) covers the post-onboarding period through citalopram buildup. M1 lived-experience boundaries are event-anchored to the lived-experience report itself per the §5.1 M1 carve-out (the date is calculated from a documented anchor event + a duration named in the lived report; this is distinct from data-driven boundary detection on channel time series).
+
+**Boundary endpoints (parent, union of 4a + 4b)**:
+- Left: 2022-09-22 (Ergotherapie start; canonical pacing-onset).
+- Right: 2024-04-09 (Citalopram buildup start per `citalopram_phase_stratification §3`).
+- **n_days**: ~564 days (combined 4a + 4b).
+
+**Per-test usage hint (parent)**: descriptive analyses use phase 4 as the **pacing-active, pre-medication** reference. For HA tests on autonomic-load channels affected by citalopram, phase 4 is a methodologically clean unmedicated-with-pacing window where the dose-confounder is zero by construction. Sub-phases 4a + 4b enable finer pacing-learning-vs-habit-established stratification when the question warrants it.
+
+#### 3.4a Sub-phase 4a — `pacing_pre_citalopram_learning` (NEW r2 — M1 lived-experience warrant)
+
+**Warrant class**: M1 per `lc_era_temporal_segmentation §2`. Operationalised via §7b interview 2026-06-19; M1 boundary is event-anchored to the lived-experience report itself per the §5.1 M1 carve-out.
+
+**Warrant body (user verbatim, 2026-06-19)**: *"8 weeks of ergotherapy where I learned the basic principles and got into the habit; gradual improvement during this window"*.
 
 **Boundary endpoints**:
 - Left: 2022-09-22 (Ergotherapie start; canonical pacing-onset).
+- Right: 2022-11-17 (Ergotherapie start + 56 days; 8-week habit-formation duration per the §7b operationalisation rule).
+- **n_days**: 56 days (8 weeks).
+
+**Per-test usage hint**: descriptive analyses use sub-phase 4a as the **pacing-learning, ergo-onboarding** reference; overlaps the formal ergotherapie Rouschop programme (which extends through 2022-12-22, overlapping into the early part of 4b).
+
+**Falsifiability hook (descriptive Layer 1, no causal claim)**: per the §7b operationalisation, the 8-week boundary's discriminative power on per-sub-phase channel medians is itself testable in descriptive Layer 1 (e.g. as a recovery_arc v2 sensitivity arm). A "fails to discriminate" finding would invite a §7b re-interview or sub-boundary withdrawal under a v2 amendment.
+
+#### 3.4b Sub-phase 4b — `pacing_habit_established` (NEW r2 — M1 lived-experience warrant)
+
+**Warrant class**: M1 per `lc_era_temporal_segmentation §2`. Operationalised via §7b interview 2026-06-19. The `pacing_habit_established` naming (replacing the r1 working name `pacing_effective`) is more precise: habit-established ≠ effectiveness-achieved; pacing effectiveness remains mediated by outside forces (e.g. workload demands, season, illness, ergo programme tail), but the overall habit was established per the user's lived report.
+
+**Warrant body (user verbatim, 2026-06-19)**: *"After 8 weeks, pacing got into a rhythm (still mediated in effectiveness by outside forces, but the overall habit was established)"*.
+
+**Boundary endpoints**:
+- Left: 2022-11-17 (Ergotherapie start + 56 days; 8-week habit-formation duration).
 - Right: 2024-04-09 (Citalopram buildup start per `citalopram_phase_stratification §3`).
+- **n_days**: ~508 days.
 
-**Potential internal sub-boundary (TBD via §7b)**: the user noted that pacing "in the beginning not that effective" — implying a within-phase qualitative shift when pacing became effective. r1 does NOT lock this date. The §7b operationalisation interview asks the user to either (a) identify a specific date or short window when pacing became effective, in which case phase 4 splits into `pacing_pre_citalopram_learning` + `pacing_pre_citalopram_effective`; or (b) acknowledge no clear boundary exists, in which case phase 4 stays undivided. Both are defensible per M1 — the lived-experience report is the warrant.
-
-**Per-test usage hint**: descriptive analyses use phase 4 as the **pacing-active, pre-medication** reference. For HA tests on autonomic-load channels affected by citalopram, phase 4 is a methodologically clean unmedicated-with-pacing window where the dose-confounder is zero by construction.
+**Per-test usage hint**: descriptive analyses use sub-phase 4b as the **pacing-habit-established, pre-medication** reference. The CPAP-interventie 2024-01-10 → 2024-04-16 overlaps this sub-phase's tail; per §3.6 the last 7 days of sub-phase 4b contain the CPAP-end event (collision with the phase-4b → phase-5 boundary at 2024-04-09). Ergotherapie tail 2022-11-17 → 2022-12-22 overlaps this sub-phase's left edge.
 
 ### 3.5 Phase 5 — `citalopram_modulated` (NEW — M2 documented confounder warrant)
 
@@ -128,15 +166,16 @@ The phase-4-internal `pacing_effective` boundary is intentionally absent from r1
 
 **Boundary endpoints**:
 - Left: 2024-04-09 (Citalopram buildup start per `citalopram_phase_stratification §3`).
-- Right: 2026-06-04 (corpus end per `STOCKTAKE §1`; post-afbouw begins 2026-06-05 and is currently out-of-corpus).
+- Right: 2026-06-04 (corpus end per `STOCKTAKE §1`; post-afbouw begins 2026-06-06 per `citalopram_phase_stratification §3` and is currently out-of-corpus).
+- **n_days**: ~787 days.
 
-**Sub-axis**: the 4-phase citalopram axis (`unmedicated` is absent within phase 5; `buildup` 2024-04-09 → 2024-06-19; `consolidation` 2024-06-20 → 2026-03-19; `afbouw` 2026-03-20 → 2026-06-04; `post_afbouw` 2026-06-05 → present but currently empty in the corpus) applies as the inner axis per §1.3 layering.
+**Sub-axis**: the 4-phase citalopram axis (`unmedicated` is absent within phase 5; `buildup` 2024-04-09 → 2024-06-19; `consolidation` 2024-06-20 → 2026-03-19; `afbouw` 2026-03-20 → 2026-06-05 (inclusive); `post_afbouw` 2026-06-06 → present per `citalopram_phase()` in `citalopram_phase_stratification §3`, currently empty in the corpus) applies as the inner axis per §1.3 layering.
 
 **Per-test usage hint**: see §6 for the phase-stratify vs detrend tradeoff.
 
 ### 3.6 The 2024-04 boundary-collision is inherited
 
-The 7-day proximity of Citalopram buildup start (2024-04-09) + CPAP end (2024-04-16) is documented at [`intervention_effects §2b + §8.1`](intervention_effects_descriptive.md#2b-channel-coverage-gap--bb_overnight_gain). This MD's phase-4/phase-5 boundary sits at 2024-04-09 (citalopram), making the last 7 days of phase 4 contain the CPAP-end event. Per `intervention_effects §8.1` neither event is analytically separable at this resolution; this MD does NOT attempt to disentangle them. Downstream analyses that need to isolate CPAP-end effects must use a different design (ITS or matched-window) per `intervention_effects §8.3`.
+The 7-day proximity of Citalopram buildup start (2024-04-09) + CPAP end (2024-04-16) is documented at [`intervention_effects §2b + §8.1`](intervention_effects_descriptive.md#2b-channel-coverage-gap--bb_overnight_gain). This MD's phase-4/phase-5 boundary sits at 2024-04-09 (citalopram), making the last 7 days of phase 4 (specifically sub-phase 4b `pacing_habit_established`) contain the CPAP-end event. Per `intervention_effects §8.1` neither event is analytically separable at this resolution; this MD does NOT attempt to disentangle them. Downstream analyses that need to isolate CPAP-end effects must use a different design (ITS or matched-window) per `intervention_effects §8.3`.
 
 ---
 
@@ -144,8 +183,8 @@ The 7-day proximity of Citalopram buildup start (2024-04-09) + CPAP end (2024-04
 
 | label | proposal | verdict | reason |
 |---|---|---|---|
-| **(a)** | Status quo — no within-Stratum-4 sub-segmentation default per `lc_era_temporal_segmentation §3` | rejected as default substrate | The default works for HA pre-regs (per-pre-reg M1/M2/M3 warrant gating) but is sub-optimal for **descriptive work** where the lived-experience structure is the substantive question. Lumping `lc_pre_ergo` + `pacing_pre_citalopram` + `citalopram_modulated` into one `lc_with_gevoelscore` bin (as `recovery_arc` v1 did) loses the clinical heterogeneity that drives the descriptive story. |
-| **(b)** | Use the citalopram axis (`citalopram_phase_stratification §3`) as the canonical multi-year axis | rejected | The citalopram axis is a medication-state sub-axis; it has no `lc_pre_ergo` or `pacing_pre_citalopram` analog. Adopting it as the canonical axis collapses 22+ months of pre-citalopram LC into a single `unmedicated` cell, losing the ergo-onset + pacing-learning structure. The two axes are orthogonal and both should exist. |
+| **(a)** | Status quo — no within-Stratum-4 sub-segmentation default per `lc_era_temporal_segmentation §3` | rejected as default substrate | The default works for HA pre-regs (per-pre-reg M1/M2/M3 warrant gating) but is sub-optimal for **descriptive work** where the lived-experience structure is the substantive question. Lumping `lc_pre_ergo` + the pacing era (phase 4: sub-phases 4a + 4b) + `citalopram_modulated` into one `lc_with_gevoelscore` bin (as `recovery_arc` v1 did) loses the clinical heterogeneity that drives the descriptive story. |
+| **(b)** | Use the citalopram axis (`citalopram_phase_stratification §3`) as the canonical multi-year axis | rejected | The citalopram axis is a medication-state sub-axis; it has no `lc_pre_ergo` or pacing-era (phase 4) analog. Adopting it as the canonical axis collapses 22+ months of pre-citalopram LC into a single `unmedicated` cell, losing the ergo-onset + pacing-learning structure. The two axes are orthogonal and both should exist. |
 | **(c)** | Algorithmic change-point detection (PELT / binary segmentation) on `gevoelscore_rolling_*` or autonomic channels | rejected per `lc_era_temporal_segmentation §4` | Re-creates the deleted trajectory framing. Externally-grounded reasons (lived experience + intervention evidence) are stronger anchors than data-driven boundary detection on the very channels the boundaries would then be tested against — a circular self-confirmation risk. |
 | **(d)** | Event-overlay only (events as plot markers, not phase boundaries) | rejected for descriptive work | Sufficient for visualisation but doesn't enable per-phase descriptive characterisation (median + IQR + bootstrap CI per phase × channel) — which is the primary use case for the recovery_arc v2 + future Strand B trajectory analyses. |
 | **(e)** | One-phase-per-intervention axis (CPAP-on / CPAP-off / Citalopram-buildup / -consolidation / -afbouw / -post) | rejected | Pure intervention-driven; ignores the lived-experience `lc_pre_ergo` + pacing-learning phases that pre-date all interventions. Also runs into the 2024-04 boundary collision unproductively (every CPAP-related boundary touches a citalopram boundary). |
@@ -159,7 +198,7 @@ The 7-day proximity of Citalopram buildup start (2024-04-09) + CPAP end (2024-04
 
 - **Stratification by lived-experience clinical phase** is standard in n-of-1 / SCED designs ([WWC 2022 SCED standards](../literature/methodology/wwc_2022_sced_standards.pdf); [SCRIBE 2016](../literature/methodology/scribe_2016_single_case_reporting.pdf); [Natesan Batley 2023](../literature/methodology/natesan_batley_2023_bayesian_sced.pdf)). The discipline requires (a) phases be operationally distinguishable; (b) phase boundaries be documented event-anchored; (c) per-phase analyses be honest about within-phase n.
 - **Time-varying confounder adjustment in n-of-1 self-tracked data** is the framework anchor for the citalopram sub-axis nesting per [Daza 2018](../literature/methodology/daza_2018_self_tracked_n_of_1_counterfactual.pdf) (cited via `citalopram_phase_stratification §1.3`).
-- **Phase boundaries should be event-anchored, not data-driven**: per `lc_era_temporal_segmentation §4` + `citalopram_phase_stratification §3`, both prior MDs explicitly reject PELT / change-point detection in favor of documented-event-anchored boundaries. This MD inherits the discipline.
+- **Phase boundaries should be event-anchored, not data-driven**: per `lc_era_temporal_segmentation §4` + `citalopram_phase_stratification §3`, both prior MDs explicitly reject PELT / change-point detection in favor of documented-event-anchored boundaries. This MD inherits the discipline, **with an explicit M1 sub-case carve-out**: lived-experience-derived boundaries may include duration rules anchored to a documented event (e.g. the §3.4 8-week post-ergotherapie-start sub-boundary at 2022-11-17). The anchor remains a documented event (ergotherapie start, 2022-09-22); the duration window is the M1 lived-experience warrant per `lc_era_temporal_segmentation §2`. This is distinct from data-driven boundary detection on channel time series — the duration is named in the lived report, not extracted from a Garmin channel — and is therefore M1-defensible without violating the no-data-driven-boundaries discipline.
 - **Sub-segmentation requires per-segment warrant**, not blanket adoption: per `lc_era_temporal_segmentation §6` four-criterion gate. Each phase here states its warrant individually (§3); the four criteria (warrant + documented + no re-tuning + descriptive-only-by-default) are honored.
 
 ### 5.2 Established literature
@@ -184,24 +223,25 @@ A future revision could queue and absorb the deferred ME/CFS-specific anchors; t
 | Compatible with descriptive Layer 1 discipline | yes (no sub-segmentation = no claim) | yes | mixed (algorithm = inferential layer leaking into descriptive) | yes (boundaries are descriptive substrate; no causal claim) |
 | Compatible with HA opt-in pattern | n/a | n/a | n/a | yes (per-pre-reg adoption per `lc_era_temporal_segmentation §6`) |
 | Cross-axis orthogonality preserved | n/a | n/a | n/a | yes (citalopram axis nested within phase 5) |
-| Per-phase n adequate for descriptive | n/a | mixed (buildup + afbouw short) | varies | yes (phase 3 ~171, phase 4 ~564, phase 5 ~787 days — all bootstrap-tractable) |
+| Per-phase n adequate for descriptive | n/a | mixed (buildup + afbouw short) | varies | mostly yes (phase 3 ~171, 4b ~508, 5 ~787 days — bootstrap-tractable); phase 4a (56 days) is tight and IQR + CI will be wide — honestly surfaced |
 
 **Trade-off summary**: the chosen axis pays a complexity cost (3 layers instead of 1) and gains descriptive-substrate fidelity to the lived-experience corpus + structural exposure of the citalopram M2 confounder. The HA-opt-in pattern absorbs the complexity cost downstream — pre-reg authors that don't need the recovery axis ignore it; those that do cite this MD. Single-axis simplicity (rejected alternatives) costs descriptive fidelity and structural transparency.
 
 ### 5.4 Our research limitations + objectives
 
 - **n=1 single-subject across ~5 years**: phase-stratification is the closest available replication test, but it is weaker than across-person replication. Sub-segmentation amplifies this — per-phase n is one slice of one person's corpus. Descriptive characterisation is the legitimate primary use; HA tests on phase-stratified cells inherit the limitation transparently per per-pre-reg caveat.
-- **Uneven per-phase durations**: phases 2 (14 days) + 3 (~171 days) + 4 (~564 days) + 5 (~787 days) span ~3 orders of magnitude. Descriptive analyses must report n explicitly per phase ([CONVENTIONS §3.6 named-counts discipline](../CONVENTIONS.md#36-name-every-count-n-unit-per-scheme-in-file)). Bootstrap CIs widen with smaller phase n; this is honestly surfaced, not hidden.
-- **Phase-4-internal "pacing became effective" boundary is intrinsically fuzzy**: per `garmin_pacing_practice §2`, the protocol "emerged and evolved over time" — there is no sharp transition. The §7b interview asks the user whether a *useful* boundary exists, not whether a *clean* one does. If the user reports no clear boundary, the MD honors that.
+- **Uneven per-phase durations**: phases 2 (14 days) + 3 (~171 days) + 4a (56 days) + 4b (~508 days) + 5 (~787 days) span ~2 orders of magnitude (smaller phases 2 + 4a at ~14-56 days; larger phases 3 + 4b + 5 at ~171-787 days). Descriptive analyses must report n explicitly per phase ([CONVENTIONS §3.6 named-counts discipline](../CONVENTIONS.md#36-name-every-count-n-unit-per-scheme-in-file)). Bootstrap CIs widen with smaller phase n; this is honestly surfaced, not hidden. Sub-phase 4a's small n (56 days) is the tightest per-cell constraint introduced at r2; recovery_arc v2 + descriptive consumers must report 4a IQR + CI even when wide.
+- **Phase-4-internal "pacing became effective" boundary is intrinsically fuzzy**: per `garmin_pacing_practice §2`, the protocol "emerged and evolved over time" — there is no sharp transition. The §7b operationalisation interview (CLEARED 2026-06-19) anchored the sub-boundary to a habit-formation duration (8 weeks post-ergotherapie-start), not an effectiveness moment. The user explicitly re-named the late sub-phase `pacing_habit_established` (not `pacing_effective`) because effectiveness remains mediated by outside forces. The fuzziness is honestly absorbed into the warrant (habit-formation duration, M1-defensible per `lc_era_temporal_segmentation §2`); the falsifiability hook (§3.4a + §3.4b) admits a revision path via recovery_arc v2 descriptive distinguishability.
 - **2024-04 boundary-collision constraint**: the CPAP-end + citalopram-start collision sits at the phase-4/phase-5 boundary. This MD does NOT attempt to disentangle them; per `intervention_effects §8.3` the design that could (ITS with both interventions modeled together) is out of scope. The collision is documented as a phase-4-tail caveat (§3.6).
-- **Citalopram afbouw is in-progress**: the corpus right edge is 2026-06-04; post-afbouw begins 2026-06-05. As new data accrues, phase 5 may need a phase-6 (`post_afbouw`) appended via a v2 amendment. Per `lc_era_temporal_segmentation §7 item 6 as-of-date convention`, this MD also adopts: descriptive analyses citing this axis state their as-of-date; the phase-6 question is queued for the first refresh when post-afbouw data exists.
+- **Citalopram afbouw is in-progress**: the corpus right edge is 2026-06-04; post-afbouw begins 2026-06-06 per [`citalopram_phase_stratification §3`](citalopram_phase_stratification.md#3-the-four-phase-citalopram-traject-stratification). As new data accrues, phase 5 may need a phase-6 (`post_afbouw`) appended via a v2 amendment. Per `lc_era_temporal_segmentation §7 item 6 as-of-date convention`, this MD also adopts: descriptive analyses citing this axis state their as-of-date; the phase-6 question is queued for the first refresh when post-afbouw data exists.
+- **Long-memory inheritance under phase-stratification**: [`recovery_arc/findings.md`](../analyses/descriptive/trajectory/recovery_arc/findings.md) (commit `24dad02`, 2026-06-19) found that 6 of 7 Stratum-4 cells on the HA-P6 channel set fire the factor-of-2 E[L]\* flag — per-phase E[L]\* in approximately [12, 30] days vs the project default E[L]=7 from [`permutation_null_block_length.md`](permutation_null_block_length.md). This long-memory structure inherits into any per-phase descriptive analysis on these channels: phase-stratified bootstrap CIs that use the default E[L]=7 block will underestimate uncertainty on long phases (4a + 4b combined, 5) where the long-memory structure exists. Per-phase E[L]\* should be data-driven OR conservatively widened to match the recovery_arc-observed range. The §6.6 prescription below names this explicitly.
 
 **Objectives served**:
 1. Restore the lived-experience clinical structure to the descriptive substrate.
 2. Expose the citalopram M2 confounder structurally (rather than relying on per-test §5.B detrend).
 3. Preserve the orthogonal citalopram axis for tests that need the dose-state dimension.
 4. Provide a citable canonical axis for any descriptive analysis + opt-in axis for HA pre-regs.
-5. Anchor the §7b operationalisation interview discipline to a concrete need (the `pacing_effective` boundary).
+5. Anchor the §7b operationalisation interview discipline to a concrete need (the phase-4 sub-boundary, locked 2026-06-19 as `pacing_habit_established` at 2022-11-17).
 
 ---
 
@@ -219,7 +259,7 @@ The user's 2026-06-19 question — "include citalopram as a separate phase, and/
 
 ### 6.2 Adoption by `recovery_arc` v2
 
-[`trajectory/recovery_arc/`](../analyses/descriptive/trajectory/recovery_arc/) v1 (commit `24dad02`) uses the 4-phase data-given axis. v2 will adopt this MD's 5-phase axis (or 6-phase if §7b unlocks the `pacing_effective` sub-boundary). The v1 `findings.md` headline "+3.3-unit elevation over healthy sustained through Stratum 4" decomposes in v2 into per-recovery-phase headlines.
+[`trajectory/recovery_arc/`](../analyses/descriptive/trajectory/recovery_arc/) v1 (commit `24dad02`) uses the 4-phase data-given axis. v2 will adopt this MD's 6-phase axis (1, 2, 3, 4a, 4b, 5) per the §7b operationalisation lock 2026-06-19. The v1 `findings.md` headline "+3.3-unit elevation over healthy sustained through Stratum 4" decomposes in v2 into per-recovery-phase headlines.
 
 ### 6.3 Adoption by other descriptive analyses (Strand A + Strand B)
 
@@ -227,39 +267,45 @@ Per [`descriptive/README §6.1 + §6.3`](../analyses/descriptive/README.md#61-op
 
 ### 6.4 Adoption by HA pre-regs (opt-in; per-pre-reg M1/M2/M3 warrant)
 
-Per `lc_era_temporal_segmentation §6`: HA pre-regs adopting this MD's recovery-phase axis as sub-stratification of Stratum 4 must state the M1/M2/M3 warrant in their `§3 Data sources` block, citing this MD. The warrant is **already supplied per phase by §3 above**; the pre-reg cites the relevant phase's warrant. Concrete example: an HA pre-reg comparing `bb_lowest` across `pacing_pre_citalopram` vs `citalopram_modulated` cites this MD's §3.5 M2 warrant (citalopram-confirmed dose-modulation on `bb_lowest`).
+Per `lc_era_temporal_segmentation §6`: HA pre-regs adopting this MD's recovery-phase axis as sub-stratification of Stratum 4 must state the M1/M2/M3 warrant in their `§3 Data sources` block, citing this MD. The warrant is **already supplied per phase by §3 above**; the pre-reg cites the relevant phase's warrant. Concrete example: an HA pre-reg comparing `bb_lowest` across `pacing_habit_established` vs `citalopram_modulated` cites this MD's §3.5 M2 warrant (citalopram-confirmed dose-modulation on `bb_lowest`).
 
 ### 6.5 Per-day master CSV columns (queued, NOT in r1)
 
 If user confirms, a follow-up pipeline patch adds `recovery_phase` as a new column to `per_day_master.csv`, computed via §2.1's `lc_recovery_phase(d)` function. This makes the axis trivially queryable. r1 does NOT pre-commit this — the column add is queued behind the lock + §7b date-lock and surfaced as Operational consequence (5).
 
+### 6.6 Block-aware bootstrap discipline for per-phase descriptives (added r2 per L4.1 absorb)
+
+**Recommended default for descriptive work using this axis** (proposed; user can override): per-phase per-channel **block-bootstrap CI with per-phase E[L]\*** (data-driven via the Patton-White-Politis convention in [`permutation_null_block_length.md`](permutation_null_block_length.md)), with fall-back to project default E[L]=7 when per-phase n is insufficient for stable E[L]\* estimation. The default reporting is: median + IQR + the block-bootstrap 95% CI. Per §5.4 long-memory inheritance, channels in the HA-P6 set on long phases (4a + 4b combined, 5) should expect E[L]\* > 7 and report accordingly; iid bootstrap CIs would systematically under-cover on those cells.
+
+Prescribed for: `recovery_arc` v2 refresh, future Strand A + Strand B descriptive analyses adopting this axis, and any HA pre-reg that opts into per-phase stratification on a channel where recovery_arc v1 already fired the factor-of-2 E[L]\* flag.
+
 ---
 
 ## 7. Status
 
-**r1 drafted 2026-06-19**.
+**r2 LOCKED 2026-06-19**.
 
-**Process state**: producer-mode draft. Next session = fresh-session methodology review via [`/research-methodology-review`](../../.claude/commands/research-methodology-review.md) per [CONVENTIONS §2.2 audit hooks](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice). r2 absorbs review fires (if mechanical) or revises substantively. LOCK happens in a drafter session AFTER audit clears; lock-commit confirms the §7.1 lock-blocking gates.
+**Process state**: producer-mode r2 absorb + lock-commit. r1 drafted 2026-06-19; fresh-session methodology audit completed 2026-06-19 ([`reviews/lc_recovery_phase_axis-2026-06-19.md`](../reviews/lc_recovery_phase_axis-2026-06-19.md), verdict PASS-with-caveats); §3.6 compression applied per [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) (mechanical r2; no architectural change). The r2 absorbs closed the 5 audit fires (L1.1, L2.6, L4.1, L4.2, plus §7b operationalisation absorb), added the §7b sub-phase split (4a + 4b) per the user-session interview output, and added reciprocal citations to `citalopram_phase_stratification.md` + `lc_era_temporal_segmentation.md`. The 5 §7.1 lock-blocking gates are confirmed at the r2 lock-commit message.
 
 ### 7.1 Lock-blocking gates (the lock-commit message MUST confirm each)
 
 1. **Four-input bar surfaced** (CONVENTIONS §2.2): all four §5 inputs visibly addressed. *(r1 status: addressed; literature deferred-but-named honestly.)*
 2. **Sub-boundary warrants documented per phase** (`lc_era_temporal_segmentation §6` criterion 1): each phase has a §3 entry naming its warrant class + justification. *(r1 status: §3 done for phases 1-5; phase 4b is gated on §7b.)*
-3. **§7b operationalisation interview cleared**: the user has either locked the `pacing_effective` date or affirmed no useful boundary exists. *(r1 status: interview not yet run; gating lock.)*
+3. **§7b operationalisation interview cleared**: the user has either locked the `pacing_effective` date or affirmed no useful boundary exists. *(r2 status: CLEARED 2026-06-19 by user session; locked operationalisation absorbed into §3.4a + §3.4b; the late sub-phase is named `pacing_habit_established` per user choice — see §3.4b.)*
 4. **Cross-axis link consistency**: `citalopram_phase_stratification.md` cross-references this MD reciprocally OR is documented as already-canonical without recip-cite-needed. *(r1 status: outbound cite present; reciprocal is a queued lock-time edit.)*
 5. **Audit-for-publication clean** (CONVENTIONS §2.3): run `docs/research/pipeline/audit_for_publication.py` before any push. *(r1 commit will run this.)*
 
-### 7.2 Hard discipline rules for THIS session (per bout-level handoff §7 producer-mode pattern)
+### 7.2 Hard discipline rules for THIS session (per bout-level handoff §7 producer-mode pattern) — *honored at r1 session 2026-06-19; preserved as historical record at r2 lock*
 
-- **End at r1 + commit. Do NOT self-audit.** Fresh-session reviewer reads cold per CONVENTIONS §1.2 reviewer-mode-with-authorization fresh-session discipline.
-- **Do NOT lock in this session.** Lock requires the audit output + the §7b interview to be present.
-- **Do NOT pre-author what the §7b interview should ask.** The interview brief is its own deliverable in a later session.
+- **End at r1 + commit. Do NOT self-audit.** Fresh-session reviewer reads cold per CONVENTIONS §1.2 reviewer-mode-with-authorization fresh-session discipline. *(honored: r1 session ended at commit; fresh-session audit performed by separate session 2026-06-19.)*
+- **Do NOT lock in this session.** Lock requires the audit output + the §7b interview to be present. *(honored: lock happened in a separate session 2026-06-19 after the audit + §7b interview both landed.)*
+- **Do NOT pre-author what the §7b interview should ask.** The interview brief is its own deliverable in a later session. *(honored: §7b operationalisation interview output was produced in a separate user session 2026-06-19 and absorbed at r2 lock.)*
 
 ---
 
 ## 8. Open follow-ups
 
-1. **§7b operationalisation interview** for the `pacing_effective` boundary (phase 4 sub-boundary). The brief asks the user: (a) is there a useful date when pacing became effective; (b) if yes, what date or short window; (c) what evidence (lived report + any Garmin signature). Cleared = phase 4 sub-boundary either locked or affirmed-absent. Gates lock per §7.1 criterion 3.
+1. **§7b operationalisation interview** for the phase-4 sub-boundary — **CLEARED 2026-06-19** in user session. The 8-week post-ergotherapie-start rule defines the `pacing_pre_citalopram_learning` → `pacing_habit_established` sub-boundary at 2022-11-17. Absorbed at r2 lock into §3.4a + §3.4b. Gates §7.1 criterion 3.
 2. **Per-day master CSV column add** for `recovery_phase` (§6.5). Pipeline patch in `pipeline/03_consolidate/build_unified_dataset.py`. Queued behind lock.
 3. **`recovery_arc` v2** using the locked axis. Refreshes `findings.md` + plots from a per-phase × per-channel reading using the 5-or-6-phase structure. Queued behind lock.
 4. **Reciprocal citation** from `citalopram_phase_stratification.md` + `lc_era_temporal_segmentation.md` to this MD. Lock-time edit. Queued behind lock.
@@ -286,4 +332,4 @@ If user confirms, a follow-up pipeline patch adds `recovery_phase` as a new colu
 
 ---
 
-*Drafted 2026-06-19 by Claude (Opus 4.7) in producer-mode under user authorisation. r1; awaits fresh-session methodology review per CONVENTIONS §2.2 before LOCK. The §7b operationalisation interview for the `pacing_effective` sub-boundary is a separate deliverable in a later session, gating LOCK per §7.1 criterion 3.*
+*Drafted 2026-06-19 by Claude (Opus 4.7) in producer-mode under user authorisation. r1 drafted in fresh session 2026-06-19; fresh-session methodology audit by independent session 2026-06-19 (verdict PASS-with-caveats; §3.6 compression eligible). r2 absorbs + LOCK by separate drafter session 2026-06-19. The §7b operationalisation interview for the phase-4 sub-boundary CLEARED 2026-06-19 in a separate user session; output absorbed into §3.4a + §3.4b at r2 lock.*

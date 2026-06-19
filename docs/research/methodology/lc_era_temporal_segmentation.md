@@ -18,6 +18,8 @@ The previous source of phase boundaries (`project_recovery_trajectory` memory) w
 
 ## 1. Data-given strata (background, not a methodological choice)
 
+**Sub-segmentation position** (added 2026-06-19 at the `lc_recovery_phase_axis.md` r2 lock): the within-Stratum-4 sub-segmentation that THIS MD §6 declines to default-commit to is provided by [`lc_recovery_phase_axis.md`](lc_recovery_phase_axis.md) §3.3-§3.5 (with §3.4 splitting into sub-phases 4a + 4b per the §7b operationalisation interview cleared 2026-06-19). That MD adopts the M1 lived-experience + M2 documented-confounder warrant framework from §2 of THIS MD and supplies the per-phase warrants directly. Descriptive analyses using the 3-layer axis (data-given outer + recovery-phase middle + citalopram-phase inner) cite both MDs; HA pre-regs opt in per §6 discipline below. Reciprocal lock-time cross-citation added 2026-06-19.
+
 Four temporal strata are dictated by the data:
 
 | stratum | date range | what data exists | what analyses are possible |

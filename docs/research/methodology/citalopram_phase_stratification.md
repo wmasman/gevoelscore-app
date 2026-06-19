@@ -102,6 +102,20 @@ downstream-treatment requirements.
 
 ## 3. The four-phase Citalopram-traject stratification
 
+**Cross-axis position**: this MD defines the inner axis (medication-state)
+that nests within the LC recovery-phase axis defined by
+[`lc_recovery_phase_axis.md`](lc_recovery_phase_axis.md) §3.5. Tests
+crossing more than one citalopram phase OR more than one recovery phase
+adopt the 3-layer cross-classification per
+[`lc_recovery_phase_axis §1.3`](lc_recovery_phase_axis.md#13-relationship-to-existing-axes--three-layers).
+This MD's `unmedicated` phase (LC start 2022-04-04 → 2024-04-08) is
+sub-partitioned by the recovery-phase axis into `lc_pre_ergo`,
+`pacing_pre_citalopram_learning` (4a), and `pacing_habit_established`
+(4b) per `lc_recovery_phase_axis §3.3 + §3.4`; this MD's `buildup` +
+`consolidation` + `afbouw` phases all nest within
+`lc_recovery_phase_axis §3.5` `citalopram_modulated`. Reciprocal lock-time
+cross-citation added 2026-06-19 per the recovery-phase axis r2 lock.
+
 The Citalopram-traject is a sub-partition of the LC era with the
 following phases:
 
