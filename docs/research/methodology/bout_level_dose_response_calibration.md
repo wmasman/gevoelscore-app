@@ -279,21 +279,31 @@ The pattern is an independent research finding; it is reported in this sub-MD's 
 
 ---
 
-## 6. Per-feature inheritance assignment (will be filled at result-time)
+## 6. Per-feature inheritance assignment (POPULATED 2026-06-22, r3)
 
-This section will be populated by the recalibration result and locked into this sub-MD as r2. The table below is the empty schema; row entries populate after the calibration script runs.
+Populated by the recalibration run [`docs/research/analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/result.md`](../analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/result.md) (LANDED 2026-06-22). Result CSV: `$GEVOELSCORE_DATA_PATH/unified/bout_level_dose_response_calibration_results.csv` (189 rows; 11-column schema per §4 verbatim).
+
+Conventions for the table cells: β units are per-mg of `dose_plasma_mg` (PK-smoothed plasma). CI95 are cluster-robust SE at day-level for per-bout features, Newey-West HAC for per-day aggregations. Buildup post-CPAP is the headline inheritance default per §3.5. The spring 2025 control window has no within-window dose variance (uniformly 30 mg); the control column reports the linear-time slope β_time as a flatness check rather than β_dose. The MD-spec name `bout_count_day` was implemented in the pipeline as `bout_n_per_day` (LOCKED `d5b394c` 2026-06-22); the row is labelled with both names for traceability.
 
 | feature | verdict | buildup post-CPAP β (CI95, p) | afbouw β | spring 2025 control β_time | Approach A inheritance? |
 |---|---|---|---|---|---|
-| `peak_height` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
-| `pre_bout_baseline` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
-| `recovery_half_life` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
-| `decay_slope` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
-| `AUC_above_baseline` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
-| `bout_count_day` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
-| `bout_n_fast_recovery_day` | (TBD) | (TBD) | (TBD) | (TBD) | (TBD) |
+| `peak_height` | NULL | −0.029 [−0.937, +0.878] p=0.949 | +0.240 [−0.321, +0.800] p=0.402 | −0.014/day [−0.083, +0.054] p=0.681 | **Dose-naive freely usable** (NOT load-bearing) |
+| `pre_bout_baseline` | NULL | +0.244 [−0.399, +0.887] p=0.457 | +0.452 [−0.059, +0.963] p=0.083 | −0.009/day [−0.059, +0.040] p=0.716 | **Dose-naive freely usable** (NOT load-bearing) |
+| `recovery_half_life` | weakly_consistent | +1.096 [−0.217, +2.410] p=0.102 | +0.564 [−0.213, +1.342] p=0.155 | +0.014/day [n.s.] | **Sensitivity-only** (downstream HA pre-regs treat Approach A as sensitivity arm, not primary) |
+| `decay_slope` | NULL | +0.019 [−0.060, +0.098] p=0.644 | +0.013 [−0.029, +0.054] p=0.535 | n.s. flat | **Dose-naive freely usable** (NOT load-bearing) |
+| `AUC_above_baseline` | weakly_consistent | +52.4 [−49.5, +154.3] p=0.314 | +27.7 [−97.6, +153.1] p=0.661 | +1.66/day [n.s.] | **Sensitivity-only** (same as `recovery_half_life`) |
+| `bout_count_day` (≡ pipeline `bout_n_per_day`) | NULL (headline); afbouw shows sign-discordant signal | −0.020 [−0.121, +0.081] p=0.698 | **−0.102 [−0.202, −0.002] p=0.045** (wrong direction vs +1 prior; robust across 6 of 7 sens specs) | +0.005/day [n.s.] | **Dose-naive freely usable** at buildup-headline; downstream HA pre-regs touching `bout_n_per_day` in **afbouw** must pre-spec a sensitivity arm covarying for `dose_plasma_mg` to disambiguate the wrong-direction signal |
+| `bout_n_fast_recovery_day` | weakly_consistent | −0.056 [−0.145, +0.034] p=0.223 (sign-concordant with −1 prior) | −0.034 [−0.118, +0.050] p=0.428 | +0.005/day [n.s.] | **Sensitivity-only** for cross-phase tests; framework-validity gate (HA11-bout-redo) is restricted to unmedicated stratum per parent MD §5.5 so this verdict is irrelevant to that gate |
 
-Once filled, the table becomes the inheritance source for [`bout_level_recovery_dynamics.md` §5.3 Approach A](bout_level_recovery_dynamics.md). Downstream HA pre-regs cite this table directly.
+**Net inheritance summary**:
+
+- **No feature reaches CONFIRMED** at the buildup-headline precision. Approach A is **NOT load-bearing** for any downstream HA pre-reg at this r3 lock.
+- **3 features (`recovery_half_life`, `AUC_above_baseline`, `bout_n_fast_recovery_day`) are weakly_consistent**: downstream HA pre-regs use raw feature as primary + Approach A as sensitivity arm.
+- **4 features (`peak_height`, `pre_bout_baseline`, `decay_slope`, `bout_n_per_day`) are NULL**: dose-naive freely usable, EXCEPT `bout_n_per_day` in afbouw where the wrong-direction signal requires disambiguation.
+
+**Dynamics-vs-level read (§5.5)**: the data pattern does NOT cleanly support the level-vs-dynamics dichotomy. Level cluster (peak_height + pre_bout_baseline) and dynamics half-feature (decay_slope) are NULL; `recovery_half_life` (dynamics) is the most directionally-supportive but does not reach CONFIRMED. The honest reading is **bout-level n is the binding constraint at this corpus, not feature-by-feature dose-response heterogeneity**. Reported in [`result.md §4`](../analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/result.md).
+
+Downstream HA pre-regs cite this populated table for inheritance defaults.
 
 ---
 
@@ -312,7 +322,7 @@ Per [CONVENTIONS §4.2](../CONVENTIONS.md#42-caveats-yes-a-priori-claims-no):
 
 ## 8. Status + revision log
 
-**Status**: **r2 LOCKED 2026-06-19** per [CONVENTIONS §2.2 + §2.3](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) + [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression. Audit ([`reviews/bout_level_recovery_dynamics-2026-06-19.md`](../reviews/bout_level_recovery_dynamics-2026-06-19.md)) verdict PASS-with-caveats; r2 absorbs are mechanical. Co-locked with parent at this commit. The recalibration itself does not run until pipeline construction (separate downstream session).
+**Status**: **r3 LANDED 2026-06-22** — recalibration executed; §6 inheritance table populated. The r3 status is producer-mode populated under user authorisation per [CONVENTIONS §1.1](../CONVENTIONS.md#11-producer-mode-claude-writes--edits--runs) (the explicit purpose §6 was designed for); fresh-session audit of the populated state pending per [CONVENTIONS §2.2](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice). The r2 spec (§3-§5) remains LOCKED unchanged; only §6 (designed to absorb result data) + this §8 log carry r3 edits. r2 audit ([`reviews/bout_level_recovery_dynamics-2026-06-19.md`](../reviews/bout_level_recovery_dynamics-2026-06-19.md)) verdict PASS-with-caveats stands; r2 absorbs are mechanical. Co-locked with parent at the r2-commit.
 
 ### Revision log
 
@@ -320,6 +330,7 @@ Per [CONVENTIONS §4.2](../CONVENTIONS.md#42-caveats-yes-a-priori-claims-no):
 |---|---|---|
 | r1 | 2026-06-19 | Initial draft as sub-MD spun off from [`bout_level_recovery_dynamics.md` §5.4](bout_level_recovery_dynamics.md). Five per-bout primary features + two per-day aggregations in scope. Three-pronged spec inherited from parent dose-response MD (afbouw / buildup post-CPAP / spring 2025 control). Mixed-effects regression at bout-level with day-cluster SE; per-day aggregations at day-level via Newey-West HAC. §6 inheritance table is the empty schema; populates at result-time. |
 | r2 | 2026-06-19 | §3.6-compression r2 absorbing audit fires. Sub-MD absorbs (4): (11) §1.5 standalone four-input bar added with §1.5.1 best-practices / §1.5.2 literature deferred-but-named / §1.5.3 tradeoff vision table {linear-extension / per-feature independent (CHOSEN) / joint with shrinkage} / §1.5.4 limitations + objectives [L1 MEDIUM]; (12) §1.3 caveat 3 "parent MD §5.5.2" antecedent clarified to upstream `citalopram_dose_response_stress_mean_sleep §5.5.2` (not local-parent `bout_level_recovery_dynamics`) [L2 minor]; (13) §3.3 Sensitivity H added (within-day AR(1) residual structure as alternative covariance specification; diagnostic-only when within-day n too small for stable AR(1)) + §4 schema spec list extended [L3 MEDIUM]; (14) §2 features table extended with `admits _lagged_lcera variant?` column per feature (`decay_slope` only non-admitter as derivative feature; §3.4 null-finding pre-spec collapses to three conditions for `decay_slope`) [L3 MEDIUM]. **LOCKED** 2026-06-19 at co-lock-commit. |
+| r3 | 2026-06-22 | **Recalibration LANDED; §6 inheritance table populated; per-feature inheritance assignments determined.** Run executed via [`docs/research/analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/run.py`](../analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/run.py); 189 rows in `$GEVOELSCORE_DATA_PATH/unified/bout_level_dose_response_calibration_results.csv` (7 features × 3 windows × 9 specs); per-feature verdict + Approach A inheritance recorded in §6 table; result.md at [`docs/research/analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/result.md`](../analyses/descriptive/operationalisation_support/bout_level_dose_response_calibration/result.md). **Net inheritance**: 0 features CONFIRMED → Approach A is NOT load-bearing for any downstream HA pre-reg; 3 features (recovery_half_life, AUC_above_baseline, bout_n_fast_recovery_day) weakly_consistent → sensitivity-only; 4 features (peak_height, pre_bout_baseline, decay_slope, bout_count_day≡bout_n_per_day) NULL → dose-naive freely usable. Substantive observation logged: `bout_n_per_day` β=−0.10/mg (p=0.045) in afbouw, sign-discordant with +1 prior, robust across 6 of 7 sensitivity specs — downstream HA pre-regs touching bout_n_per_day in afbouw must pre-spec a dose-sensitivity arm. Dynamics-vs-level read inconclusive at this bout-level n (≈49 day-clusters in buildup-post-CPAP); the binding constraint is precision, not feature-by-feature heterogeneity. Producer-mode populated edit per [CONVENTIONS §1.1](../CONVENTIONS.md#11-producer-mode-claude-writes--edits--runs); §3-§5 spec unchanged; §6 table now stable until any future recalibration session triggers an r4 absorb. Fresh-session audit of the populated state pending. |
 
 ---
 
