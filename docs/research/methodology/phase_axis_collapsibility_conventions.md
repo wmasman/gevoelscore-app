@@ -1,6 +1,6 @@
 # Phase-axis collapsibility conventions — pooling rules for the LC recovery-phase axis
 
-*Producer-mode methodology MD per [CONVENTIONS §1.1](../CONVENTIONS.md#11-producer-mode-claude-helps-the-user-build-the-research-artefact). Drafted 2026-06-22 as r1; pending fresh-session audit per [`/research-methodology-review`](../../../.claude/commands/research-methodology-review.md) before lock.*
+*Producer-mode methodology MD per [CONVENTIONS §1.1](../CONVENTIONS.md#11-producer-mode-claude-helps-the-user-build-the-research-artefact). Drafted 2026-06-22 as r1; r2 absorbs + LOCK 2026-06-22 per [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression (audit verdict PASS-with-caveats; mechanical r2; no architectural change).*
 
 ---
 
@@ -10,7 +10,7 @@
 
 **Drafting-session context**: directly follows the [`lc_recovery_phase_axis.md`](lc_recovery_phase_axis.md) **r2 LOCK 2026-06-19** (`d47e0d3`). User observation in main session 2026-06-22 (post-lock-wave reflection): the axis MD specifies the 6-phase structure but does NOT specify which phases can be **pooled** for an HA pre-reg or descriptive analysis. Pooling decisions are recurring (e.g. "pool 4a+4b → 4 when sub-phase n is too tight"; "pool 4+5 → unified pacing+medication era when channel isn't dose-modulated"); without a documented convention each consumer re-invents the discipline, with corresponding risk of data-driven back-doors leaking into the choice. PM-confirmed 2026-06-22 via AskUserQuestion: (a) **hypothesis-driven only** as the collapse trigger (no data-driven decision pathway), (b) new dedicated methodology MD location (not a v2 of `lc_recovery_phase_axis.md` — keep the axis MD clean as the axis spec, host the collapsibility discipline here).
 
-**Status**: **r1 drafted; not locked.** Awaiting fresh-session methodology audit per CONVENTIONS §2.2. Lock follows in a separate drafter session after audit clears per [`hypothesis_lock_process.md §1`](hypothesis_lock_process.md) (methodology MD carve-out: governed by CONVENTIONS §2.2 + §2.3, not the HA lock process).
+**Status**: **r2 LOCKED 2026-06-22** per [CONVENTIONS §2.2 + §2.3](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) audit hooks + [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression. Fresh-session methodology audit completed 2026-06-22 ([`reviews/phase_axis_collapsibility_conventions-2026-06-22.md`](../reviews/phase_axis_collapsibility_conventions-2026-06-22.md) at commit `1f940ef`); verdict PASS-with-caveats; §3.6 compression applied because all r2 absorbs are mechanical (no architectural shift; 3-tier + hard boundary preserved; no new claim; all 3 user-locked decisions verified honored). r2 absorbs closed the 4 mechanical audit fires (L2 §6.4 wording, L4 §6.1 named-counts cross-ref, PE.4 §3.5 placement forward-pointer, PE.3 verification of §3.5 "illustrative, not exhaustive" framing) and added reciprocal-cite paragraphs to [`lc_recovery_phase_axis.md`](lc_recovery_phase_axis.md) §6.7 + [`lc_era_temporal_segmentation.md`](lc_era_temporal_segmentation.md) §1. Governed by CONVENTIONS §2.2 + §2.3 (methodology MD carve-out per [`hypothesis_lock_process.md §0`](hypothesis_lock_process.md), not the HA lock process).
 
 ---
 
@@ -78,6 +78,8 @@ Four pooling positions are documented. Tiers A, B, C are *available* moves with 
 - **Tier C is the project-canonical default** for HA pre-regs that adopt the recovery-phase axis but don't specifically need within-LC sub-structure (per `lc_era_temporal_segmentation §1` Stratum 4 IS the primary analytic surface). HA pre-reg authors who want sub-structure escalate down to Tier B, Tier A, or no-collapse.
 - **No-collapse (6-phase axis) is the canonical for descriptive work that specifically asks about within-LC clinical heterogeneity** (e.g. `recovery_arc` v2 per `lc_recovery_phase_axis §6.2`).
 - Hard boundary applies in all cases regardless of tier.
+
+Worked mixed-tier examples illustrating these collapse conditions in practice are at §3.5 (after the per-tier discipline subsections).
 
 ---
 
@@ -231,7 +233,8 @@ HA pre-regs that opt into the [`lc_recovery_phase_axis.md`](lc_recovery_phase_ax
 
 - which **tier** they adopt (Tier A / Tier B / Tier C / no-collapse / mixed),
 - the **hypothesis-driven condition** (one of §3.1.1-3 for Tier A, §3.2.1-3 for Tier B, §3.3.1-3 for Tier C) that triggers the collapse,
-- for Tier B on a CONFIRMED-citalopram channel: which **§5.A/B/C treatment pattern** is applied + the `citalopram_phase_stratification §6` template reference.
+- for Tier B on a CONFIRMED-citalopram channel: which **§5.A/B/C treatment pattern** is applied + the `citalopram_phase_stratification §6` template reference,
+- per [CONVENTIONS §3.6](../CONVENTIONS.md#36-name-every-count-n-unit-per-scheme-in-file) named-counts discipline, the **n per tier-cell named explicitly** (e.g. "phase 4 = `pacing_pre_citalopram_learning` n_days=56 + `pacing_habit_established` n_days=508; pooled-Tier-A n_days=564"; or "Tier B pool n_days=1295 = phase 4 564 + phase 5 ~787"; or "Tier C pool n_days≈1466 = phase 3 171 + phase 4 564 + phase 5 ~787"). The per-tier n surfaces both the pooled cell and its components so reviewers can audit the pool's component n and the resulting analytic-unit n in one read.
 
 HA pre-regs that do NOT opt into the recovery-phase axis (default per `lc_era_temporal_segmentation §3`) operate at Stratum 4 by inheritance from `lc_era_temporal_segmentation §1`; these pre-regs are unaffected by this MD.
 
@@ -249,7 +252,7 @@ Tier B's channel-sensitivity rule binds without modification of the upstream MD.
 
 ### 6.4 Interaction with bout-level cascade
 
-The bout-level cascade ([`bout_level_recovery_dynamics.md`](bout_level_recovery_dynamics.md) + downstream HA pre-regs HA11-bout-redo, HA-C4c) opts into the 6-phase recovery-phase axis via the bout-level MD's Approach A/B/C. The collapsibility conventions inherit through that opt-in:
+Bout-level HA pre-regs ([`bout_level_recovery_dynamics.md`](bout_level_recovery_dynamics.md) + downstream HA11-bout-redo, HA-C4c, opportunistic A4 / C1 / C4b / H4) opt into the 6-phase recovery-phase axis from [`lc_recovery_phase_axis.md`](lc_recovery_phase_axis.md) **independently of** their cross-phase dose-handling choice (the bout-level MD's [§5.3](bout_level_recovery_dynamics.md) Approaches A / B / C: A = subtract-shift; B = per-bout dose covariate; C = stratify-and-meta-analyse). The two decisions are orthogonal: the recovery-axis opt-in selects the *phase stratification surface*; §5.3 Approach A/B/C selects the *per-bout dose-handling pattern at cross-phase scope*. When a bout-level HA opts INTO the recovery-phase axis, this MD's collapsibility tiers apply to its phase-stratified analyses (Tier B + the channel-sensitivity rule on CONFIRMED-citalopram channels still binds). The collapsibility conventions inherit through that opt-in:
 
 - bout-level HA pre-regs that adopt this MD's recovery-phase axis declare tier per §6.1;
 - bout-level features on CONFIRMED-citalopram channels (`stress_mean_sleep`, `all_day_stress_avg`, `bb_lowest`) at Tier B require the §5.A/B/C treatment per the channel-sensitivity rule;
@@ -270,7 +273,7 @@ This MD's tier vocabulary slots into `lc_era_temporal_segmentation §7` operatio
 
 ## 7. Status + lock-blocking gates
 
-**r1 drafted 2026-06-22; not locked.** Awaiting fresh-session methodology audit per `CONVENTIONS §2.2`.
+**r2 LOCKED 2026-06-22** per `CONVENTIONS §2.2 + §2.3` audit hooks + `hypothesis_lock_process.md §3.6` compression. Fresh-session audit completed 2026-06-22 ([`reviews/phase_axis_collapsibility_conventions-2026-06-22.md`](../reviews/phase_axis_collapsibility_conventions-2026-06-22.md) at commit `1f940ef`), verdict PASS-with-caveats. §3.6 compression applied because the four r2 absorbs are mechanical (no architectural shift; the 3-tier + hard-boundary structure preserved; no new claim; all 3 user-locked decisions honored).
 
 ### 7.1 Lock-blocking gates (the lock-commit message MUST confirm each)
 
@@ -290,15 +293,15 @@ This MD's tier vocabulary slots into `lc_era_temporal_segmentation §7` operatio
 
 ---
 
-## 8. Open follow-ups (queued for lock-time)
+## 8. Open follow-ups
 
-1. **Reciprocal-cite paragraph in `lc_recovery_phase_axis.md`** (lock-time edit) — pointing at this MD's §3 hierarchy + §3.2 channel-sensitivity rule.
-2. **Reciprocal-cite paragraph in `lc_era_temporal_segmentation.md` §1** (lock-time edit) — pointing at this MD's §3.4 hard-boundary discipline as the dual of the data-given strata.
-3. **Reciprocal-cite paragraph in `citalopram_phase_stratification.md` §5** (lock-time edit) — pointing at this MD's Tier B as the consumer of the §5.A/B/C patterns.
-4. **STOCKTAKE.md entry** at lock-commit per `STOCKTAKE.md §8` trigger "New methodology MD locked".
-5. **`descriptive/README.md §5` index entry** — adding this MD to the methodology-MD index alongside `lc_recovery_phase_axis.md` + `citalopram_phase_stratification.md`.
+1. **Reciprocal-cite paragraph in `lc_recovery_phase_axis.md`** — **LANDED 2026-06-22 at this lock-commit** as §6.7 "Collapsibility position", pointing at this MD's §3 hierarchy + §3.2 channel-sensitivity rule.
+2. **Reciprocal-cite paragraph in `lc_era_temporal_segmentation.md` §1** — **LANDED 2026-06-22 at this lock-commit** as a new paragraph after the existing "Sub-segmentation position", pointing at this MD's §3.4 hard-boundary discipline as the dual of the data-given strata.
+3. **Reciprocal-cite paragraph in `citalopram_phase_stratification.md` §5** — queued for separate session (optional cross-ref; not lock-blocking). Will point at this MD's Tier B as the consumer of the §5.A/B/C patterns.
+4. **STOCKTAKE.md entry** — queued for separate session per `STOCKTAKE.md §8` trigger "New methodology MD locked". Includes §5 methodology structural map + §6 synthesis + §8 revision log refresh.
+5. **`descriptive/README.md §5` index entry** — queued for separate session; adds this MD to the methodology-MD index alongside `lc_recovery_phase_axis.md` + `citalopram_phase_stratification.md`.
 6. **HA-pre-reg authoring template update in `hypothesis_lock_process.md §3.2.4`** (queued if the discipline matures into a project-canonical pattern across ≥2 HA pre-regs) — adding a default-text line for the tier declaration in `§3 Data sources`.
-7. **Literature fetch for the deferred-but-named §5.2 candidates** (Daza-family pooling-discipline follow-up; WWC 2022 SCED Appendix on phase-pooling) — queue at `QUEUED-WORK.md` Tier 3.
+7. **Literature fetch for the deferred-but-named §5.2 candidates** (Daza-family pooling-discipline follow-up; WWC 2022 SCED Appendix on phase-pooling) — queue at `QUEUED-WORK.md` Tier 3. On landing, r2 absorbs at §5.2 via `hypothesis_lock_process.md §3.6` mechanical compression.
 8. **v2 amendment trigger**: if a new class of edge-case hypothesis-channel pairs emerges that doesn't fit cleanly into the 4-tier slot vocabulary, a v2 amendment expands the hierarchy. Documented here so the audit hook is visible.
 
 ---
@@ -318,4 +321,4 @@ This MD's tier vocabulary slots into `lc_era_temporal_segmentation §7` operatio
 
 ---
 
-*Drafted 2026-06-22 by Claude (Opus 4.7) in producer-mode under user authorisation. r1 ends at this commit; fresh-session `/research-methodology-review` follows in a separate session; r2 absorbs + LOCK by separate drafter session after audit clears.*
+*Drafted 2026-06-22 by Claude (Opus 4.7) in producer-mode under user authorisation. r1 drafted in fresh session 2026-06-22 (commit `1282d9b`); fresh-session methodology audit by independent session 2026-06-22 (commit `1f940ef`; verdict PASS-with-caveats; §3.6 compression eligible). r2 absorbs + LOCK by separate drafter session 2026-06-22.*

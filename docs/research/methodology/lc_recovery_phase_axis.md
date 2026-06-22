@@ -279,6 +279,10 @@ If user confirms, a follow-up pipeline patch adds `recovery_phase` as a new colu
 
 Prescribed for: `recovery_arc` v2 refresh, future Strand A + Strand B descriptive analyses adopting this axis, and any HA pre-reg that opts into per-phase stratification on a channel where recovery_arc v1 already fired the factor-of-2 E[L]\* flag.
 
+### 6.7 Collapsibility position (added 2026-06-22 at the `phase_axis_collapsibility_conventions.md` lock-commit)
+
+When downstream HA pre-regs or descriptive analyses need to **pool phases** from this 6-phase axis (e.g. 4a + 4b → phase 4 `pacing_pre_citalopram`; or phase 4 + phase 5 → unified pacing+medication era; or full Stratum 4 = phase 3 + 4 + 5), see [`phase_axis_collapsibility_conventions.md`](phase_axis_collapsibility_conventions.md) for the **3-tier hierarchy + hard boundary** discipline. Default canonical is the **non-collapsed 6-phase axis**; collapse is **hypothesis-driven only** (no data-driven pathway). The hard boundary (phase 1 ↔ phase 2 ↔ LC era never collapses) inherits this MD's §1 cross-reference to [`lc_era_temporal_segmentation §1`](lc_era_temporal_segmentation.md#1-data-given-strata-background-not-a-methodological-choice) data-given strata. The Tier B channel-sensitivity rule (CONFIRMED-citalopram channels REQUIRE one of [`citalopram_phase_stratification §5.A/B/C`](citalopram_phase_stratification.md#5-the-three-downstream-test-treatment-patterns) correction patterns when pooling phase 4 + phase 5) binds on `stress_mean_sleep` / `all_day_stress_avg` / `bb_lowest` per `citalopram_dose_response §5.6`. Reciprocal-cite added 2026-06-22 at the `phase_axis_collapsibility_conventions.md` lock-commit.
+
 ---
 
 ## 7. Status
