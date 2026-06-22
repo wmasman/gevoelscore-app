@@ -525,6 +525,26 @@ phenomenology). Use both when triangulating C4b.
 |---|---|---|---|---|---|---|---|---|
 | `u_dip_count` | daily_computed | `analyses/hypotheses/HA11-stress-udip/udip_counts.csv` | `u_dip_count` | int | events/day | 2021-08-16 → today (1740 / 1755 = 99.1%; ≥ 600-sample gate: same gate as §8C) | NaN on days without monitoring_b file; 0 (not NaN) on days below the 600-sample gate (extractor forces count to 0 when `valid=0`) | Count of distinct U-dip events satisfying the locked HA11 spec (pre-window mean ≥ 40 stress, dip-window floor ≤ pre − 25, post-window mean ≥ pre + 5, 60-min refractory between events). |
 
+### Section 8E — Bout-level per-day aggregations (5 columns; added 2026-06-22 at `d5b394c`)
+
+**Section preamble**: per-day summaries of per-bout features extracted by [`pipeline/02_features/extract_stress_bouts.py`](pipeline/02_features/extract_stress_bouts.py) per the locked methodology MD [`methodology/bout_level_recovery_dynamics.md`](methodology/bout_level_recovery_dynamics.md) (LOCKED `c57ff3f` 2026-06-21). The per-bout dataset itself lives external at `$GEVOELSCORE_DATA_PATH/unified/per_bout_master.csv` (4,317 bouts across 1,479 valid days; bout-detection rule = peak ≥60 + 50-floor hysteresis + 5-min minimum + 60-min separation + 180-min return-window cap). These 5 columns are the **Moderate aggregation set** ratified at PM AskUserQuestion 2026-06-22 Decision 2; broader per-day summaries (median_recovery_half_life, max_tail_length, median_decay_slope) can be added on-demand per HA pre-reg need.
+
+**Framework-validity operand**: `bout_n_fast_recovery_day` is the operand for **HA11-bout-redo** (framework-validity reproduction check restricted to unmedicated × train × calm-day pool per `bout_level_recovery_dynamics §6`). HA-C4c (substantive Wiggers C4 retest at bout resolution) gates on HA11-bout-redo confirming framework-validity per the §6 HALT rule.
+
+| name | class | source | source column | dtype | units | coverage | missingness | notes |
+|---|---|---|---|---|---|---|---|---|
+| `bout_n_fast_recovery_day` | daily_computed | `$GEVOELSCORE_DATA_PATH/unified/per_bout_master.csv` via aggregation | derived (count of bouts with `recovery_half_life` below the fast-recovery threshold) | int | bouts/day | 2021-08-16 → today (1479 / 1486 valid-day coverage; 7 days have 0 bouts) | NaN on days without per-minute Garmin stress trace; 0 (not NaN) on days with stress trace but no bouts crossing the §2 peak threshold ≥60 | **Framework-validity operand for HA11-bout-redo** per `bout_level_recovery_dynamics §6`. The fast-recovery threshold is the median `recovery_half_life` across pooled bouts (see pipeline README for exact value). |
+| `bout_n_per_day` | daily_computed | `$GEVOELSCORE_DATA_PATH/unified/per_bout_master.csv` via aggregation | derived (total bout count per day) | int | bouts/day | same | same | Total bouts per day; coverage descriptor; supports bout-rate as a candidate per-day covariate. |
+| `bout_n_did_not_return` | daily_computed | `$GEVOELSCORE_DATA_PATH/unified/per_bout_master.csv` via aggregation | derived (count of bouts with `did_not_return_flag=True`) | int | bouts/day | same | same | Count of bouts that did NOT return to within +5 of pre-bout baseline within the 180-min return-window cap; the "stuck sympathetic" candidate descriptor at bout resolution. Sample: crash day 2023-02-04 has bout_n_did_not_return=2 (consistent with the Wiggers C4 substantive reading). 22.8% of all 4,317 bouts fire this flag. |
+| `bout_max_peak_height_day` | daily_computed | `$GEVOELSCORE_DATA_PATH/unified/per_bout_master.csv` via aggregation | derived (max `peak_height` across day's bouts) | float64 | stress units (0-100) | same (NaN on 0-bout days) | NaN on days with no bouts (vs 0 on §8E count columns) | Highest stress peak observed during a bout on a given day; sample heavy-exertion day 2024-04-18 reaches 99 (Garmin saturation). |
+| `bout_total_AUC_day` | daily_computed | `$GEVOELSCORE_DATA_PATH/unified/per_bout_master.csv` via aggregation | derived (sum of `AUC_above_baseline` across day's bouts) | float64 | stress-minutes (integrated) | same (NaN on 0-bout days) | NaN on days with no bouts | Total integrated stress-above-baseline across all bouts; intensity-burden descriptor. Sample: crash day 2023-02-04 = 11477.5 (high); calm day 2022-10-18 = 2317.3 (~5× lower). |
+
+**Cross-references**:
+- Methodology spec: [`methodology/bout_level_recovery_dynamics.md`](methodology/bout_level_recovery_dynamics.md) §2 (bout-detection rule), §3 (per-bout feature set), §4 (per-day aggregations), §6 (framework-validity gate + HALT rule)
+- Pipeline: [`pipeline/02_features/extract_stress_bouts.py`](pipeline/02_features/extract_stress_bouts.py) + [`pipeline/02_features/README.md`](pipeline/02_features/README.md)
+- Cross-axis: phase-5 stratification on these columns inherits `citalopram_phase_stratification §5.A` per `phase_axis_collapsibility_conventions.md` (LOCKED `ab356d8`) Tier B rule — bouts inherit the day's `citalopram_phase` + `citalopram_dose_mg` via the join in per_bout_master
+- Recalibration: bout-level β recalibration over citalopram dose (per `bout_level_dose_response_calibration.md`) is queued as a separate downstream session per PM AskUserQuestion 2026-06-22 Decision 3 (pipeline-alone scope)
+
 ---
 
 ## Section 9 — note categorization rollup (presence-conditioned)
