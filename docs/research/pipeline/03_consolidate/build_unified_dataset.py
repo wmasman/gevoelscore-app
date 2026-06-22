@@ -69,6 +69,15 @@ UDS_EXTRAS = DATA_PATH / "processed/garmin/uds_extras_daily.csv"
 SLEEP_EXTRAS = DATA_PATH / "processed/garmin/sleep_extras_daily.csv"
 INTRADAY_HR_STRESS = DATA_PATH / "processed/garmin/intraday_hr_stress_daily.csv"
 STRESS_LOW_MOTION = DATA_PATH / "processed/garmin/stress_low_motion_minutes.csv"
+# Bout-level per-day aggregations (5 columns) per methodology/bout_level_recovery_dynamics.md
+# (LOCKED c57ff3f). Produced by pipeline/02_features/extract_stress_bouts.py
+# from monitoring_b FIT files; see that script's docstring for the bout-detection
+# rule. Absent rows mean "the bout-level pipeline hasn't been run for this day"
+# (file missing entirely) or "day failed the §3.4 validity gate" (row present
+# but all 5 columns blank). Per-day master inherits the same convention as
+# stress_low_motion: blank means missing/unanalysable; 0 (for count columns)
+# means valid-day-with-no-bouts.
+PER_BOUT_AGG = DATA_PATH / "unified/per_bout_aggregations_daily.csv"
 # HA11 U-dip count: lives under analyses/ rather than processed/garmin/ because
 # the extractor is co-located with the hypothesis spec. Mirror semantics of the
 # stress_low_motion block (NaN when no monitoring_b file; 0 — not NaN — on
@@ -372,6 +381,8 @@ def main():
     print(f"  intraday_hr_stress: {len(intraday_hr_stress)}")
     stress_low_motion = load_csv_by_date(STRESS_LOW_MOTION)
     print(f"  stress_low_motion: {len(stress_low_motion)}")
+    bout_aggs = load_csv_by_date(PER_BOUT_AGG) if PER_BOUT_AGG.exists() else {}
+    print(f"  per_bout_aggregations: {len(bout_aggs)}")
     udip = load_csv_by_date(UDIP_COUNTS)
     print(f"  udip_counts: {len(udip)}")
     crash = load_csv_by_date(LABELS_CRASH)
@@ -426,7 +437,7 @@ def main():
             d, day_entries, uds, af, sleep, spike, crash, intensity,
             sub_dips, pwc_hours, v24_per_day, events_by_day, umbrella_by_day,
             dossier_by_day, uds_extras, sleep_extras, intraday_hr_stress,
-            stress_low_motion, udip,
+            stress_low_motion, udip, bout_aggs,
         )
         rows.append(row)
 
@@ -636,12 +647,13 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
               sub_dips, pwc_hours, v24_per_day, events_by_day,
               umbrella_by_day, dossier_by_day, uds_extras=None,
               sleep_extras=None, intraday_hr_stress=None,
-              stress_low_motion=None, udip=None):
+              stress_low_motion=None, udip=None, bout_aggs=None):
     intraday_hr_stress = intraday_hr_stress or {}
     stress_low_motion = stress_low_motion or {}
     udip = udip or {}
     uds_extras = uds_extras or {}
     sleep_extras = sleep_extras or {}
+    bout_aggs = bout_aggs or {}
     row = {"date": d.isoformat()}
 
     # --- Identity ---
@@ -950,6 +962,22 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     # monitoring_b file at all are absent from the source CSV and emit "".
     ud = udip.get(d, {})
     row["u_dip_count"] = ud.get("u_dip_count") or ""
+
+    # --- Bout-level per-day aggregations (5 columns) ---
+    # Per methodology/bout_level_recovery_dynamics.md §4 + user-ratified
+    # Decision 2 (2026-06-22): the Moderate 5-column aggregation set joined
+    # from pipeline/02_features/extract_stress_bouts.py output.
+    # bout_n_fast_recovery_day is the framework-validity operand for
+    # HA11-bout-redo per §6.1 (recovery_half_life <= 15 AND tail_length <= 45).
+    # Per the extractor's convention: count columns are 0 on valid days with
+    # no bouts and blank on invalid days (failing the §3.4 gate); max/AUC
+    # are blank on no-bout days too. NaN policy mirrors stress_low_motion.
+    ba = bout_aggs.get(d, {})
+    row["bout_n_fast_recovery_day"] = ba.get("bout_n_fast_recovery_day") or ""
+    row["bout_n_per_day"] = ba.get("bout_n_per_day") or ""
+    row["bout_n_did_not_return"] = ba.get("bout_n_did_not_return") or ""
+    row["bout_max_peak_height_day"] = ba.get("bout_max_peak_height_day") or ""
+    row["bout_total_AUC_day"] = ba.get("bout_total_AUC_day") or ""
 
     # --- v24 rollup (presence-conditioned on has_note) ---
     if row["has_note"] and d in v24_per_day:
