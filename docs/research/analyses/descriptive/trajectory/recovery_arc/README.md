@@ -1,5 +1,23 @@
 # `trajectory/recovery_arc/` — Multi-year recovery shape across three phases
 
+## v2 status — refreshed 2026-06-22 on locked 6-phase axis
+
+v2 adopts the 6-phase LC recovery axis from
+[`methodology/lc_recovery_phase_axis.md`](../../../../methodology/lc_recovery_phase_axis.md)
+(LOCKED `d47e0d3` 2026-06-19) replacing v1's 4-phase data-given axis. Adds
+block-bootstrap CIs per `§6.6`, honors the `§5.4` tight-n caveat for sub-phase
+4a (56 days), and adds the `§7b` falsifiability hook test as a Layer 1
+sensitivity arm. v1 (commit `24dad02`) stands as historical record;
+substantive v1 findings (autonomic-load family acute-spike pattern,
+recovery-family coverage-dominated trajectory, cardiovascular acute-DIP,
+6/7 factor-of-2 E[L]\* flag) carry forward + decompose at v2 per-phase
+resolution. See [`findings.md`](findings.md) for v2 headlines.
+
+The §7b operationalisation interview answers from v1 carry forward verbatim
+(2026-06-18 user-locked); no new interview required for v2.
+
+---
+
 ## Authorship
 
 - **Drafted**: 2026-06-18 by Claude (Opus 4.7), in reviewer-mode-with-authorization per [CONVENTIONS §1.2](../../../../CONVENTIONS.md#12-reviewer-mode-claude-reads--critiques--explains-does-not-edit-unless-asked)
