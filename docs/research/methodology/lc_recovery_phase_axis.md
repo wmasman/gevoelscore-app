@@ -306,7 +306,7 @@ Prescribed for: `recovery_arc` v2 refresh, future Strand A + Strand B descriptiv
 ## 8. Open follow-ups
 
 1. **§7b operationalisation interview** for the phase-4 sub-boundary — **CLEARED 2026-06-19** in user session. The 8-week post-ergotherapie-start rule defines the `pacing_pre_citalopram_learning` → `pacing_habit_established` sub-boundary at 2022-11-17. Absorbed at r2 lock into §3.4a + §3.4b. Gates §7.1 criterion 3.
-2. **Per-day master CSV column add** for `recovery_phase` (§6.5). Pipeline patch in `pipeline/03_consolidate/build_unified_dataset.py`. Queued behind lock.
+2. **Per-day master CSV column add** for `recovery_phase` (§6.5). Pipeline patch in `pipeline/03_consolidate/build_unified_dataset.py`. **DONE 2026-06-22 at `e00df27`** — column populated for all 1755 rows; 6 phases verified via spot-check + 10 boundary-inclusivity tests; per-day-master regenerated at `$GEVOELSCORE_DATA_PATH/unified/per_day_master.csv` (195 columns); phase counts 217/14/171/56/509/788. DATA_DICTIONARY entry added in the same Wave-1.5 commit.
 3. **`recovery_arc` v2** using the locked axis. Refreshes `findings.md` + plots from a per-phase × per-channel reading using the 5-or-6-phase structure. Queued behind lock.
 4. **Reciprocal citation** from `citalopram_phase_stratification.md` + `lc_era_temporal_segmentation.md` to this MD. Lock-time edit. Queued behind lock.
 5. **STOCKTAKE entry** for the new methodology MD per [`STOCKTAKE.md §8 trigger "New methodology MD locked"`](../STOCKTAKE.md). Queued behind lock.

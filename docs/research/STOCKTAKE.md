@@ -194,8 +194,8 @@ The arc as of 2026-06-16 (canonical in [`methodology/intervention_effects_descri
 7. **HA-C4c pre-reg drafting** — substantive Wiggers C4 retest at bout resolution (Approach A headline; B + C sensitivity arms). Gated on HA11-bout-redo confirming framework-validity per `bout_level_recovery_dynamics §6` HALT rule.
 
 ### Recovery-phase-axis follow-ups (post-LOCK 2026-06-19)
-8. **Per-day master `recovery_phase` column add** — `pipeline/03_consolidate/build_unified_dataset.py` extends per_day_master.csv with the 6-phase column per `lc_recovery_phase_axis §2.1` helper. Trivially queryable downstream.
-9. **`recovery_arc` v2 refresh** on locked 6-phase axis. v1 (commit `24dad02`) used 4-phase data-given axis; v2 adopts the M1/M2 6-phase axis with the §3.4a/b sub-split. Honor §5.4 bullet 2 tight-n caveat for sub-phase 4a (56 days; bootstrap CIs wider).
+8. **Per-day master `recovery_phase` column add** — **DONE 2026-06-22 at `e00df27`**. `pipeline/03_consolidate/build_unified_dataset.py` extended; per_day_master.csv regenerated (1755 rows × 195 cols); 6 phases populated; spot-checked 6 dates + 10 boundary inclusivity tests pass; phase counts 217/14/171/56/509/788. DATA_DICTIONARY entry added in the same wave (`recovery_phase` row at §0 identity).
+9. **`recovery_arc` v2 refresh** on locked 6-phase axis. v1 (commit `24dad02`) used 4-phase data-given axis; v2 adopts the M1/M2 6-phase axis with the §3.4a/b sub-split. Honor §5.4 bullet 2 tight-n caveat for sub-phase 4a (56 days; bootstrap CIs wider). **Now unblocked** by §7 item 8 done.
 
 ### Deferred per user — "full set of new sessions when we interpret the results of multiple hypotheses, in isolation and also in context of each other"
 10. **Cross-test interpretation pass** — synthesis across HA-P6 (4/7 channels recovery-shape signal) + HA-C4b v3 (NOT-SUPPORTED, PROTECTIVE-not-PREDICTIVE reading) + HA-P7 (recent-low-gevoelscore proxy collapse) + HA-C4 v2 REJECTED (validate-era SUPPORTED + Ch1 drop_avg both-eras companion) + stress_mean_sleep findings + recovery_arc multi-year arc. Substantially more tractable now that recovery_arc + HA-P6 share the 7-channel HA-P6 set.
