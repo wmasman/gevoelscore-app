@@ -117,6 +117,28 @@ LC_ERA_START = date(2022, 4, 4)
 # any classification of that kind belongs in descriptive-analysis output
 # rather than the schema. See DATA_DICTIONARY.md update log.
 
+
+def lc_recovery_phase(d: date) -> str:
+    """Per lc_recovery_phase_axis.md §2. r2 LOCKED 2026-06-19.
+
+    Verbatim copy of the canonical helper from methodology/lc_recovery_phase_axis.md
+    §2.1 (lock-commit d47e0d3). Do NOT modify here; any change to the boundaries
+    must originate in that MD via a v3 amendment + re-lock.
+    """
+    if d < date(2022, 3, 21):
+        return "pre_illness_healthy"
+    if d < date(2022, 4, 4):
+        return "acute_infection"
+    if d < date(2022, 9, 22):
+        return "lc_pre_ergo"
+    if d < date(2022, 11, 17):
+        return "pacing_pre_citalopram_learning"
+    if d < date(2024, 4, 9):
+        return "pacing_habit_established"
+    # Phase 5 — citalopram_modulated; sub-axis via citalopram_phase() per
+    # citalopram_phase_stratification.md §3
+    return "citalopram_modulated"
+
 # Per-period umbrella booleans emitted alongside the descriptive `in_umbrella` OR.
 # Added 2026-06-12 after Layer 3 spot-investigation showed that the three
 # umbrella periods are semantically distinct (medication, work, relational)
@@ -1005,6 +1027,16 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
         row["lc_phase"] = "corona_infection"
     else:
         row["lc_phase"] = "lc"
+    # recovery_phase: six-bin LC recovery-phase axis (M1 lived-experience + M2
+    # intervention-evidence) per methodology/lc_recovery_phase_axis.md §2 (r2
+    # LOCKED 2026-06-19 at d47e0d3). Sub-stratifies the `lc_phase=lc` window
+    # plus the pre-LC pre_illness_healthy + acute_infection bins. Values:
+    # pre_illness_healthy | acute_infection | lc_pre_ergo |
+    # pacing_pre_citalopram_learning | pacing_habit_established |
+    # citalopram_modulated. Phase-5 inner sub-axis is the orthogonal
+    # citalopram_phase per citalopram_phase_stratification.md §3 (not emitted
+    # here; cross-classify downstream when needed).
+    row["recovery_phase"] = lc_recovery_phase(d)
 
     # --- PwC work record ---
     p = pwc_hours.get(d, {})
