@@ -125,7 +125,7 @@ following phases:
 | **buildup** | 2024-04-09 → 2024-06-19 | 0 → 10 → 20 → 30 mg ramp | 0 → 30 mg (PK-smoothed) | 72 days |
 | **consolidation** | 2024-06-20 → 2026-03-19 | 30 mg | 30 mg | ~638 days |
 | **afbouw** | 2026-03-20 → 2026-06-05 | 30 → 20 → 10 → 8mg ramp | 30 → ~8 mg (PK-smoothed) | 78 days |
-| **post-afbouw** | 2026-06-05 → present | (TBD: 8mg ongoing or stopped) | low/zero (TBD) | ongoing |
+| **post-afbouw** | 2026-06-06 → present | (TBD: 8mg ongoing or stopped) | low/zero (TBD) | ongoing |
 
 **Source of truth** for boundary dates:
 `$GEVOELSCORE_DATA_PATH/raw/directus_exports/annotations.yaml`
@@ -133,6 +133,11 @@ following phases:
 Per [`intervention_effects_descriptive §2`](intervention_effects_descriptive.md#2-interventions-in-scope--curated-catalog)
 the canonical edit target is `hand_curated_spans.yaml`; `annotations.yaml`
 is regenerated and direct edits are silently reverted.
+
+> **Table-text alignment note (2026-06-22)**: Table text aligned to
+> `citalopram_phase()` Python helper 2026-06-22; previously had off-by-one
+> (afbouw right-edge / post_afbouw left-edge); surfaced by
+> `lc_recovery_phase_axis.md` r2-lock d47e0d3 producer-side observation.
 
 **Algorithmic change-point detection not used.** PELT
 ([Killick et al. 2012](https://www.tandfonline.com/doi/abs/10.1080/01621459.2012.737745))
