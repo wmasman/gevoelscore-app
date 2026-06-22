@@ -61,6 +61,8 @@ Per-day median z (Arm B) with 95% bootstrap CI:
 
 ## §4.8.4 secondary correlations (locked headline cell -- pooled-LC × Arm-B × no-detrend × episode-end × primary)
 
+*(Spec single-cell-lock identifier per §9 head + v2 closure (b) disambiguation: `pooled-LC × Arm-A × no-detrend × episode-end-t0 × primary-window`. The Arm-B label here reflects the data source for the completeness denominator μ_ch per v2 closure (b); the Arm-A label is the spec's lock identifier. Per [reviews/HA-P6-2026-06-18-v3-result.md §4](../../../reviews/HA-P6-2026-06-18-v3-result.md) recommendation #2.)*
+
 Spearman rho with 95% block-bootstrap CI at per-channel E[L] (day-level; see §8 v3 caveat per closure #7 on the day-level-E[L]-on-per-episode-summary granularity mismatch); B=10000:
 
 | channel | E[L] | rate vs duration: rho [95% CI] (n) | completeness vs next-interval: rho [95% CI] (n) | n undef compl |
@@ -172,9 +174,15 @@ Spearman rho with 95% block-bootstrap CI at per-channel E[L] (day-level; see §8
 
 - **First branch ('distinct recovery shape across >= 3 of 7 channels')**: fires = **YES** (n_sig_channels=4/7 at >= 2 of 5 days; strict >= 3 of 5: 3/7).
 - **Second branch ('Arm A matches crash trajectory on majority')**: fires = **NO** (arm_a_match_count=12 / 33 cells).
+- **Bullet 3 ('consolidation-only-detrend-failure')**: fires = **NO** (the spec predicate "consolidation fails but unmedicated + afbouw survive" is not met; the §3.7 detrend sensitivity table above shows the pattern is more pervasive — only 2/28 per-phase cells survive detrend, and both are consolidation cells; see almost-everywhere-fails-detrend synthesis below).
+- **Bullet 4 ('per-channel timing differences')**: fires = **YES** (recovery-completion-day estimates in the headline table above span 1.0 to 3.0 days; ≥2 channels differ by ≥2 days, e.g. `resting_hr` 1.0d vs `all_day_stress_avg` 3.0d). Propagated via commit `eb42888` → [`time_resolution.md` §2.3](../../../methodology/time_resolution.md) + commit `94a4bb3` → [`crash_episode_descriptive.md` §8](../../../methodology/crash_episode_descriptive.md).
+- **Bullet 5 ('Arm A and Arm B baselines diverge substantially, concordance < 50%')**: fires = **YES** (Arm-A matches the crash trajectory on only 12/33 = 36% of (channel × phase) cells per the second-branch readout above; the complementary 64% divergence exceeds the spec's 50% threshold).
+- **Bullet 6 ('t0-sensitivity divergence: episode-end vs last-below-threshold-day')**: fires = **YES** (the t0-sensitivity table above reports 3/7 = 43% concordance, i.e. 57% discordance; the spec's "diverge substantially" predicate is met).
 - **§4.8.4 secondary correlations excluding 0** on the locked cell:
   - all_day_stress_avg: rate vs duration, completeness vs next-interval
   - stress_low_motion_min_count_S60_Mlow: rate vs duration
+
+*Evaluation surface completeness per [reviews/HA-P6-2026-06-18-v3-result.md §4](../../../reviews/HA-P6-2026-06-18-v3-result.md) recommendation #1 (bullets 3, 4, 5, 6 added; bullet 9 spec-sanity-halt already passed at the dry-run stage per `dry-run-report.md`).*
 
 ## Caveats per §8 (must be acknowledged on every read)
 
@@ -210,6 +218,10 @@ Cap-binding channels (data-driven E[L]\* > 21; per-day CI at the n=29-imposed re
 ### v3 caveat (#7) -- §4.8.4 day-level-E[L]-on-per-episode-summary granularity mismatch (structural; inherited from v1; deferred to v4)
 
 The §4.8.4 secondary Spearman CIs use the per-channel day-level E[L] from §4.8.1 at per-episode resampling within phase, but per-episode summaries are not autocorrelated within an episode in the same way daily values are. The day-level E[L] on per-episode resampling over-conservatively widens the per-episode-summary CIs. This is a structural choice for cross-cell comparability; the per-episode-summary-aware block length alternative is deferred to a methodology MD update + a v4 absorption.
+
+### §3.7 almost-everywhere-fails-detrend pattern synthesis
+
+The §3.7 detrend sensitivity table shows 25/28 per-phase cells categorically shift under detrend (vs the spec §9 bullet 3 consolidation-only-failure anticipation); the LC recovery trajectory leaks through nearly all cells, not just consolidation. The Arm-A paired-diff §9 first-branch trigger is independent of this concern by construction (matched-control trajectory is on a same-phase non-crash day with similar pre-trajectory, so trend is absorbed at the matched-day pair level), so the load-bearing finding survives. Per [reviews/HA-P6-2026-06-18-v3-result.md §4](../../../reviews/HA-P6-2026-06-18-v3-result.md) recommendation #3 + [STOCKTAKE.md §6](../../../STOCKTAKE.md#6-cross-section-synthesis) framing.
 
 ---
 
