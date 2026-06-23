@@ -4,7 +4,7 @@
 
 Drafted 2026-06-23 by Claude (Opus 4.7, 1M context) in producer-mode under user authorisation per [CONVENTIONS section 1.1](../../../CONVENTIONS.md#11-producer-mode-claude-edits-the-docs--codebase-the-default). Authorising user: Willem. Pre-reg r2 LOCKED 2026-06-23 at commit `c0148ca`. Test commit: `(this-commit)`. Status: **LANDED**.
 
-**Test-session context**: this `test.py` was implemented and run in a FRESH Claude session per the post-lock discipline of [`hypothesis_lock_process.md` section 3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock). Sister-session note: HA-C3 v2 r2 test execution runs in parallel; section 6 4-cell agreement matrix populates HA-C3p's column only; HA-C3 v2's column is marked TBD (dispatcher consolidates).
+**Test-session context**: this `test.py` was implemented and run in a FRESH Claude session per the post-lock discipline of [`hypothesis_lock_process.md` section 3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock). Sister-session note: HA-C3 v2 r2 test execution ran in parallel and landed REJECTED (wrong-direction override) at commit `a2b18ba` 2026-06-23; section 6 4-cell agreement matrix CONSOLIDATED post-parallel-session with both axes populated (cell "v2 REJECTED / p PARTIAL" — "Wiggers' numbers wrong-for-this-participant but underlying SHAPE IS REAL in the INVERSE direction"). **Pipeline-edits note**: agent-written test.py contained two write-time bugs (sanity_original threading in halt-option-A reporting + bin_median key missing in run_full results dict for write_result_md); dispatcher applied minimal patches enabling result.md emission — substantive test logic untouched (block-permutation, Jonckheere-Terpstra, second-diff S, spline F + secderiv, 3-condition verdict gate all per locked spec).
 
 ## Section 1 - What was tested
 
@@ -133,23 +133,28 @@ Per pre-reg section 7.1 SUPPORTED expectation: monotone decreasing (positive ste
 
 Per pre-reg Locked decision 5 + section 1 sister-pre-reg framing, HA-C3p's result.md section 6 carries the 4-cell agreement-matrix interpretation with HA-C3 v2 (Wiggers-verbatim sister test). HA-C3 v2 r2 test execution runs in **parallel** with this HA-C3p session; its verdict is **TBD** at this result-emission time. The dispatcher consolidates the matrix in a follow-up commit after both sessions return.
 
-### 4-cell matrix (HA-C3p column populated; HA-C3 v2 column TBD)
+### 4-cell matrix (CONSOLIDATED 2026-06-23 by dispatcher post-parallel-session)
 
-| HA-C3 v2 (Wiggers) v / HA-C3p (personal) > | SUPPORTED | REJECTED |
-|---|---|---|
-| SUPPORTED | strong (both agree on convexity) | bin-edge artefact (v2 anchors happen to fall on a peak HA-C3p smooths) |
-| REJECTED | Wiggers' numbers wrong-for-this-participant but underlying shape real | informative null (no convexity at either operationalisation) |
+| HA-C3 v2 (Wiggers) v / HA-C3p (personal) > | SUPPORTED | PARTIAL | REJECTED |
+|---|---|---|---|
+| SUPPORTED | strong (both agree on convexity) | partial-corroboration (v2 finds full convex; p sees partial structure) | bin-edge artefact (v2 anchors happen to fall on a peak HA-C3p smooths) |
+| **PARTIAL** | partial-on-p / SUPPORTED-on-v2 inversion (unusual) | both partial — operationalisation-sensitive convex signal | partial-on-v2 / REJECTED-on-p (v2 thresholds pick up signal HA-C3p quintiles miss) |
+| **REJECTED (wrong-direction override)** | bin-edge anti-pattern (v2 sees inverse-direction; p sees full convex on quintiles — very unlikely) | **Wiggers' numbers wrong-for-this-participant but the underlying SHAPE IS REAL (non-linear) in the INVERSE direction (concave / inverted-U)** -- the cell that fires here | informative null (no convexity at either operationalisation; data is genuinely flat or noise) |
 
-**HA-C3p verdict**: **PARTIAL**. **HA-C3 v2 axis**: **TBD (parallel session pending; dispatcher consolidates)**.
+**HA-C3p verdict**: **PARTIAL** (2-of-3 conditions MET: p_b spline-F significant + p_c convexity-contrast significant; p_a Jonckheere monotone non-significant).
 
-**HA-C3p column under PARTIAL** (note: matrix shown above is 2x2 SUPPORTED/REJECTED; PARTIAL is the intermediate state). The PARTIAL verdict is 2-of-3 conditions MET; downstream interpretation follows pre-reg section 9.2's three operationally-distinguishable PARTIAL configurations. Cross-test reading: PARTIAL is interpreted as 'evidence of some convex structure but not the full 3-condition headline'; the HA-C3 v2 cross-test consolidation will frame the PARTIAL-vs-v2-verdict reading at dispatcher-consolidation time.
+**HA-C3 v2 verdict** (CONSOLIDATED post-parallel-session, commit `a2b18ba`): **REJECTED (wrong-direction override)** — primary 3-condition test on 3-bin reduction (post-§7.3 halt-option-A absorb) returned J*=0.481 p_a=0.6742 + S=-0.740 p_c=0.0003 + spline F=28.27 p_b=0.0002 + spline secderiv at midpoints [35, 70] = [-0.0015, 0.0000]. Wrong-direction override fired because S is significantly NEGATIVE (concave, not convex) → primary verdict REJECTED.
+
+**The "v2 REJECTED / p PARTIAL" cell fires** (middle row, right column). **Substantive joint reading**: BOTH pre-regs detect REAL non-linearity in the stress→gevoelscore relationship (HA-C3 v2 spline F=28.27 p=0.0002; HA-C3p spline F=19.55 p=0.0018), and BOTH detect CONCAVE not CONVEX shape (HA-C3 v2 S=-0.740; HA-C3p S=-0.196; HA-C3p spline secderiv mostly negative). The two pre-regs differ in verdict-band semantics: HA-C3 v2's spec carries a wrong-direction override that promotes to REJECTED on Condition 2 sign-flip; HA-C3p's spec does NOT carry the override and lands the same wrong-direction-but-significant pattern in PARTIAL via 2-of-3 conditions MET.
+
+**Cross-test interpretation per the consolidated cell**: Wiggers' verbatim 30→40 numerical anchor does NOT operationalise the convex-cost claim at this corpus — but NOT because the relationship is flat or noisy. The underlying stress→gevoelscore relationship at this n=1 corpus shows a robust **inverted-U / threshold pattern** with peak around stress 30-40 (HA-C3 v2 B2=4.265; HA-C3p Q3-Q4 mean ~4.28) and decline at higher stress (HA-C3 v2 B3=3.860; HA-C3p Q5=4.016 with declining trend). This is consistent across the two binning schemes — it is NOT a measurement artefact. The Wiggers C3 framework operationalised on this participant's actual stress distribution reveals an **inverse-direction non-linearity** the original prediction does not anticipate. Caveat-class observation per CONVENTIONS §4.2 — does NOT promote to a substantive HA-C3 v3 / HA-C3p v2 alternative claim.
 
 ### Sister-test cross-reference table
 
 | pre-reg | verdict | venue | cited per |
 |---|---|---|---|
 | **HA-C3p (this test)** | **PARTIAL** | personal-baseline quintile bins | pre-reg section 5.1 |
-| HA-C3 v2 r2 (Wiggers-verbatim sister; running in parallel) | **PENDING** (parallel session) | bins [0,30), [30,40), [40,60), [60,100] | pre-reg section 1 sister-test framing; dispatcher consolidates |
+| HA-C3 v2 r2 (Wiggers-verbatim sister) | **REJECTED (wrong-direction override)** | bins [0,30), [30,40), [40,100] post-§7.3 halt-option-A absorb of B4 n=1 | commit `a2b18ba` 2026-06-23 |
 | HA-C4 v2 (daily-aggregate recovery-dynamics triad) | REJECTED at triad sum 0/3 | commit `52bddb5` 2026-06-18 | structurally distinct (recovery dynamics, not same-day shape) |
 | HA-C4c (bout-level cross-phase) | PARTIAL (bar (b) effect-size failing; bar (a) PASS p=0.0001, delta=+0.120 at n_heavy=465/n_non=809) | commit `a69a8ed` 2026-06-23 | structurally distinct (bout-level, not bin-shape) |
 | HA-P6 v3 (post-crash autonomic recovery shape) | noisy-inconclusive / mixed per-channel | 2026-06-17 | structurally distinct (event-anchored recovery, not cross-day shape) |

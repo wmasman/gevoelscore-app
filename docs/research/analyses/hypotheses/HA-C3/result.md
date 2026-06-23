@@ -131,7 +131,7 @@ Per §4.4 + Locked decision 8: §5.B cross-phase test with predictor adjusted as
 
 | sister test | verdict | one-line context | commit |
 |---|---|---|---|
-| **HA-C3p** (personal-baseline-anchored sister; equal-N quintile bins) | **verdict pending; consolidation in HA-C3p result.md §6 4-cell agreement matrix** | personal-baseline equal-N quintile bins on full Stratum 4 pool; running in parallel session; 4-cell agreement matrix lives in HA-C3p result.md §6 per LOCKED HA-C3p decision | `c0148ca` (LOCKED) |
+| **HA-C3p** (personal-baseline-anchored sister; equal-N quintile bins) | **PARTIAL** (2-of-3 conditions MET; p_a=0.5925 non-significant, p_b=0.0018 spline F significant, p_c=0.0020 convexity contrast significant in WRONG direction S=-0.196; z-score sensitivity arm REJECTED) | personal-baseline equal-N quintile bins; **same inverse-direction non-linearity finding** as this HA-C3 v2 result; verdict-band differs because HA-C3p spec does NOT carry the wrong-direction override on Condition 2 that HA-C3 v2 carries. 4-cell agreement matrix in HA-C3p result.md §6: cell "v2 REJECTED / p PARTIAL" reads as *"Wiggers' numbers wrong-for-this-participant but underlying SHAPE IS REAL in the INVERSE direction (concave / inverted-U)"* | commit `e5a63fe` 2026-06-23 |
 | HA-C4 v2 | **REJECTED** | daily-aggregate triad sum 0.0/3.0; Ch1+Ch2 validate SUPPORTED but train REFUTED -> mixed-era cancellation | `52bddb5` |
 | HA-C4c | **PARTIAL** | bout-level recovery dynamics; bar (a) PASS p=0.0001 / bar (b) FAIL δ=+0.120 at cross-phase-pooled n=465/n=809; weak-effect-but-real positive pattern | `a69a8ed` |
 | HA-P6 | (informational) | per cross-test register; substantively distinct from C3 daily-aggregate shape | -- |
