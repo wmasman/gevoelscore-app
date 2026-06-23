@@ -80,6 +80,34 @@ we haven't done, don't claim methods we haven't earned.
    integrate the statistical-methodology citations currently deferred
    in MDs 6-8.
 
+10. **[research_line_limitations.md](research_line_limitations.md)** —
+    binding enumeration of the seven systemic limitations of the
+    research line (single-subject reach, era confounds, device
+    generations, analyst-is-subject, presence-conditioned data layer,
+    self-reporting, survivorship). Authored 2026-06-23 per
+    [`_plan_results_analysis_layer.md`](_plan_results_analysis_layer.md)
+    §3.9 + §11 step 4. **Per-topic contextualisation MDs and per-
+    construct actionability MDs MUST cite the relevant limitations
+    from this doc.**
+
+---
+
+## Results-analysis layer (in development)
+
+The following docs scaffold the results-analysis methodology layer
+that takes locked HA verdicts through interpretation → synthesis →
+contextualisation → actionability → audience translation:
+
+- **[_plan_results_analysis_layer.md](_plan_results_analysis_layer.md)** —
+  layer-level plan (r4 LOCKED 2026-06-23). Specifies six guides + one
+  skill + two supporting MDs (this list will populate as drafting
+  progresses per the plan's §11 implementation order).
+- **[_descriptive_stocktake_2026-06-23.md](_descriptive_stocktake_2026-06-23.md)** —
+  step 3 of §11. Per-HA assumption-backstop matrix + decisions on
+  HA fate (retire / shelve / supersede / proceed).
+- **[research_line_limitations.md](research_line_limitations.md)** —
+  step 4 of §11. The binding systemic-limitations enumeration above.
+
 ---
 
 ## Symptom-categorisation dictionaries
