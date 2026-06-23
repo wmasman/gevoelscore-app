@@ -74,6 +74,8 @@ feature, window, spec, n_bouts, n_days, beta_dose, beta_dose_lo95, beta_dose_hi9
 
 The buildup post-CPAP β is the headline inheritance default per sub-MD §3.5; afbouw + control reported alongside for the verdict assignment.
 
+*Framing note (r4 absorb 2026-06-23, audit L2.1): all β coefficients in this section are **within-window within-subject partial-derivatives of feature-on-dose** (per sub-MD §1.3 caveat + §7.3 confound-stack acknowledgement), not population-level dose-responses. CIs are conditional on the §3.1 model form (cluster-robust SE at the day level for per-bout features; Newey-West HAC for per-day aggregations). The afbouw + buildup + control three-window spec is the project-canonical mitigation for within-window non-stationarity; the linear time covariate absorbs local LC-recovery slope; the spring 2025 control verifies seasonality-alibi absence.*
+
 ### `peak_height` — verdict NULL
 
 Buildup β = −0.029/mg, CI95 [−0.937, +0.878], p = 0.949. Afbouw β = +0.240/mg, CI95 [−0.321, +0.800], p = 0.402. Spring 2025 β_time = −0.014/day (flat). Sign-concordant with prior (+1) in afbouw but sign-reversed in buildup; in both windows CI brushes far from excluding zero. The null-finding pre-spec (sub-MD §3.4) is met: primary CI contains zero; |β| << SD-half-width gating; sens A block-bootstrap CI [−2.94, +2.16] also contains zero; lagged-lcera p = 0.546 > 0.05. **NULL** per pre-spec.
@@ -84,7 +86,7 @@ Buildup β = +0.244/mg, CI95 [−0.399, +0.887], p = 0.457. Afbouw β = +0.452/m
 
 ### `recovery_half_life` — verdict weakly_consistent
 
-Buildup β = +1.096 min/mg, CI95 [−0.217, +2.410], p = 0.102. Afbouw β = +0.564 min/mg, CI95 [−0.213, +1.342], p = 0.155. Spring 2025 β_time = +0.014 min/day (flat). Sign-concordant with prior (+1) in BOTH windows, with the largest effect-size of any feature relative to its standard deviation. Buildup CI brushes zero from below; primary p > 0.05 in both windows. Sens A block-bootstrap [−13.47, +22.64] contains zero (n=49 day-clusters drives huge bootstrap variance). Does NOT meet the null pre-spec (sign-concordant + non-trivial β + lagged-lcera p < 0.05) but does NOT meet CONFIRMED (CI does not exclude zero). **weakly_consistent**.
+Buildup β = +1.096 min/mg, CI95 [−0.217, +2.410], p = 0.102. Afbouw β = +0.957 min/mg, CI95 [−0.350, +2.264], p = 0.151. Spring 2025 β_time = +0.014 min/day (flat). Sign-concordant with prior (+1) in BOTH windows, with the largest effect-size of any feature relative to its standard deviation. Buildup CI brushes zero from below; primary p > 0.05 in both windows. Sens A block-bootstrap [−13.47, +22.64] contains zero (n=49 day-clusters drives huge bootstrap variance). Does NOT meet the null pre-spec (sign-concordant + non-trivial β + lagged-lcera p < 0.05) but does NOT meet CONFIRMED (CI does not exclude zero). **weakly_consistent**.
 
 ### `decay_slope` — verdict NULL
 
@@ -92,7 +94,7 @@ Buildup β = +0.019 stress·min⁻¹/mg, CI95 [−0.060, +0.098], p = 0.644. Afb
 
 ### `AUC_above_baseline` — verdict weakly_consistent
 
-Buildup β = +52.4 stress·min/mg, CI95 [−49.5, +154.3], p = 0.314. Afbouw β = +27.7, CI95 [−97.6, +153.1], p = 0.661. Sign-concordant with prior (+1) in BOTH windows; spring 2025 β_time = +1.66/day (mild positive drift but n.s.). CI excludes zero only modestly far below in afbouw; sens A bootstrap CI [−1410, +228] is enormous (small per-day n × high within-bout variance compounds). Does NOT meet null pre-spec (sign-concordant + non-trivial β in both windows). Does NOT meet CONFIRMED (CI does not exclude zero). **weakly_consistent**.
+Buildup β = +52.4 stress·min/mg, CI95 [−49.5, +154.3], p = 0.314 (sign-concordant with +1 prior). Afbouw β = **−20.5**, CI95 [−112.2, +71.2], p = 0.661 (**sign-DISCORDANT** with +1 prior; this is a cross-window-coherence caveat, not a verdict-changer because the buildup-headline weakly_consistent stands on the buildup cell alone per §3.5 headline-default discipline). Spring 2025 β_time = +1.66/day (mild positive drift but n.s.). Sens A bootstrap CI for afbouw [−134.4, +54.8] also negative point estimate; sens_E crash-drop β = −18.8 also negative; sens_D alt_lag β = −81.7 negative-significant-direction — five of seven afbouw sens cells are sign-discordant (only sens_B + sens_F flip to positive). Does NOT meet null pre-spec at buildup (sign-concordant + non-trivial β). Does NOT meet CONFIRMED (CI does not exclude zero in either window). **weakly_consistent** at buildup-headline; the afbouw sign-discordance is a cross-window-coherence flag worth surfacing for any downstream HA pre-reg invoking Approach A on `AUC_above_baseline` in the afbouw window.
 
 ### `bout_n_per_day` (≡ MD-spec `bout_count_day`) — verdict NULL
 
@@ -125,7 +127,9 @@ The substantive read is therefore **not the level-vs-dynamics question of sub-MD
 | `bout_n_per_day` | NULL (headline); afbouw shows significant negative β | −0.020 | **−0.102** (p=0.045) |
 | `bout_n_fast_recovery_day` | weakly_consistent | −0.056 | −0.034 |
 
-The afbouw `bout_n_per_day` β = −0.10/mg (p=0.045 in primary HAC; brushes zero in sens A bootstrap at [−0.17, +2.42]) is a substantive observation: higher plasma citalopram in afbouw 2026 associates with **fewer bouts per day**, opposite to the +1 prior (the +1 prior expected "higher baseline sympathetic tone → more frequent 60-crossings"). The buildup-headline does not reach the same significance (n=50 days, CI brushes zero in both directions). Two competing readings are open: (a) citalopram's autonomic-suppression effect at high plasma reduces stress-bout incidence overall (which would be the OPPOSITE-direction signal vs the +1 prior derived from "elevated tone → more crossings"); (b) the afbouw signal is an unusual within-window time-trend that the linear `days_from_window_start` covariate fails to absorb. Sens E (crash-drop) on afbouw bout_n_per_day shows β = −0.067/mg with |Δβ| = 0.035 < 0.10·SD threshold = 0.060 — does not fire the crash-distortion flag. The substantive observation is logged here; the verdict at the buildup-headline remains NULL per pre-spec.
+The afbouw `bout_n_per_day` β = −0.10/mg (p=0.045 in primary HAC; brushes zero in sens A bootstrap at [−0.17, +2.42]) is a substantive observation: higher plasma citalopram in afbouw 2026 associates with **fewer bouts per day**, opposite to the +1 prior (the +1 prior expected "higher baseline sympathetic tone → more frequent 60-crossings"). The buildup-headline does not reach the same significance (n=50 days, CI brushes zero in both directions). Two competing readings are open: (a) citalopram's autonomic-suppression effect at high plasma reduces stress-bout incidence overall (which would be the OPPOSITE-direction signal vs the +1 prior derived from "elevated tone → more crossings"); (b) the afbouw signal is an unusual within-window time-trend that the linear `days_from_window_start` covariate fails to absorb. Sens E (crash-drop) on afbouw bout_n_per_day shows β = **−0.108**/mg [−0.202, −0.013] p=0.025 with |Δβ| = **0.0054** < 0.10·SD threshold = **0.113** — does not fire the crash-distortion flag (well within the CONVENTIONS §3.4 tolerance band). The substantive observation is logged here; the verdict at the buildup-headline remains NULL per pre-spec.
+
+**Sens F nonlinear-time surfacing** (r4 absorb 2026-06-23, audit L3.5): three sens_F cells reach p<0.05 under the 4-knot natural cubic spline on time, which the primary linear time covariate does not: `recovery_half_life` buildup β=+3.84 [+0.32, +7.36] p=0.032; `AUC_above_baseline` buildup β=+335.95 [+152.82, +519.09] p=0.0003; `bout_n_per_day` afbouw β=−0.196 [−0.325, −0.066] p=0.003. The sens_F spline absorbs more within-window time-trend variance than the linear covariate; the dose-β under sens_F is the MORE-confound-adjusted estimate. Two interpretations open: (a) the linear time covariate under-fits the within-window trend and the dose-causal signal is larger than the headline-spec admits (sens_F STRENGTHENS the dose-causal reading on these three cells); (b) the spline overfits a noisy 47-78-day window. The headline-spec compound-symmetry + linear-time pre-commit holds the load-bearing verdicts; the sens_F results add nuance worth surfacing in downstream HA-C4c framing. None of the sens_F cells change a §6 inheritance assignment; recovery_half_life + AUC_above_baseline remain weakly_consistent (their sens_F cells just sharpen the directional read), and the bout_n_per_day sens_F result is the sharpest of the 7 sens cells supporting the afbouw substantive observation that downstream HA pre-regs touching bout_n_per_day in afbouw must pre-spec a dose-sensitivity arm.
 
 ---
 
@@ -165,6 +169,8 @@ Per sub-MD §3.5 verdict mapping → §5.4 inheritance status:
 | spring_2025_control | N/A (no dose variance) | — | — | — |
 
 No per-bout feature rejects at α=0.05 in either window after Holm correction. Consistent with the per-feature NULL/weakly-consistent verdicts.
+
+*Footnote (r4 absorb 2026-06-23, audit L3.3)*: the Holm family is the **5 per-bout features per window** per run.py docstring decision #6 + sub-MD §3.7. The 2 per-day aggregations (`bout_n_per_day`, `bout_n_fast_recovery_day`) are excluded from the Holm family because they are different unit-of-analysis fits (day-level Newey-West HAC, not bout-level cluster-robust SE) and report their own per-feature verdicts in §3.
 
 ---
 
