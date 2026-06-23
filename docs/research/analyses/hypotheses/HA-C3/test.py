@@ -523,7 +523,7 @@ def block_permutation_three_conditions(pool: dict, B: int,
             "S": float(obs_S) if not math.isnan(obs_S) else None,
             "spline_F_block_perm_target": float(obs_F_midpoint) if not math.isnan(obs_F_midpoint) else None,
             "spline_F_continuous_predictor": float(obs_spline_F) if not math.isnan(obs_spline_F) else None,
-            "spline_secderiv_at_midpoints": [
+            "spline_second_derivative_at_midpoints": [
                 float(x) if not math.isnan(x) else None for x in obs_spline_secderiv
             ],
             "companion_contrast": float(obs_companion) if not math.isnan(obs_companion) else None,
@@ -1234,7 +1234,7 @@ def run_full(master: dict, baseline_cutoff: date | None,
             "bin_ci_95": bin_ci,
             "perm": perm,
             "spline_continuous_F": float(F_continuous) if not math.isnan(F_continuous) else None,
-            "spline_secderiv_at_midpoints": [
+            "spline_second_derivative_at_midpoints": [
                 None if math.isnan(x) else float(x) for x in spline_sd
             ],
             "verdict": verdict,
