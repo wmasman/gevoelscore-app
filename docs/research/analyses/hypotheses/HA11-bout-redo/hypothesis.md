@@ -25,7 +25,23 @@
 - **Power-calc dispatch**: power calc inapplicable per [Daza 2018](../../../literature/methodology/daza_2018_self_tracked_n_of_1_counterfactual.pdf) within-subject design. The block-permutation null at E[L]=7 (per §4.6) is the within-subject inferential machinery; the §5 comparability bars determine the framework-validity verdict rather than asymptotic-power thresholds.
 - **Single-cell headline lock**: the headline is the single triple {bout-level test on `bout_n_fast_recovery_day` × unmedicated × train era × calm-day pool (HA11 v1's null-pool reference dates)} evaluated against the three §6.2 comparability bars; sensitivity arms (motion-clean-only, transient-excluded, baseline-invalid-excluded, crash-drop) are diagnostic only and cannot promote to PASSED independently.
 
-**Status**: drafted, not locked.
+**Revision 2026-06-23-r2** (§3.6-compression LOCK absorb per [`hypothesis_lock_process.md` §3.5 + §3.6](../../../methodology/hypothesis_lock_process.md#35-revise-step-stage-3-of-the-arc-r2--the-bulk-of-methodological-strengthening)). Absorbs the fresh-session [audit report](../../../reviews/HA11-bout-redo-2026-06-22.md) (verdict: **PASS with caveats**; commit `69c4f8d`). The audit found no Layer-1 / Layer-2 / Layer-4 fires; one Layer-3 substantive (§4.5 effective n unpinned pre-lock); one Layer-3 minor (σ ≤ 0.5 inheritance from HA11 v1 `u_dip_count` to structurally-different `bout_n_fast_recovery_day` operand). Both items addressable by single-script counts on `per_day_master.csv` per the audit's explicit closure path (NOT spec revision; no architectural change, no falsification-bar change, no new statistical machinery). The four §4 strengthening recommendations are absorbed as inline pins + a §4.5/§4.8 dual-seed cross-reference. Q#3 (motion-clean elevation to PARTIAL-gating) explicitly retained as descriptive-only per audit closure (promoting would break HA11 v1 reference-frame comparability mid-test; the framework-validity question is whether the operand reproduces HA11 v1's signal in HA11 v1's reference frame, not whether it survives an additional filter).
+
+The r2 changes (mechanical, no architectural delta):
+
+- **§4.5 effective n pinned at 70** (closes L3 substantive). Verified by [`scripts/count_HA11_bout_redo_effective_n.py`](../../../../../scripts/count_HA11_bout_redo_effective_n.py) replaying HA11 v1's `build_null_sample` with seed `20260605`, then applying §4.2 (unmedicated) × §4.3 (train) × §4.4 (day-validity) × §4.5/§4.7 (≥ 3-of-4 window coverage). Of the 200 HA11 v1 reference dates, 73 fall in unmed × train; 70 survive the window-coverage gate. Well above the §4.9 walk-forward gate of n ≥ 30. Matches the auditor's ~50-65 estimate.
+- **§4.6 σ-skip-threshold inheritance clarified** (closes L3 minor). Empirical σ of `bout_n_fast_recovery_day` across the 413 analysis days in unmed × train: median **0.739**, IQR [0.672, 0.826], range [0.589, 1.026]. HA11 v1 `u_dip_count` on the equivalent pool (480 days): median σ **0.840**, IQR [0.773, 0.899], range [0.633, 1.010]. The bout-count distribution sits modestly below `u_dip_count` (median σ delta −0.10) but stays well above the 0.5 floor — zero low-variability skips occur on either distribution in this pool. The σ ≤ 0.5 threshold is retained verbatim from HA11 v1 on inheritance-consistency grounds (pre-spec'd; not data-driven calibration); the modest empirical downshift is noted but does not trigger threshold recalibration at this lock.
+- **§4.5 / §4.8 dual-seed cross-reference** (audit §4 side observation; mechanical wording closure). The seeds are now explicitly cross-referenced inline at the boundary.
+- **§10.3 / §10.4 low-variability skip-rate reporting** (audit §4 strengthening recommendation #2). Skip-rate reporting was already in §10.2 / §10.3 per parent MD §6.3 inheritance; no spec change needed beyond the §4.6 clarification above.
+
+**Status**: r2 LOCKED 2026-06-23 by user acceptance.
+
+The four [§3.8 lock-blocking gates](../../../methodology/hypothesis_lock_process.md#38-lock-step-stage-5-of-the-arc) all confirmed at lock:
+
+1. **Power-calc dispatch — MET**. §8 caveat 1 + §4.8 carry the Daza 2018 within-subject design dispatch verbatim. The block-permutation null at E[L]=7 (§4.8) is the within-subject inferential machinery; the §5 three-bar verdict rule determines the framework-validity verdict rather than asymptotic-power thresholds; INCONCLUSIVE cells are sample-size shortfalls per §4.9 walk-forward gate.
+2. **Multi-comparison discipline — MET via single-cell headline lock**. Authorship "Mandatory dispatches — Single-cell headline lock" + parent MD §6 framework-validity-gate scope binds the headline to a single triple {bout-level × `bout_n_fast_recovery_day` × unmedicated × train × HA11 v1 calm-day pool} evaluated against the three §5 bars; the four sensitivity arms (§4.10) are diagnostic-only per §9.5 + cannot promote to PASSED.
+3. **Register-row pointer — MET via non-supersession**. HA11-bout-redo is a project-original framework-validity test (the methodology-MD-analogue of [`hypothesis_lock_process.md` §3.9](../../../methodology/hypothesis_lock_process.md#39-run-step-post-lock) dry-run halt per parent MD §6) — it does NOT supersede a register row. The HA11 stress-udip parent row (and HA11 v1's `## Future work — bout-level reproduction` forward pointer) stands. The parent MD §1.3 / §7.1 enabled-row pointer (`bout_level_recovery_dynamics.md` forward-pointing at HA-C4c per the lock-commit) is the substantive register chain; HA11-bout-redo is the framework-validity gate that conditions the chain.
+4. **Re-audit clean OR §3.6 compression — MET via compression**. The §3.4 audit was clean on L1 + L2 + L4 + most of L3; one L3 substantive + one L3 minor both addressable by single-script counts on `per_day_master.csv` per the audit's explicit closure path. The r2 changes are mechanical (count pinning + threshold-inheritance clarification + dual-seed cross-reference) with no architectural change, no falsification-bar change, no new statistical machinery — matches the §3.6 compression-acceptability criteria. The audit's verdict explicitly authorises this disposition ("Both are addressable pre-lock by single-script counts on `per_day_master.csv`, NOT by spec revision").
 
 ---
 
@@ -92,11 +108,14 @@ Days failing the gate produce no `bout_n_fast_recovery_day` value (blank in `per
 
 ### 4.5 Calm-day pool (HA11 v1 reference-date construction; locked)
 
-**Construction**: 200 random non-overlapping reference dates per HA11 v1 §4.9, generated with HA11 v1's seed (`20260605`), restricted to days satisfying §4.4 (HA11 v1 §4.4 day-validity is a subset of this pre-reg's §4.4 gate since they share the ≥ 600 sample rule + LC era rule). For HA11-bout-redo specifically, the pool is further restricted to the unmedicated × train era subset (any of the 200 reference dates outside 2022-09-03 → 2023-12-31 are excluded).
+**Construction**: 200 random non-overlapping reference dates per HA11 v1 §4.9, generated with HA11 v1's seed (`20260605`; distinct from this pre-reg's `RANDOM_SEED = 20260622` used for the block-permutation null in §4.8 — see §4.8 dual-seed note), restricted to days satisfying §4.4 (HA11 v1 §4.4 day-validity is a subset of this pre-reg's §4.4 gate since they share the ≥ 600 sample rule + LC era rule). For HA11-bout-redo specifically, the pool is further restricted to the unmedicated × train era subset (any of the 200 reference dates outside 2022-09-03 → 2023-12-31 are excluded).
 
 **Per-reference-date window**: each reference date `r` defines a 4-day window `[r-3, r]` (mirroring HA11 v1 §4.7 4-day primary lead-up window). For each reference date, the per-day `bout_n_fast_recovery_day` is computed for each of the 4 days in `[r-3, r]`, z-scored against the participant's lagged personal baseline per §4.6, then aggregated via `max signed_z` over the 4-day window per HA11 v1 §4.7.
 
 **Coverage gate per HA11 v1 §4.7**: at least 3 of 4 days in `[r-3, r]` must have a valid `bout_n_fast_recovery_day` value AND a valid (μ, σ) lagged baseline; reference dates failing this are excluded.
+
+**Pre-lock pinned effective n** (r2; per [`scripts/count_HA11_bout_redo_effective_n.py`](../../../../../scripts/count_HA11_bout_redo_effective_n.py); CONVENTIONS §3.6 named count):
+**70** reference dates in this pre-reg's stratum (unmedicated × train × satisfying §4.4 day-validity × satisfying the §4.7 ≥ 3-of-4 window-coverage gate), out of 200 generated by HA11 v1's `build_null_sample` with seed `20260605`. Well above the §4.9 walk-forward gate of **n ≥ 30** in the calm-day pool. Detailed counting flow: 200 HA11 v1 reference dates → 73 in unmed × train pre-window-coverage → 70 surviving the window-coverage gate. The script also confirms 480 bout-redo-valid days in the train era, of which 413 have a valid (μ, σ) lagged baseline (zero low-variability skips at the σ ≤ 0.5 floor; 67 insufficient-prior-days skips). Source files: [`udip_counts.csv`](../HA11-stress-udip/) (HA11 v1 day-validity) + [`per_day_master.csv`](../../../) `bout_n_fast_recovery_day` column + [`labels_crash_v2.csv`](../crash_v2-definition/labels_crash_v2.csv) (crash-leadup occupied set).
 
 ### 4.6 Lagged personal baseline + z-score (locked; inherited verbatim from HA11 v1 §4.5–§4.6)
 
@@ -107,6 +126,14 @@ For each analysis day `d`:
 - **Baseline σ**: stdev of the same trimmed values.
 - **Computed only when ≥ 40 of 60 prior days are valid** per HA11 v1 §4.5.
 - **If σ ≤ 0.5 events** the day is flagged *low-variability* and skipped per HA11 v1 §4.5.
+
+**Inheritance-of-σ-floor note** (r2; closes audit L3 minor on operand-specific distribution differences): the σ ≤ 0.5 threshold is inherited verbatim from HA11 v1's `u_dip_count` low-variability skip. `bout_n_fast_recovery_day` is structurally a different count distribution; the pre-lock single-script count (per [`scripts/count_HA11_bout_redo_effective_n.py`](../../../../../scripts/count_HA11_bout_redo_effective_n.py)) confirms the empirical σ on the unmed × train pool sits modestly below HA11 v1's `u_dip_count` σ:
+
+- `bout_n_fast_recovery_day` σ across 413 analysis days: median **0.739** (IQR [0.672, 0.826], range [0.589, 1.026]).
+- HA11 v1 `u_dip_count` σ on equivalent 480-day pool: median **0.840** (IQR [0.773, 0.899], range [0.633, 1.010]).
+- Median σ delta: **−0.10** (bout-count distribution slightly less variable; both well above the 0.5 floor; **zero** low-variability skips on either distribution in this pool).
+
+The threshold is retained at HA11 v1's 0.5 on **inheritance-consistency grounds** (pre-spec'd; not data-driven calibration). If a future v2 test surfaces materially different operand variability shape (e.g. higher zero-rate in a different stratum pushing many days below 0.5), the threshold may be calibrated to the bout-count distribution at v2 lock-time; for this draft the threshold is held at HA11 v1's value to preserve the framework-validity reference frame.
 
 Per-day z-score per HA11 v1 §4.6:
 
@@ -139,7 +166,7 @@ Project-canonical per parent MD §5.1 + [`permutation_null_block_length.md`](../
 3. For each null draw, recompute the discrimination (pp) per the procedure above.
 4. **Empirical one-sided p-value** = `(1 + #{disc_null ≥ disc_observed}) / (B + 1)`.
 
-**Seed**: `RANDOM_SEED = 20260622` (HA11-bout-redo; distinct from HA11 v1's `20260605` to keep the framework-validity gate's null distribution independently reproducible from HA11 v1's archived null).
+**Seed**: `RANDOM_SEED = 20260622` (HA11-bout-redo; distinct from HA11 v1's `20260605` to keep the framework-validity gate's null distribution independently reproducible from HA11 v1's archived null). **Dual-seed cross-reference** (r2): the reference-date construction in §4.5 uses HA11 v1's `20260605` (inherited verbatim, NOT this pre-reg's `20260622`); the block-permutation null here uses this pre-reg's `20260622` (NOT HA11 v1's `20260605`). Implementer note for the next session writing `test.py`: do not conflate the two seeds.
 
 **Cliff's delta** on the per-window `max signed_z` distributions (crash-episode vs null reference) is reported as a descriptive companion (per Authorship "Locked decisions" item 4); does NOT enter the §5 comparability bars.
 
