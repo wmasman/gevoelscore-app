@@ -1632,7 +1632,7 @@ step in case any trigger has fired.
 
 - **Drafted by**: Claude (this session), at user authorization, on
   2026-06-23.
-- **Authorising user**: wmasman.
+- **Authorising user**: Willem.
 - **Mode**: producer-mode (r3 reclassification per r2 review finding;
   prior r1/r2 carried reviewer-mode-with-authorization).
 - **Status**: r4 **LOCKED 2026-06-23** by user acceptance. r3

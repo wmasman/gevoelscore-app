@@ -328,7 +328,7 @@ entirely:
 
 ### L4. Analyst-is-subject
 
-**What.** The researcher (wmasman) is also the study participant. The
+**What.** The researcher (Willem) is also the study participant. The
 two roles cannot be separated; the researcher cannot blind themselves
 to their own data; introspection enters at every stage.
 
