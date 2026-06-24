@@ -128,3 +128,41 @@ maintenance.
 - **Methodology revisions** (crash_v1 percentile → absolute threshold,
   activity-labels v1 → v3.1, etc.) — these are spec changes
   documented in their own methodology MDs, not hypothesis rejections.
+
+---
+
+## Appendix — 2026-06-23 status refinements (descriptive stocktake §9)
+
+The [`methodology/_descriptive_stocktake_2026-06-23.md`](methodology/_descriptive_stocktake_2026-06-23.md)
+walked every HA pre-reg through the [`methodology/_plan_results_analysis_layer.md`](methodology/_plan_results_analysis_layer.md)
+§6.1 load-bearing-assumption checklist. The stocktake's §9 user decisions
+refined the project's standing on **5 of the entries above** + reserved
+**3 successor slots** in [`methodology/synthesis_structure_map.md`](methodology/synthesis_structure_map.md)
+(LOCKED r2 2026-06-23).
+
+The historical 2026-06-05 → 2026-06-07 categorisations above stand as
+the verdict-at-test-time audit trail; the refinements below are the
+**current standing** as of the results-analysis layer's stocktake.
+
+| original row (date) | original category | refined standing | rationale | successor slot |
+|---|---|---|---|---|
+| H03b (2026-06-07) | BLOCKED | **RETIRED — data-resolution limit** | INCONCLUSIVE × 12 cells by data availability; the data does not exist at the gated resolution. Re-spec or wait-for-data-accrual is a different hypothesis, not a salvage of this one. | none reserved |
+| H05 (2026-06-05) | WITHDRAWN | **RETIRED — spec-induced trivial** + successor slot reserved | Operationalisation produced a degenerate distribution (all 25 episodes recover "0 days" by construction). Revising = new HA, not a salvage. | **HA-H05-successor** RESERVED in synthesis map cluster `C-h05-successor` (TBD; activates on producer-mode pre-reg drafting with sound spec) |
+| HA07 (2026-06-07) | BLOCKED | **SUPERSEDED-by-proxy** | Hardware-blocked (FR245 doesn't record HRV Status). The `hrv_proxy_via_stress.md` methodology MD specifies the proxy operationalisation; corpus has the data. | **HA07-proxy** RESERVED in synthesis map cluster `C-hrv-proxy` (TBD; sister HA08-proxy) |
+| HA08 (2026-06-07) | BLOCKED | **SUPERSEDED-by-proxy** | Same FR245 hardware blocker as HA07; same proxy substitution path. | **HA08-proxy** RESERVED in synthesis map cluster `C-hrv-proxy` (TBD; sister HA07-proxy) |
+| S02b (2026-06-07) | NULL | **SHELVED — blocked-by-S02** | Spec depends on lag values from S02's algorithmic outputs; S02 itself is archived (`_archive/S02-score-trajectory/`) and not refreshed under the descriptive programme. The 2026-06-07 NULL verdict on `notes.md` runs on unverified inputs. Revisit if S02 ever produces verified outputs OR via a Strand-B refresh of S02's algorithm. | none reserved (dependency-blocked, not retired) |
+
+**Reserved-slot lifecycle** (per [`synthesis_structure_map.md` §6](methodology/synthesis_structure_map.md)):
+RESERVED → PROPOSED (on producer-mode pre-reg drafting) → ACCEPTED (on user sign-off) →
+LOCKED (on fresh-session methodology-review absorption). The 3 reserved
+slots above sit at RESERVED. Slot activation is a separate producer-mode
+pre-reg drafting session per the project's standard pre-reg discipline;
+this appendix records the reservation, not the drafting.
+
+**Note on the [`registry.md`](analyses/hypotheses/registry.md)**: the
+1471-line HA pre-registration registry remains the canonical record at
+the per-HA detail level (pre-reg statement / measurement / falsification
+criterion / lock-cycle history). The 5 status refinements above are
+project-audit-trail entries on this REJECTED.md file; the registry's
+per-HA entries may be updated in a separate producer-mode session if
+the user wants the refinement to surface at the per-HA detail level too.
