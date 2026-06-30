@@ -90,7 +90,7 @@ correction licensed (raw only).
 | H01 | RHR drift (absolute) | REFUTED both eras | absolute-threshold lead-up | NO | **NO-confirmed** — RHR not dose-modulated; season complicates (raw only) | NO | no-change (single-pool −3.1pp) |
 | H04 | BB net-drain (daily UDS) | REFUTED both (validate +13.3 near-miss) | daily BB net-drain threshold | YES (reverse) | complicates — same **full-coverage UDS** fields as HA10 (no coverage cliff; corrected per review); BB-algorithm/firmware opacity complicates; not `bb_lowest`, not CONFIRMED | NO | overlay-only — REFUTED both eras, single-pool +0.5pp, **no live verdict at stake** |
 | HA01b | exertion-class 4d | REFUTED both (v3.2); v3.1 +17.3 artefact | exertion shock frequency | **YES** | YES — pacing-fidelity, exertion channel → complicates (not citalopram) | NO | overlay-only (single-pool +5.1pp NOT-SUP) |
-| HA01c | effective-exertion rank | SUPPORTED both, GATED on v2 diag | rank≥0.75 precursor | partial | YES — pacing-fidelity, exertion → complicates | NO | **needs-rerun (single-pool)** — NOT run in reanchor; R14-v2; load-bearing WITHHELD |
+| HA01c | effective-exertion rank | SUPPORTED both, GATED on v2 diag | rank≥0.75 precursor | partial | YES — pacing-fidelity, exertion → complicates | NO | **DONE (R14-v2, 2026-06-30)** — single-pool **+19.6pp, p=0.029 SUPPORTED** (CONVERGE; 2nd single-pool SUPPORTED w/ HA07d); load-bearing still WITHHELD pending v2 diag + specificity ~2.2% PPV (Tier-C, not card-shippable) |
 | HA-C3 | stress→felt curve (Wiggers bins) | REJECTED (wrong-direction) | curve shape (mid-stress peak) | NO | YES — citalopram `all_day_stress_avg` CONFIRMED; **netted by §5.A unmed-primary design** | **SELF** | no-change → **R21** anchor |
 | HA-C3p | stress→felt curve (personal bins) | PARTIAL (same inverse shape) | curve shape | NO | YES — citalopram CONFIRMED; §5.A netted | **SELF** | no-change (cluster pipeline) → R21 |
 | HA-C4c | bout failure-to-return | PARTIAL (bar-b δ=0.120 fail) | cross-phase bout contrast | NO (cross-phase) | YES — cross-phase pooled (conditional; **unmed-only REJECTED** → stratum-fragility) | NO | overlay-only (carry unmed-REJECTED caveat) |
@@ -106,11 +106,14 @@ the same driver-ledger facts. They agreed on the CONFIRMED-channel
 definitions; determinations merged above by the PM. **Net result —
 genuinely-disturbed rows are a short list:**
 
-- **needs-rerun (only 1):**
-  - **HA01c** — *single-pool* re-run. Never run in the reanchor (R14-v2);
-    `effective_exertion_rank_lagged` column available; load-bearing
-    already WITHHELD pending its v2 diagnostic. **The one genuine new
-    computation.**
+- **needs-rerun (CLOSED — 0 outstanding):**
+  - **HA01c** — **DONE 2026-06-30 (R14-v2).** Single-pool **+19.6pp,
+    p=0.029 SUPPORTED** (CONVERGE both-SUPPORTED) — now the **2nd**
+    single-pool SUPPORTED signal alongside HA07d. Caveat unchanged:
+    load-bearing WITHHELD pending its v2 diagnostic; specificity leaves
+    PPV ~2.2% at the ~1.7% base rate (Tier-C, not card-shippable). H03
+    closed in the same run (single-pool 0.0pp NOT-SUPPORTED, CONVERGE).
+    **The R18 re-run list is now empty; the triage is fully resolved.**
 - **HA10 re-assessed → overlay-only (PM, 2026-06-30; flagged for
   confirmation).** Following the fresh-session review's correction to its
   honest conclusion: with the phantom measurement-regime confound removed,
@@ -151,15 +154,16 @@ The R14 single-pool re-run is **done** for the ten core tests at
 bootstrap 95% CI; full Stratum-4 pool n=29 crashes). It executes the
 binding recipe at `train_validate_split_fate.md` §5.7. Consequence for
 this triage: **most `needs-rerun` rows collapse to `overlay-only`** —
-the single-pool number already exists. Headline: **all 10 CONVERGE with
-their locked overall verdicts; only HA07d clears single-pool** (perm
-p=0.029); the other nine are NOT-SUPPORTED with wide CIs (the train-era
-signals were era-specific).
+the single-pool number already exists. Headline (updated 2026-06-30 with
+the R14-v2 extension): **12 tests total, all 12 CONVERGE** with their
+locked overall verdicts; **HA07d + HA01c clear single-pool** (the two
+SUPPORTED, perm p=0.029 each); the other ten are NOT-SUPPORTED with wide
+CIs (the train-era signals were era-specific).
 
-**Still genuinely uncovered** (R14-v2 fodder, plan as work):
-- **HA01c** (effective-exertion rank) — NOT-RUN in the reanchor.
-- **H03** (sleep-efficiency) — NOT-RUN (REFUTED both eras; low priority).
-- **C4b** rest-stress low-motion n=9 — separate cell (§3 below).
+**Still genuinely uncovered** (remaining R14-v2 / other work):
+- ~~HA01c, H03~~ — **DONE 2026-06-30** (R14-v2): HA01c single-pool
+  SUPPORTED, H03 NOT-SUPPORTED; both CONVERGE.
+- **C4b** rest-stress low-motion n=9 — honest-closed (§3 below).
 - **HA-C3 / HA-C3p** (stress→felt *curve*) + **HA-C4c / HA11-bout-redo**
   (bout-level) — these are not discrimination tests; they travel the
   cluster pipeline (rollout Phases A/B/C), not this cross-check.

@@ -437,6 +437,102 @@ def episode_ha01b_n_shock(
     return n_shock, n_valid
 
 
+def episode_ha01c_rank_trigger(
+    ref_date: date,
+    df_indexed: pd.DataFrame,
+    *,
+    rank_col: str = "eff_exertion_rank_lagged",
+    rank_threshold: float = 0.75,
+    leadup_days: int = LEADUP_DAYS,
+    min_valid: int = MIN_LEADUP_VALID,
+) -> tuple[bool | None, float | None, int]:
+    """HA01c: episode triggers if >=1 day in 4-day lead-up has eff_exertion_rank_lagged >= 0.75.
+
+    Returns (triggered, max_rank_on_leadup, n_valid). triggered is None if
+    fewer than ``min_valid`` (3 of 4) lead-up days carry a valid rank in [0, 1].
+    The max_rank is used to compute crit_c (median rank on triggering episodes
+    >= 0.875) on the triggering subset, matching the locked HA01c bar (c).
+    """
+    series_all = df_indexed[rank_col]
+    date_to_idx = df_indexed.attrs["date_to_idx"]
+    leadup_dates = [ref_date - timedelta(days=i) for i in range(1, leadup_days + 1)]
+    ranks = []
+    n_valid = 0
+    for d in leadup_dates:
+        if d not in date_to_idx:
+            continue
+        val = series_all.iloc[date_to_idx[d]]
+        if pd.isna(val):
+            continue
+        v = float(val)
+        if not (0.0 <= v <= 1.0):
+            continue
+        n_valid += 1
+        ranks.append(v)
+    if n_valid < min_valid or not ranks:
+        return None, None, n_valid
+    max_rank = max(ranks)
+    triggered = max_rank >= rank_threshold
+    return triggered, max_rank, n_valid
+
+
+def episode_h03_efficiency_delta(
+    ref_date: date,
+    df_indexed: pd.DataFrame,
+    *,
+    leadup_days: int = 7,
+    baseline_window_days: int = 90,
+    min_leadup_valid: int = 5,
+    min_baseline_valid: int = 30,
+    trim_pct: float = 0.10,
+) -> tuple[float | None, int]:
+    """H03: delta sleep efficiency = mean(leadup eff) - trimmed_mean(baseline eff).
+
+    Sleep efficiency is reconstructed from per_day_master columns as
+    TST / (TST + awake + unmeasurable), where TST = sleep_deep_min +
+    sleep_light_min. Per DATA_DICTIONARY.md the FR245 hardware does NOT
+    classify REM (no sleep_rem_min exists); all non-deep / non-awake sleep
+    aggregates into sleep_light_min, so (deep + light) is construction-
+    equivalent to the locked test's (deep + light + rem). 7-night leadup,
+    [d-97, d-8] trimmed baseline (10/90), min 5/7 leadup + min 30 baseline.
+
+    Returns (delta_eff, n_leadup_valid) or (None, n_leadup_valid).
+    """
+    eff_series = df_indexed.attrs["_eff_cache"]
+    dates_all = df_indexed["date"]
+    date_to_idx = df_indexed.attrs["date_to_idx"]
+
+    leadup_dates = [ref_date - timedelta(days=i) for i in range(1, leadup_days + 1)]
+    leadup_vals = []
+    for d in leadup_dates:
+        if d not in date_to_idx:
+            continue
+        v = eff_series.iloc[date_to_idx[d]]
+        if pd.isna(v):
+            continue
+        leadup_vals.append(float(v))
+    if len(leadup_vals) < min_leadup_valid:
+        return None, len(leadup_vals)
+
+    baseline_end = ref_date - timedelta(days=leadup_days + 1)
+    baseline_start = ref_date - timedelta(days=leadup_days + baseline_window_days)
+    mask = (dates_all >= baseline_start) & (dates_all <= baseline_end)
+    baseline_vals = eff_series[mask].dropna().to_numpy(dtype=float)
+    if len(baseline_vals) < min_baseline_valid:
+        return None, len(leadup_vals)
+    sorted_vals = np.sort(baseline_vals)
+    trim = int(len(sorted_vals) * trim_pct)
+    if len(sorted_vals) - 2 * trim < 1:
+        trimmed = sorted_vals
+    else:
+        trimmed = sorted_vals[trim: len(sorted_vals) - trim]
+    if len(trimmed) < 1:
+        return None, len(leadup_vals)
+    baseline = float(np.mean(trimmed))
+    leadup_mean = float(np.mean(leadup_vals))
+    return float(leadup_mean - baseline), len(leadup_vals)
+
+
 # -----------------------------------------------------------------------------
 # Null sample construction (matches the locked HA pattern)
 # -----------------------------------------------------------------------------
@@ -492,6 +588,19 @@ def _index_master(df: pd.DataFrame) -> pd.DataFrame:
     df.attrs["date_to_idx"] = {d: i for i, d in enumerate(df["date"])}
     df.attrs["_delta_cache"] = {}
     df.attrs["_slope_cache"] = {}
+    # H03 sleep-efficiency reconstruction from per_day_master columns.
+    # TST = deep + light (no REM on FR245 per DATA_DICTIONARY.md);
+    # efficiency = TST / (TST + awake + unmeasurable). NaN when any
+    # component is missing or the denominator is non-positive.
+    deep = df["sleep_deep_min"].astype(float) if "sleep_deep_min" in df.columns else pd.Series([np.nan] * len(df))
+    light = df["sleep_light_min"].astype(float) if "sleep_light_min" in df.columns else pd.Series([np.nan] * len(df))
+    awake = df["sleep_awake_min"].astype(float) if "sleep_awake_min" in df.columns else pd.Series([np.nan] * len(df))
+    unmeas = df["sleep_unmeasurable_min"].astype(float) if "sleep_unmeasurable_min" in df.columns else pd.Series([np.nan] * len(df))
+    tst = deep + light
+    tib_like = tst + awake + unmeas
+    eff = tst / tib_like
+    eff = eff.where(tib_like > 0)
+    df.attrs["_eff_cache"] = eff.reset_index(drop=True)
     return df
 
 
@@ -970,6 +1079,93 @@ def eval_H04(df_indexed, crash_starts, null_dates) -> dict:
     return res
 
 
+def eval_HA01c(df_indexed, crash_starts, null_dates) -> dict:
+    """HA01c (R14-v2): frac windows with >=1 day in 4-day leadup at eff_exertion_rank_lagged >= 0.75.
+
+    Crit (a) freq >= 60%; crit (b) disc >= +15 pp; crit (c) median rank on
+    TRIGGERING episodes >= 0.875 (locked HA01c bar). One-sided elevated.
+    Operand routes through the per_day_master `eff_exertion_rank_lagged`
+    column (the v3.2 _lagged variant that the locked HA01c test used; see
+    §3.2 caveat for the _lagged_lcera alternative -- on the all-LC Stratum 4
+    pool the two baselines are near-identical).
+    """
+    def collect(refs):
+        triggers = []
+        trig_max_ranks = []  # max rank only on TRIGGERING episodes (for crit_c)
+        for ref in refs:
+            triggered, max_rank, _n_valid = episode_ha01c_rank_trigger(ref, df_indexed)
+            if triggered is None:
+                triggers.append(np.nan)
+                continue
+            triggers.append(1 if triggered else 0)
+            if triggered:
+                trig_max_ranks.append(max_rank)
+        return np.array(triggers, dtype=float), trig_max_ranks
+
+    crash_trig, crash_trig_ranks = collect(crash_starts)
+    null_trig, _ = collect(null_dates)
+    res = evaluate_ha("HA01c", crash_trig, null_trig, crash_trig_ranks, n_std=2)
+    if "verdict_single_pool" not in res or res["verdict_single_pool"].startswith("INCONCLUSIVE"):
+        res["operand"] = "frac windows with >=1 day in 4-day leadup at eff_exertion_rank_lagged >= 0.75; median rank on triggering >= 0.875"
+        return res
+    median_rank = float(statistics.median(sorted(crash_trig_ranks))) if crash_trig_ranks else float("nan")
+    crit_a = res["frac_crash"] >= CRIT_A_FRAC
+    crit_b = res["disc_pp"] >= CRIT_B_DISC_PP
+    crit_c = (not np.isnan(median_rank)) and (median_rank >= 0.875)
+    res["median_max_z_or_signed"] = median_rank
+    res["median_rank_on_triggering"] = median_rank
+    res["crit_a_pass_freq60"] = bool(crit_a)
+    res["crit_b_pass_disc15"] = bool(crit_b)
+    res["crit_c_pass_median"] = bool(crit_c)
+    res["verdict_single_pool"] = "SUPPORTED" if (crit_a and crit_b and crit_c) else "NOT-SUPPORTED"
+    res["operand"] = "frac windows with >=1 day in 4-day leadup at eff_exertion_rank_lagged >= 0.75; median rank on triggering episodes >= 0.875"
+    return res
+
+
+def eval_H03(df_indexed, crash_starts, null_dates) -> dict:
+    """H03 (R14-v2, stretch): frac windows where 7d-leadup mean sleep-efficiency minus trimmed baseline <= -0.05.
+
+    Crit (a) freq >= 60% at delta <= -0.05; crit (b) disc >= +15 pp; crit (c)
+    median delta <= -0.03 AND upper-quartile delta <= 0 (locked H03 bar).
+    Direction: drop (one-sided, lower). 7-day leadup, [d-97, d-8] trimmed
+    baseline. Efficiency reconstructed from per_day_master sleep components.
+    """
+    def collect(refs):
+        triggers = []
+        deltas = []
+        for ref in refs:
+            d_val, _ = episode_h03_efficiency_delta(ref, df_indexed)
+            if d_val is None:
+                triggers.append(np.nan)
+                continue
+            triggers.append(1 if d_val <= -0.05 else 0)
+            deltas.append(d_val)
+        return np.array(triggers, dtype=float), deltas
+
+    crash_trig, crash_deltas = collect(crash_starts)
+    null_trig, _ = collect(null_dates)
+    res = evaluate_ha("H03", crash_trig, null_trig, crash_deltas, n_std=4)
+    cleaned = sorted([x for x in crash_deltas if x is not None])
+    if cleaned:
+        median_d = float(statistics.median(cleaned))
+        upperq_d = float(cleaned[int(len(cleaned) * 0.75)])
+    else:
+        median_d = float("nan")
+        upperq_d = float("nan")
+    if "verdict_single_pool" in res and not res["verdict_single_pool"].startswith("INCONCLUSIVE"):
+        crit_a = res["frac_crash"] >= CRIT_A_FRAC
+        crit_b = res["disc_pp"] >= CRIT_B_DISC_PP
+        crit_c = (median_d <= -0.03) and (upperq_d <= 0.0)
+        res["median_delta_eff"] = median_d
+        res["upper_quartile_delta_eff"] = upperq_d
+        res["crit_a_pass_freq60"] = bool(crit_a)
+        res["crit_b_pass_disc15"] = bool(crit_b)
+        res["crit_c_pass_median"] = bool(crit_c)
+        res["verdict_single_pool"] = "SUPPORTED" if (crit_a and crit_b and crit_c) else "NOT-SUPPORTED"
+    res["operand"] = "frac windows where mean sleep-efficiency (7d leadup) - trimmed baseline <= -0.05 (eff = (deep+light)/(deep+light+awake+unmeasurable))"
+    return res
+
+
 # -----------------------------------------------------------------------------
 # Locked-verdict cross-reference table (per result.md headline numbers)
 # -----------------------------------------------------------------------------
@@ -1065,6 +1261,24 @@ LOCKED_VERDICTS = {
         "locked_validate_frac": 0.533,
         "result_md_path": "analyses/hypotheses/HA06b-rhr-zscore/result.md",
         "note": "RHR z-score (4d, bidirectional); permanently demoted to non-load-bearing per v2 diag.",
+    },
+    "HA01c": {
+        "locked_verdict": "BOTH ERAS SUPPORTED -> OVERALL SUPPORTED (load-bearing WITHHELD pending v2 threshold-monotonicity diagnostic)",
+        "locked_train_disc_pp": +21.3,
+        "locked_validate_disc_pp": +19.5,
+        "locked_train_frac": 0.818,
+        "locked_validate_frac": 0.800,
+        "result_md_path": "analyses/hypotheses/HA01c-effective-exertion-shock/result.md",
+        "note": "Effective-exertion rank shock (>= 0.75 in 4d leadup); SUPPORTED both eras at the locked 3-criterion bar; load-bearing gated on HA01c v2. R14-v2 close.",
+    },
+    "H03": {
+        "locked_verdict": "REFUTED both eras",
+        "locked_train_disc_pp": 0.0,
+        "locked_validate_disc_pp": 0.0,
+        "locked_train_frac": 0.000,
+        "locked_validate_frac": 0.000,
+        "result_md_path": "analyses/hypotheses/H03-sleep-efficiency/result.md",
+        "note": "Sleep-efficiency drop (>= 5pp) over 7d leadup; flat-as-a-board, REFUTED decisively both eras (0.0% trigger). R14-v2 close.",
     },
 }
 
@@ -1178,12 +1392,14 @@ def main():
         ("HA08c", eval_HA08c, null_dates_4d),
         ("HA10", eval_HA10, null_dates_4d),
         ("HA11", eval_HA11, null_dates_4d),
+        ("HA01c", eval_HA01c, null_dates_4d),
     ]
     stretch_evaluators = [
         ("H01", eval_H01, null_dates_7d),
         ("H02b", eval_H02b, null_dates_3d),
         ("H04", eval_H04, null_dates_7d),
         ("HA06b", eval_HA06b, null_dates_4d),
+        ("H03", eval_H03, null_dates_7d),
     ]
 
     results = {"primary": {}, "stretch": {}, "meta": {}}
@@ -1476,11 +1692,9 @@ def write_findings_md(results: dict) -> None:
         "|---|---|---|\n"
         "| H02 | SUPERSEDED-by-H02b (daily-aggregate stress -> per-minute spike count); cross-check covers via H02b. | [REJECTED.md 2026-06-05](../../../../REJECTED.md) |\n"
         "| H02d | SUPERSEDED-by-equivalence (H02b == H02d at rho=+1.000 per cross-channel-correlation card). | [REJECTED.md 2026-06-06](../../../../REJECTED.md) |\n"
-        "| H03 | NOT-RUN in cross-check (REFUTED both eras; sleep_efficiency channel; not in primary scope; would close shared gap 2 partially - candidate for R14-v2). | [H03 result.md](../../../hypotheses/H03-sleep-efficiency/result.md) |\n"
         "| H03b | RETIRED - data-resolution limit (INCONCLUSIVE x 12 cells; data does not exist at gated resolution). | [REJECTED.md Appendix](../../../../REJECTED.md) |\n"
         "| H05 | RETIRED - spec-induced trivial. | [REJECTED.md Appendix](../../../../REJECTED.md) |\n"
         "| HA01b-per-axis-diagnostic | NOT-RUN in cross-check (DIAGNOSTIC bound to HA01b parent; inheriting cross-check from HA01b-recomputed). | parent: HA01b-recomputed |\n"
-        "| HA01c | NOT-RUN in cross-check (SUPPORTED-with-stability-mixed; load-bearing WITHHELD pending v2 diag; effective_exertion_rank_lagged column available - candidate for R14-v2). | [HA01c result.md](../../../hypotheses/HA01c-effective-exertion-shock/result.md) |\n"
         "| HA06 | SUPERSEDED-by-HA06b (absolute-threshold mis-cal -> z-score). | [REJECTED.md 2026-06-07](../../../../REJECTED.md) |\n"
         "| HA07 | SUPERSEDED-by-proxy (FR245 HRV hardware-blocked; HA07c proxy). | [REJECTED.md Appendix](../../../../REJECTED.md) |\n"
         "| HA08 | SUPERSEDED-by-proxy (same FR245 hardware blocker; HA08c proxy). | [REJECTED.md Appendix](../../../../REJECTED.md) |\n"
@@ -1489,10 +1703,11 @@ def write_findings_md(results: dict) -> None:
         "| K02 | NOT-APPLICABLE (same as K01). | [K02 result.md](../../../hypotheses/K02-crash-duration/result.md) |\n"
         "| threshold-monotonicity diagnostics (HA01c-v2, HA06b-v2, HA07d, HA07d-v2, HA10, HA10-v2, HA11-v2) | inherit cross-check from parent HA per testing playbook. | parents covered above |\n"
         "\n"
-        "**R14-v2 candidates** (closeable by extending this script with column wiring): H03 "
-        "(sleep_efficiency), HA01c (effective_exertion_rank_lagged), and HA06b "
-        "covered as stretch where included above. The remaining NOT-BACKSTOPPED HAs from "
-        "stocktake Sec 5 close in a future R14-v2 session.\n"
+        "**R14-v2 closed** (2026-06-30): HA01c (effective_exertion rank shock; primary scope) "
+        "and H03 (sleep_efficiency drop; stretch scope) are now COMPUTED and reported in the "
+        "Sec 2 table + Sec 3 narrative above; they are no longer deferred. HA06b is covered as "
+        "stretch. The remaining NOT-BACKSTOPPED HAs from stocktake Sec 5 close in a future "
+        "R14-v3 session.\n"
     )
     lines.append("---\n")
 
@@ -1523,12 +1738,13 @@ def write_findings_md(results: dict) -> None:
         "audit). Those remain to be closed by separate descriptive runs.\n"
         "\n"
         "Of the 16 HAs that stocktake Sec 3 Shared gap 2 enumerated, this cross-check "
-        f"closes A8 on {len(all_evaluated)} of them; remaining {16 - len(all_evaluated)} "
-        f"(H02, H02d, H03, H03b, HA01b-diag, HA01c) continue to carry "
-        f"NOT-BACKSTOPPED A8 until R14-v2 or descriptive backstop arrives via another path. "
+        f"closes A8 on {len(all_evaluated)} of them (HA01c + H03 added in the 2026-06-30 R14-v2 "
+        f"extension); remaining {16 - len(all_evaluated)} "
+        f"(H02, H02d, H03b, HA01b-diag) continue to carry "
+        f"NOT-BACKSTOPPED A8 until a future descriptive backstop arrives via another path. "
         f"H02 and H02d are SUPERSEDED in the registry (so closure is procedural rather than "
         f"empirical); H03b is RETIRED per stocktake Sec 9; HA01b-diag inherits from HA01b-recomputed which IS "
-        f"covered. The genuinely uncovered remaining are H03 + HA01c (R14-v2 fodder).\n"
+        f"covered. There are no genuinely uncovered HAs remaining in the Shared gap 2 set.\n"
     )
     lines.append("---\n")
 
@@ -1573,6 +1789,20 @@ def write_findings_md(results: dict) -> None:
     # Sec 8 Verification log
     lines.append("## 8. Verification log\n")
     lines.append(
+        "- **R14-v2 extension (2026-06-30)**: HA01c (primary) + H03 (stretch) added to scope "
+        "under the SAME recipe as the original 10 HAs (full Stratum 4 single pool, "
+        "n_crash_episodes=29; block-permutation null E[L]=7; B=10,000; null sample seed "
+        "`20260605`; bootstrap/perm seed `20260624`; N_std primary 1.5; leadup 4 days for HA01c, "
+        "7 days for H03). HA01c operand = `eff_exertion_rank_lagged >= 0.75` (the v3.2 _lagged "
+        "column the locked HA01c test used; per CONVENTIONS §3.2 the `_lagged_lcera` variant "
+        "is near-identical on the all-LC Stratum 4 pool). H03 operand = 7d-leadup mean "
+        "sleep-efficiency minus [d-97, d-8] trimmed baseline <= -0.05; efficiency reconstructed "
+        "from per_day_master `(sleep_deep_min + sleep_light_min) / (deep + light + awake + "
+        "unmeasurable)` (no `sleep_rem_min` on FR245 per DATA_DICTIONARY.md, so light absorbs REM "
+        "and the reconstruction is construction-equivalent to the locked test's deep+light+rem). "
+        "§3.4 crash-drop sensitivity: the single pool inherits the same 29-episode crash_v2 "
+        "set; no per-episode drop sweep is re-run at the cross-check layer (the locked HA verdicts "
+        "carry their own sensitivity records).\n"
         f"- **As-of-date**: {meta['as_of_date']} (Stratum 4 right edge for this run).\n"
         f"- **Stratum 4 start**: {meta['stratum_4_start']}.\n"
         f"- **n_days in Stratum 4 master**: {meta['n_days_master_in_S4']}.\n"
