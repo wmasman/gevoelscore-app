@@ -97,6 +97,23 @@ track is the only sanctioned path onto the site.
 | R26 | HR-correction sensitivity | new | 4 | scoped later; `note_2026-06-29_*` track |
 | R27 | phase-boundary convergence status | assemble | 0/1 | Q4.3 `era_boundaries/findings.md` |
 | R28 | per-phase p25/p75 export | have/new | 0 | `recovery_arc` v2 emit |
+| R29 | SSRI/citalopram lit review (HRV · LC/PAIS · Carla Rus) | new | 5 | **companion to R24** (same `/reading`, different topic); PubMed/PMC + `ssri-story-plan.md` leads; feeds `/workings/the-citalopram-question` |
+
+**Delivered as of 2026-06-30** (committed `7f0c093`, `958bfe2`, `bc7b30a`;
+pushed): R1, R2, R13, R14 (+R14-v2), R17, R18, R19, R22, R25, R27. Remaining:
+R15/R16/R20 (Wave 3 driver ledger), R23 (Wave 4), R24+**R29** (lit track),
+R4 (honest-limit), R3/R5/R6 (folded into R15), R7-R12/R21/R26/R28 (future).
+
+**R29 scope boundary (load-bearing).** R29 adjudicates the *mechanism
+explanation* on the citalopram page ("SSRI lowers HRV → watch reads higher
+stress"), **not** the measured dose-response. We have a CONFIRMED
+citalopram dose-response on stress + `bb_lowest` (the driver ledger's
+basis for R15/R16/R20). If R29's RQ1 returns "SSRIs don't reliably lower
+HRV," the dose-response **stays** (we measured it) but the page's *why*
+must change. So R29 and R20 are complementary: **R20 corrects the channels
+for the measured driver; R29 explains (or fails to explain) why.** R29
+must land before the citalopram page's mechanism copy locks — sequence it
+ahead of the Stage-T translation of the driver-ledger construct.
 
 ## 4. Wave schedule (dependency-respecting)
 
@@ -148,9 +165,16 @@ committed heavy test.** Each wave passes the §6 gate before any push.
   slowest — it cannot be an export.*
 - R21 / R26 / R12 are **scoped after R23 lands**, not committed now.
 
-### Parallel track (no dependency, start anytime)
-- **R24** wearable-validity lit review (Lane 5; agent task). Can run
-  from day one alongside any wave.
+### Parallel track — literature reviews (no data dependency, start anytime)
+- **R24** wearable-validity lit review in LC/ME-CFS (Lane 5; agent task).
+- **R29** SSRI/citalopram lit review (HRV · LC/PAIS · Carla Rus; Lane 5).
+  Companion to R24 — same `/reading` registry, different topic. Returns
+  an explicit yes/no/mixed verdict on the HRV-blunting mechanism +
+  3–6 cited sources. **Sequence ahead of the citalopram-page mechanism
+  copy** (Stage-T translation of the R15 driver-ledger construct); it
+  does not block the *measured* dose-response (R20), only its *why*.
+  Both are PubMed/PMC agent tasks and can run from day one alongside any
+  wave; privacy pass is on the brief (no personal data in a lit review).
 
 ### Wave 5 — Future layer / honest limits
 - **R7**, **R8**, **R9**, **R10**, **R11**, **R28**, **R4** (weak).
@@ -165,12 +189,12 @@ committed heavy test.** Each wave passes the §6 gate before any push.
 
 | Order | Wave | Requests | Lane(s) | Gate before push |
 |---|---|---|---|---|
-| 1 | 0 | R18, R14 | 1, 2 | fresh-session review (R14 result); audit |
-| 2 | 1 | R2, R25, R1, R17 | 1, 0/3 | audit; R2/R25 reviewer-checked vs R14 |
-| 3 | 2 | R13, R19, R27, R22 | 3, 0/1 | Stage D per analysis; audit |
+| 1 | 0 | R18, R14 | 1, 2 | ✅ done + pushed |
+| 2 | 1 | R2, R25, R1, R17 | 1, 0/3 | ✅ done + pushed |
+| 3 | 2 | R13, R19, R27, R22 | 3, 0/1 | ✅ done + pushed |
 | 4 | 3 | R15, R20, R16 | 1, 2 | reviewer review (R20/R16 corrections); audit |
 | 5 | 4 | R23 | 4 | methodology MD + 2× fresh-session review; audit |
-| — | ∥ | R24 | 5 | privacy pass on brief |
+| — | ∥ | R24, **R29** | 5 | privacy pass on brief (R29 before citalopram-page copy locks) |
 | 6 | 5 | R7, R8, R9, R10, R11, R28, R4 | 3/4/6/7 | per-lane |
 
 ## 6. The rigor-gate contract (applied to every wave)
@@ -215,3 +239,5 @@ committed heavy test.** Each wave passes the §6 gate before any push.
 | Date | Event | Note |
 |---|---|---|
 | 2026-06-30 | Drafted r1 (PROPOSED) | Producer-mode under user interview. Sequencing decision: site-delivery track supersedes by-cluster order (authorized deviation from `_rollout_order_2026-06-25.md`). Wave-4 scope: R23 only. First content artefact: R18 triage. NOT LOCKED — fresh-session `/research-methodology-review` pending before lock. |
+| 2026-06-30 | Waves 0–2 delivered + pushed | R18, R14(+v2), R25, R2, R1, R17, R13, R19, R22, R27 committed (`7f0c093`, `958bfe2`, `bc7b30a`) and pushed to origin/main. Each wave passed `audit_for_publication.py` before commit. |
+| 2026-06-30 | R29 planned in | New register request R29 (SSRI/citalopram lit review) added to §3 map + §4 parallel lit track (companion to R24, Lane 5). Scope boundary recorded: adjudicates the citalopram-page *mechanism*, not the measured dose-response; sequence ahead of the citalopram-page copy lock. |
