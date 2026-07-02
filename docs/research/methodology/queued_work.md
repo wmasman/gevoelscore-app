@@ -774,7 +774,7 @@ acceptance criteria rather than ad-hoc work.
 
 ## Q16. Seasonality-decomposed Garmin-only baseline contrasts (Strata 1 vs 3 vs 4)
 
-**Status**: queued — descriptive work; methodologically required for any Stratum 1 vs Stratum 3/4 comparison.
+**Status**: queued — descriptive work; methodologically required for any Stratum 1 vs Stratum 3/4 comparison. **Partly superseded 2026-07-02:** the R23 follow-up decomposition ([`../analyses/longrun_rhr_trend/`](../analyses/longrun_rhr_trend/)) now handles seasonality as a **modelled annual-phase term** (~2.1 bpm on RHR, matching the ~2 bpm literature prior) rather than by season-stratified contrasts. Q20 subsumes this Q16 goal for the channels it covers; Q16's per-primitive stratification survives only as an independent descriptive cross-check of the modelled season term.
 
 **Context**: Per [`lc_era_temporal_segmentation.md`](lc_era_temporal_segmentation.md) §1, Stratum 1 (pre-corona, 2021-08-16 → 2022-03-20) covers ~7 months of Aug-Mar = winter + shoulder seasons only. Any Garmin-only contrast between Stratum 1 and Strata 3/4 (LC) baselines confounds illness state with season by construction. Disentangling requires season-stratified contrasts.
 
@@ -881,6 +881,86 @@ acceptance criteria rather than ad-hoc work.
 - [`time_resolution.md`](time_resolution.md) `## Citation status` and §11.2
 - [`_pending_literature_fetch.md`](_pending_literature_fetch.md) (the agent brief Q19 extends)
 - Q17 (the parallel literature fetch for the other three methodology MDs)
+
+## Q20. Long-horizon LC-attributable residual — full multi-confounder decomposition
+
+**Status**: queued — exploratory estimation; the R12-class long-horizon
+audit. Blocks any FIRM "the factor drifted over the LC era *because of LC*" /
+"structurally different body" quantitative claim. NOT urgent (see why-queued).
+
+**Context (read this cold, 2026-07-02)**: The R23 COVID follow-up built a
+literature-gated confounder framework for multi-year Garmin-channel trends and
+ran it on `resting_hr`. Result
+([`../analyses/longrun_rhr_trend/findings.md`](../analyses/longrun_rhr_trend/findings.md)):
+after modelling out deconditioning + weight + citalopram + seasonality +
+aging, a residual RHR rise of ~+1.2 bpm/yr persists post-2023, but its CI is
+wide (~[0.6, 1.9]) and FRAGILE (leave-2024-out crosses zero; sensitive to the
+sparsely-measured weight trajectory). So the LC-attributable residual is
+**SUGGESTIVE, not established**. Separately, the citalopram dose-response
+re-audit
+([`citalopram_dose_response_confounder_reaudit_2026-07-02.md`](citalopram_dose_response_confounder_reaudit_2026-07-02.md))
+found the dose BETA is sound but the §5.B dose-CORRECTED channel
+(`channel_adj = channel - beta*dose`) is dose-clean, NOT confounder-clean over
+the full era. The confounder-exposure triage
+([`confounder_exposure_triage.md`](confounder_exposure_triage.md)) classifies
+exactly this (long-horizon / cross-era / absolute-level claims) as the class
+needing the full audit; the crash-precursor scorecard is immune and does NOT.
+
+**The question**: can we firm up, or honestly bound, the LC-attributable
+component of the multi-year drift on the load-bearing channels, by modelling
+ALL literature-supported slow confounders together over the full era? Targets:
+(a) `resting_hr` (refine/confirm the +1.2 [0.6,1.9] residual); (b) the
+dose-corrected stress/BB channels (`stress_mean_sleep`, `all_day_stress_avg`,
+`bb_lowest`) whenever a long-horizon claim consumes `channel_adj` — those
+still owe weight (~15 kg over the era), the deconditioning tail, and aging
+their own correction on top of the dose correction.
+
+**Why queued (and why NOT urgent)**: the crash-precursor scorecard (the
+site's core) is immune (short-horizon lagged baselines; triage §2), so nothing
+the site currently ships depends on this. It becomes load-bearing only if the
+site wants a FIRM quantitative "structurally different body" claim (register
+R12's inferential version) instead of the honest "direction robust, magnitude
+not cleanly separable" answer already delivered. **The honest expected
+outcome is that n=1 with collinear slow drivers may not permit a clean
+number** — "we cannot cleanly separate" is a valid, publishable result.
+
+**Workflow (cold-start instructions)**:
+1. Reuse the driver ledger
+   ([`../analyses/longrun_rhr_trend/driver_ledger.md`](../analyses/longrun_rhr_trend/driver_ledger.md))
+   as the confounder set — literature-gated, inputs resolved (weight 56
+   weigh-ins; VO2Max peak-measured / decline-modelled; aging <=0.3 bpm/yr;
+   citalopram dose; season). Do NOT re-derive it.
+2. Per target channel, fit the full decomposition and read the residual using
+   the CORRECTED methods the RHR work established (the first draft overclaimed
+   the CI 3x; a skeptical review caught it — do not repeat): **block-bootstrap
+   OF THE RESIDUAL SLOPE** (not the analytic Theil-Sen interval — lag-1
+   autocorrelation ~0.94), leave-one-year-out sensitivity, weight-coefficient
+   sensitivity, and the slow-deconditioning sensitivity pair. Template:
+   [`../analyses/longrun_rhr_trend/decomposition.py`](../analyses/longrun_rhr_trend/decomposition.py).
+3. Fold in Q16 (season-stratified baseline) as the seasonality handling; Q20
+   subsumes Q16 for the channels it covers.
+4. Report per channel: residual direction (robust?) + magnitude (CI) +
+   fragility (year-drop, weight-sensitivity). Carry the honesty limits
+   verbatim from ledger §5 (fitness decline modelled not measured; slow
+   drivers collinear; static level not attributable; n=1).
+5. **Fresh-session skeptical review before any FIRM claim ships** — this
+   result class MUST be reviewed cold (convenient results overclaim).
+
+**Where to put when done**: extend
+[`../analyses/longrun_rhr_trend/`](../analyses/longrun_rhr_trend/) with
+per-channel residual findings, or a new `longrun_channel_residuals/` folder.
+Update the triage's residual sub-flag + register R12.
+
+**Cross-refs**:
+- [`../analyses/longrun_rhr_trend/`](../analyses/longrun_rhr_trend/) (driver
+  ledger, decomposition, findings, skeptical review — the whole substrate)
+- [`citalopram_dose_response_confounder_reaudit_2026-07-02.md`](citalopram_dose_response_confounder_reaudit_2026-07-02.md)
+  (the `channel_adj` residual sub-flag) + [`confounder_exposure_triage.md`](confounder_exposure_triage.md)
+- Q16 (season decomposition — subsumed for the covered channels)
+- register R12 (structurally-different-body inferential version)
+- [[feedback_research_discipline_statistical]] (block-bootstrap,
+  autocorrelation, named counts); [[reference_garmin_weight_vo2max_biometrics]]
+  (weight/VO2Max data location + the nested-object gotcha)
 
 ---
 
