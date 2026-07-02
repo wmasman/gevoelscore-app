@@ -254,3 +254,36 @@ separate p-analogue** and is not ranked against the E[L]=7 null.
 - [CONVENTIONS.md](../../../CONVENTIONS.md) - §3.1 (personal baseline),
   §3.6 (named counts), §3.7 (detrend audit hook), §4.1 (no interpretive
   marks on the descriptive layer).
+
+## 12. Follow-up (2026-07-02): the raw-RHR nuance is explained
+
+The one friction point in this result (§6: coherence FALSE, 2 of 3; the
+directly-validated channel `resting_hr` did NOT move in its predicted sign
+on the raw 14-day mean, only after the §3.7 detrend) prompted a follow-up
+investigation, now recorded under
+[`../../longrun_rhr_trend/`](../../longrun_rhr_trend/). Its bearing on this
+result:
+
+- **The raw-RHR equivocation is a training-fitness-baseline artefact, not a
+  failure of the factor.** The participant was a heavily-training endurance
+  athlete until the COVID week (last training run 2022-03-17), so RHR was at
+  its athletic floor immediately before the infection. That depresses the
+  raw personal-baseline contrast, so an infection-driven RHR rise is masked
+  on the raw scale, exactly what §6 found. The literature anchor
+  [`../../../literature/reviews/training_bradycardia_detraining_rhr_review.md`](../../../literature/reviews/training_bradycardia_detraining_rhr_review.md)
+  supports this, and finds detraining is too slow (weeks-to-months) to
+  fabricate the detrended +1.77 rise within a 14-day window, so the
+  detrended RHR rise remains the more defensible read of the acute effect.
+- **This does NOT change the locked verdict.** The primary anchor
+  (`stress_mean_sleep`) verdict MOVED stands as pre-registered; this
+  follow-up only explains the secondary triad-coherence nuance. It is
+  recorded here as context, not as a re-scoring.
+- **Broader context (suggestive, not established).** The follow-up also
+  characterised the multi-year RHR trend
+  ([`../../longrun_rhr_trend/findings.md`](../../longrun_rhr_trend/findings.md)):
+  after modelling out deconditioning, weight, citalopram, seasonality, and
+  aging, a residual RHR rise persists post-2023 that deconditioning does not
+  explain (robust in direction, fragile in magnitude, CI ~[0.6, 1.9]
+  bpm/yr). This is consistent with, but does not prove, the factor tracking
+  an LC-related autonomic component beyond fitness loss. It is a separate
+  exploratory layer, not part of this pre-registered test.
