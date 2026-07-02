@@ -46,7 +46,7 @@ dump (`DI_CONNECT/DI-Connect-Wellness/*bioMetrics*`) on 2026-07-02.
 
 | # | Driver | Lit rating | Direction / magnitude / timescale | Project-data handle | Model term | Status |
 |---|---|---|---|---|---|---|
-| 1 | **Deconditioning / fitness loss** | STRONG (primary confounder) | RHR **UP** ~5-12 bpm; biphasic, front-loaded into **year 1**, plateau well before year 4 | **MEASURED: Garmin VO2Max series, 302 pts 2021-08 to 2026-05** (peak ~52 early-2022, ~42 by 2023, 37 by 2026); cessation 2022-03 | **VO2Max regressor** (measured fitness anchor), replaces the literature-only curve | **measured** (post-cessation estimation caveat, §5) |
+| 1 | **Deconditioning / fitness loss** | STRONG (primary confounder) | RHR **UP** ~5-12 bpm; biphasic, front-loaded into **year 1**, plateau well before year 4 | **peak MEASURED only**: real training runs end **2022-03-17** (brief failed 4-run comeback Jun-Jul 2023, none since); VO2Max ~52 at peak. The 52 to 37 decline is **Garmin's inactivity-DECAY MODEL**, not measured (no runs feed it post-2022) | **model curve** anchored at 2022-03 cessation, run as a **sensitivity pair** (literature curve primary; Garmin VO2Max-decay as secondary) | **model-based** (only the peak is measured; §5) |
 | 2 | **Citalopram** | STRONG (step) | RHR **DOWN** up to ~8 bpm (Rasmussen 1999), OPPOSITE to LC elevation so it MASKS the signal; persistent step | **`dose_plasma_mg`** + `in_citalopram_traject` (788 days), full coverage | **change-point / dose term** at initiation, not a slope | measurable (in-sample RHR beta to estimate; lit prior -8 bpm) |
 | 3 | **Body weight / adiposity / BMI** | STRONG (trend) | RHR UP ~0.3 bpm/BMI unit; **74 kg athlete (2021-22) to ~82 (mid-2023) to 84.7 (2025) to 89 (2026)**, BMI 21.8 to 26.6 | **MEASURED: 56 weigh-ins** in `userBioMetrics.json` (nested `weight` objects); dense 2021-08 to 2022-04, then a **14-month gap** to 2023-06, then sparse | **separate interpolated weight regressor** (see per-kg double-count note, §5) | resolved: measured-but-sparse, LC-onset gap |
 | 4 | **Device / firmware change** | STRONG (artefact step) | spurious step/drift in the estimate | **same Forerunner 245 throughout** (participant-confirmed; single-device dump) | none needed | **resolved: no device step** |
@@ -70,11 +70,12 @@ comes **only** from trajectory **shape and timing**:
   **plateaus well before year 4**. So any RHR movement **still ongoing at
   year 3-4**, or any **episodic / provocation-linked** structure, is
   **NOT deconditioning** (it is LC-disease or aging).
-- The measured VO2Max series lets us test this directly: VO2Max fell fast
-  in year 1 (52 to ~42) then declined slowly (42 to 37, 2023 to 2026). If
-  RHR tracks VO2Max, its rise should likewise be front-loaded; RHR
-  movement decoupled from the (near-flat, slowly-declining) later VO2Max
-  is the LC/aging candidate.
+- Both deconditioning curves (literature + Garmin decay) agree the fitness
+  contribution is front-loaded and plateaus by ~year 1, so if RHR tracks
+  fitness its rise is front-loaded too; RHR movement after the ~year-1
+  plateau is the LC/aging candidate. (The Garmin VO2Max decline 52 to 37
+  is that decay model, not a measured fitness trajectory: runs ended
+  2022-03.)
 - The decomposition has leverage on the **post-year-1 drift and the
   episodic component**, and **no** leverage on the **static level** of the
   year-4 plateau (deconditioning + weight + LC-baseline + aging all raise
@@ -83,8 +84,8 @@ comes **only** from trajectory **shape and timing**:
 ## 4. Proposed decomposition (model form, for approval)
 
 ```
-RHR(t) = f_fitness( VO2Max(t) )          # driver 1: measured fitness (see per-kg note, §5)
-       + b_weight * weight_interp(t)          # driver 3: measured weigh-ins, interpolated over the gap
+RHR(t) = decond_curve(t; cessation=2022-03) # driver 1: MODEL curve (lit primary / Garmin-decay sensitivity), plateau ~yr1
+       + b_weight * weight_interp(t)          # driver 3: MEASURED weigh-ins (sparse), interpolated over the gap
        + citalopram_term(t; dose_plasma_mg)   # driver 2, step/dose (DOWN, masks LC)
        + seasonal_phase(t)                     # driver 7, cyclic (day-of-year)
        + aging_slope(t; birthyear=1981)        # driver 9, small
@@ -92,16 +93,18 @@ RHR(t) = f_fitness( VO2Max(t) )          # driver 1: measured fitness (see per-k
        + noise
 ```
 
-**Fitness-vs-weight parameterisation (design fork, for approval).** Garmin
-VO2Max is **per-kg**, so weight is already in its denominator; entering
-per-kg VO2Max AND a separate weight term double-counts weight. Two clean
-options: **(A)** reconstruct **absolute VO2** = per-kg VO2Max x weight
-(weight-independent cardiorespiratory fitness), then weight as a separate
-adiposity term, cleanly separating "lost fitness" from "gained mass"; or
-**(B)** keep per-kg VO2Max as a single "net cardiometabolic fitness" axis
-and drop the separate weight term, simpler but unable to separate the two.
-Option A is preferred but its gap-period absolute-VO2 is uncertain (weight
-interpolated over the 14-month LC-onset gap). Flagged for design sign-off.
+**Deconditioning is a MODEL curve, not measured (design lock).** Real
+running fitness data ends at 2022-03 (last training run 2022-03-17); the
+VO2Max decline after that is Garmin's inactivity-decay model. So the
+fitness term is a **shape prior anchored at cessation**, run as a
+**sensitivity pair**: the **literature deconditioning curve** (primary,
+weight-independent) and the **Garmin VO2Max-decay curve** (secondary).
+Note the Garmin curve is per-kg so it partially re-encodes weight; if used
+alongside the separate weight term it mildly double-counts weight, which is
+why the literature curve is primary. Both curves agree on the load-bearing
+point: **plateau by ~year 1**, so post-year-1 residual is not fitness.
+Weight (driver 3) is the one genuinely-**measured** slow confounder and
+enters as its own term.
 
 Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
 12, 13 are literature-weak and not modelled as trend terms (13 optional).
@@ -122,12 +125,12 @@ Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
 
 ## 5. Collinearity + measurement limits (stated before any fit)
 
-- **VO2Max is per-kg (fitness / weight double-count risk).** Garmin VO2Max
-  is per-kg, so the weight gain mechanically lowers it. Weight is now
-  MEASURED (driver 3), so fitness and weight CAN be partly separated via
-  option A (§4, absolute VO2 + separate weight), but per-kg VO2Max plus a
-  separate weight term would double-count; the parameterisation must be
-  chosen (§4 design fork).
+- **The fitness DECLINE is modelled, not measured.** Real running fitness
+  data ends 2022-03; VO2Max after that is Garmin's decay model, so we have
+  a measured PEAK only, not a measured decline. The deconditioning term is
+  therefore a model curve either way (§4 sensitivity pair). This is the
+  main honest downgrade from an earlier framing that treated VO2Max as a
+  measured fitness anchor.
 - **The three slow drivers pile into 2022-2023 together.** The weight gain
   (74 to ~82 kg), the VO2Max fast-drop (52 to ~42), and LC onset all fall
   in the same 2022-04 to 2023-06 window, and the weight series has **no
@@ -175,6 +178,7 @@ Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
 - [`../hypotheses/peri-event-covid/result.md`](../hypotheses/peri-event-covid/result.md)
   — the R23 result that motivated this thread (raw RHR equivocation).
 - Garmin fitness + weight source: `DI_CONNECT/DI-Connect-Wellness/97794221_userBioMetrics.json`
-  (302 non-null `vo2MaxRunning`; **56 `weight` weigh-ins nested as
-  `{weight, sourceType, timestampGMT}` objects**, easy to miss with a
-  scalar scan).
+  (302 non-null `vo2MaxRunning`, but real-run-fed only through 2022-03;
+  **56 `weight` weigh-ins nested as `{weight, sourceType, timestampGMT}`
+  objects**, easy to miss with a scalar scan). Run counts from
+  `processed/garmin/activities.csv` (last training run 2022-03-17).
