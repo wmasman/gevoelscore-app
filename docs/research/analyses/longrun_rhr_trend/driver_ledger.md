@@ -48,7 +48,7 @@ dump (`DI_CONNECT/DI-Connect-Wellness/*bioMetrics*`) on 2026-07-02.
 |---|---|---|---|---|---|---|
 | 1 | **Deconditioning / fitness loss** | STRONG (primary confounder) | RHR **UP** ~5-12 bpm; biphasic, front-loaded into **year 1**, plateau well before year 4 | **MEASURED: Garmin VO2Max series, 302 pts 2021-08 to 2026-05** (peak ~52 early-2022, ~42 by 2023, 37 by 2026); cessation 2022-03 | **VO2Max regressor** (measured fitness anchor), replaces the literature-only curve | **measured** (post-cessation estimation caveat, §5) |
 | 2 | **Citalopram** | STRONG (step) | RHR **DOWN** up to ~8 bpm (Rasmussen 1999), OPPOSITE to LC elevation so it MASKS the signal; persistent step | **`dose_plasma_mg`** + `in_citalopram_traject` (788 days), full coverage | **change-point / dose term** at initiation, not a slope | measurable (in-sample RHR beta to estimate; lit prior -8 bpm) |
-| 3 | **Body weight / adiposity / BMI** | STRONG (trend) | RHR UP ~0.3 bpm/BMI unit; participant reports **large gradual gain to 89 kg / 1.83 m (BMI 26.6)**, athlete baseline lower | **NO Garmin trajectory** (weight null in biometrics; single stale 84.7 kg). Partly captured by VO2Max-per-kg | **folded into the VO2Max term** (per-kg VO2Max integrates weight gain) | resolved: unmeasured-as-trajectory, collinear (see §5) |
+| 3 | **Body weight / adiposity / BMI** | STRONG (trend) | RHR UP ~0.3 bpm/BMI unit; **74 kg athlete (2021-22) to ~82 (mid-2023) to 84.7 (2025) to 89 (2026)**, BMI 21.8 to 26.6 | **MEASURED: 56 weigh-ins** in `userBioMetrics.json` (nested `weight` objects); dense 2021-08 to 2022-04, then a **14-month gap** to 2023-06, then sparse | **separate interpolated weight regressor** (see per-kg double-count note, §5) | resolved: measured-but-sparse, LC-onset gap |
 | 4 | **Device / firmware change** | STRONG (artefact step) | spurious step/drift in the estimate | **same Forerunner 245 throughout** (participant-confirmed; single-device dump) | none needed | **resolved: no device step** |
 | 5 | **Changing cardioactive exposure** (beta-blocker, thyroid med, smoking) | STRONG **IF** it changes | large step | participant reports **none** (occasional painkillers only; non-smoker) | none | **resolved: absent** |
 | 6 | **Changing clinical state** (thyroid, anemia/iron) | STRONG but episodic | ~10-20 bpm if present | participant reports **no diagnoses/treatments** | none | **resolved: absent** |
@@ -83,13 +83,25 @@ comes **only** from trajectory **shape and timing**:
 ## 4. Proposed decomposition (model form, for approval)
 
 ```
-RHR(t) = f_fitness( VO2Max(t) )          # drivers 1 + 3 combined: measured per-kg fitness
+RHR(t) = f_fitness( VO2Max(t) )          # driver 1: measured fitness (see per-kg note, §5)
+       + b_weight * weight_interp(t)          # driver 3: measured weigh-ins, interpolated over the gap
        + citalopram_term(t; dose_plasma_mg)   # driver 2, step/dose (DOWN, masks LC)
        + seasonal_phase(t)                     # driver 7, cyclic (day-of-year)
        + aging_slope(t; birthyear=1981)        # driver 9, small
        + LC_residual(t)                        # the signal
        + noise
 ```
+
+**Fitness-vs-weight parameterisation (design fork, for approval).** Garmin
+VO2Max is **per-kg**, so weight is already in its denominator; entering
+per-kg VO2Max AND a separate weight term double-counts weight. Two clean
+options: **(A)** reconstruct **absolute VO2** = per-kg VO2Max x weight
+(weight-independent cardiorespiratory fitness), then weight as a separate
+adiposity term, cleanly separating "lost fitness" from "gained mass"; or
+**(B)** keep per-kg VO2Max as a single "net cardiometabolic fitness" axis
+and drop the separate weight term, simpler but unable to separate the two.
+Option A is preferred but its gap-period absolute-VO2 is uncertain (weight
+interpolated over the 14-month LC-onset gap). Flagged for design sign-off.
 
 Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
 12, 13 are literature-weak and not modelled as trend terms (13 optional).
@@ -110,13 +122,19 @@ Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
 
 ## 5. Collinearity + measurement limits (stated before any fit)
 
-- **VO2Max entangles fitness and weight.** Garmin VO2Max is per-kg, so the
-  reported weight gain (to BMI 26.6) mechanically lowers it. Using VO2Max
-  as the fitness regressor therefore **folds deconditioning and adiposity
-  into one measured term** (drivers 1 + 3). This is a feature for
-  isolating the LC residual, but it means the model **cannot separate
-  "lost cardiorespiratory fitness" from "gained weight"** as distinct RHR
-  causes; they enter as one cardiometabolic-fitness axis.
+- **VO2Max is per-kg (fitness / weight double-count risk).** Garmin VO2Max
+  is per-kg, so the weight gain mechanically lowers it. Weight is now
+  MEASURED (driver 3), so fitness and weight CAN be partly separated via
+  option A (§4, absolute VO2 + separate weight), but per-kg VO2Max plus a
+  separate weight term would double-count; the parameterisation must be
+  chosen (§4 design fork).
+- **The three slow drivers pile into 2022-2023 together.** The weight gain
+  (74 to ~82 kg), the VO2Max fast-drop (52 to ~42), and LC onset all fall
+  in the same 2022-04 to 2023-06 window, and the weight series has **no
+  weigh-ins in exactly that window** (interpolated straight-line). So the
+  early rise is where fitness, weight, and LC are MOST collinear and least
+  separable; the post-2023 behaviour (VO2Max near-flat, weight sparse) is
+  where the residual has more leverage.
 - **Post-cessation VO2Max reliability.** Garmin estimates VO2Max from
   runs with HR + GPS. With training largely ceased post-2022, later VO2Max
   values may rest on sparse or degraded input and may lag or freeze. The
@@ -129,16 +147,17 @@ Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
   uniquely apportion the static drift** among them. Only the shape/timing
   (front-loading vs post-year-1 persistence) and the episodic part are
   identifiable.
-- **No measured weight trajectory.** Weight is absent from the dump as a
-  series (single stale value). Its effect is carried only indirectly
-  through per-kg VO2Max; a standalone weight covariate is not available.
+- **Weight measured but sparse.** 56 weigh-ins, dense 2021-08 to 2022-04
+  then a 14-month gap over LC onset then sparse (last 2025-02); the 2026
+  value (89 kg) is participant-reported, not in the dump. Interpolation
+  over the gap is an assumption.
 - n=1. Every attribution is "consistent with", never proof.
 
 ## 6. Open inputs (RESOLVED 2026-07-02)
 
 | # | Question | Resolution |
 |---|---|---|
-| 1 | Weight record / change | Large gradual gain to **89 kg / 1.83 m (BMI 26.6)**; **no Garmin trajectory** (only a stale 84.7 kg); carried via per-kg VO2Max |
+| 1 | Weight record / change | **MEASURED: 56 weigh-ins** in `userBioMetrics.json` (nested `weight` objects; an earlier scan missed them). 74 kg athlete (2021-22) to ~82 (mid-2023) to 84.7 (2025) to 89 (2026, participant-reported). Dense early, 14-month gap over LC onset, then sparse. Enters as a separate interpolated regressor |
 | 2 | Device change | **Same Forerunner 245 throughout**; no device step |
 | 3 | Beta-blocker / thyroid med / smoking | **None** (occasional painkillers only; non-smoker) |
 | 4 | Thyroid / anemia diagnosis or treatment | **None** |
@@ -155,5 +174,7 @@ Drivers 4, 5, 6, 10 are resolved absent/N/A and drop out. Drivers 8, 11,
   — training-cessation coverage (fitness-term anchor).
 - [`../hypotheses/peri-event-covid/result.md`](../hypotheses/peri-event-covid/result.md)
   — the R23 result that motivated this thread (raw RHR equivocation).
-- Garmin VO2Max source: `DI_CONNECT/DI-Connect-Wellness/97794221_userBioMetrics.json`
-  (302 non-null `vo2MaxRunning`); weight null therein.
+- Garmin fitness + weight source: `DI_CONNECT/DI-Connect-Wellness/97794221_userBioMetrics.json`
+  (302 non-null `vo2MaxRunning`; **56 `weight` weigh-ins nested as
+  `{weight, sourceType, timestampGMT}` objects**, easy to miss with a
+  scalar scan).
