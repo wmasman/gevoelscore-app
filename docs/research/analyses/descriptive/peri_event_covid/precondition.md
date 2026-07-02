@@ -130,14 +130,12 @@ inspected.
 
 **Computability verdict**: the factor's component **channels are
 present for every day of the infection window** — the factor is
-computable across the window at the raw-channel level. **One open
-caveat** (see §5): presence was confirmed on the **raw** channels
-(`all_day_stress_max`, `bb_highest`). The factor's exact primitives are
-the **overnight/sleep-window derivations** `sleep_stress_mean` (HA07c)
-and `morning_bb_peak` (HA10); a one-line confirmation that these
-overnight derivations are non-null in March 2022 is still owed (raw
-channel ≠ sleep-window primitive). `resting_hr` (HA06b) is confirmed at
-the exact primitive level.
+computable across the window at the raw-channel level. **The exact
+overnight primitive was subsequently confirmed** (see §5.1): the HA07c
+anchor's real column is `stress_mean_sleep` (14/14 in the window), and
+HA10's operand is the daily `bb_highest` (14/14); `resting_hr` (HA06b)
+is likewise 14/14. All three factor components are non-null on every
+infection-window day at the exact-primitive level.
 
 ## 4. Comparison design space (counts only)
 
@@ -174,8 +172,31 @@ over the same band for the richer (autocorrelated) null distribution.
 
 | # | What is missing | Blocks | Cheapest path | Fallback |
 |---|---|---|---|---|
-| 1 | Confirm `sleep_stress_mean` (HA07c) + `morning_bb_peak` (HA10) are **non-null in 2022-03** (raw channels confirmed; exact overnight primitives not) | Locking HA07c as the factor's primary anchor (methodology decision g1) | One-line non-null count on the two columns for March 2022 (S) | Use `resting_hr` (HA06b, confirmed at primitive level) as primary anchor |
+| 1 | ~~Confirm `sleep_stress_mean` (HA07c) + `morning_bb_peak` (HA10) are **non-null in 2022-03**~~ **RESOLVED 2026-07-02** (see §5.1) | ~~Locking HA07c as the factor's primary anchor~~ — anchor locked | non-null count run | — |
 | 2 | User lock on methodology decisions (a)–(g) | The pre-registration | Methodology MD §5 + fresh-session `/research-methodology-review` | — |
+
+### 5.1 Open-input #1 resolution (2026-07-02, coverage-only)
+
+The exact-primitive columns resolve to real `per_day_master.csv` names:
+**HA07c `sleep_stress_mean` → `stress_mean_sleep`** (the sleep-window
+stress mean); **HA10 `morning_bb_peak` → `bb_highest`** (HA10's operand
+is the daily UDS BB peak per the R18 correction; "morning_bb_peak" was a
+descriptive label, not a column). A **presence-only** non-null count
+(no values, means, or contrasts inspected — see the binding statement
+above) returns:
+
+| Primitive | Infection window (14 d) | March 2022 | Pre-LC comparator band (217 d) |
+|---|---|---|---|
+| `stress_mean_sleep` (HA07c anchor) | 14 / 14 | 31 / 31 | 215 / 217 (99.1%) |
+| `bb_highest` (HA10) | 14 / 14 | 31 / 31 | 216 / 217 (99.5%) |
+| `resting_hr` (HA06b) | 14 / 14 | 31 / 31 | 217 / 217 (100%) |
+
+**Anchor lock (contingency g1 satisfied):** `stress_mean_sleep` is
+non-null on every infection-window day, so the **primary anchor is HA07c
+`stress_mean_sleep`**, with `bb_highest` (redundant inverse) and
+`resting_hr` (peripheral) as the companion triad. The pre-specified
+HA06b-primary fallback is **not** triggered. The comparator null remains
+well-populated (99.1–100% density across the 217-day pre-LC band).
 
 ## 6. Cross-references
 
