@@ -69,13 +69,25 @@ library-wide re-run.
 
 ### NEEDS AUDIT (long-horizon / cross-era / absolute-level)
 
-- **Citalopram dose-response (§5.B correction) -- PRIORITY.** It has the
-  EXACT collinearity structure the RHR work uncovered: over 2024+, dose,
-  continued weight gain, and the deconditioning tail all co-trend. The
-  confirmed betas (stress_mean_sleep +0.43/mg, all_day_stress_avg +0.57/mg,
-  bb_lowest -1.13/mg) may partly absorb weight/fitness co-trends, just as
-  the RHR aging term over-absorbed. Load-bearing for the site's citalopram
-  mechanism, so audit first.
+- **Citalopram dose-response (§5.B correction) -- AUDITED 2026-07-02:
+  BETA STANDS; scoped residual sub-flag remains.** Re-audited in
+  [`citalopram_dose_response_confounder_reaudit_2026-07-02.md`](citalopram_dose_response_confounder_reaudit_2026-07-02.md).
+  The confirmed betas (stress_mean_sleep +0.43/mg, all_day_stress_avg
+  +0.57/mg, bb_lowest -1.13/mg) are estimated on SHORT windows (72d
+  buildup / 78d afbouw), NOT a long-era regression, so the slow confounders
+  barely move across them: weight +0.30 kg over the buildup (<1% of the
+  dose effect), deconditioning ~0 (past the year-1 plateau), aging +0.04
+  bpm. Two existing controls specifically neutralise the concern:
+  **sign-concordance** (same-sign betas across a dose-UP and a dose-DOWN
+  window rules out a monotonic/seasonal confounder) and the **flat-dose
+  spring-2025 control** (flat beta_time when dose is constant). A re-fit
+  adding an interpolated-weight term left the dose beta unchanged to three
+  decimals. **The dose BETA is sound.** **Residual sub-flag (still NEEDS
+  AUDIT):** the §5.B dose-CORRECTED channel (`channel_adj = channel -
+  beta*dose`) is dose-clean but NOT confounder-clean over the full era, so
+  any long-horizon / cross-era claim consuming `channel_adj` still owes
+  weight (~15 kg over the era), the deconditioning tail, and aging their
+  own correction. That is the long-horizon-claim class below, not the beta.
 - **Any "the factor drifted over the LC era" / cross-era baseline
   comparison** (e.g. era-directionality-reversal claims).
 - **The stress-to-felt curve (R22)** IF it uses absolute cross-era stress
@@ -88,11 +100,15 @@ library-wide re-run.
 ## 4. Recommended action
 
 1. Do NOT re-test the precursor library (section 2 demonstrates immunity).
-2. Audit the **citalopram dose-response** against the confounder set first
-   (same collinearity as RHR; highest value).
+2. ~~Audit the citalopram dose-response first~~ **DONE 2026-07-02: the dose
+   BETA is audited-robust** (short windows + sign-concordance + flat-dose
+   control). Only the long-horizon use of the dose-CORRECTED channel keeps a
+   scoped residual sub-flag (needs the other slow confounders too).
 3. For each other NEEDS-AUDIT item, first verify its baseline construction:
    if it uses a rolling lagged baseline it is safe; only fixed-era-baseline /
-   absolute-level analyses need the full audit.
+   absolute-level analyses need the full audit. **The dose-response audit is
+   the worked example: verifying construction (short windows + existing
+   controls) cleared it without a full re-run.**
 4. Spot-check precursor results that depend on acute-2022 crashes.
 
 ## 5. Cross-references
