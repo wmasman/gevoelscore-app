@@ -28,6 +28,38 @@ per-episode spread show "the shape of getting back up."
   around the nadir (t-1/t0 median ~21) and drifts down only gradually to
   ~18-19 by t+8-14, a gentler, slower curve than the felt-state snap-back.
 
+## 2b. Dip recovery signature, and the crash-vs-dip autonomic contrast
+
+The same alignment was run on the **79 dips** (transient single-bad-days, all
+1-day episodes; aligned at the dip day t0). The contrast with crashes is the
+informative result:
+
+| | crashes (n=29) | dips (n=79) |
+|---|---|---|
+| felt-state at nadir (t0 median) | **2** (deeper) | **3** (shallower) |
+| felt-state recovery | V over ~2-3 days | single-day notch (back to 4 at t+1) |
+| overnight stress (`stress_mean_sleep`) around nadir | **ELEVATED (~21)**, settles slowly over ~2 weeks | **FLAT (~18-19)**, no elevation at all |
+
+**The autonomic signature separates crashes from dips.** A crash carries an
+overnight-stress perturbation (elevated at the nadir, slow settle); a dip does
+NOT (the overnight stress is flat straight through it). So the watch's stress
+channel physiologically distinguishes a real crash from a transient
+felt-state notch. This is consistent with the site's crash-vs-dip framing (R13:
+sustained crashes vs growing transient dips) and with "the watch sees the
+crash": it sees crashes, not dips. (Descriptive; the felt-state depth at t0 is
+definitional for both, so the load-bearing contrast is the *autonomic* one.)
+
+Dip recovery curves (aggregated, relative days, no dates):
+
+```json
+{"note":"DIP recovery curves aligned at each dip day (t0); relative days only, no dates","t_axis":[-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14],"n_dips":79,"gevoelscore":{"aggregate":[{"t":-3,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":-2,"n":79,"median":5.0,"p25":4.0,"p75":5.0},{"t":-1,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":0,"n":79,"median":3.0,"p25":3.0,"p75":3.0},{"t":1,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":2,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":3,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":4,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":5,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":6,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":7,"n":79,"median":5.0,"p25":4.0,"p75":5.0},{"t":8,"n":79,"median":5.0,"p25":4.0,"p75":5.0},{"t":9,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":10,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":11,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":12,"n":79,"median":4.0,"p25":4.0,"p75":5.0},{"t":13,"n":79,"median":5.0,"p25":4.0,"p75":5.0},{"t":14,"n":79,"median":4.0,"p25":4.0,"p75":5.0}]},"stress_mean_sleep":{"aggregate":[{"t":-3,"n":79,"median":18.81,"p25":15.79,"p75":21.47},{"t":-2,"n":79,"median":18.68,"p25":15.95,"p75":20.45},{"t":-1,"n":78,"median":18.9,"p25":16.7,"p75":23.26},{"t":0,"n":76,"median":18.55,"p25":16.57,"p75":21.78},{"t":1,"n":76,"median":18.97,"p25":16.92,"p75":21.58},{"t":2,"n":77,"median":18.94,"p25":16.88,"p75":22.9},{"t":3,"n":79,"median":18.78,"p25":16.38,"p75":21.92},{"t":4,"n":76,"median":18.84,"p25":16.64,"p75":21.6},{"t":5,"n":78,"median":19.56,"p25":16.12,"p75":22.59},{"t":6,"n":77,"median":19.93,"p25":17.05,"p75":22.96},{"t":7,"n":76,"median":19.02,"p25":16.49,"p75":21.77},{"t":8,"n":79,"median":18.98,"p25":15.77,"p75":21.39},{"t":9,"n":78,"median":19.9,"p25":16.85,"p75":23.2},{"t":10,"n":77,"median":19.21,"p25":15.84,"p75":21.84},{"t":11,"n":76,"median":18.6,"p25":16.1,"p75":22.97},{"t":12,"n":77,"median":19.38,"p25":16.45,"p75":23.41},{"t":13,"n":77,"median":19.59,"p25":16.89,"p75":21.46},{"t":14,"n":78,"median":19.84,"p25":17.32,"p75":22.37}]}}
+```
+
+Note: `stress_mean_sleep` from ~2024-04 is citalopram-dose-modulated, so the
+dip/crash stress-level comparison is cleanest within a single medication era;
+the crash-vs-dip *shape* contrast (elevation vs flat around t0) is a
+within-window effect and robust to the slow dose drift.
+
 ## 3. Two honesty flags the site MUST carry
 
 - **The felt-state DEPTH at t0 is definitional, not a finding.** Crashes are
