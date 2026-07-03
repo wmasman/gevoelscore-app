@@ -962,6 +962,67 @@ Update the triage's residual sub-flag + register R12.
   autocorrelation, named counts); [[reference_garmin_weight_vo2max_biometrics]]
   (weight/VO2Max data location + the nested-object gotcha)
 
+## Q21. Site R4 -- trigger type (physical / emotional / cognitive) full treatment
+
+**Status**: queued -- parked 2026-07-03 by user decision; needs a dedicated
+session for proper hypothesis formulation + methodology, NOT the honest-limit
+note the register scoped.
+
+**Context (cold-read)**: Site register R4 asks what share of crashes are
+physically-triggered vs emotionally / cognitively-triggered -- the
+"activity-invisible" / mental-PEM fraction (Wiggers' own "the watch can't see
+mental PEM"). The register scoped it `weak` (honest-limit only). The user
+decided it deserves fuller treatment: a proper hypothesis + methodology, not a
+caveated share. The hard constraint is data: the proxies
+(`cat_belasting_emotioneel` / `cat_belasting_cognitief`, `state_symptoom_*`)
+are sparse (~35% fill, note-days only, max value 2) and were NOT used in
+conditioning, so clean tests speak to the physical subset only.
+
+**Why queued**: the operationalisation of "physically vs emotionally /
+cognitively triggered crash" is non-trivial and the exposure is sparse; likely
+an honest-limit outcome, but that verdict should come from a real
+precondition + methodology pass, not an assumption.
+
+**Workflow**: descriptive precondition on proxy coverage/quality first (how
+many crashes have a usable trigger-type proxy); then decide testable-vs-
+honest-limit; if testable, the Lane-4 arc (methodology MD -> pre-reg -> review
+-> test); the mental-PEM fraction is the headline. Keep the "watch can't see
+mental PEM" framing central.
+
+**Cross-refs**: site register R4; H2 activity-invisible analysis;
+DATA_DICTIONARY §9/§11; [[feedback_research_discipline_interpretive]].
+
+## Q22. Site R7 crash-character flip -- early-vs-late crashes deep pass
+
+**Status**: queued -- parked 2026-07-03 by user decision; a fuller descriptive
+pass on R7's crash-character-flip candidate.
+
+**Context (cold-read)**: Site register R7 flags a candidate -- "which
+direction dominates appears to have flipped over time." The user wants a
+deeper pass: **is there a difference in the EARLY crashes vs the LATER
+crashes, using the recovery phases as the guideline?** Does crash character
+(deviation-direction mix, depth/duration, the post-crash autonomic signature)
+differ across the lived recovery phases (`lc_pre_ergo` / 4a / 4b /
+`citalopram_modulated`)?
+
+**Why queued**: deserves a careful descriptive pass, and it is
+discipline-sensitive: it MUST stay descriptive (an over-time difference is a
+number with wide error, never a per-era/temporal verdict, per
+`train_validate_split_fate.md`), and it must guard against labelling /
+measurement-regime coverage artifacts (e.g. the per-minute BB cliff) so a data
+-availability change is not read as a crash-character change.
+
+**Workflow**: characterise crash properties -- direction mix, K01 depth, K02
+duration, the R9 / HA-P6 post-crash autonomic signature -- stratified by
+recovery phase, descriptive with wide error; flag every coverage artifact;
+never a per-phase verdict. Sibling of R19 (per-signal phase read) and R28
+(per-phase quartiles).
+
+**Cross-refs**: site register R7; R13 (the changing-crash story); K01 / K02
+(crash depth / duration shift); the recovery-phase axis
+(`lc_recovery_phase_axis.md`); `crash_v2-definition/`;
+[[feedback_research_discipline_statistical]].
+
 ---
 
 *Add new queued items with a `Q<n>` header following the same shape:
