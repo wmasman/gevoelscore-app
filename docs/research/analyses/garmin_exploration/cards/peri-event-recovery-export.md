@@ -60,6 +60,29 @@ dip/crash stress-level comparison is cleanest within a single medication era;
 the crash-vs-dip *shape* contrast (elevation vs flat around t0) is a
 within-window effect and robust to the slow dose drift.
 
+## 2c. Literature anchor (external validation of the shape)
+
+The symptom-fast / autonomic-slow shape is corroborated by published PEM
+recovery literature (reads no project data):
+[`../../../literature/reviews/pem_recovery_trajectory_review.md`](../../../literature/reviews/pem_recovery_trajectory_review.md).
+Key points:
+
+- **PEM recovery is prolonged, days-to-weeks** (Moore 2023: mean ~12.7 days in
+  ME/CFS, range 1-64, vs ~2.1 days in controls). Our ~2-week overnight-stress
+  settle sits well inside this.
+- **The autonomic channel is the slowest to recover.** Radin 2021 (JAMA Netw
+  Open): resting HR took ~79 days to normalise (biphasic) while step count
+  (~32d) and sleep (~24d) settled far sooner. So a felt-state that rebounds in
+  2-3 days while an autonomic index settles over weeks is the *expected*
+  ordering, not an anomaly.
+- **Our felt-state rebound (2-3 d) is fast relative to ME/CFS norms** (the
+  mild / control-adjacent tail), consistent with the felt-state *understating*
+  the true, slower physiological recovery, which is precisely the dissociation.
+- **Honest caveat (from the review):** no published study paired a daily
+  felt-state and an overnight HRV-derived index through the *same* spontaneous
+  crash, so the exact pairing is an inference from adjacent literatures, and
+  PEM recovery-trajectory quantification is genuinely thin.
+
 ## 3. Two honesty flags the site MUST carry
 
 - **The felt-state DEPTH at t0 is definitional, not a finding.** Crashes are
