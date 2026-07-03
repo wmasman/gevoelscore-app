@@ -106,6 +106,26 @@ trap.) The pacing-confound concern was thus **inverted**: exposure is not
 censored by pacing, it is near-ubiquitous, so the design problem is
 *contrast*, not *rarity*.
 
+### 3.2 Dip-window exposure distribution + comparable support (predictor only)
+
+For the crash-vs-dip mechanism control to be fair, the two arms must span
+comparable exposure. Dip danger-window peak `eff_exertion_rank_lagged_lcera`
+(predictor only, n=79): min 0.47, p25 **0.83**, median **0.92**, p75 **0.97**,
+max 1.00 -- **near-identical to the crash-window peak** (median 0.93, p25 0.83,
+p75 0.98). So the crash and dip dose-response slopes are compared over
+**overlapping exposure ranges** (review finding 6c resolved). The power
+asymmetry remains (79 dips vs 28 crashes ~ 2.7x) and is handled in the
+methodology MD §3f-iv (formal slope interaction + base-rate conditioning).
+
+### 3.3 Baseline-contamination caveat (neighbouring crashes)
+
+The lagged `[d-90, d-30]` baseline self-cleans against the **index** crash (it
+closes >= 20 days before the index nadir). It does NOT fully clean against
+**neighbouring** crashes in the dense 2023-24 era (~10 crashes/yr, ~30-40d
+apart), where the 60-day window can straddle a previous crash and deflate the
+reference. The methodology MD §3d mandates **masking crash/dip days out of the
+baseline** (with an un-masked sensitivity).
+
 ## 4. Comparison design space (counts + design only)
 
 - **Primary test**: dose-response of relapse on the **continuous peak
