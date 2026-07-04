@@ -785,13 +785,15 @@ an L-ID gets recorded here, so that any future revision of this MD
 
 | L-ID | Citing artefacts (count) | Last cited |
 |---|---|---|
-| L1 | 0 | — |
-| L2 | 0 | — |
-| L3 | 0 | — |
-| L4 | 0 | — |
-| L5 | 0 | — |
-| L6 | 0 | — |
-| L7 | 0 | — |
+| L1 | 4 | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25) |
+| L2 | 4 | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25) |
+| L3 | 4 | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25) |
+| L4 | 4 | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25) |
+| L5 | 4 (cited as NA) | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25 — L5 NA preserved per source binding) |
+| L6 | 4 | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25) |
+| L7 | 4 | `analyses/translation/{research-audience,patient-audience}/{construct-stress-fatigue-monitoring,topic-stress-fatigue-pacing}.md` §5.5 (Stage T dry-run; DRAFT r1; 2026-06-25) |
+
+**Note on counts**: counts are at the translation-artefact-file granularity (one increment per file that cites the L-ID via §5.5 rendering). All four Stage T dry-run track-files cite L1+L2+L3+L4+L6+L7 (L5 NA preserved per source binding). When upstream-source counts are added (Stage A construct §5.11, Stage S₂ topic §4.7, Stage S₁ cluster §4.5b, Stage I HA-C3 / HA-C3p §4.5b, Stage D §5 audit entries citing L5 + L7), the count totals will grow accordingly; the current counts reflect only the Stage T dry-run propagation per skill responsibility #11. The upstream-source increments are deferred to source-artefact lock events (currently DRAFT-r1 dry-run; not yet locked) to maintain count-integrity per upstream-source LOCKED status as the discipline gate.
 
 **Tracking-mechanism status (current limitation).** The intended
 mechanism is the `/research-interpret` skill's `--drift-check` helper

@@ -1,17 +1,17 @@
 # Plan — results-analysis methodology layer
 
-**Status**: **LOCKED r4**, producer-mode. Authored 2026-06-23, locked
-2026-06-23 by user acceptance. The fresh-session
-`/research-methodology-review` against r2 completed (verdict REVISION
-RECOMMENDED, report at
-[`reviews/methodology-_plan_results_analysis_layer-2026-06-23.md`](../reviews/methodology-_plan_results_analysis_layer-2026-06-23.md)).
-r3 absorbed the three required actions plus the producer-mode
-reclassification; r4 absorbed the scope expansion the user requested
-before lock (predictive-quality measures with base-rate framing per
-§3.10, and follow-up research suggestions with own-research +
-external-research tracks per §3.11). r4 LOCKED without second-pass
-review per user decision (scope of r3 and r4 absorption is named in
-§12 revision history). Implementation proceeds per §11.
+**Status**: **LOCKED r5** by user acceptance 2026-06-24. r4 was
+LOCKED 2026-06-23 and implementation started (steps 3-5 complete:
+stocktake at [`_descriptive_stocktake_2026-06-23.md`](_descriptive_stocktake_2026-06-23.md);
+limitations doc LOCKED r3 at [`research_line_limitations.md`](research_line_limitations.md);
+synthesis-structure map LOCKED r3 at [`synthesis_structure_map.md`](synthesis_structure_map.md)
+— map r2 → r3 propagated §3.12 commentary-eligible notes to K-cells).
+r5 absorbed a user-requested mid-implementation refinement: §3.10
+hard predictive gate stays inviolable for formal claims; new §3.12
+sibling rule opens bounded patient-facing nuance space (subject-
+narrative commentary at tier-1 and tier-2 attached, patient-audience
+translation track only). Implementation proceeds to §11 step 6
+(draft six guides). See §12 revision history for the r4 → r5 diff.
 
 **Mode note**: This plan is a planning artefact that specifies
 methodology MDs. r1 / r2 carried `reviewer-mode-with-authorization`
@@ -56,7 +56,11 @@ work downstream of those verdicts**:
 5. **Actionability translation** — when, if at all, a finding becomes
    usable for the patient-user's daily life or predictive of what is
    coming up. Under a **hard predictive gate**: no predictive claim
-   without forward-validated replication.
+   without forward-validated replication. **Plus** a bounded
+   **subject-narrative commentary layer** (per §3.12) that opens
+   patient-facing nuance space at tier-1 and tier-2 attached
+   commentary, with discipline rules that prevent the gate from
+   being backdoored.
 6. **Translation to audience** — translating findings into audience-
    targeted artefacts on two tracks: research-audience (peer-style
    reading) and patient-audience (laymen, especially PAIS patients).
@@ -352,8 +356,8 @@ a usable surface.
 | `interpretation.md` | All section-outline fields filled; checklist ticked or `open_inputs` entries logged for each unticked item; lived-experience prior reconciliation done (even if conflict is left open); follow-up suggestions section filled (own + external tracks per §3.11); user explicitly accepts. |
 | `cluster-*.md` | All HAs in the pre-declared cluster have current `interpretation.md`; coherence call made; joint claim narrowed appropriately; `open_inputs` logged; follow-up suggestions section filled (own + external tracks per §3.11); user explicitly accepts. |
 | `topic-*.md` | All constituent clusters synthesised; positioning call made (CANNOT-SAY is valid); every external claim cited or in literature-gap log; per-topic limitations cited from `research_line_limitations.md`; follow-up suggestions section filled (own + external tracks per §3.11); user explicitly accepts. |
-| `construct-*.md` | Tier claim made; tier no higher than evidence layer permits; forward-validation pathway specified if tier 3 wanted but unearned; tier-2-or-above claims report PPV + base-rate in plain-language frame per §3.10 (or have tier downgraded); follow-up suggestions section filled (own + external tracks per §3.11); user explicitly accepts. |
-| Translation artefacts | Both audience tracks produced (or skip-research-internal recorded); plain-language dictionary updated; visual summary present or specified; patient-relevance test passed; quality-measure translation present where source artefact is tier-2+ per §3.10; follow-up communication section filled per §3.11; user explicitly accepts. |
+| `construct-*.md` | Tier claim made; tier no higher than evidence layer permits; forward-validation pathway specified if tier 3 wanted but unearned; tier-2-or-above claims report PPV + base-rate in plain-language frame per §3.10 (or have tier downgraded); follow-up suggestions section filled (own + external tracks per §3.11); **optional subject-narrative commentary section** per §3.12 either filled (with attach-citation, subject-attribution, language-discipline) or recorded-as-skipped; user explicitly accepts. |
+| Translation artefacts | Both audience tracks produced (or skip-research-internal recorded); plain-language dictionary updated; visual summary present or specified; patient-relevance test passed; quality-measure translation present where source artefact is tier-2+ per §3.10; follow-up communication section filled per §3.11; **patient-audience track only** carries §3.12 subject-narrative commentary (if the source `construct-*.md` has one; commentary is forbidden in research-audience track); user explicitly accepts. |
 
 **"User explicitly accepts"** is the binding event for completion. The
 skill marks an artefact as "ready for completion review" when its
@@ -520,6 +524,81 @@ from a wishlist.
 what we know"; the natural next move ("what next") is left to memory
 across sessions and decays. The follow-up section is the routable
 next-work for the research line beyond completing the current claim.
+
+## 3.12 Subject-narrative commentary — bounded reading-of-tea-leaves space
+
+The §3.10 hard predictive gate protects **the research's external
+defensibility**: no formal predictive claim without forward-validated
+replication. But real patient use of a tier-1 or tier-2 finding
+necessarily involves the subject interpreting the signal in lived
+context, and that interpretation has utility worth recording. The
+two are different epistemic categories:
+
+- The §3.10 gate is about *what claims the research can make about
+  predictive validity* (external defensibility, peer-review-ready).
+- This §3.12 commentary layer is about *what the subject is allowed
+  to say about the signal in lived experience* (patient-facing
+  nuance, subject-attributed, not a forecast).
+
+By naming them separately, the layer prevents silent slippage from
+"I notice X often precedes Y in my experience" (legitimate subject-
+commentary) into "X predicts Y" (illegitimate predictive overclaim).
+
+**Where commentary lives.** Optional section in Stage A `construct-*.md`
+artefacts (titled "Subject-narrative commentary — §3.12-bounded")
+and optional section in Stage T **patient-audience track only**.
+Commentary may attach to a **tier-1 monitoring** or **tier-2
+informative-pattern** formal claim — not to a tier-3 predictive
+claim (those carry the forward-validation HA and don't need
+commentary nuance), nor to claims absent (commentary cannot float
+unattached).
+
+**Required discipline.**
+
+- **Cite the attached claim**: every commentary section opens with
+  "attached to: K-XXX tier-N claim per §X.Y".
+- **Subject-attribution every sentence**: "I", "the subject", "in
+  this subject's experience" — never bare third-person assertion.
+- **Permitted language**: "I notice", "in my experience", "in
+  retrospect", "I sometimes", "the pattern hints at / suggests-not-
+  confirms / reads as", "worth attention", "I lean toward".
+- **Forbidden language**: "predicts", "forecasts", "will happen",
+  "tomorrow", "X means Y", "this signals that...", any causal-claim
+  or forecast-claim wording.
+
+**Hard separations** (these keep the §3.10 gate inviolable):
+
+- Commentary **cannot promote actionability tier**. A construct
+  artefact with rich commentary stays at its formal tier; commentary
+  does not count toward tier-2 → tier-3 promotion. Only a
+  pre-registered forward-validation HA per §3.10 unlocks tier-3.
+- Commentary **cannot be cited as evidence** in HAs, interpretations,
+  syntheses, contextualisations, or research-audience translations.
+  It is patient-facing nuance, not analytical input.
+- Commentary **cannot float unattached**. Every commentary section
+  attaches to a formal claim (tier-1 or tier-2). "Subject suspects a
+  thing nobody tested" is forbidden — that belongs in the §3.11
+  follow-up-suggestions track as a candidate own-research HA.
+- Commentary is **forbidden in research-audience translation track**
+  per the locked decision. The research-audience reader sees the
+  formal claim + caveats; the subject's narrative belongs only at
+  patient-audience track.
+
+**Layperson-test propagation.** Per §6.6 translation discipline, the
+patient-audience track is layperson-tested. If commentary wording
+fails the test (e.g., a layperson reads "I lean toward resting on
+those days" as a soft prediction), the commentary is revised before
+lock — the revision-trigger is the layperson's actual interpretation,
+not the drafter's intent.
+
+**Why this works without breaking the gate.** The gate prevents the
+research from claiming predictive validity it has not earned. The
+commentary layer allows the subject to use the signal interpretively
+in daily life without the research overstating what it can defend
+externally. The discipline rules (attached, attributed, tier-bound,
+non-promoting, non-citable, language-bounded) make commentary a
+first-class but operationally constrained space — useful but
+unable to backdoor into formal claims.
 
 ## 4. Producer / reviewer split
 
@@ -1083,8 +1162,21 @@ guide drafts may not weaken it.
      that could establish a population-level base rate to compare ours
      against. Each entry names the N=1 limit that prevents us from
      answering it ourselves.
-9. Open downgrades from review (this section gets filled at
-   `/research-review` time).
+9. **Optional: Subject-narrative commentary** (per §3.12). May attach
+   to tier-1 or tier-2 formal claim (not tier-3 — those carry
+   forward-validation HA and don't need commentary nuance). When
+   present, opens with "attached to: K-XXX tier-N claim per §X.Y".
+   Every sentence subject-attributed ("I" / "the subject" / "in this
+   subject's experience"). Permitted wording: "I notice", "in my
+   experience", "in retrospect", "I sometimes", "the pattern hints
+   at / suggests-not-confirms / reads as", "worth attention", "I
+   lean toward". Forbidden wording: "predicts", "forecasts", "will
+   happen", "tomorrow", "X means Y", any causal-claim or forecast-
+   claim phrasing. Cannot promote tier; cannot be cited downstream;
+   cannot float unattached. If commentary skipped, record-as-skipped
+   explicitly.
+10. Open downgrades from review (this section gets filled at
+    `/research-review` time).
 
 **Checklist sketch.**
 
@@ -1218,6 +1310,21 @@ audience):
       (external-research analogue). Avoids both false hope ("research
       will soon answer this") and counsel-of-despair ("nothing more is
       known") — honest framing of the open questions.
+11. **Optional: Subject-narrative commentary translation** (per §3.12,
+    patient-audience track ONLY — commentary is forbidden in research-
+    audience track per the §3.12 locked decision):
+    - When the source `construct-*.md` has a §3.12 commentary section,
+      the patient-audience track renders it in plain Dutch (or audience-
+      appropriate language). Subject-attribution stays in the rendering
+      ("ik merk op dat..." / "in mijn ervaring..."); permitted /
+      forbidden language discipline carries through the translation.
+    - **Layperson-test gate**: if the layperson reads the commentary
+      as a soft prediction or as advice, the commentary is revised
+      before lock — the layperson's interpretation is the binding test,
+      not the drafter's intent. This is the §3.12 implementability
+      check.
+    - When the source has no commentary or has skip-recorded it, the
+      translation simply omits this section.
 
 **Checklist sketch.**
 
@@ -1476,6 +1583,29 @@ Independent of any single guide:
   because we have one subject and no comparator arm" is hand-waving
   dressed as research suggestion. Per §3.11, honest scoping is what
   distinguishes a follow-up suggestion from a wishlist.
+- **The bare-narrative-as-actionability fallacy** (using §3.12
+  subject-narrative commentary wording to escape the §3.10 hard
+  predictive gate). Variant: "we couldn't claim prediction, but the
+  subject's narrative shows the signal is predictive in lived
+  experience..." — this routes a backdoor predictive claim through
+  commentary language and is exactly the slippage §3.12 is designed
+  to prevent. Per §3.12 hard separations: commentary cannot promote
+  actionability tier; only a pre-registered forward-validation HA
+  per §3.10 unlocks tier-3.
+- **The commentary-promotion fallacy** (letting accumulated
+  commentary across multiple lock cycles justify tier promotion
+  without forward-validation HA). "We've seen this pattern hold up
+  across three commentary rounds; that's evidence" — no, that's
+  retrospective consistency of the subject's own narrative, which is
+  what L4 (analyst-is-subject) and §3.10 (hard predictive gate) both
+  caution against treating as analytical evidence. Tier promotion
+  requires forward-validation, not narrative durability.
+- **The downstream-citation-of-commentary fallacy** (citing §3.12
+  commentary content in HA result.md / interpretation.md /
+  cluster-*.md / topic-*.md / research-audience translation as if it
+  were analytical input or finding). Commentary is patient-facing
+  nuance, not research evidence; citing it downstream blurs the
+  epistemic categories §3.12 keeps separate.
 
 ## 10. Open questions deferred to guide-drafting time
 
@@ -1635,12 +1765,13 @@ step in case any trigger has fired.
 - **Authorising user**: Willem.
 - **Mode**: producer-mode (r3 reclassification per r2 review finding;
   prior r1/r2 carried reviewer-mode-with-authorization).
-- **Status**: r4 **LOCKED 2026-06-23** by user acceptance. r3
-  absorbed required actions from r2 review (R1+R2+R3 + producer-mode
-  reclassification); r4 absorbed scope expansion before lock per user
-  request (predictive-quality measures + follow-up research
-  suggestions). No second-pass review per user decision (scope of r3
-  and r4 absorption is named below).
+- **Status**: r5 **LOCKED 2026-06-24** by user acceptance. r4 was
+  LOCKED 2026-06-23; r5 absorbed a user-requested mid-implementation
+  refinement to the §3.10 hard predictive gate tradeoff (the hard
+  gate stays; §3.12 opens a bounded patient-facing nuance space
+  alongside it). No second-pass review per user pattern (scope of
+  r3 / r4 / r5 absorption is named below). Implementation proceeds
+  to §11 step 6.
 - **On lock**: the six guides in §6 + the two supporting MDs in §3.6
   and §3.9 become drafting tasks per the §11 implementation order.
   This plan is preserved as historical scaffold; it can be moved to
@@ -1710,3 +1841,25 @@ step in case any trigger has fired.
     tier-2+; quality-measure translation in patient track).
     Added two layer-level anti-patterns to §9: bare-percentage
     actionability fallacy; unscoped-follow-up fallacy.
+  - 2026-06-24 r5: mid-implementation refinement per user request
+    during step 5 lock. User identified tradeoff #4 (the §3.10 hard
+    predictive gate) as the one she wanted to revise — accepting the
+    hard gate for formal claims while opening "reading tea leaves"
+    nuance space after it. Added §3.12 subject-narrative commentary
+    layer (sibling to §3.10 and §3.11). Design choices locked in
+    interview: (a) layer-level rule §3.12 not buried in §6.5
+    actionability guide; (b) commentary permitted at tier-1 AND
+    tier-2 attached (not just tier-2); (c) patient-audience track
+    only (forbidden in research-audience translation). Hard
+    separations preserved: commentary cannot promote actionability
+    tier, cannot be cited as downstream evidence, cannot float
+    unattached, cannot use predictive/causal language. Updated §0
+    purpose list item 5; updated §3.8 stopping criteria (actionability
+    + translation rows); updated §6.5 actionability outline (new
+    section 9 — optional commentary); updated §6.6 translation
+    outline (new section 11 — patient-audience-only commentary
+    translation with layperson-test gate); added three §9 anti-
+    patterns (bare-narrative-as-actionability; commentary-promotion;
+    downstream-citation-of-commentary). Map K-stress-fatigue-monitoring
+    and K-bout-recovery-signal cells will gain commentary-eligible
+    notes in separate map-revision (r2 → r3).
