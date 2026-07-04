@@ -62,13 +62,19 @@ the danger-window rationale is the symptom-fast / autonomic-slow dissociation
   out of the <=3 crash/dip zone), first such day in t+1..t+10.
 - **Danger window**: felt-recovery day .. nadir+10 (inside the ~2-week
   autonomic-settle window).
-- **Exposure -- PRIMARY (threshold-crossing)**: the **peak** single-day
-  `eff_exertion_rank_lagged_lcera` in the danger window, as a **continuous
-  dose-response**. Lagged, era-local baseline ([d-90, d-30], LC-era days) per
-  [CONVENTIONS §3.2](../../../CONVENTIONS.md) -- "a spike relative to your
-  *current* capacity," self-cleaning against crash contamination.
-- **Exposure -- SECONDARY (dose-accumulation, competing)**: cumulative load
-  (count of shock-days / summed rank) in the danger window. Pits
+- **Exposure -- PRIMARY (cardiac threshold-crossing)**: the **peak** single-day
+  `max_hr_rank_lagged_lcera` (peak HR relative to current capacity) in the
+  danger window, as a **continuous dose-response**. Lagged, era-local baseline
+  ([d-90, d-30], LC-era days) per [CONVENTIONS §3.2](../../../CONVENTIONS.md) --
+  "a cardiac spike relative to your *current* capacity." **(r3, methodology MD
+  decision d)**: cardiac strain replaces activity-volume as primary to answer
+  the step-count / activity-volume confound ("how much someone walks, not how
+  they walk"); the two axes diverge in the danger windows (rho +0.42, §3.4).
+- **Exposure -- COMPARISON ARM**: `eff_exertion_rank_lagged_lcera`
+  (activity-volume, the HA01c operand). The strain-vs-volume divergence is the
+  in-sample test of the confound.
+- **Exposure -- CUMULATIVE-STRAIN SECONDARY (dose-accumulation, competing)**:
+  `hr_area_above_daytime_baseline_waking_lcera` (cardiac-load integral). Pits
   threshold-crossing vs dose-accumulation (a contrast no published study has
   run, per `push crash research.md`).
 - **Outcome (the TEST, not computed here)**: a new crash OR dip within ~4 days
@@ -125,6 +131,22 @@ closes >= 20 days before the index nadir). It does NOT fully clean against
 apart), where the 60-day window can straddle a previous crash and deflate the
 reference. The methodology MD §3d mandates **masking crash/dip days out of the
 baseline** (with an un-masked sensitivity).
+
+### 3.4 Primary cardiac-strain exposure (`max_hr_rank_lagged_lcera`, r3)
+
+Coverage in crash danger windows: **235 / 236 days**. Felt-recovery unchanged
+(28/29). Peak-distribution (predictor only, n=28): min 0.50, p25 0.87, **median
+0.95**, p75 0.98, max 1.00 -- a continuous gradient, so the continuous peak
+gives real contrast (a binary >=0.75 flag is still degenerate at 24/28 = 86%,
+so the continuous peak is used, as for the activity measure).
+
+**Strain-vs-volume divergence (the confound-test premise):** danger-window
+day-level `rho(max_hr_rank, eff_exertion) = +0.42` (n=235 days). The two
+measures disagree on ~58% of the rank-variance, so cardiac strain and activity
+volume are genuinely different exposures in the danger window -- exactly the
+"how they walk, not how much" confound. Testing both (strain primary, volume
+comparison) is therefore an in-sample test of that confound, not a redundant
+re-measure.
 
 ## 4. Comparison design space (counts + design only)
 
