@@ -1,12 +1,19 @@
 # Result: post-crash exertion relapse (the "danger window")
 
-**Status**: producer-mode TEST EXECUTION result, layer-1 descriptive-plus-inference
-per [CONVENTIONS](../../../CONVENTIONS.md). Reveals the outcome for the LOCKED
-pre-registration
+**Status**: producer-mode TEST EXECUTION result, DRAFT r2, layer-1
+descriptive-plus-inference per [CONVENTIONS](../../../CONVENTIONS.md). Reveals the
+outcome for the LOCKED pre-registration
 [`hypothesis.md`](hypothesis.md) (LOCKED 2026-07-04). This is the single place the
 exposure-versus-relapse relationship is computed. Executed 2026-07-04 by Claude
 (Opus 4.8) under producer-mode authorization, for the participant-researcher
-(repo owner). Test code: [`test.py`](test.py).
+(repo owner). Test code: [`test.py`](test.py). **r2** folds in the fresh-session
+result review
+[`../../../reviews/result-post-crash-exertion-relapse-2026-07-04.md`](../../../reviews/result-post-crash-exertion-relapse-2026-07-04.md)
+(ACCEPT-WITH-MINOR-REVISIONS, NO-OUTCOME-PEEK HELD, 0 BLOCKING / 0 MAJOR): three
+reporting-honesty disclosures (M1 the un-gated baseline universe + exclude
+sensitivity, M2 the E[L]* degenerate-fallback correction, N1 the per-replicate
+contributing-event note) and two code tidies (M3 dead-function removal, N2 unused
+variable). None changed the primary statistic, the verdict, or the lock.
 
 > "stress" = Garmin HRV-derived Stress Score (GSS), never mental / emotional
 > stress. "exertion" / "strain" = physical / cardiac load only.
@@ -100,6 +107,16 @@ block-permutation null has heavy tails; this width is the honest reflection of
 the design's power at 24 units, not a numerical artefact (the null was
 well-behaved: all 10,000 replicates valid, centred near 0, median -0.09).
 
+**Per-replicate contributing-event count (review N1, transparency).** The
+event-level null pools the 24 danger-window peak units with their 530
+matched-baseline units and permutes the danger-window labels across the pool; an
+event contributes to a given replicate only if, after the permutation, its key
+retains at least one danger-window-labelled AND one baseline-labelled unit. On
+average only **13.0 of the 24 events contribute per replicate (range 5 to 20)**.
+That well-below-24 effective count is the mechanical source of the heavy-tailed
+null and the wide CI, and it makes the "well-behaved null" statement above fully
+transparent: the null is well-behaved but thin, exactly as expected at this n.
+
 ### 4b. Rank-slope reading (pre-reg section 4c, 6)
 
 The pre-reg calls the primary "equivalently the relapse-rate-monotone-in-peak
@@ -121,10 +138,18 @@ not promoted.
 
 - Day-level ACF of the masked `max_hr_rank_lagged_lcera`: **rho(1) = +0.1113**,
   **rho(7) = +0.0843** (weak, short-range autocorrelation).
-- Data-driven **E[L]\* = 7.000** (Politis-White / Patton-Politis-White estimator;
-  cutoff lag 1). The factor-of-2 override did NOT fire (E[L]* does not deviate
-  from 7 by more than 2x), so **E[L] = 7** is used, matching the
-  `permutation_null_block_length.md` stationary-block default.
+- Data-driven E[L]\* companion (review M2, corrected): the Politis-White /
+  Patton-Politis-White estimator returned **E[L]\* = 7.000 as a FORMULA-DEGENERATE
+  FALLBACK, not an independent optimum**. On this weak ACF (rho(1) = +0.11) the
+  closed-form Bartlett-kernel term collapses and the estimator returns its own
+  configured default (7) with the note *"Closed-form formula degenerate; returning
+  default"* (cutoff lag 1). So E[L]\* did NOT independently confirm 7, and the
+  factor-of-2 override "not firing" is **uninformative here** (a fallback value
+  trivially equals the default it is compared against), not a confirmation.
+  **E[L] = 7 therefore rests on the first-principles `permutation_null_block_length.md`
+  stationary-block policy plus the ACF readout above, not on a data-driven
+  optimum.** This matches the pre-reg's own honest "the data-driven companion"
+  language and the null MD's deferred-citation posture.
 - Transparency note (carried from the pre-reg): the null MD's own literature
   anchor is deferred (the stationary-bootstrap canon is unread in the literature
   folder), so E[L] = 7 rests on first-principles reasoning plus the data-driven
@@ -156,6 +181,33 @@ The precondition predicted pool constructibility (63 days >= 0.95, 116 >= 0.90,
 149 >= 0.87 available across bands); the per-peak calipered pools realised here
 are smaller (median 17) because each pool is constrained by all three calipers
 simultaneously (not just the rank band), which is the intended tight matching.
+
+### 6b. The baseline universe is NOT felt-recovery-gated (review M1 disclosure)
+
+The danger-window peaks are gated felt-recovered (`gevoelscore >= 4`). The
+matched-baseline reference, however, applies only the **three locked calipers**
+(rank band +/- 0.03, same `recovery_phase`, preceding-3-day gevoelscore mean +/-
+1.0); a felt-recovered gate on the baseline day itself is **not among the locked
+three**, and the felt-trajectory caliper constrains only the *preceding* 3-day
+mean, so the baseline day's own felt-state is unconstrained. Consequence,
+measured directly on the primary arm: of the **530 matched-baseline pool slots**
+across the 24 events, **50 (9.4%) fall on days with `gevoelscore <= 3`, and all 50
+of those are actual `is_crash` / `is_dip` days.** Their follow-on relapse rate is
+**0.580 vs 0.327** for the non-crash/dip baseline slots. Including them **inflates
+the baseline relapse rate and biases the primary delta NEGATIVE** (that is,
+*conservative against the hypothesis*, so it cannot have manufactured a false
+"Supported").
+
+**Exclude-crash/dip-baseline sensitivity:** removing the `is_crash` / `is_dip`
+days from the reference universe moves the primary from mean delta -0.116 / stat
+-1.03 to **mean delta -0.087 / stat -0.76** (n=24). **The verdict does not change
+(still null-spanning "Cannot resolve").** But the direction of the shift matters
+for the honest reading (see caveat (a)): the slightly-negative point estimate is
+*partly an artefact of a baseline whose relapse rate is inflated by crash/dip
+contamination*, so it must NOT be leaned on as evidence of a disconfirming
+direction. This is a disclosure of an unstated property of the locked
+construction, not a re-lock: the three named calipers were implemented exactly as
+locked, and the locked primary (stat -1.03) remains the verdict.
 
 ## 7. Crash-vs-dip formal slope interaction (pre-reg section 7)
 
@@ -237,8 +289,14 @@ established"). The mental-PEM escape applies ONLY to case (1); it never absorbs 
 physical spike that failed to relapse. This test's danger-window peaks were
 overwhelmingly high-strain (median peak rank ~0.95) and did NOT relapse above
 baseline, which is case (2) territory, so the honest reading is that the
-physically-visible danger-window effect is not established here, tempered only by
-the wide CI (hence "Cannot resolve," not "Not supported").
+physically-visible danger-window effect is not established here, tempered by the
+wide CI (hence "Cannot resolve," not "Not supported"). **Tempering (review M1):**
+the "case (2) / disconfirming direction" lean is itself softened by section 6b:
+the slightly-negative point estimate is partly an artefact of a baseline whose
+relapse rate is inflated by crash/dip contamination, and the exclude-crash/dip
+sensitivity pulls the statistic toward zero (-1.03 to -0.76). So the honest
+reading is "not established / cannot resolve," and the negative sign should NOT be
+read as positive evidence *against* the danger-window mechanism either.
 
 **(b) Physical / cardiac scope; mental-PEM invisible.** The exposure is
 physical / cardiac strain only. `eff_exertion` and `max_hr_rank` are blind to
@@ -340,14 +398,28 @@ NOT upgraded to "suggestive" or "consistent with."
   excluding every crash danger-window day at the widest sensitivity band (14) so
   no window day can leak into a baseline pool.
 
+- **G. r2 review fold-in (no verdict / primary / lock change).** The fresh-session
+  result review returned ACCEPT-WITH-MINOR-REVISIONS (0 BLOCKING / 0 MAJOR).
+  Folded in: **M1** the baseline-universe composition + exclude-crash/dip
+  sensitivity (section 6b, caveat (a) tempering); **M2** the E[L]* degenerate-
+  fallback correction (section 5); **N1** the per-replicate contributing-event
+  note (section 4). Two code tidies in `test.py`: **M3** deleted the dead,
+  never-called `matched_baseline_pool` copy (the live pool construction is inlined
+  in `run_arm`), and **N2** removed the unused `auto_stress_cov` variable. All
+  headline numbers (primary -1.0287, CI [-8.5780, +5.2134], p 0.6608, every
+  sensitivity, the per-event detail) reproduce bit-for-bit after the fold-in; the
+  changes are disclosure + tidy only.
+
 ---
 
 *Executed 2026-07-04. Implements the LOCKED pre-registration
 [`hypothesis.md`](hypothesis.md) verbatim. Primary exposure: peak masked
 `max_hr_rank_lagged_lcera` (r3 cardiac-strain, section 4e masked primary).
-Verdict: Cannot resolve (pre-committed default reading of a null-spanning CI).
-Cross-refs: methodology MD `../../../methodology/post_crash_exertion_relapse.md`;
-descriptive precondition `../../descriptive/post_crash_exertion_relapse/precondition.md`;
+Verdict: Cannot resolve (pre-committed default reading of a null-spanning CI);
+unchanged by the r2 review fold-in. Cross-refs: methodology MD
+`../../../methodology/post_crash_exertion_relapse.md`; descriptive precondition
+`../../descriptive/post_crash_exertion_relapse/precondition.md`; the fresh-session
+result review `../../../reviews/result-post-crash-exertion-relapse-2026-07-04.md`;
 sibling null precedent `../peri-event-covid/test.py`;
 `../../../methodology/permutation_null_block_length.md`; the `_lcera` extractor
 `../../garmin_exploration/activity-labels/scripts/11_compute_lagged_baseline.py`.*

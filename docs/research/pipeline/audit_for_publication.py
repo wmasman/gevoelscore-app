@@ -129,6 +129,11 @@ ALLOWLISTED_PATHS = {
     # Public-facing app copy mentions the project author's business email
     "src/copy.ts",
     "src/__tests__/copy.test.ts",
+    # User-authored thinking notes referencing the repo's own github URL
+    # (github handle appears in intra-repo self-links + cross-repo links
+    # to sibling research-story repo owned by the same author)
+    "docs/research/gevoelscore_lived_definitions.md",
+    "docs/research/note_2026-06-26_scope_clarification_and_step1_steelman.md",
 }
 
 # Forbidden extensions in tracked files (data + binaries)

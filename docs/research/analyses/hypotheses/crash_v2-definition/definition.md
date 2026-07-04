@@ -264,6 +264,16 @@ revert to crash_v1 for downstream work.
 - **`crash_v2` is locked at this revision.** Any change to thresholds
   or rules from this point forward becomes `crash_v3` — and we re-run
   all downstream from scratch.
+- **No symmetric positive counter-pole in this dataset.** A "good day"
+  definition mirroring `crash_v2` (left-tail) on the right tail is
+  structurally infeasible: the `gevoelscore` distribution is
+  left-tailed with the upper register compressed near 5–6 (ceiling
+  effect of recalibrated self-report in chronic illness; the scale's
+  ceiling sits where a healthy person's baseline would). Comparators
+  for crash analyses therefore use pooled-baseline z-scores (e.g.
+  cohort_topology) or matched non-event days (e.g. HA-P6), not
+  "good vs crash" contrasts. This is a documented design choice
+  grounded in the data shape, not a methodology gap.
 
 ## 7. What we do with each outcome
 

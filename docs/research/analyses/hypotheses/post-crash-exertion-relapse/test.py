@@ -318,43 +318,13 @@ def build_event_peaks(nadirs, rank_map, gs_map, crash_map, dip_map, all_dates,
     return events
 
 
-def matched_baseline_pool(peak, reference_days, rank_map, gs_map, phase_map,
-                          crash_map, dip_map, all_dates, *, relapse_window):
-    """All-eligible-in-caliper matched-baseline days for one danger-window peak.
-
-    reference_days = LC-era days OUTSIDE any post-crash danger window. A day
-    enters the pool iff ALL three calipers hold (section 4d):
-      (i)   masked rank within +/- RANK_BAND_CALIPER of the peak rank;
-      (ii)  same recovery_phase as the peak day;
-      (iii) the baseline day's preceding-3-day gevoelscore mean within
-            +/- FELT_TRAJ_CALIPER of the peak day's preceding-3-day mean.
-    Each pooled day gets its own relapse outcome (new crash/dip within
-    relapse_window days after it). Returns a list of relapse indicators (0/1).
-    """
-    outcomes = []
-    peak_rank = peak["peak_rank"]
-    peak_phase = peak["recovery_phase"]
-    peak_traj = peak["peak_preceding_gs_mean"]
-    for d in reference_days:
-        r = rank_map.get(d)
-        if r is None or pd.isna(r):
-            continue
-        if abs(float(r) - peak_rank) > RANK_BAND_CALIPER:
-            continue
-        if phase_map.get(d) != peak_phase:
-            continue
-        traj = preceding_gs_mean(d, gs_map)
-        if pd.isna(traj) or pd.isna(peak_traj):
-            continue
-        if abs(traj - peak_traj) > FELT_TRAJ_CALIPER:
-            continue
-        outcomes.append(relapse_after(d, relapse_window, crash_map, dip_map, all_dates))
-    return outcomes
-
-
 # ----------------------------------------------------------------------------
 # The one primary statistic + the event-level block-permutation null
 # ----------------------------------------------------------------------------
+# (The matched-baseline pool is constructed inline in run_arm, which carries the
+# (date, outcome, magnitude) tuples the null needs for calendar ordering. A
+# second standalone copy was removed in r2 per the result review M3, so one
+# copy of the three-caliper logic is authoritative.)
 
 
 def primary_statistic(deltas):
@@ -446,15 +416,21 @@ def block_permutation_null(events, baseline_outcomes_per_event, *, e_l, n_replic
             bl_rate = outcomes[bl_sel].mean()
             deltas.append(dw_rate - bl_rate)
             pranks.append(magnitudes[dw_sel].mean())
-        return primary_statistic(deltas), rank_slope(pranks, deltas)
+        # len(deltas) = the number of events that contributed to this replicate
+        # (an event contributes only if its key kept >= 1 dw-labelled AND >= 1
+        # baseline-labelled unit after the permutation). Tracked for the N1
+        # transparency note: the per-replicate contributing count runs well below
+        # the 24 usable events, which is why the null has heavy tails.
+        return primary_statistic(deltas), rank_slope(pranks, deltas), len(deltas)
 
     # Observed labelling: dw units are exactly is_dw == 1.
     obs_mask = pooled["is_dw"].to_numpy(dtype=bool)
-    obs_stat, obs_slope = stat_for_labels(obs_mask)
+    obs_stat, obs_slope, _ = stat_for_labels(obs_mask)
 
     p = 1.0 / e_l
     null_stats = np.empty(n_replicates)
     null_slopes = np.empty(n_replicates)
+    null_contrib = np.empty(n_replicates)
     for b in range(n_replicates):
         # Stationary-block permutation of positions: draw a block-structured
         # index order, then assign the first n_dw positions (in that permuted
@@ -482,15 +458,17 @@ def block_permutation_null(events, baseline_outcomes_per_event, *, e_l, n_replic
                         break
         mask = np.zeros(n, dtype=bool)
         mask[np.asarray(dw_positions, dtype=int)] = True
-        s, sl = stat_for_labels(mask)
+        s, sl, nc = stat_for_labels(mask)
         null_stats[b] = s
         null_slopes[b] = sl
+        null_contrib[b] = nc
 
     return {
         "obs_stat": obs_stat,
         "obs_slope": obs_slope,
         "null_stats": null_stats,
         "null_slopes": null_slopes,
+        "null_contrib": null_contrib,
     }
 
 
@@ -687,6 +665,40 @@ def main():
     pool_max = max(pool_sizes) if pool_sizes else 0
     n_empty_pool = sum(1 for s in pool_sizes if s == 0)
 
+    # --- M1 (result review): baseline-universe composition + exclude-crash/dip
+    # sensitivity. The matched-baseline universe is NOT felt-recovery-gated (the
+    # three locked calipers -- rank band, recovery_phase, preceding-3-day gs mean
+    # -- do not include a felt gate on the baseline day itself), so it admits
+    # low-felt days, including is_crash / is_dip nadir days. Their higher
+    # follow-on relapse rate inflates the baseline and biases the primary delta
+    # NEGATIVE (conservative against the hypothesis). Disclosed post-review with
+    # the exclude-crash/dip sensitivity; the locked primary + its verdict are
+    # unchanged (this is disclosure, not a re-lock).
+    n_slot_total = 0
+    n_slot_crashdip = 0
+    relapse_crashdip = []
+    relapse_normal = []
+    for pool in baseline_outcomes:
+        for (bdate, bout, _bmag) in pool:
+            n_slot_total += 1
+            if crash_map.get(bdate, False) or dip_map.get(bdate, False):
+                n_slot_crashdip += 1
+                relapse_crashdip.append(bout)
+            else:
+                relapse_normal.append(bout)
+    pct_crashdip = 100.0 * n_slot_crashdip / n_slot_total if n_slot_total else float("nan")
+    rate_crashdip = float(np.mean(relapse_crashdip)) if relapse_crashdip else float("nan")
+    rate_normal = float(np.mean(relapse_normal)) if relapse_normal else float("nan")
+
+    ref_days_no_crashdip = [
+        d for d in ref_days if not (crash_map.get(d, False) or dip_map.get(d, False))
+    ]
+    _, _, excl_est = run_arm(
+        crashes, rank_map, window=DANGER_WINDOW_PRIMARY, relapse_window=RELAPSE_PRIMARY,
+        ref_universe=ref_days_no_crashdip, label="EXCL_CRASHDIP",
+    )
+    excl_mean_delta = float(np.mean(excl_est["deltas"])) if excl_est["deltas"] else float("nan")
+
     # --- 7. ACF readout + data-driven E[L]* companion (section 6) ---
     masked_series = df["max_hr_rank_masked"].to_numpy(dtype=float)
     el_result = compute_data_driven_block_length(
@@ -695,6 +707,14 @@ def main():
     el_star = el_result["optimal_block_length"]
     el_flagged = el_result["flagged_deviation"]
     el_used = el_star if el_flagged else EXPECTED_BLOCK_LENGTH
+    # M2 (result review): surface the estimator's note. On this weak ACF the
+    # closed-form estimator degenerates and FALLS BACK to the default of 7 (note:
+    # "Closed-form formula degenerate; returning default"), so E[L]*=7.0 is NOT
+    # an independent data-driven optimum that confirms 7; the factor-of-2 flag is
+    # therefore uninformative here (a fallback value trivially equals the default
+    # it is compared against). E[L]=7 rests on the first-principles policy plus
+    # the ACF readout, not on an independent data-driven optimum.
+    el_note = el_result.get("note", "")
     acf = el_result.get("autocorrelations")
     acf1 = float(acf[1]) if acf is not None and len(acf) > 1 else float("nan")
     acf7 = float(acf[7]) if acf is not None and len(acf) > 7 else float("nan")
@@ -705,6 +725,10 @@ def main():
     )
     null_stats = null_res["null_stats"]
     null_stats_valid = null_stats[~np.isnan(null_stats)]
+    null_contrib = null_res["null_contrib"]
+    contrib_mean = float(np.mean(null_contrib))
+    contrib_min = int(np.min(null_contrib))
+    contrib_max = int(np.max(null_contrib))
     obs_stat = est["stat"]
     # percentile of the observed statistic within the null (two-sided reading:
     # report the one-sided upper-tail p-analogue in the predicted positive
@@ -835,7 +859,6 @@ def main():
         ref_universe=ref_days, day_filter=make_rising_filter(auto_rhr_map),
         label="AUTORHR",
     )
-    auto_stress_cov = df["date"].isin(all_crash_dw_days).sum()  # informational
     auto_sens = {
         "stress": {"stat": as_est["stat"], "slope": as_est["slope"], "n_used": as_est["n_used"]},
         "rhr": {"stat": ar_est["stat"], "slope": ar_est["slope"], "n_used": ar_est["n_used"]},
@@ -867,14 +890,28 @@ def main():
     print("MATCHED-BASELINE POOL SIZES (per crash peak, primary arm):")
     print(f"  min={pool_min}  median={pool_med}  max={pool_max}  empty pools={n_empty_pool}")
     print(LINE)
+    print("M1. BASELINE-UNIVERSE COMPOSITION (not felt-recovery-gated; review disclosure):")
+    print(f"  pool slots total: {n_slot_total}   is_crash/is_dip slots: {n_slot_crashdip} "
+          f"({pct_crashdip:.1f}%)")
+    print(f"  follow-on relapse rate: crash/dip slots={rate_crashdip:.3f}  "
+          f"normal slots={rate_normal:.3f}")
+    print(f"  EXCLUDE-crash/dip-baseline sensitivity: stat={excl_est['stat']:+.4f}  "
+          f"mean_delta={excl_mean_delta:+.4f}  n={excl_est['n_used']} "
+          f"(vs primary stat={est['stat']:+.4f}; verdict unchanged, still null-spanning)")
+    print(LINE)
     print("7. ACF / BLOCK LENGTH:")
     print(f"  masked-rank ACF: rho(1)={acf1:+.4f}  rho(7)={acf7:+.4f}")
     print(f"  data-driven E[L]*={el_star:.3f}  cutoff_lag={el_result.get('cutoff_lag')}")
-    print(f"  factor-of-2 flag: {el_flagged}   E[L] used: {el_used:.3f}")
+    print(f"  estimator note (M2): {el_note}")
+    print(f"  factor-of-2 flag: {el_flagged} (uninformative: fallback==default)"
+          f"   E[L] used: {el_used:.3f}")
     print(LINE)
     print("6. PRIMARY STATISTIC (standardised danger-window-vs-matched-baseline difference):")
     print(f"  point estimate (standardised mean of delta_i): {obs_stat:+.4f}")
     print(f"  event-level block-permutation 95% CI: [{ci_low:+.4f}, {ci_high:+.4f}]")
+    print(f"  per-replicate contributing events (N1): mean={contrib_mean:.1f} "
+          f"(range {contrib_min}-{contrib_max}) of {est['n_used']} usable "
+          f"-> heavy-tailed null, wide CI")
     print(f"  p-analogue (upper tail, predicted +): {p_upper:.4f}   percentile: {percentile:.2f}")
     mean_delta = float(np.mean(est["deltas"])) if est["deltas"] else float("nan")
     print(f"  direction+magnitude: mean delta = {mean_delta:+.4f} "
@@ -944,6 +981,14 @@ def main():
         "el_used": el_used,
         "el_flagged": el_flagged,
         "pool_sizes": (pool_min, pool_med, pool_max),
+        "baseline_crashdip_pct": pct_crashdip,
+        "baseline_crashdip_rate": rate_crashdip,
+        "baseline_normal_rate": rate_normal,
+        "excl_crashdip_stat": excl_est["stat"],
+        "excl_crashdip_mean_delta": excl_mean_delta,
+        "excl_crashdip_n": excl_est["n_used"],
+        "null_contrib_mean": contrib_mean,
+        "null_contrib_range": (contrib_min, contrib_max),
         "slope_interaction": slope_interaction,
         "comparison_stat": comp_est["stat"],
         "cumulative_slope": cum_slope,
