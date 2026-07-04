@@ -1023,6 +1023,136 @@ never a per-phase verdict. Sibling of R19 (per-signal phase read) and R28
 (`lc_recovery_phase_axis.md`); `crash_v2-definition/`;
 [[feedback_research_discipline_statistical]].
 
+## Q23. Site R32 -- "no visible trigger-into-crash signal" as a finding + per-crash case-histories
+
+**Status**: queued -- logged 2026-07-04 from the site register. Two parts:
+(a) a synthesis/framing finding (mostly `assemble` from existing results),
+(b) a design + privacy decision for a future site section (not primarily a
+research ask).
+
+**Context (cold-read)**: discussing HA01c, the participant noticed that naming
+"what triggered each crash" assumes a trigger->response model the record can't
+support. R32(a) asks research to confirm the honest finding -- that **no
+scorecard signal reaches a trigger / causal-precursor bar**: the signals are
+retrospective discriminators (precision <5%, lift <2x; HA07d ~1-in-37 per fire,
+HA01c ~1-in-45), physical exertion (HA01c) is only a soft backward tendency and
+not load-bearing, and a large share of plausible triggers (emotional /
+cognitive) are off-instrument (R4 `weak`; "the watch can't see mental PEM").
+Net claim to sanity-check: *the moment of tipping into a crash is not visibly
+encoded in this watch data; the data reads the weather around a crash better
+than what set it off.* R32(b) is a per-crash case-histories section
+(descriptive; dual-track lived-vs-watch; "unclear" a first-class label; no
+"trigger" wording; hindsight-bias caution) -- flagged as a privacy opt-in
+(per-crash dated life-events depart from aggregate-only).
+
+**Why queued**: (a) is a one-line confirmation that "no signal reaches a trigger
+bar" fairly states the record -- but it should be an explicit research sign-off,
+not a site assumption. (b) is editorial/design + a privacy call for the
+participant, not a research run.
+
+**Workflow**: research confirms or corrects the (a) framing against the
+trust-metric export (R2 / R14) + R4; no new test needed. (b) stays site-side
+unless a quantitative companion (R4 / Q21) informs the "unclear" fraction. Keep
+the honest bound: the claim is "no trigger is *visibly confirmable*", NOT
+"crashes have no triggers".
+
+**Cross-refs**: site register R32 (sibling of R4 / Q21); trust metrics
+`cards/trust-panel-export.md` + `cards/primary-verdict-statistics.md`; HA01c
+handoff `handoff_back_2026-07-04_HA01c-exertion-verdict-and-framing.md`;
+[[feedback_research_discipline_interpretive]].
+
+## Q24. Site R33 -- compensatory rest *after* heavy days, and whether it strengthened over time
+
+**Status**: queued -- logged 2026-07-04 from the site register. `new` (the
+within-day sub-part is `blocked` on per-minute extraction). The flip side of
+R32.
+
+**Context (cold-read)**: lived experience -- after a heavy day (physical or
+emotional) the participant feels far more tired and rests more; if that's
+*learned* pacing it should show, more clearly in recent years, as more rest
+after heavy days and shorter self-limiting within-day peaks. Status checked
+2026-07-04: **none of this is tested** -- pre-crash exertion (HA01b / HA01c) and
+post-crash recovery (HA-P6) exist, but not the post-heavy-day direction. Five
+sub-questions:
+1. **Day-after rest** -- does exertion fall in the 1-3 days after a heavy day
+   (HA01c heavy-day def, own top ~25%) vs after matched ordinary days? `new`,
+   feasible on daily aggregates.
+2. **Within-day shape** -- shorter peaks + more active rest same-day? `blocked`
+   on per-minute Garmin extraction (H04b path C; `garmin_pacing_practice.md §8`;
+   QUEUED-WORK C.4 / C.5).
+3. **Over time** -- stratify (1) / (4) across the recovery-phase axis; the
+   pacing-improvement test and the most confounded: **deconditioning** (fewer /
+   lighter days recently -> a floor effect, not a choice) and **citalopram**
+   (phase-5 boundary = medication-onset date) both mimic "more rest recently".
+   Descriptive only; attribution to the driver ledger.
+4. **Sleep after a heavy day** -- do `sleep_duration_min` / `stress_mean_sleep`
+   / `bb_overnight_gain` / `sleep_efficiency` on the night(s) after differ from
+   after matched ordinary days? `new`, closest to testable on existing
+   aggregates.
+5. **Does resting prevent crashes?** -- hardest; a counterfactual on n=1;
+   overlaps R3 (pacing paradox). HA-P7 already NOT-SUPPORTED and post-hoc
+   reframed as "maybe pacing prevents the crashes that would have shown the
+   signal" -- unfalsifiable. Descriptive bound at best.
+
+**Why queued**: genuine un-operationalised gaps; the feasible parts (1, 4)
+could run on existing daily aggregates but need a precondition + methodology
+pass; (2) is data-blocked; (3) / (5) are discipline-sensitive (confounds +
+counterfactual).
+
+**Workflow**: descriptive precondition on the day-after / night-after reads
+first (1, 4); if clean, stratify by phase (3) with the deconditioning +
+citalopram rivals attached as caveats; (2) waits on per-minute; (5) routes to R3
+/ the driver ledger. The available honest positive is "load is followed by more
+rest", NOT "pacing prevents my crashes".
+
+**Cross-refs**: site register R33 (flip side of R32; feeds R15 pacing driver +
+R3 pacing paradox); HA01c heavy-day def
+`analyses/hypotheses/HA01c-effective-exertion-shock/`; phase axis
+`lc_recovery_phase_axis.md`; sleep channels `intervention_effects_descriptive.md
+§3`; pacing-efficacy scope `garmin_pacing_practice.md §1 / §5.2 / §7.4` +
+QUEUED-WORK C.4 / C.5; within-day blocker H04b path C;
+[[feedback_research_discipline_statistical]].
+
+## Q25. Site R34 -- re-test morning-RHR with an overnight-*average* HR proxy (HRM4Pacing caveat)
+
+**Status**: queued -- logged 2026-07-04 from the site register. `new` but
+feasible on existing per-minute HR where coverage allows. Does **not** change
+the published morning-RHR verdict until it runs.
+
+**Context (cold-read)**: external source HRM4Pacing (Kathryn Dickinson; Workwell
+tradition; peer-reviewed Clague-Baker et al. 2023) warns: *"you can't rely on
+the figure that Polar and Garmin devices report as RHR, as they show lowest HR
+instead, which for our cohort may not be the same thing"* -- recommend
+**average overnight / sleeping HR** as the proxy. This bites here: the site's
+morning-RHR claim (not-found; H01 / HA06b, Workwell "RHR+15") is tested on
+`resting_hr`, which `DATA_DICTIONARY §5` confirms is **Garmin's algorithmic RHR
+passed through directly** ("Garmin computes RHR during sleep" -- a
+lowest-sustained figure). That IS the figure the caveat warns against; the
+recommended overnight-*average* proxy was never used. So the not-found verdict
+is measurement-input-exposed -- maybe the wrong RHR definition, not a true
+absence.
+
+**Why queued**: re-running A1 / A3 (H01 "+threshold" and the HA06b z-variant) on
+an overnight-average sleeping-HR proxy either makes the negative
+robust-to-the-caveat (stronger) or moves it. The proxy channel doesn't exist
+yet but is computable from per-minute `intraday_hr_stress_daily.csv` x the known
+sleep window (feasible `new`); flag coverage gaps. Venu 3 exposes overnight HR /
+HRV more richly going forward.
+
+**Workflow**: build `hr_overnight_mean_sleep` from intraday HR x sleep window;
+pre-register the proxy + threshold exactly as the original (no fishing for a
+positive); re-run A1 / A3; report whether the verdict moves + a
+measurement-definition note. Honest bound: the lowest-vs-average gap may be
+small / stable (resting_hr range 47-65 bpm) -> verdict unchanged is a valid
+outcome. Feeds R17 (measurement-regime) and R18 (mark morning-RHR
+measurement-input-exposed).
+
+**Cross-refs**: site register R34; sources `sources.json` -> `hrm4pacing` +
+`clague-baker-2023`; `resting_hr` def `DATA_DICTIONARY §5` +
+`methodology/nightly_attribution.md` + `methodology/garmin_indicators_audit.md`;
+RHR tests `analyses/hypotheses/` A1 / A3 / H01 / HA06b; intraday
+`pipeline/01_extract/garmin_intraday_hr_stress.py`; site R17 / R18.
+
 ---
 
 *Add new queued items with a `Q<n>` header following the same shape:
