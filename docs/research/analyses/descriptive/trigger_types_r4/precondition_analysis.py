@@ -196,6 +196,39 @@ def main():
              "B3. COGNITIVE isolated (cog & ~phy) vs neither")
     contrast(lc.emo_load_ev & ~lc.phy_load_ev, ~lc.emo_load_ev & ~lc.phy_load_ev,
              "B4. EMOTIONAL isolated (emo & ~phy) vs neither")
+
+    # B5. Wiggers "HRV drops that night OR the following night" timing test.
+    # Wiggers (handleiding, mental-PEM concession, PDF lines 1448-1457): excessive
+    # mental activity is undetected in the activity view but "will cause your HRV to
+    # drop that night or the following night." Overnight stress (GSS) is the
+    # HRV-derived proxy (higher stress = lower HRV). Test cognitive (her example) and
+    # emotional load at lag 0 (that night) and lag +1 (the following night).
+    SLEEP = {"sleep_stress_z": "stress_mean_sleep_lagged_lcera_z", "bb_lowest_z": "bb_lowest_lagged_lcera_z"}
+
+    def chan_at(d, col, lag):
+        dd = d + pd.Timedelta(days=lag)
+        return by[dd].get(col) if dd in alld else np.nan
+
+    def lag_contrast(mask_a, mask_b, label):
+        print(f"\n{label}   (that-night lag+0 / following-night lag+1; * = 95% CI excludes 0)")
+        A, B = lc[mask_a], lc[mask_b]
+        for nm, col in SLEEP.items():
+            for lag in (0, 1):
+                a = [chan_at(d, col, lag) for d in A["date"]]
+                b = [chan_at(d, col, lag) for d in B["date"]]
+                d, lo, hi = boot_delta(a, b)
+                tag = "that-night " if lag == 0 else "next-night "
+                star = "*" if (pd.notna(lo) and (lo > 0 or hi < 0)) else " "
+                print(f"    {nm:14s} {tag}(lag+{lag}): diff {d:+.3f} [{lo:+.2f},{hi:+.2f}]{star}")
+
+    print(f"\n{LINE}\nB5. WIGGERS 'HRV drop that night OR the following night' TIMING TEST")
+    lag_contrast(lc.cog_load_ev & ~lc.phy_load_ev, ~lc.cog_load_ev & ~lc.phy_load_ev,
+                 "COGNITIVE isolated (Wiggers' own 'laptop / writing' example)")
+    lag_contrast((lc.cog_load == 3) & ~lc.phy_load_ev, lc.cog_load.isna() & ~lc.phy_load_ev,
+                 "COGNITIVE severe L3 only ('excessive mental activity')")
+    lag_contrast(lc.emo_load_ev & ~lc.phy_load_ev, ~lc.emo_load_ev & ~lc.phy_load_ev,
+                 "EMOTIONAL isolated")
+
     print("\n(CIs are day-level bootstrap; autocorrelation not modelled -> treat as approximate/optimistic.)")
     print(LINE)
 

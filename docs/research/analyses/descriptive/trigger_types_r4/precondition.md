@@ -168,8 +168,45 @@ are in the table below; `*` = 95% bootstrap CI excludes 0.
 
 An honesty correction carried from the drafting: an earlier point-estimate read
 oversold "emotional -> sleep-stress +0.34." With bootstrap CIs and felt-state
-adjustment that channel is only suggestive (+0.16, CI spans 0); the robust
-emotional autonomic signals are daytime GSS and the battery floor.
+adjustment that same-day channel is only suggestive (+0.16, CI spans 0); the
+robust emotional autonomic signals same-day are daytime GSS and the battery floor.
+The sleep-stress channel does reach significance on the FOLLOWING night, which is
+exactly the timing Wiggers describes; see section 5.4.
+
+### 5.4 The Wiggers timing test ("HRV drops that night or the following night")
+
+Wiggers' handleiding makes a specific, testable concession (the mental-PEM
+passage, PDF lines 1448-1457): *"Too much mental activity, such as working on your
+laptop or writing, often goes undetected in your Garmin, but excessive mental
+activity can still cause PEM. It will also cause your HRV to drop that night or the
+following night."* Overnight stress (GSS) is the HRV-derived proxy (higher stress
+= lower HRV), so this is directly testable at lag 0 (that night) and lag +1 (the
+following night). Isolated + bootstrap CIs; `*` = CI excludes 0.
+
+| load | overnight channel | that night (lag+0) | following night (lag+1) |
+|---|---|---|---|
+| **cognitive** (her own laptop/writing example) | sleep-stress | -0.10 ns | -0.09 ns |
+| cognitive **severe L3** ("excessive mental activity") | sleep-stress | -0.24 ns | -0.15 ns |
+| **emotional** | sleep-stress | +0.27 ns | **+0.53\*** |
+| emotional | battery floor | **-0.42\*** | **-0.42\*** |
+
+Two clean reads:
+
+- **For cognitive load, Wiggers' claim fails in this body.** Her own example
+  (laptop, writing) produces **no overnight HRV drop on either night, even at
+  severe intensity** -- the point estimates are if anything in the wrong direction
+  (slightly lower stress). So the watch misses not just the *activity* of cognitive
+  overexertion but its *autonomic aftermath* too. The watch is blinder to cognitive
+  load than the guide expects.
+- **For emotional load, Wiggers' claim holds, with her exact timing.** The overnight
+  HRV drop (sleep-stress up) is suggestive that night (+0.27) and **significant the
+  following night (+0.53\*)**, and the body-battery floor is robustly down both
+  nights. Wiggers' "that night *or the following night*" hedge captures a real lag:
+  the emotional-load autonomic aftermath peaks on the second night.
+
+So the guide's mechanism (non-physical load -> overnight HRV drop) is **confirmed
+for emotional load with the exact timing Wiggers states, and refuted for cognitive
+load** -- a refinement of a taxonomy the guide lumps together as "mental activity."
 
 ## 6. What R4 can and cannot deliver
 
