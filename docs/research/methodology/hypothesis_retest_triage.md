@@ -80,9 +80,15 @@ disturbing a single crash-discrimination verdict.
 - **R14** (single-pool verdicts): done; this triage confirms nothing else flipped.
 - **R19** (per-phase descriptive read): a descriptive backdrop, not a re-verdict --
   proceed as description, no re-run gated by this triage.
-- **R20** (net-of-drivers re-read): reduces to **overlay numbers on the five
-  driver-exposed NOT-SUPPORTED rows** plus an optional confirmatory overlay on HA07d.
-  None changes a verdict, so R20 is a transparency layer, not a re-scoring.
+- **R20** (net-of-drivers re-read): **DELIVERED 2026-07-06** as an overlay in
+  [`analyses/descriptive/operationalisation_support/driver_netting_overlay/findings.md`](../analyses/descriptive/operationalisation_support/driver_netting_overlay/findings.md).
+  Zero verdicts change, and the result is sharper than "overlay on five rows":
+  only **one** scorecard row (HA07c) uses a channel with a locked citalopram beta,
+  and its delta operator makes it **dose-immovable** (netted disc identical to raw
+  to two decimals, delta +0.0 pp); the sibling HA08c behaves the same; HA06b (weak
+  non-significant beta) moves +1.8 pp and stays NOT-SUPPORTED; the other three
+  driver-exposed rows (H02b, HA11, HA10) have no per-mg coefficient at all. R20 is
+  confirmed a transparency layer, not a re-scoring.
 - **R30** (net-of-slow-confounders per-phase levels): still warranted for the
   `resting_hr` + stress/BB *absolute levels* on the recovery-phase strip (a
   different surface from the binary scorecard), unchanged by this triage.
