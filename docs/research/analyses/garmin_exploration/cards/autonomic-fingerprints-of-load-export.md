@@ -56,10 +56,12 @@ expects.
 **(c) Emotional load is the keeper: invisible in heart rate, but it leaves an
 autonomic trace, on the guide's exact timing.** Emotional load is **flat in heart
 rate** yet **robustly raises daytime stress and lowers the overnight body-battery
-floor** (both CIs exclude 0, both survive felt-state adjustment). And the
-guide-predicted HRV drop appears with the timing Wiggers names: overnight stress
-is suggestive *that* night and **significant the *following* night** -- her "that
-night or the following night" hedge captures a real one-day lag.
+floor** (both CIs exclude 0, both survive felt-state adjustment). The **body-battery
+floor is the robust overnight signal** -- it drops on both the same night and the
+following night. The **sleep-stress HRV-proxy specifically is only suggestive that
+night** (CI spans 0) and **reaches significance only the *following* night** -- which
+is exactly the timing Wiggers names: her "that night or the following night" hedge
+captures a real one-day lag in the HRV drop.
 
 **Net beyond-the-guide statement:** the guide says the watch can't see non-physical
 load but its autonomic aftermath may surface overnight. This body sharpens that:
@@ -78,8 +80,10 @@ asks whether the crashes themselves sort into types. As a **tendency**, they do:
 crashes whose run-up was emotional-dominant are **autonomically quiet** (body
 battery not depleted, resting HR not raised) with **interpersonal / brainfog** note
 content, while physical-dominant crashes are **autonomically loud** (the stress +
-RHR storm) with **illness-leaning** content. The emotional crashes are, in other
-words, the "activity-invisible" crashes the guide names.
+RHR storm) with **illness-leaning** content. Depth and duration are similar across
+the types, so both are equally real crashes -- they differ in whether the *watch*
+registers them, not in severity. The emotional crashes are, in other words, the
+"activity-invisible" crashes the guide names.
 
 **The honest floor:** requiring all three signals (trigger, wearable, notes) to
 agree labels only **5 of 29 crashes** cleanly (4 loud/physical, 1 quiet/emotional);
