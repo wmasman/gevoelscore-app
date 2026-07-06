@@ -1053,6 +1053,14 @@ never a per-phase verdict. Sibling of R19 (per-signal phase read) and R28
 
 ## Q23. Site R32 -- "no visible trigger-into-crash signal" as a finding + per-crash case-histories
 
+**Status**: **(a) DELIVERED 2026-07-06** as a synthesis card
+(`analyses/garmin_exploration/cards/no-visible-trigger-into-crash-signal-export.md`):
+the no-visible-trigger claim now rests on three independent lines (trust metrics
+all Tier C + push-crash null + R4 ambient/off-instrument triggers), with the "not
+visibly confirmable, not proven absent" boundary carried. **(b) still queued** --
+the per-crash case-histories site section (design + privacy opt-in). Original note
+below.
+
 **Status**: queued -- logged 2026-07-04 from the site register. Two parts:
 (a) a synthesis/framing finding (mostly `assemble` from existing results),
 (b) a design + privacy decision for a future site section (not primarily a
