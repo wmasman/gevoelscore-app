@@ -964,6 +964,34 @@ Update the triage's residual sub-flag + register R12.
 
 ## Q21. Site R4 -- trigger type (physical / emotional / cognitive) full treatment
 
+**Status**: **descriptive treatment DELIVERED 2026-07-06** (much of the parked
+scope done); two forward tests spun out to Q26 (phenotype-validation) + Q27
+(household-illness prospective logging).
+
+**DELIVERED 2026-07-06** (`analyses/descriptive/trigger_types_r4/`): the full
+descriptive arc. (1) Precondition: coverage is adequate (100% triaged, 83% of
+crash run-ups carry a structured load) but presence is degenerate, so no defensible
+trigger share. (2) Autonomic fingerprints of load (concordance): physical -> cardiac
+/ activity, cognitive -> Garmin-invisible, emotional -> flat in HR but robust in
+daytime GSS + battery floor; the Wiggers "HRV drop that night or the following
+night" timing test confirms this for emotional load (significant the FOLLOWING
+night) and refutes it for cognitive load -- a refinement of her mental-PEM
+concession. Site card built. (3) Crash-specificity: emotional load is the only
+suggestive pre-crash trigger (moderate+ perm-p 0.028 uncorrected), does not survive
+multiplicity, era-confounded -- suggestive not established. (4) Crash phenotypes
+(exploratory): crashes tend to sort into a quiet/interpersonal (emotional) type and
+a loud/illness (physical) type, but a strict tri-axis convergence rule labels only
+5/29 cleanly (24 unclear). Feeds R32(a). The mental-PEM headline is answered:
+the watch sees emotional load (in the autonomic aftermath, not HR) and does not see
+cognitive load.
+
+**Remaining (forward-looking)**: Q26 (the phenotype-validation test the convergence
+rule operationalises) and Q27 (log household illness prospectively so viral crashes
+become separable). The emotional-TRIGGER pre-reg (prospective-primary, per the
+2026-07-04/06 discussion) is also still un-drafted; scope it separately if pursued.
+
+--- original parked note (2026-07-03) below ---
+
 **Status**: queued -- parked 2026-07-03 by user decision; needs a dedicated
 session for proper hypothesis formulation + methodology, NOT the honest-limit
 note the register scoped.
@@ -1152,6 +1180,63 @@ measurement-input-exposed).
 `methodology/nightly_attribution.md` + `methodology/garmin_indicators_audit.md`;
 RHR tests `analyses/hypotheses/` A1 / A3 / H01 / HA06b; intraday
 `pipeline/01_extract/garmin_intraday_hr_stress.py`; site R17 / R18.
+
+## Q26. Crash-phenotype validation test (the convergence rule operationalised)
+
+**Status**: queued -- operationalisation proposed 2026-07-06 from the R4
+crash-phenotype exploration; needs its own methodology MD + pre-reg (different
+sessions).
+
+**Context**: the exploration
+(`analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md`) found
+crashes tend to sort into a quiet/interpersonal (emotional) type and a loud/illness
+(physical) type across three independently-measured axes (trigger, autonomic
+fingerprint, note content), but a strict convergence rule labels only 5/29 cleanly
+(24 unclear). The convergence rule is a strong exposure DEFINITION but **cannot be
+tested on these data** (it was found here, and its axes are correlated by
+selection).
+
+**Why queued**: promoting the phenotype from description to test requires a
+non-circular design. Two clean forms: (1) **prospective lock** -- freeze the
+convergence definition + thresholds now, evaluate on crashes AFTER the lock (also
+de-confounds the era issue); (2) **external validator** -- predict an outcome NOT
+used to define the phenotype (recovery-trajectory shape, recurrence spacing,
+differential pacing-vs-emotion-regulation response). NOT part of the
+emotional-trigger pre-reg (there the fingerprint is outcome-adjacent and cannot
+enter the exposure).
+
+**Workflow**: methodology MD (lock the three axes + thresholds) -> fresh-session
+review -> lock -> prospective accrual or external-outcome run. Keep the "unclear is
+first-class / largest bucket" honesty.
+
+**Cross-refs**: `analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md`
++ `crash_phenotypes.py`; Q21 (R4); site R4 / R32; the emotional-trigger pre-reg
+(separate).
+
+## Q27. Prospective household-illness logging (external de-confounder for viral crashes)
+
+**Status**: queued -- data-collection suggestion, 2026-07-06. Not an analysis;
+a one-field logging change that unlocks a future analysis.
+
+**Context**: the participant's own symptoms (runny nose, cough, feeling feverish)
+cannot separate a real virus from severe PEM -- they present identically. The clean
+de-confounder is an EXTERNAL marker: whether OTHERS in the household are ill. A
+feasibility check (`crash_phenotypes.py`) found this signal essentially ABSENT from
+the current record (18 note-dates mention illness, 0 pair an illness term with a
+household member in the same clause), and the illness mentions that exist are the
+participant's own symptoms. So viral crashes cannot be separated from PEM
+retrospectively.
+
+**Why queued**: the fix is prospective. Logging a simple "household illness today
+(y/n)" field going forward would let future crashes carry the external viral marker,
+enabling a clean viral-vs-PEM crash split that the record cannot support now.
+
+**Workflow**: add the field to the daily-entry app (a v1.x form addition, coordinate
+with the app roadmap); after a suitable accrual window, revisit the crash-phenotype
+typology with a viral bucket separable by the external marker.
+
+**Cross-refs**: `analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md`
+section 5; Q21 / Q26; site R4 / R32; Wiggers H3 (acute-illness signature).
 
 ---
 

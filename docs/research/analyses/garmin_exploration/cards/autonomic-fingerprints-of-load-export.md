@@ -70,6 +70,30 @@ in the overnight signal. The guide lumps "mental activity"; the data splits it -
 the watch sees your emotional load, just not in your heart rate, and it does not
 see your cognitive load at all.
 
+## 2b. Exploratory extension: two crash phenotypes (newer / less-settled)
+
+A companion exploration
+([`../../descriptive/trigger_types_r4/crash_phenotypes_exploratory.md`](../../descriptive/trigger_types_r4/crash_phenotypes_exploratory.md))
+asks whether the crashes themselves sort into types. As a **tendency**, they do:
+crashes whose run-up was emotional-dominant are **autonomically quiet** (body
+battery not depleted, resting HR not raised) with **interpersonal / brainfog** note
+content, while physical-dominant crashes are **autonomically loud** (the stress +
+RHR storm) with **illness-leaning** content. The emotional crashes are, in other
+words, the "activity-invisible" crashes the guide names.
+
+**The honest floor:** requiring all three signals (trigger, wearable, notes) to
+agree labels only **5 of 29 crashes** cleanly (4 loud/physical, 1 quiet/emotional);
+**24 are unclear.** So this is a real *tendency* but not a confident classifier --
+the site must present it as "crashes seem to come in a quiet type and a loud type,"
+never "we can tell you what triggered your crash," and the **unclear majority is
+the headline, not a footnote.** Descriptive, exploratory, not causal.
+
+**A note on viral crashes:** the participant's own symptoms cannot separate a real
+virus from severe PEM (both give runny nose, cough, feeling feverish), so viral
+crashes cannot be labelled from the record as it stands. The clean fix is an
+external marker -- logging when *others in the household* are ill -- a
+forward-looking data-collection suggestion, not something the current notes support.
+
 ## 3. Honesty flags (carry these to the surface)
 
 - **n=1, self-report, same-day / next-day concordance, not causation.** The load
