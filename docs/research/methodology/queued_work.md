@@ -1300,7 +1300,8 @@ A4 operands capture occurrence + duration, not the recovery curve. NB: RHR itsel
 *rises* over the years but R30 showed that is weight/aging, not worse pacing.
 
 **Cross-refs**: `wiggers_testable_hypotheses.md` A4 + §J.3 PG4/PG6;
-`methodology/bout_level_recovery_dynamics.md`; `longrun_rhr_trend/`.
+`methodology/bout_level_recovery_dynamics.md`; `longrun_rhr_trend/`; Q32 (the intraday
+swing frame, split out of "Cluster 3").
 
 ## Q31. POTS / orthostatic family -- descriptive write-up + the electrolyte-intervention test + prospective symptom logging
 
@@ -1336,11 +1337,12 @@ Q27's household-illness fix.
 `analyses/descriptive/pem_pots_separability/`;
 `methodology/pem_pots_mechanism_framing.md`; HA11; Q27 (sibling prospective-logging).
 
-## Q32. Full intraday parasympathetic-swing composite (H4) vs felt-state
+## Q32. Intraday parasympathetic-swing frame (H4) vs felt-state -- co-occurrence read, not a weighted composite
 
 **Status**: queued -- Layer-1 descriptive assembly first, then a pre-reg-deferred
-directional test (H4-composite), 2026-07-07. Primitives all exist; the composite
-object was never assembled.
+directional test (H4), 2026-07-07. Primitives all exist; the frame was never assembled.
+**Assembled as co-occurrence of separately-operationalised components, NOT a pooled
+weighted composite** (see constraints).
 
 **Context**: Wiggers describes the parasympathetic swing / "freeze" as one intraday
 object -- a sudden HRV spike, body battery draining *faster* than normal, midday
@@ -1349,22 +1351,50 @@ felt 1-2 days later ("don't be fooled by good values"; the "singing seated" work
 example, clean source lines 1463-1494). The catalog registers it three ways (B4 the
 outlier framing, D5 the high-morning-BB framing, H4 the composite), but only its
 *components* were ever tested -- HA10 (morning-BB paradox, validate-era SUPPORTED)
-and HA11 (within-day U-dip, train-era SUPPORTED). The full intraday composite has
-never been assembled as one object or checked against felt-state (catalog §J.4
-B4/H4 row: "full intraday composite not modelled").
+and HA11 (within-day U-dip, train-era SUPPORTED). The frame has never been assembled
+as one object or checked against felt-state (catalog §J.4 B4/H4 row: "full intraday
+composite not modelled").
+
+**Two constraints settled 2026-07-07 (read before scoping the test)**:
+
+1. **Weights, not a PEM/POTS collapse, are the bar.**
+   [`pem_pots_mechanism_framing.md`](pem_pots_mechanism_framing.md) §3.4 rejects a
+   pooled composite on two grounds. Ground (a) ("collapses the PEM/POTS distinction")
+   is specific to the *cross-mechanism* separability index and does NOT forbid this
+   frame (within-day, load/BB side). Ground (b) ("channel weights = an unreasoned
+   a-priori commitment") DOES apply to any composite and is the operative constraint.
+   So assemble the frame as **co-occurrence of pre-specified components** -- each its
+   own primitive vs its own lagged baseline -- and test whether they land on the same
+   days more than a block-permutation null. Co-occurrence carries no weight vector, so
+   ground (b) never bites; a pooled weighted index would trip it and is out of scope.
+2. **The HRV element is a proxy stack, not an in-principle wall.** Measured nightly HRV
+   is device-blocked (FR245 HRV Status) -- but so is the whole HA07/HA08 family, which
+   runs on the `stress_mean_sleep` proxy, so this is not unique to the swing and is not
+   a barrier. The subtlety: the swing's HRV element is a transient *spike*, and the
+   nightly-MEAN proxy is the wrong *shape* for a spike; proxy it with a within-window
+   trough/variability operator (the U-dip / `stress_stdev_sleep` family, already "a
+   transient HRV rise" per the framing MD §3.1). The frame is therefore **two proxies
+   deep** (stress-for-HRV, ~0.6x degradation and not yet n-of-1 calibrated per Q7; then
+   trough/variability-for-spike). Discount the effect size for the stack and carry the
+   layered caveats; it is a discount, not a wall.
 
 **Why queued**: (a) **descriptive assembly (do first, §2.1)** -- build the swing-day
-object from existing primitives: proxy-HRV rise (inverted overnight / within-day
+read from existing primitives: proxy-HRV trough/rise (inverted overnight / within-day
 stress), faster-than-normal BB drain (`bb_drained_24h` / intraday BB slope), a midday
 stress U-dip (HA11 `u_dip_count`), BB rising against that dip; describe swing-day
-frequency over phases / around crashes / **vs felt-state**. (b) **pre-reg-deferred
-predictive extension** -- H4's directional claim ("a swing day raises crash /
-steep-drain risk at t+1/t+2") as a single-pool, reviewer-mode, fresh-session-reviewed
-pre-reg, built only once the descriptive assembly warrants it. The HRV-spike half stays
-a stress proxy and device-blocked-labelled throughout (FR245 HRV Status hardware-blocked).
+frequency over phases / around crashes / **vs felt-state** as component co-occurrence.
+Deferred behind Q29 (night state-5 half) + Q30 (per-minute BB-drain / intraday
+primitives), which it consumes. (b) **pre-reg-deferred predictive extension** -- H4's
+directional claim ("a swing day raises crash / steep-drain risk at t+1/t+2") as a
+single-pool, reviewer-mode, fresh-session-reviewed pre-reg, built only once the
+descriptive co-occurrence is shown non-degenerate, effect size discounted for the
+two-proxy stack.
 
-**Cross-refs**: `wiggers_testable_hypotheses.md` B4 / D5 / H4 + §J.1 / §J.4; HA10;
-HA11; `methodology/pem_pots_mechanism_framing.md`; Q29 (night state-5 sibling) /
+**Cross-refs**: `wiggers_testable_hypotheses.md` B4 / D5 / H4 + §J.1 / §J.4;
+[`../note_2026-07-07_session_consolidation_pem_pots.md`](../note_2026-07-07_session_consolidation_pem_pots.md)
+Part B; [`pem_pots_mechanism_framing.md`](pem_pots_mechanism_framing.md) §3.1 + §3.4;
+HA10; HA11; Q7 (HRV-proxy n-of-1 calibration);
+[`hrv_proxy_via_stress.md`](hrv_proxy_via_stress.md); Q29 (night state-5 sibling) /
 Q30 (recovery-shape sibling).
 
 ---
