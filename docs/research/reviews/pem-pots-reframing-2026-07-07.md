@@ -1,5 +1,7 @@
 # Review - PEM vs POTS reframing (methodology MD + separability analysis + note + catalog section J + site card)
 
+> **Label discipline.** "POTS" here names one of Wiggers' two management threads (the electrolyte-side she takes for the felt within-day stress U-dip), NOT a watch-detectable condition. FR245 is posture-blind, U-dip polarity runs opposite the established POTS HRV signature (vagal withdrawal), and no POTS subtype is trackable to the instrument-bar per [`../literature/reviews/pots_operationalisation_wearable_review.md`](../literature/reviews/pots_operationalisation_wearable_review.md). See [`../methodology/pem_pots_mechanism_framing.md §1.2`](../methodology/pem_pots_mechanism_framing.md).
+
 **Reviewer mode**: independent peer review by a subagent with NO exposure to the
 drafting session. Isolated-context cold read, doc-only knowledge; fresh session,
 no shared context with whoever produced these artefacts, per

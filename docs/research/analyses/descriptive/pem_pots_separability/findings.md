@@ -1,5 +1,7 @@
 # Findings - PEM vs POTS separability in the watch data (descriptive)
 
+> **Label discipline.** "POTS" here names one of Wiggers' two management threads (the electrolyte-side she takes for the felt within-day stress U-dip), NOT a watch-detectable condition. FR245 is posture-blind, U-dip polarity runs opposite the established POTS HRV signature (vagal withdrawal), and no POTS subtype is trackable to the instrument-bar per [`../../../literature/reviews/pots_operationalisation_wearable_review.md`](../../../literature/reviews/pots_operationalisation_wearable_review.md). See [`../../../methodology/pem_pots_mechanism_framing.md §1.2`](../../../methodology/pem_pots_mechanism_framing.md).
+
 **Descriptive Layer-1 analysis** answering the reframing questions raised
 2026-07-07: is the POTS-signature watch pattern separable from the PEM-signature
 pattern, when does it appear, do POTS-signature days coincide with lower felt-state,
