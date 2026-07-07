@@ -148,6 +148,83 @@ Source: [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators
 
 ---
 
+## J. PEM vs POTS: mechanism labels + the orthostatic/POTS family (DRAFT, added 2026-07-07)
+
+> **Status: DRAFT, not locked.** Drafted 2026-07-07 by Claude (Opus 4.8),
+> producer-mode, under authorization (this is a `wiggers_*.md` reviewer-mode
+> artefact per [CONVENTIONS §1.2](CONVENTIONS.md); peer review runs in a
+> **different session**). Operationalisation reasoned in
+> [`methodology/pem_pots_mechanism_framing.md`](methodology/pem_pots_mechanism_framing.md).
+> Verbatim quotes below are from the clean source
+> `literature/wiggers_pacing_handleiding.txt` (pdftotext -raw); the §"Source
+> verification log" line numbers above map to the archived two-column extraction.
+
+**The distinction.** Wiggers (ME/CFS **and** POTS) interleaves two watch-visible
+mechanisms. **PEM** = the load / recovery axis (RHR after overexertion, HRV drop,
+night orange stress, the swing, long sleep) — the well-structured bulk of families
+A–I. **POTS / orthostatic** = the blood-volume / positional axis (RHR rising while
+lying still, the stress U-dip, stress stuck on standing / after eating, standing-HR
+rise) — treated by the guide **mostly descriptively**, and (her point) **waxing and
+waning as symptoms are managed** with electrolytes / salt / compression. We look
+for both; the POTS reads are mainly descriptive. **Empirical warrant for a two-axis
+split, not one**: the PEM and POTS day-markers correlate at only **r ≈ 0.09**
+([`analyses/descriptive/pem_pots_separability/`](analyses/descriptive/pem_pots_separability/)),
+so they are largely independent days, and the POTS marker is **time-varying**
+(stronger early era, receding into the citalopram era).
+
+### J.1 Mechanism label per existing hypothesis (from the 2026-07-07 re-read)
+
+| mechanism | hypotheses |
+|---|---|
+| **PEM** | A1, A3, A4, B1, B2, B3, B4, C1, C2, C3, D1, D2, D3, D4, D5, E1, E2, E3, F1, F2, F3, F4, G1, G2, H1, H2, H4, H5 |
+| **both** (guide names both) | A2 (lower RHR: PEM after too-much / POTS too-little-movement), C4 + C4b ("PEM **or** low blood volume"), G3 (pressure × low blood volume) |
+| **POTS / orthostatic** | G4 (the *interesting* SpO2 signal is positional, not exertion) |
+| **neither** | B5 (acute illness), H3 (the PEM-vs-illness separation test itself), I1, I2, I3 (data quality) |
+
+### J.2 The missing POTS / orthostatic family (largest catalog gap)
+
+The guide devotes an orthostatic-stress chapter + her personal U-dip workflow to
+POTS; the catalog never turned it into lines. Proposed descriptive family (mostly
+descriptive; POTS reads wax/wane over the timeline):
+
+| ID | POTS statement (short quote / paraphrase) | Signal | Testable here? | Status |
+|---|---|---|---|---|
+| **O1** | "An elevated resting heart rate, especially if you have POTS, can also be caused by too little movement" — RHR rises lying still, drops with gentle movement ("needed more blood flow") | RHR | partial (daily-summary only) | descriptive; not yet analysed |
+| **O2** | Standing / NASA-lean HR rise as an ANS readout; do not stress-test on purpose | positional HR | **no** (no posture data) | flag not-yet-testable |
+| **O3** | The stress **U-dip**: "a suspicious dip in my stress where my body battery rises… I take electrolytes as soon as I see a U dip" | stress (U-dip) | **yes** (`u_dip_count`) | **analysed** — HA11 (early-era SUPPORTED, recedes) + separability (the POTS marker) |
+| **O4** | Stress stays high on standing / after eating; "PEM **or low blood volume**, your stress remains high" | stress | partial | HA-C4 / HA-C4c (bout-level PARTIAL) |
+| **O5** | "Managing POTS with compression, water and salt can significantly reduce daytime stress scores" | stress | **yes** (intervention-effect) | **testable predictive claim, NOT yet tested** |
+| **O6** | Low / dropping barometric pressure → dizzy + exhausted; personal threshold "below 980 mBar" | pressure | needs external weather join | G3 sibling (POTS arm) |
+| **O7** | SpO2 "decreases after standing or moving," increases lying down | SpO2 (positional) | instrument unreliable | G4 (positional framing) |
+| **O8** | POTS raises data-gap / high-HR estimation errors | all | — | data-quality caveat (I-block) |
+
+### J.3 PEM gaps to add (descriptive "things to look for", not yet lines)
+
+| ID | PEM statement | Signal | Note |
+|---|---|---|---|
+| **PG1** | "If it takes a long time to fall asleep after overexertion, you can suspect PEM next day" — sleep-onset latency (a rare **predictive** Wiggers claim) | sleep (latency) | timestamps exist; NEW, constructable |
+| **PG2** | HR × HRV pattern table **rows 2/3/4** (high HR + fluctuating HRV; initial-high-HR-decreasing; both fluctuate) — only rows 1 (severe PEM) + 5 (swing) map to H3/H4 today | RHR + HRV | the image-2 five-state **night typology** (queued) |
+| **PG3** | "higher and **more variable** heart rates" at night when disrupted — variability, not just level | night RHR | NEW |
+| **PG4** | Second personal dose anchor: "two dips in my HRV when I've taken more than 2,000 steps; HRV at 40 = not going well" | steps + HRV | distinct from E1's 1600/3000 anchor |
+| **PG5** | Awake / restless minutes per night as a status readout | sleep (awake) | `sleep_awake_min` exists, unused |
+| **PG6** | Flare-up: HR high even lying down ("tells me how upset my body is") | RHR / intensive-min | NEW |
+
+### J.4 Excerpt + single-pool result on the key existing entries
+
+Verbatim guide quote paired with what this body's data actually showed (single-pool):
+
+| entry | Wiggers (verbatim, clean source) | this body (single-pool) |
+|---|---|---|
+| **A2** | lowest stable night RHR "higher or lower than normal" = overload / PEM | HA06b **NOT-SUPPORTED**; lowered-direction present later, non-discriminative; R30: level rise is confounder-dominated |
+| **B1** | "a decrease of 10 HRV points compared to the previous day could indicate PEM" | HA07c (proxy) **NOT-SUPPORTED** |
+| **B2** | "HRV drops after several days of overexertion… even if the person rested well immediately after" | HA08c **NOT-SUPPORTED**; push-crash **Cannot resolve** |
+| **B4/H4** | sudden HRV spike = parasympathetic swing, "don't be fooled by good values" | components present (HA10 morning-BB validate-SUPPORTED; HA11 U-dip train-SUPPORTED); full intraday composite **not modelled**; HRV-spike device-blocked |
+| **C1** | "If you see more orange at night than is normal for you, it could indicate… PEM" | mean (HA07c) **NOT-SUPPORTED**; **variability (HA07d) SUPPORTED** — variability is the operative measure |
+| **C4** | "PEM **or low blood volume**, your stress remains high" | HA-C4 rejected daily; **HA-C4c PARTIAL** bout-level (weak, real) |
+| **H2** | mental activity "will also cause your HRV to drop that night or the following night… Garmin can't warn you about everything" | the activity-invisible / mental-PEM anchor (source-verified) |
+
+---
+
 ## Priority shortlist (set by verification × family-history criteria)
 
 *Priority re-tiered 2026-06-14, replacing the 2026-06-13 intersection rule. The 2026-06-13 rule used artifact-baseline descriptive numbers for A1 + B1 (HA01b validate +17.3 pp at v3.1 rolling baseline; on the v3.2 lagged baseline HA01b-recomputed is REFUTED both eras at +5.8 / +4.0 pp per [`REJECTED.md`](REJECTED.md)). The new criteria:*

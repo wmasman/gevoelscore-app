@@ -1246,6 +1246,85 @@ typology with a viral bucket separable by the external marker.
 **Cross-refs**: `analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md`
 section 5; Q21 / Q26; site R4 / R32; Wiggers H3 (acute-illness signature).
 
+## Q28. Sleep descriptive trajectory + Wiggers sleep gaps (F1 / F4 extension)
+
+**Status**: queued -- Layer-1 descriptive, 2026-07-07. Data ready, analysis absent
+(per the sleep sweep). Reuses the R19/R30 recovery-phase machinery.
+
+**Context**: Wiggers makes several sleep claims the catalog registered but never
+analysed over time. `sleep_duration_min`, `bedtime_hour_local`, `bedtime_std_7d`,
+`sleep_awake_min`, and the sleep start/end timestamps all exist in the master;
+no trajectory or crash-neighbourhood analysis has landed.
+
+**Why queued**: three descriptive reads fall out cheaply -- (a) **sleep duration +
+rhythm per recovery phase / over all phases** (F1); (b) **sleep-onset latency +
+waking-later around crashes** (Wiggers PG1, a rare predictive claim: "long sleep
+onset after overexertion -> suspect PEM"); (c) **awake/restless minutes** as a
+status readout (PG5). Descriptive backdrop, single-pool, no verdict.
+
+**Cross-refs**: `wiggers_testable_hypotheses.md` F1/F4 + §J.3 PG1/PG5;
+`lc_recovery_phase_axis.md`; R19/R30 folders; note 2026-07-07.
+
+## Q29. Night-quality 5-state typology + guide graph replication (Wiggers pattern table)
+
+**Status**: queued -- Layer-1 descriptive typology, 2026-07-07. Needs the
+`pem_pots_mechanism_framing.md` markers; primitives all exist.
+
+**Context**: the guide's HR x HRV pattern table (image 2 / clean source rows
+1394-1400) is a 5-state night typology: (1) high HR + low HRV = severe PEM;
+(2) high HR + fluctuating HRV; (3) initial high HR decreasing; (4) both fluctuate;
+(5) high HRV + very low HR = parasympathetic swing. Only rows 1 + 5 map to catalog
+lines (H3 / H4). No composite night-quality classifier exists.
+
+**Why queued**: build the paired nightly **resting_hr + HRV-proxy** (inverted
+overnight stress) series (replicating guide image 1), classify each night into the
+5 states by (RHR level, HRV-proxy level, HRV-proxy variability), and describe state
+frequency **over time / per phase**, **around crashes**, and **vs felt-state**.
+Descriptive first; a predictive "does state X forecast next-day crash" is a
+separate pre-reg. Carries the FR245 HRV-proxy caveat throughout.
+
+**Cross-refs**: `wiggers_testable_hypotheses.md` §J.3 PG2/PG3;
+`methodology/pem_pots_mechanism_framing.md`; H3/H4; `hrv_proxy_via_stress.md`.
+
+## Q30. Intraday HR-pacing trend + post-peak recovery shape (Wiggers HR-pacing)
+
+**Status**: queued -- intraday, 2026-07-07. Extraction infrastructure mature
+(`pipeline/01_extract/garmin_intraday_hr_stress.py`, A4 operands locked); the
+recovery-SHAPE part is new compute.
+
+**Context**: Wiggers frames HR pacing as staying near resting HR / under an HR cap.
+Two reads are absent: (a) **time-above-threshold / high-HR-minutes trend over the
+years** (evidence of improved pacing, consciously or by feel); (b) **post-peak HR
+recovery shape** (decay slope / half-life -- did the body settle after a peak). The
+A4 operands capture occurrence + duration, not the recovery curve. NB: RHR itself
+*rises* over the years but R30 showed that is weight/aging, not worse pacing.
+
+**Cross-refs**: `wiggers_testable_hypotheses.md` A4 + §J.3 PG4/PG6;
+`methodology/bout_level_recovery_dynamics.md`; `longrun_rhr_trend/`.
+
+## Q31. POTS / orthostatic family -- descriptive write-up + the electrolyte-intervention test + prospective symptom logging
+
+**Status**: queued -- 2026-07-07. Mixed: descriptive family write-up (do now),
+one testable predictive claim (pre-reg), one prospective logging change.
+
+**Context**: the largest catalog gap (per the 2026-07-07 re-read) is a missing
+POTS / orthostatic family -- `wiggers_testable_hypotheses.md` §J.2 (O1-O8). The
+separability analysis established the POTS axis is real and separable (r ~ 0.09)
+and time-varying (recedes into the citalopram era). Three follow-ups:
+
+**Why queued**: (a) **descriptive family write-up** -- fold O1-O8 into the catalog
+proper once §J is reviewed; (b) **the one testable predictive claim, O5**: "water +
+salt + compression significantly reduce daytime stress scores" -- a pre-registered
+intervention-effect test (needs the electrolyte/compression log; single-pool,
+reviewer-mode, fresh-session reviewed); (c) **prospective orthostatic-symptom
+logging** -- the notes carry no orthostatic vocabulary (2/246 POTS-signature days
+corroborated), so a lightweight "dizzy-on-standing / palpitations (y/n)" daily field
+would let a future analysis corroborate the watch U-dip against felt symptoms (same
+shape as Q27's household-illness fix).
+
+**Cross-refs**: `wiggers_testable_hypotheses.md` §J.2; `analyses/descriptive/pem_pots_separability/`;
+`methodology/pem_pots_mechanism_framing.md`; HA11; Q27 (sibling prospective-logging).
+
 ---
 
 *Add new queued items with a `Q<n>` header following the same shape:
