@@ -234,9 +234,12 @@ Verbatim guide quote paired with what this body's data actually showed (single-p
 | **A2** | lowest stable night RHR "higher or lower than normal" = overload / PEM | HA06b **NOT-SUPPORTED**; lowered-direction present later, non-discriminative; R30: level rise is confounder-dominated |
 | **B1** | "a decrease of 10 HRV points compared to the previous day could indicate PEM" | HA07c (proxy) **NOT-SUPPORTED** |
 | **B2** | "HRV drops after several days of overexertion… even if the person rested well immediately after" | HA08c **NOT-SUPPORTED**; push-crash **Cannot resolve** |
-| **B4/H4** | sudden HRV spike = parasympathetic swing, "don't be fooled by good values" | components present (HA10 morning-BB validate-SUPPORTED; HA11 U-dip train-SUPPORTED); full intraday composite **not modelled**; HRV-spike device-blocked |
+| **B3** | "a slowly rising HRV can indicate that your health is improving" (a higher HRV is not always a good sign) | **not tested** (descriptive-open); no 7-day-HRV-baseline-vs-improving-stretch read has landed (HRV is a stress proxy here) |
+| **B4/H4** | sudden HRV spike = parasympathetic swing, "don't be fooled by good values" | components present (HA10 morning-BB validate-SUPPORTED; HA11 U-dip train-SUPPORTED); full intraday composite **not modelled** (queued -> Q32); HRV-spike device-blocked |
+| **B5** | "it has sometimes been reported that people saw their HRV rise at the onset of, e.g., catching a cold" (distinct from PEM) | **opposite direction at our one window**: peri-event COVID onset showed stress up / HRV-proxy down (+0.86 SD, high-load), not a rise; single event, acute infection and LC onset temporally inseparable |
 | **C1** | "If you see more orange at night than is normal for you, it could indicate… PEM" | mean (HA07c) **NOT-SUPPORTED**; **variability (HA07d) SUPPORTED** — variability is the operative measure |
 | **C4** | "PEM **or low blood volume**, your stress remains high" | HA-C4 rejected daily; **HA-C4c PARTIAL** bout-level (weak, real) |
+| **D5** | paradoxically high morning body battery after overexertion precedes a crash (false-energy / "don't be fooled by good values") | HA10 (morning-BB peak) **NOT-SUPPORTED** single-pool (disc +4.1 pp, CI [-16.5, +16.8]); the paradoxical high-BB direction is only the validate-era half of a directionality-reversal, non-discriminative single-pool |
 | **H2** | mental activity "will also cause your HRV to drop that night or the following night… Garmin can't warn you about everything" | the activity-invisible / mental-PEM anchor (source-verified) |
 
 ---

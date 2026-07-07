@@ -1336,6 +1336,37 @@ Q27's household-illness fix.
 `analyses/descriptive/pem_pots_separability/`;
 `methodology/pem_pots_mechanism_framing.md`; HA11; Q27 (sibling prospective-logging).
 
+## Q32. Full intraday parasympathetic-swing composite (H4) vs felt-state
+
+**Status**: queued -- Layer-1 descriptive assembly first, then a pre-reg-deferred
+directional test (H4-composite), 2026-07-07. Primitives all exist; the composite
+object was never assembled.
+
+**Context**: Wiggers describes the parasympathetic swing / "freeze" as one intraday
+object -- a sudden HRV spike, body battery draining *faster* than normal, midday
+"low blue" stress lines, and body battery *rising* against that dip, with a small PEM
+felt 1-2 days later ("don't be fooled by good values"; the "singing seated" worked
+example, clean source lines 1463-1494). The catalog registers it three ways (B4 the
+outlier framing, D5 the high-morning-BB framing, H4 the composite), but only its
+*components* were ever tested -- HA10 (morning-BB paradox, validate-era SUPPORTED)
+and HA11 (within-day U-dip, train-era SUPPORTED). The full intraday composite has
+never been assembled as one object or checked against felt-state (catalog §J.4
+B4/H4 row: "full intraday composite not modelled").
+
+**Why queued**: (a) **descriptive assembly (do first, §2.1)** -- build the swing-day
+object from existing primitives: proxy-HRV rise (inverted overnight / within-day
+stress), faster-than-normal BB drain (`bb_drained_24h` / intraday BB slope), a midday
+stress U-dip (HA11 `u_dip_count`), BB rising against that dip; describe swing-day
+frequency over phases / around crashes / **vs felt-state**. (b) **pre-reg-deferred
+predictive extension** -- H4's directional claim ("a swing day raises crash /
+steep-drain risk at t+1/t+2") as a single-pool, reviewer-mode, fresh-session-reviewed
+pre-reg, built only once the descriptive assembly warrants it. The HRV-spike half stays
+a stress proxy and device-blocked-labelled throughout (FR245 HRV Status hardware-blocked).
+
+**Cross-refs**: `wiggers_testable_hypotheses.md` B4 / D5 / H4 + §J.1 / §J.4; HA10;
+HA11; `methodology/pem_pots_mechanism_framing.md`; Q29 (night state-5 sibling) /
+Q30 (recovery-shape sibling).
+
 ---
 
 *Add new queued items with a `Q<n>` header following the same shape:
