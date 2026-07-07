@@ -4,11 +4,12 @@
 
 - **Drafted**: 2026-07-07 by Claude (Opus 4.8), producer-mode, under authorization
   from the participant-researcher (repo owner).
-- **Status**: **DRAFT - NOT LOCKED.** A consolidation / session-log note. The
-  synthesis claims below (esp. the PEM/POTS separability reframing) are producer
-  drafts pending a **fresh-session** peer review per
-  [CONVENTIONS section 1.2](CONVENTIONS.md) before they are relied on downstream
-  (website, catalog lock).
+- **Status**: **ACCEPTED 2026-07-07.** A consolidation / session-log note. The
+  synthesis claims went through the independent fresh-context review
+  ([`reviews/pem-pots-reframing-2026-07-07.md`](reviews/pem-pots-reframing-2026-07-07.md),
+  MAJOR-REVISIONS folded), accepted by the participant-researcher as the
+  [CONVENTIONS section 1.2](CONVENTIONS.md) independent review; the wording below is
+  post-review.
 
 > "stress" = Garmin HRV-derived Stress Score (GSS), never mental / emotional
 > stress.
@@ -80,12 +81,24 @@ night HR variability, a second step->HRV dose anchor.
 
 The guide distinguishes two watch-visible mechanisms - **PEM** (load / recovery)
 and **POTS / orthostatic** (blood volume / positional) - and treats POTS largely
-descriptively, noting it waxes and wanes as symptoms are managed. We operationalised
-the split with proxy markers (methodology:
-[`methodology/pem_pots_mechanism_framing.md`](methodology/pem_pots_mechanism_framing.md),
-draft) - POTS-signature = within-day stress **U-dip**; PEM-signature = overnight
-stress load - and ran a descriptive separability analysis
+descriptively, managing it as symptoms wax and wane. We operationalised the split as
+**two descriptive watch signals** (methodology:
+[`methodology/pem_pots_mechanism_framing.md`](methodology/pem_pots_mechanism_framing.md))
+- a within-day **U-dip signal** and an overnight **stress-load signal** - and ran a
+descriptive separability analysis
 ([`analyses/descriptive/pem_pots_separability/findings.md`](analyses/descriptive/pem_pots_separability/findings.md)).
+
+**Label floor (important, corrected 2026-07-07).** These are **signals, not
+markers/detectors**: `PEM` / `POTS` name Wiggers' two *management threads* (pacing;
+electrolytes), and management is attributed to her, not claimed by us. An early
+"POTS-marker / axis" framing over-reached three ways and was walked back - "axis" (peer
+review), "POTS marker" (external PubMed review
+[`literature/reviews/pots_operationalisation_wearable_review.md`](literature/reviews/pots_operationalisation_wearable_review.md):
+no orthostatic precedent, off-polarity, posture-blind), and even "management-relevant"
+(participant: it presumes a mechanism our own U-dip null contradicts). The
+separability result is unaffected; only the label is capped. See methodology MD
+section 1.3 for the full provenance.
+
 Four findings:
 
 1. **Largely distinct** - the POTS and PEM markers are only weakly correlated

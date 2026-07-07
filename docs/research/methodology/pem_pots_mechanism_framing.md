@@ -4,10 +4,15 @@
 
 - **Drafted**: 2026-07-07 by Claude (Opus 4.8), producer-mode, under explicit
   authorization from the participant-researcher (repo owner).
-- **Status**: **DRAFT - NOT LOCKED.** Revisable freely until the participant
-  accepts. Per [CONVENTIONS section 1.2](../CONVENTIONS.md) (drafting under
-  reviewer-mode-with-authorization), the peer review of this MD must run in a
-  **different session** (fresh cold read, doc-only knowledge) before it locks.
+- **Status**: **ACCEPTED 2026-07-07** (peer-reviewed + literature-updated). The
+  independent fresh-context review
+  ([`reviews/pem-pots-reframing-2026-07-07.md`](../reviews/pem-pots-reframing-2026-07-07.md),
+  MAJOR-REVISIONS folded) was accepted as the section-1.2 independent review. A
+  subsequent **external PubMed review**
+  ([`literature/reviews/pots_operationalisation_wearable_review.md`](../literature/reviews/pots_operationalisation_wearable_review.md),
+  the section-2.2 input-2 literature leg) then **capped the POTS-marker language one
+  notch further** (no orthostatic precedent, off-polarity, watch blind to the
+  defining orthostatic axis); that ceiling is folded into section 3.1 + section 6.
 - **Why this MD exists**: the 2026-07-07 Wiggers-guide re-read surfaced that the
   guide distinguishes two watch-visible mechanisms - **PEM** and **POTS /
   orthostatic** - and that the project catalog is almost entirely PEM-framed. Two
@@ -27,26 +32,56 @@
 
 ### 1.1 It operationalises
 
-1. A **PEM-signature marker** and a **POTS-signature marker** at the day level, as
-   watch-data proxies, for *descriptive* separability / timing / felt-state reads
-   (the analysis at
-   [`analyses/descriptive/pem_pots_separability/`](../analyses/descriptive/pem_pots_separability/)).
+1. Two **descriptive watch signals** at the day level, for *descriptive*
+   separability / timing / felt-state reads (analysis at
+   [`analyses/descriptive/pem_pots_separability/`](../analyses/descriptive/pem_pots_separability/)):
+   the **overnight stress-load signal** (`stress_mean_sleep` z) and the **within-day
+   U-dip signal** (`u_dip_count` z).
 2. A **mechanism label** (`PEM` / `POTS` / `both` / `neither`) applied to each
-   Wiggers-catalog hypothesis, so the catalog stops being implicitly PEM-only.
+   Wiggers-catalog hypothesis, tagging which of the guide's mechanisms a statement is
+   about, so the catalog stops being implicitly PEM-only.
+
+**Naming discipline (added 2026-07-07).** We call these two things **signals /
+patterns**, not "markers." "PEM marker" / "POTS marker" would imply the watch
+*detects a condition*; "management-relevant" would imply a *mechanism* (that the
+state worsens if unmanaged, and that managing it helps) - neither is tested, and for
+the U-dip our own null (U-dip days are not lower in felt-state) argues against the
+"worsens" premise. So `PEM` and `POTS` here name **Wiggers' two management threads**
+(she paces for load; she takes electrolytes for the U-dip), and any *management* is
+attributed to her lived practice, never asserted by us.
 
 ### 1.2 It does NOT
 
-- Diagnose POTS or PEM. The markers are watch-signal proxies, not clinical labels;
-  a true orthostatic read needs positional / standing-HR data this device (FR245)
-  does not record.
+- Diagnose PEM or POTS, or claim the watch detects either. The two things are
+  descriptive watch signals, not clinical labels or detectors; a true orthostatic
+  read needs positional / standing-HR data this device (FR245) does not record.
+- Assume a mechanism. It does not claim that either state, unmanaged, worsens, nor
+  that management changes it - both are untested causal / interventional claims.
 - Lock a *predictive* (hypothesis-test) claim. Everything here is Layer-1
-  descriptive per [CONVENTIONS section 2.1](../CONVENTIONS.md); any forecast test
-  (e.g. "a POTS-signature day predicts next-day X") is a separate pre-registered
-  artefact, reviewer-mode, fresh-session reviewed.
-- Re-derive the HRV-proxy validity (that lives in
-  [`hrv_proxy_via_stress.md`](hrv_proxy_via_stress.md)) or the U-dip primitive
-  (that lives in [`stress_low_motion_primitive.md`](stress_low_motion_primitive.md)
+  descriptive per [CONVENTIONS section 2.1](../CONVENTIONS.md); any forecast test is
+  a separate pre-registered, reviewer-mode, fresh-session-reviewed artefact.
+- Re-derive the HRV-proxy validity ([`hrv_proxy_via_stress.md`](hrv_proxy_via_stress.md))
+  or the U-dip primitive ([`stress_low_motion_primitive.md`](stress_low_motion_primitive.md)
   + HA11).
+
+### 1.3 Provenance of the labels (three corrections, honest record)
+
+The label on the second signal was walked back three times, each removing an
+implicit claim it was never entitled to:
+
+1. Wiggers has POTS and manages the U-dip with electrolytes; the participant,
+   following her, asked to "look for POTS-related findings, mainly descriptive."
+   Neither Wiggers nor that ask calls the U-dip a "POTS marker" - she *manages* a
+   felt pattern, she does not claim the watch *detects* POTS.
+2. This MD's first draft over-reached, building a "POTS-signature marker / axis" from
+   `u_dip_count`. The independent peer review cut "axis" to "signal".
+3. The external PubMed review ([`pots_operationalisation_wearable_review.md`](../literature/reviews/pots_operationalisation_wearable_review.md))
+   then cut "POTS marker" to "as-if-orthostatic" (no precedent, off-polarity,
+   posture-blind).
+4. The participant then flagged that even "management-relevant signal" over-reaches -
+   it presumes a mechanism (unmanaged -> worse) our own null contradicts. **Final
+   floor: two distinct descriptive patterns; management is Wiggers' practice, not our
+   claim.**
 
 ---
 
@@ -76,37 +111,59 @@ MD makes the split explicit and gives it a measurement.
 
 ## 3. The markers (section 2.2 core choice)
 
-### 3.1 POTS-signature marker = within-day stress U-dip (`u_dip_count` z)
+### 3.1 The within-day U-dip signal (Wiggers' as-if-orthostatic side) = `u_dip_count` z
 
 **Choice**: elevate `u_dip_count` (the per-day count of within-day stress U-dips)
-against the personal lagged [d-90, d-30] trimmed baseline; a "POTS-signature day"
-= z >= 1.0.
+against the personal lagged [d-90, d-30] trimmed baseline; a signature day = z >= 1.0.
+
+**Label ceiling (added 2026-07-07 per the external literature review below):** this
+is **NOT a validated POTS marker.** The defensible label is *"a within-day
+autonomic-variability event the participant manages as if orthostatic,"* not "a POTS
+marker," "a POTS axis," or "the orthostatic signal." The Wiggers link is a patient
+management heuristic, not an instrument reading.
 
 **Reasoning (four inputs per section 2.2):**
 
 1. **Best practice**: latent-mechanism operationalisation should use the
-   *most-specific available observable*, and state its proxy status. Among this
-   corpus's watch signals, the U-dip is the one Wiggers ties *specifically* to the
+   most-specific available observable and state its proxy status. Among this
+   corpus's watch signals, the U-dip is the one Wiggers ties specifically to the
    orthostatic / blood-volume mechanism (not to generic autonomic load), so it is
-   the least-ambiguous POTS proxy available.
-2. **Literature / source**: the guide's own U-dip passage
-   (`wiggers_pacing_handleiding.txt`, the Orthostatic-Stress chapter): "I always
-   notice a suspicious dip in my stress where my body battery rises... I take
-   electrolytes as soon as I see a U dip." The U-dip is her personal
-   POTS-management trigger. The project already has HA11 characterising it.
-3. **Our tradeoff**: `u_dip_count` is *specific but narrow* - it captures one
-   orthostatic pattern, not the whole POTS picture (standing-HR, postprandial
-   stress, dizziness are off-instrument or absent). We weight **specificity over
-   coverage**: a narrow but mechanism-faithful marker is more honest for a
-   separability claim than a broad "autonomic dysregulation" composite that would
-   blur PEM and POTS together (which is exactly the thing we are trying to
-   separate).
-4. **Our limits**: n=1; no positional data; the notes carry no orthostatic-symptom
-   vocabulary (2 of 246 signature-days corroborated), so the marker cannot be
-   validated against felt orthostatic symptoms on the current record - a
-   prospective-logging gap, stated, not hidden.
+   the least-ambiguous *managed-as-if-orthostatic* proxy available - but see input 2
+   for why "POTS proxy" itself overreaches.
+2. **Literature / source**: two legs that pull in opposite directions.
+   (i) the guide's own U-dip passage (`wiggers_pacing_handleiding.txt`,
+   Orthostatic-Stress chapter): "I always notice a suspicious dip in my stress where
+   my body battery rises... I take electrolytes as soon as I see a U dip" - her
+   personal blood-volume-management trigger, characterised in HA11.
+   (ii) the **external PubMed review**
+   [`literature/reviews/pots_operationalisation_wearable_review.md`](../literature/reviews/pots_operationalisation_wearable_review.md)
+   caps the label: POTS is defined *everywhere* by an orthostatic HR delta (>=30 bpm
+   on standing/tilt) this posture-blind device cannot compute; the within-day
+   stress-trough count has **no precedent** as a POTS / orthostatic marker; and its
+   **polarity runs backwards** - a stress U-dip is a transient HRV *rise* (vagal
+   blip), whereas the population POTS signature is HRV *withdrawal* (reduced RMSSD/HF,
+   raised LF/HF), most sharply on standing (Inbaraj 2022; Orjatsalo 2020). So the
+   U-dip is not merely un-validated as orthostatic, it points the *other way* from
+   the canonical POTS autonomic pattern - strengthening HA11's own "HRV-shape, not
+   orthostatic-specific" caveat into a substantive objection.
+3. **Our tradeoff**: `u_dip_count` is specific but narrow - one within-day autonomic
+   pattern, not POTS (standing-HR, blood pressure, cerebral blood flow, and the
+   orthostatic delta itself are all off-instrument). We weight **specificity over
+   coverage** because the question is *separability* (are two watch markers the same
+   days or different days), for which a narrow mechanism-faithful marker is more
+   honest than a broad "autonomic dysregulation" composite that blurs the two. The
+   r ~ 0.09 separability survives on those terms; **only the label is capped.**
+4. **Our limits**: n=1; **no posture / BP / blood-volume / cerebral-blood-flow
+   channel**, so the variable that *defines* POTS cannot be formed; the marker's
+   polarity is off-canonical (input 2); the overnight PEM channel looks at the time
+   POTS is *quietest* (asleep HR ~ normal in POTS, burden is daytime / post-waking,
+   Cai 2020 - echoed in-corpus by R30 rejecting resting HR as confounder-dominated);
+   and the notes carry no orthostatic-symptom vocabulary (2 of 246 signature-days
+   corroborated). The one channel that would let the watch speak to POTS on the
+   literature's terms is a **posture / standing-HR or orthostatic-symptom tag** - a
+   prospective-logging fix (queued), not something the current record supports.
 
-### 3.2 PEM-signature marker = overnight stress (`stress_mean_sleep` z)
+### 3.2 The overnight stress-load signal (the load / PEM side) = `stress_mean_sleep` z
 
 **Choice**: elevate `stress_mean_sleep` (the HRV proxy; higher stress = lower HRV)
 against the same lagged baseline; "PEM-signature day" = z >= 1.0.

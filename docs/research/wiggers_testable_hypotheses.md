@@ -148,12 +148,14 @@ Source: [`methodology/garmin_indicators_audit.md`](methodology/garmin_indicators
 
 ---
 
-## J. PEM vs POTS: mechanism labels + the orthostatic/POTS family (DRAFT, added 2026-07-07)
+## J. PEM vs POTS: mechanism labels + the orthostatic/POTS family (added 2026-07-07)
 
-> **Status: DRAFT, not locked.** Drafted 2026-07-07 by Claude (Opus 4.8),
-> producer-mode, under authorization (this is a `wiggers_*.md` reviewer-mode
-> artefact per [CONVENTIONS §1.2](CONVENTIONS.md); peer review runs in a
-> **different session**). Operationalisation reasoned in
+> **Status: ACCEPTED 2026-07-07.** Drafted 2026-07-07 by Claude (Opus 4.8),
+> producer-mode, under authorization (a `wiggers_*.md` reviewer-mode artefact per
+> [CONVENTIONS §1.2](CONVENTIONS.md)); the independent fresh-context review
+> ([`reviews/pem-pots-reframing-2026-07-07.md`](reviews/pem-pots-reframing-2026-07-07.md),
+> MAJOR-REVISIONS folded) was accepted as the section-1.2 review. Operationalisation
+> reasoned in
 > [`methodology/pem_pots_mechanism_framing.md`](methodology/pem_pots_mechanism_framing.md).
 > Verbatim quotes below are from the clean source
 > `literature/wiggers_pacing_handleiding.txt` (pdftotext -raw); the §"Source
@@ -173,7 +175,16 @@ independent; <1% shared variance)
 ([`analyses/descriptive/pem_pots_separability/`](analyses/descriptive/pem_pots_separability/)),
 so they are **largely distinct days**. The POTS marker is a thin, sparse substrate
 (u_dip is 43% zeros), so it is a low-resolution *signal*, not an "axis" in its own
-right. It is descriptively **more frequent in the earlier pacing phase than the
+right. **Label ceiling (external PubMed review**
+[`literature/reviews/pots_operationalisation_wearable_review.md`](literature/reviews/pots_operationalisation_wearable_review.md)**):**
+the U-dip is **not a validated POTS marker** - POTS is defined by an orthostatic HR
+delta this posture-blind device cannot compute, the within-day-stress-trough approach
+has no precedent, and its polarity runs *opposite* the population POTS signature (a
+U-dip is a vagal *rise*; POTS is HRV withdrawal). Defensible as "a within-day
+autonomic-variability event managed as if orthostatic," not "a POTS marker." The
+POTS/orthostatic *family* below (O1-O8) is Wiggers' guide content; the *watch marker*
+we can build for it is only the capped U-dip. It is descriptively **more frequent in
+the earlier pacing phase than the
 citalopram phase**, but that boundary IS citalopram onset, so this read is
 era-confounded (R19 discipline: descriptive variation, not a time-trend verdict).
 

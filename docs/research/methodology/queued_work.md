@@ -1309,20 +1309,31 @@ one testable predictive claim (pre-reg), one prospective logging change.
 
 **Context**: the largest catalog gap (per the 2026-07-07 re-read) is a missing
 POTS / orthostatic family -- `wiggers_testable_hypotheses.md` §J.2 (O1-O8). The
-separability analysis established the POTS axis is real and separable (r ~ 0.09)
-and time-varying (recedes into the citalopram era). Three follow-ups:
+separability analysis established the U-dip signal is separable from the load signal
+(r ~ 0.09, distinct days) and descriptively more frequent early (era-confounded by
+citalopram onset). **The external PubMed review
+(`literature/reviews/pots_operationalisation_wearable_review.md`) capped the label**:
+the U-dip is NOT a validated POTS marker (no orthostatic precedent, off-polarity,
+posture-blind), only "a within-day pattern managed as if orthostatic." Three
+follow-ups:
 
 **Why queued**: (a) **descriptive family write-up** -- fold O1-O8 into the catalog
 proper once §J is reviewed; (b) **the one testable predictive claim, O5**: "water +
 salt + compression significantly reduce daytime stress scores" -- a pre-registered
 intervention-effect test (needs the electrolyte/compression log; single-pool,
-reviewer-mode, fresh-session reviewed); (c) **prospective orthostatic-symptom
-logging** -- the notes carry no orthostatic vocabulary (2/246 POTS-signature days
-corroborated), so a lightweight "dizzy-on-standing / palpitations (y/n)" daily field
-would let a future analysis corroborate the watch U-dip against felt symptoms (same
-shape as Q27's household-illness fix).
+reviewer-mode, fresh-session reviewed); (c) **prospective posture / orthostatic-symptom
+logging -- the one channel that would let the watch speak to POTS on the literature's
+own terms.** The review is explicit: POTS is defined by a standing HR delta the FR245
+cannot form. A lightweight daily field -- a **standing-HR / lean-test reading** and/or
+"dizzy-on-standing / palpitations (y/n)" -- would (i) let a future analysis corroborate
+the watch U-dip against felt orthostatic symptoms (the notes carry no such vocabulary,
+2/246 corroborated), and (ii) supply the orthostatic delta itself, moving the POTS side
+from "managed-as-if" to something the instrument can actually check. Same shape as
+Q27's household-illness fix.
 
-**Cross-refs**: `wiggers_testable_hypotheses.md` §J.2; `analyses/descriptive/pem_pots_separability/`;
+**Cross-refs**: `wiggers_testable_hypotheses.md` §J.2;
+`literature/reviews/pots_operationalisation_wearable_review.md`;
+`analyses/descriptive/pem_pots_separability/`;
 `methodology/pem_pots_mechanism_framing.md`; HA11; Q27 (sibling prospective-logging).
 
 ---

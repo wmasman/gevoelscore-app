@@ -3,9 +3,11 @@
 ## Authorship / status
 
 - **Drafted** 2026-07-07 by Claude (Opus 4.8), producer-mode, under authorization.
-- **Status: DRAFT - NOT for the site yet.** A synthesis card carrying claims; per
-  [CONVENTIONS §1.2](../../../CONVENTIONS.md) it must clear a **fresh-session** peer
-  review before it ships. It is staged for that review.
+- **Status: CLEARED FOR THE SITE 2026-07-07.** The independent fresh-context review
+  ([`../../../reviews/pem-pots-reframing-2026-07-07.md`](../../../reviews/pem-pots-reframing-2026-07-07.md),
+  MAJOR-REVISIONS folded) was accepted as the [CONVENTIONS §1.2](../../../CONVENTIONS.md)
+  review; the card's claims are review-corrected. Ready for the site team to consume,
+  with the section-5 honesty floor kept intact.
 - **This is descriptive input for a still-open story, not a story.** The site
   narrative is malleable; this card gives the site team what the data shows about
   two mechanisms so they can weave it in however the narrative wants. It does not
@@ -27,42 +29,48 @@ so can this body's data:
 
 - **PEM** - the *load / recovery* story: overexertion shows up as elevated resting
   HR, dropping HRV, more orange night stress, the parasympathetic swing.
-- **POTS / orthostatic** - the *blood-volume / positional* story: the heart racing
-  on standing or lying still, the stress "U-dip," stress that stays high after
-  eating - which Wiggers manages with salt, electrolytes, and compression, and which
-  **comes and goes as symptoms change.**
+- **POTS / orthostatic** (Wiggers' framing) - the *blood-volume / positional* story:
+  the heart racing on standing or lying still, the stress "U-dip," stress that stays
+  high after eating - which Wiggers manages with salt, electrolytes, and compression,
+  and which **comes and goes as symptoms change.** (Caveat carried below: the watch
+  *signal* we can measure for this side is not a validated POTS reading - see
+  section 3.)
 
 The useful thing for the site: in this body's data these are **two different
 things, on different days** - which is what the rest of this card shows.
 
 ## 2. They are largely distinct
 
-The two watch-markers (a POTS marker = the within-day stress U-dip; a PEM marker =
-overnight stress load) correlate only **weakly** (r ≈ 0.09; they share under 1% of
-variance). The correlation is faintly positive, not zero - so "largely distinct,"
+The two watch-markers (the within-day stress U-dip - Wiggers' as-if-orthostatic
+signal, see section 3; and a PEM marker = overnight stress load) correlate only
+**weakly** (r ≈ 0.09; they share under 1% of variance). The correlation is faintly positive, not zero - so "largely distinct,"
 not "independent." Of the flagged days, most are one or the other: **169 POTS-only,
 219 PEM-only, 77 both.** A reader can hold them as largely-separate signals, not two
 names for one bad day.
 
-## 3. Which POTS signal did we find, and when?
+## 3. The second signal, and the honest limit on calling it "POTS"
 
-The one clearly-orthostatic signal on this watch is the **stress U-dip** (the
-pattern Wiggers ties to blood volume and treats with electrolytes). We find it, and
-it appears **more in the earlier pacing-habit years (about 27% of days) than in the
-recent years (about 19%)**, consistent with the earlier crash result (HA11) and the
-lived experience that the POTS picture eases as it is managed. **Honest caveat the
-site must keep inline:** those "recent years" begin exactly at the start of the
-citalopram medication, so this is a *suggestive* pattern, **not a clean independent
-time-trend** - the timeline can't separate "POTS easing" from "the medication era."
-The standing-HR / lean-test orthostatic signals Wiggers describes are
-**off-instrument** here (the watch has no posture data), so they are named as
-"can't see on this device," not tested.
+The second watch signal is the **stress U-dip** - the pattern Wiggers ties to blood
+volume and treats with electrolytes. **Be careful with the label.** An outside
+literature check (see section 5) is clear that this is **not a validated POTS
+reading**: the watch cannot see the thing that *defines* POTS (the heart-rate jump
+on standing - there is no posture sensor), the within-day-stress-dip approach has no
+precedent in the POTS research, and the U-dip's direction actually runs *opposite*
+the textbook POTS autonomic pattern (a U-dip is a brief calming/vagal blip; POTS is
+the reverse). So the honest description is *"a within-day pattern the participant has
+learned to manage as if it were orthostatic,"* not "the POTS signal." With that
+caveat: we do find the U-dip, and it appears **more in the earlier years (about 27%
+of days) than the recent years (about 19%)** - but those recent years begin exactly
+at the citalopram-medication onset, so this is a *suggestive* pattern, **not a clean
+time-trend** (the timeline can't separate "it eased" from "the medication era"). The
+standing-HR / lean-test signals Wiggers describes are **off-instrument** (no posture
+data), named as "can't see on this device," not tested.
 
 ## 4. The counter-intuitive, honest bit
 
-**POTS-signature days are NOT the low-felt-state days.** On days the orthostatic
-U-dip fires, the felt-state (gevoelscore) is about the same as ordinary days (if
-anything a touch higher) - a **genuine null** (p = 0.19). It is the **PEM**
+**U-dip days are NOT the low-felt-state days.** On days the U-dip fires, the
+felt-state (gevoelscore) is about the same as ordinary days (if anything a touch
+higher) - a **genuine null** (p = 0.19). It is the **PEM**
 signature - the overnight load - that coincides with feeling worse (a real,
 crash-drop-robust difference), which is exactly Wiggers' "don't be fooled by good
 values": the orthostatic pattern is *dysregulation that need not feel bad*, which is
@@ -72,12 +80,18 @@ artefact of crash days, not a real felt-state effect.)
 
 ## 5. Honesty floor (must ship with it)
 
-- **Proxies, not diagnoses.** "POTS-signature" = the stress U-dip proxy;
-  "PEM-signature" = the overnight HRV-proxy load. Neither is a clinical label, and
-  a true orthostatic read would need standing-HR data this watch does not record.
+- **The U-dip is NOT a validated POTS reading** (external literature check,
+  `pots_operationalisation_wearable_review.md`). POTS is defined by a standing
+  heart-rate jump the watch can't see (no posture sensor); the within-day-stress-dip
+  approach has no precedent in POTS research; and the U-dip's direction runs
+  *opposite* the textbook POTS autonomic pattern. Honest label: "a within-day pattern
+  the participant manages as if orthostatic," not "a POTS marker." The site must not
+  present it as "we can see your POTS."
+- **Proxies, not diagnoses.** Both markers are proxies (stress U-dip; overnight
+  HRV-proxy load), not clinical labels.
 - **Descriptive, n=1, wide error.** The felt-state differences are small on a 1-6
   scale; the separability is an association, not a mechanism.
-- **The notes can't corroborate the POTS days** (the record has no
+- **The notes can't corroborate the U-dip days** (the record has no
   orthostatic-symptom vocabulary) - so this rests on the watch pattern alone.
 - **The "HRV" line is a stress proxy** (device limitation), labelled as such.
 

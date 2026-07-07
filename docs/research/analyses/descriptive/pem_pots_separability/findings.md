@@ -10,20 +10,25 @@ Reproducible via [`run.py`](run.py).
 > "stress" = Garmin HRV-derived Stress Score (GSS), never mental / emotional
 > stress.
 
-**Operationalisation (PROXY markers, grounded in Wiggers' own framing; not a
-diagnosis):**
-- **POTS-signature marker** = elevated within-day stress **U-dip** (`u_dip_count`
-  z vs personal baseline) - the orthostatic / blood-volume pattern Wiggers ties to
-  ORS / electrolytes, and the one relatively-specific orthostatic watch-signal on
-  this corpus (the substrate of HA11).
-- **PEM-signature marker** = elevated overnight stress (`stress_mean_sleep` z, the
-  HRV-proxy autonomic load), with `stress_stdev_sleep` as a secondary read.
+**Operationalisation (two descriptive watch SIGNALS, not markers/detectors of a
+condition; grounded in Wiggers' own framing; not a diagnosis):**
+- the **within-day U-dip signal** = elevated within-day stress **U-dip**
+  (`u_dip_count` z vs personal baseline) - the pattern Wiggers manages as if
+  orthostatic (electrolytes / ORS), the substrate of HA11. NB: this is Wiggers'
+  as-if-orthostatic side, **not a validated POTS marker** (see caveats).
+- the **overnight stress-load signal** = elevated overnight stress
+  (`stress_mean_sleep` z, the HRV-proxy autonomic load; the load / PEM side), with
+  `stress_stdev_sleep` as a secondary read.
 
-Both z vs the personal lagged [d-90, d-30] trimmed baseline (project standard). A
-"signature day" = marker z >= 1.0 (stated threshold; the separability read is the
-threshold-free correlation). Single-pool, baseline-relative, aggregated. No causal
-marks per [CONVENTIONS section 4.1](../../../CONVENTIONS.md); the markers are
-proxies and the associations are not mechanism. n_days with both markers computable
+Naming note: `PEM` / `POTS` refer to **Wiggers' two management threads** (pacing;
+electrolytes), not to conditions the watch detects; any *management* is her lived
+practice, not a claim of ours. Both signals: z vs the personal lagged [d-90, d-30]
+trimmed baseline (project standard). A "signature day" = signal z >= 1.0 (stated
+threshold; the separability read is the threshold-free correlation). Single-pool,
+baseline-relative, aggregated. No causal marks per
+[CONVENTIONS section 4.1](../../../CONVENTIONS.md); the signals are proxies, the
+associations are not mechanism, and we make **no claim that either state worsens if
+unmanaged or that management helps**. n_days with both markers computable
 = 1090 (of 1372; the [d-90,d-30] baseline needs 40+ prior days, so the earliest
 weeks and phase 3 drop out).
 
@@ -137,6 +142,15 @@ future analysis corroborate the watch U-dip against felt orthostatic symptoms.
   "PEM-signature" = the overnight HRV-proxy load. Neither is a clinical label; a
   true orthostatic read would need positional / standing-HR data this device does
   not provide.
+- **The U-dip is not a validated POTS marker** (external literature review,
+  [`../../../literature/reviews/pots_operationalisation_wearable_review.md`](../../../literature/reviews/pots_operationalisation_wearable_review.md)):
+  POTS is defined by an orthostatic HR delta this posture-blind device cannot form;
+  the within-day stress-trough count has no precedent as a POTS marker; and its
+  polarity runs *opposite* the population POTS signature (a stress U-dip is a
+  transient HRV rise; POTS is HRV withdrawal). The defensible label is "a within-day
+  autonomic-variability event the participant manages as if orthostatic," not "a
+  POTS marker." This does not affect the separability result (two distinct signals);
+  it caps only what the second signal may be *called*.
 - **The POTS marker is a thin substrate.** `u_dip_count` is a sparse low count -
   43% of days are zero and the max is 5, so a signature day (z >= 1.0) turns on a
   small integer difference. This is enough for a descriptive *marker* but does not
