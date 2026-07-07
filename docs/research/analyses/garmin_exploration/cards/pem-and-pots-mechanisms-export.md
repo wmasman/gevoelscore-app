@@ -5,7 +5,7 @@
 ## Authorship / status
 
 - **Drafted** 2026-07-07 by Claude (Opus 4.8), producer-mode, under authorization.
-- **Status: CLEARED FOR THE SITE 2026-07-07.** The independent fresh-context review
+- **Status: CLEARED FOR THE SITE 2026-07-07 (LOCKED r1 by user acceptance 2026-07-07).** The independent fresh-context review
   ([`../../../reviews/pem-pots-reframing-2026-07-07.md`](../../../reviews/pem-pots-reframing-2026-07-07.md),
   MAJOR-REVISIONS folded) was accepted as the [CONVENTIONS §1.2](../../../CONVENTIONS.md)
   review; the card's claims are review-corrected. Ready for the site team to consume,

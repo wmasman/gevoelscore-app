@@ -262,8 +262,7 @@ discriminator, not a construct that could carry an "axis" on its own.
 
 ## 7. Status + review hooks
 
-- **Status**: DRAFT, unlocked, drafted 2026-07-07 producer-mode under
-  authorization. Awaiting fresh-session peer review per section 1.2.
+- **Status**: **LOCKED r1 2026-07-07** by user acceptance per [CONVENTIONS section 1.2](../CONVENTIONS.md). The independent fresh-context review at [`reviews/pem-pots-reframing-2026-07-07.md`](../reviews/pem-pots-reframing-2026-07-07.md) (MAJOR-REVISIONS folded) was accepted as the section-1.2 independent review; the external PubMed review at [`literature/reviews/pots_operationalisation_wearable_review.md`](../literature/reviews/pots_operationalisation_wearable_review.md) was folded into section 3.1 as the label ceiling; label-discipline caveats (2026-07-07) landed on all consumers (this MD's own section-1.3 provenance chain; session note; review report; catalog section J; site card at [`analyses/garmin_exploration/cards/pem-and-pots-mechanisms-export.md`](../analyses/garmin_exploration/cards/pem-and-pots-mechanisms-export.md); separability findings at [`analyses/descriptive/pem_pots_separability/findings.md`](../analyses/descriptive/pem_pots_separability/findings.md)). Header ACCEPTED-2026-07-07 line (Authorship block) is reconciled at r1 lock.
 - **Review should push on**: the u_dip-as-POTS-proxy validity (is one orthostatic
   pattern enough to carry a "POTS axis" claim); the threshold-free correlation as
   the separability statistic (vs the thresholded contingency); the descriptive vs

@@ -156,6 +156,41 @@ that day for the multi-day analysis and patterns.
 
 ---
 
+## Addendum 2026-07-07 — era-specific monitoring practice refinement
+
+*Recorded 2026-07-07 during the Stage I §4.6 lived-experience-prior articulation at the Phase B lock session for HA11-bout-redo (see [`analyses/interpretation/HA11-bout-redo.md`](analyses/interpretation/HA11-bout-redo.md) §4.6). The general "How I used the Garmin for pacing" section above describes the pacing practice at a high level; this addendum specifies what was actually being watched during the **unmedicated × HA11 v1 train era (2022-09-03 → 2023-12-31, roughly month 2 through month 17 of LC, pre-citalopram)**.*
+
+### Verbatim self-report
+
+> "I didn't notice a specific pattern, but crashes felt un-predictable in the moment. I did not use the stress levels that much back then and did not monitor them really closely."
+>
+> "This is by the way also interesting and relevant for my pacing discipline. I did look at body battery, and at stress peaks sometimes, but stress was not something I monitored closely."
+
+### What was tactically monitored in this era
+
+- **Body battery** — looked at sometimes; used per the general practice above (indicator at day-start; don't empty at day-end; below 15/20/25 warns).
+- **Stress peaks** — looked at sometimes; discrete high-stress events flagged when I glanced.
+
+### What was NOT closely monitored in this era
+
+- The **continuous stress trace / composite pattern** was NOT closely monitored. Stress was not something I watched closely.
+
+### Why this refinement matters for research interpretation
+
+The distinction between "watched BB + peaks" and "did not closely watch continuous stress" is a **resolution-of-attention boundary**. Sub-15-minute bout-shape signals (e.g., `bout_n_fast_recovery_day` fast-recovery bouts, per [`methodology/bout_level_recovery_dynamics.md`](methodology/bout_level_recovery_dynamics.md) §6.1) live at the continuous-stress-trace resolution — structurally invisible to a BB + peak-glance monitoring practice. Any watch-derived pattern claim about this era must respect what was actually attended to at the time:
+
+- Analytical questions like *"did the participant feel a lead-up signal before crashes?"* — no, per verbatim (and no monitoring practice at BB + peak-glance resolution would have surfaced sub-minute patterns anyway).
+- Actionability claims like *"the participant could have used [watch pattern] as a real-time warning"* — must specify which watch signal + at what resolution + whether the participant's actual monitoring practice in that era could have caught it.
+- Cross-era comparisons — this addendum describes the **unmedicated × train era only**; post-citalopram (2024-04-09+) + afbouw (2026) monitoring practice may differ. If future analyses surface different monitoring behaviour in other eras, extend this section with era-specific sub-headings rather than overwriting.
+
+### Cross-references (in addition to the "Where this connects" table below)
+
+- [`analyses/interpretation/HA11-bout-redo.md`](analyses/interpretation/HA11-bout-redo.md) §4.6 — the Phase B lock session where the refinement was articulated (dispatcher's dry-run default-reading over-projected parent MD motivation onto felt prior; user articulation surfaced the null-felt-prior + BB-peak-tactical-monitoring reality).
+- [`methodology/bout_level_recovery_dynamics.md`](methodology/bout_level_recovery_dynamics.md) §6.1 — the operand (`bout_n_fast_recovery_day`) whose sub-15-minute resolution motivated the era-specific attention-boundary framing.
+- Downstream cascade: HA-C4c Phase C actionability discussion must respect this monitoring-attention boundary (cannot presume the participant would have felt or caught a bout-level lead-up signal in this era).
+
+---
+
 ## Where this connects to existing work
 
 *Neutral forward pointers, not interpretation. Each segment maps to
