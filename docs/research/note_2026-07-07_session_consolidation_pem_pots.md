@@ -88,22 +88,29 @@ stress load - and ran a descriptive separability analysis
 ([`analyses/descriptive/pem_pots_separability/findings.md`](analyses/descriptive/pem_pots_separability/findings.md)).
 Four findings:
 
-1. **Separable, not correlated** - r(POTS, PEM markers) = +0.09; signature-days are
+1. **Largely distinct** - the POTS and PEM markers are only weakly correlated
+   (r = +0.09, 95% CI [0.03, 0.15], sharing under 1% of variance); the CI excludes
+   zero, so they are weakly *positive*, not independent, but signature-days are
    mostly one mechanism or the other (169 POTS-only, 219 PEM-only, 77 both). Warrant
-   for a two-axis catalog, not a taxonomy preference.
-2. **Time-varying** - the POTS U-dip signature is stronger in the pre-citalopram
-   pacing-habit era (4b, 27% of days) and recedes into the citalopram era (5,
-   18.7%), matching HA11 and "comes and goes as symptoms change."
-3. **POTS days are NOT lower in felt-state** (POTS-only 4.57 ~ neither 4.48); the
-   **PEM** marker tracks lower gevoelscore (4.15), lowest when both co-occur (4.03).
-   The orthostatic pattern is "dysregulated but not necessarily feeling bad"; the
-   PEM load is what coincides with feeling worse.
+   for reading both signals separately.
+2. **Suggestively time-varying (era-confounded)** - the POTS U-dip signature is
+   stronger in the pre-citalopram pacing-habit phase (4b, 27% of days) than the
+   citalopram phase (5, 18.7%). But the 4b/5 boundary IS citalopram onset, so this
+   is the retired era-split in another guise (R19 discipline): a suggestive
+   descriptive pattern, not a clean time-trend.
+3. **PEM days track lower felt-state; POTS days do not** - PEM-only 4.15 vs neither
+   4.48 is real (MWU p < 0.0001, d = -0.40) and survives a crash-drop check;
+   POTS-only 4.57 is a genuine null (p = 0.19). (The earlier "both together = lowest"
+   was **dropped on review** as a crash artefact - the "both" group is 24.7%
+   crash-days, and crashes are defined partly on low felt-state.)
 4. **Notes can't corroborate POTS** (2 / 246 signature-days carry any
    orthostatic-symptom keyword) - a prospective-logging gap.
 
 All four are descriptive, n=1, wide error, proxy markers, small felt-state
-magnitudes - these are the claims the fresh-session review must push hardest on
-before they go public.
+magnitudes. Findings 1-3 are the **post-review** wording - they went through the
+independent fresh-context review (MAJOR-REVISIONS-NEEDED, folded), which is why the
+separability claim is softened from "not correlated" and the "both = lowest" beat is
+gone. See [`reviews/pem-pots-reframing-2026-07-07.md`](reviews/pem-pots-reframing-2026-07-07.md).
 
 ---
 
@@ -136,15 +143,26 @@ before they go public.
 
 ---
 
-## What needs the fresh-session review (the conclusions audit)
+## The conclusions audit (DONE 2026-07-07)
 
-Per [CONVENTIONS section 1.2](CONVENTIONS.md), a **different session** cold-reads:
-this note, the methodology MD, the separability findings, and (once drafted) the
-catalog edits + website card, via the 4-layer checklist in `reviews/`. Push hardest
-on: the separability headline ("PEM and POTS carry felt-state differently"), R30's
-"confounder-dominated," R1's "departure at onset," and the u_dip-as-POTS-proxy
-validity. R20 / R19 are lower-risk (overlays on already-reviewed locked verdicts /
-descriptive backdrop).
+Per [CONVENTIONS section 1.2](CONVENTIONS.md), an independent **fresh-context**
+review cold-read this note, the methodology MD, the separability findings + script,
+the catalog edits, and the website card, via the 4-layer checklist -> report at
+[`reviews/pem-pots-reframing-2026-07-07.md`](reviews/pem-pots-reframing-2026-07-07.md).
+The reviewer was an isolated-context subagent (no exposure to the drafting session);
+this is a reasonable equivalent of a fresh session, but not a user-initiated one, so
+a final user-initiated confirmation remains optional.
+
+**Verdict: MAJOR-REVISIONS-NEEDED, now folded.** The numbers reproduced exactly, but
+three public claims overstated and were corrected: (1) "separable, not correlated" ->
+"weakly correlated but largely distinct" (the r CI excludes zero); (2) "both
+mechanisms = lowest felt-state" **dropped** (crash-driven / circular per the §3.4
+crash-drop check that was missing); (3) the "POTS recedes over time" timing read now
+carries the citalopram-onset era-confound inline (not just in a footer). Minors
+folded: MWU tests added for the felt-state contrasts, and "axis / family" softened
+given the thin u_dip substrate (43% zeros). The reviewer could not verify HA11's
+era-handling (relied on for the timing read) - handled by framing the timing read as
+era-confounded descriptive variation throughout.
 
 ---
 

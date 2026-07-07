@@ -34,6 +34,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy import stats as sps
 
 HERE = Path(__file__).resolve().parent
 STRATUM_4_START = date(2022, 9, 3)
@@ -177,6 +178,64 @@ def main():
     pots_days = list(both.loc[both["pots_day"], "date"])
     notes = notes_pots_corroboration(pots_days)
 
+    # 6. Review-requested statistics (2026-07-07 peer review).
+    # (a) CI on Pearson r (Fisher z) + Spearman p -- the correlation is small but
+    #     the CI decides whether "independent" is warranted.
+    def _fisher_ci(r, nn):
+        if nn < 4 or not np.isfinite(r):
+            return (float("nan"), float("nan"))
+        z = np.arctanh(r)
+        se = 1.0 / np.sqrt(nn - 3)
+        return (round(float(np.tanh(z - 1.96 * se)), 3), round(float(np.tanh(z + 1.96 * se)), 3))
+    r_lo, r_hi = _fisher_ci(pear, n)
+    _sp_rho, _sp_p = sps.spearmanr(both["pots_z"], both["pem_z"])
+    # (b) CONVENTIONS 3.4 crash-drop sensitivity -- is_crash is defined partly on
+    #     low gevoelscore, so the felt-state contrasts and correlation are re-run
+    #     with crash days dropped.
+    nc = both[both["is_crash"] != True]
+    pear_nc = round(float(np.corrcoef(nc["pots_z"], nc["pem_z"])[0, 1]), 3) if len(nc) > 3 else float("nan")
+
+    def _gsm(frame, mask):
+        v = frame.loc[mask, "gevoelscore"].dropna()
+        return round(float(v.mean()), 3) if len(v) else None
+    crashdrop_groups = {
+        "neither": _gsm(nc, (~nc["pots_day"]) & (~nc["pem_day"])),
+        "pots_only": _gsm(nc, (nc["pots_day"]) & (~nc["pem_day"])),
+        "pem_only": _gsm(nc, (~nc["pots_day"]) & (nc["pem_day"])),
+        "both": _gsm(nc, (nc["pots_day"]) & (nc["pem_day"])),
+    }
+
+    def _crash_pct(mask):
+        m = mask & (both["is_crash"] == True)
+        return round(100.0 * m.sum() / max(1, mask.sum()), 1)
+    crash_pct_by_group = {
+        "neither": _crash_pct((~both["pots_day"]) & (~both["pem_day"])),
+        "pots_only": _crash_pct((both["pots_day"]) & (~both["pem_day"])),
+        "pem_only": _crash_pct((~both["pots_day"]) & (both["pem_day"])),
+        "both": _crash_pct((both["pots_day"]) & (both["pem_day"])),
+    }
+    # (c) MWU + Cohen's d for the felt-state contrasts vs neither.
+    neither_mask = (~both["pots_day"]) & (~both["pem_day"])
+
+    def _mwu(mask1):
+        aa = both.loc[mask1, "gevoelscore"].dropna().to_numpy(dtype=float)
+        bb = both.loc[neither_mask, "gevoelscore"].dropna().to_numpy(dtype=float)
+        if len(aa) < 5 or len(bb) < 5:
+            return None
+        _u, p = sps.mannwhitneyu(aa, bb, alternative="two-sided")
+        sp_ = np.sqrt(((len(aa) - 1) * aa.var(ddof=1) + (len(bb) - 1) * bb.var(ddof=1)) / (len(aa) + len(bb) - 2))
+        d = round(float((aa.mean() - bb.mean()) / sp_), 3) if sp_ > 0 else float("nan")
+        return {"p_value": round(float(p), 5), "cohens_d_vs_neither": d, "n1": int(len(aa)), "n_neither": int(len(bb))}
+    mwu_tests = {
+        "pem_only_vs_neither": _mwu((~both["pots_day"]) & (both["pem_day"])),
+        "pots_only_vs_neither": _mwu((both["pots_day"]) & (~both["pem_day"])),
+        "both_vs_neither": _mwu((both["pots_day"]) & (both["pem_day"])),
+    }
+    # marker substrate transparency (thin-substrate flag)
+    ud = both["u_dip_count"].dropna()
+    pots_substrate = {"pct_zero": round(float((ud == 0).mean() * 100), 1), "max": int(ud.max()),
+                      "signature_day_min_raw_count": int(both.loc[both["pots_day"], "u_dip_count"].min())}
+
     result = {
         "operationalisation": {
             "pots_marker": "u_dip_count z vs lagged baseline (within-day orthostatic U-dip proxy)",
@@ -185,12 +244,20 @@ def main():
             "n_days_both_markers_computable": n,
         },
         "separability": {"pearson_pots_vs_pem": round(pear, 3),
+                         "pearson_ci95": [r_lo, r_hi],
                          "spearman_pots_vs_pem": round(sp, 3),
+                         "spearman_p": round(float(_sp_p), 4),
                          "pearson_pots_vs_pem_variability": round(pear_var, 3),
                          "phi_contingency": round(phi, 3),
+                         "shared_variance_pct": round(pear * pear * 100, 2),
                          "contingency": {"both": a, "pots_only": b, "pem_only": c, "neither": d}},
         "when_per_phase": per_phase,
         "felt_state_by_group": groups,
+        "felt_state_mwu_vs_neither": mwu_tests,
+        "crash_drop_sensitivity": {"pearson_crash_dropped": pear_nc, "delta_pearson": round(pear_nc - pear, 3),
+                                   "felt_state_by_group_crash_dropped": crashdrop_groups,
+                                   "crash_pct_by_group": crash_pct_by_group},
+        "pots_marker_substrate": pots_substrate,
         "notes_corroboration": notes,
         "meta": {"stratum_4_start": str(STRATUM_4_START), "as_of_date": str(AS_OF_DATE),
                  "run_at": datetime.now().isoformat(timespec="seconds")},
@@ -200,11 +267,12 @@ def main():
     # ---- stdout ----
     print(f"[PEM/POTS] n_days both markers computable = {n}\n")
     print("1. SEPARABILITY (are POTS-days and PEM-days the same days?)")
-    print(f"   Pearson  r(pots_z, pem_z)      = {pear:+.3f}")
-    print(f"   Spearman r(pots_z, pem_z)      = {sp:+.3f}")
+    print(f"   Pearson  r(pots_z, pem_z)      = {pear:+.3f}  CI95 [{r_lo:+.3f}, {r_hi:+.3f}]  (shared var {pear*pear*100:.2f}%)")
+    print(f"   Spearman r(pots_z, pem_z)      = {sp:+.3f}  p={float(_sp_p):.4f}")
     print(f"   Pearson  r(pots_z, pem_var_z)  = {pear_var:+.3f}")
     print(f"   contingency phi                = {phi:+.3f}")
     print(f"   POTS+PEM both={a}  POTS-only={b}  PEM-only={c}  neither={d}")
+    print(f"   [crash-drop 3.4] r={pear_nc:+.3f} (delta {pear_nc-pear:+.3f}); POTS substrate {pots_substrate['pct_zero']}% zeros, max {pots_substrate['max']}, sig-day min count {pots_substrate['signature_day_min_raw_count']}")
     print("\n2. WHEN does the POTS signal appear (per recovery phase)?")
     print(f"   {'ph':3} {'n_days':>6} {'POTS-day%':>9} {'PEM-day%':>8} {'mean_pots_z':>11} {'mean_pem_z':>10}")
     for p in per_phase:
@@ -212,7 +280,13 @@ def main():
               f"{p['mean_pots_z']:>11} {p['mean_pem_z']:>10}")
     print("\n3. FELT-STATE by group (are POTS-signature days lower in gevoelscore?)")
     for k, v in groups.items():
-        print(f"   {k:12} n={v['n']:>4}  mean_gevoelscore={v['mean_gevoelscore']}")
+        cd = crashdrop_groups.get(k)
+        cp = crash_pct_by_group.get(k)
+        extra = f"  | crash-dropped={cd}  crash%={cp}" if k in crashdrop_groups else ""
+        print(f"   {k:12} n={v['n']:>4}  mean_gevoelscore={v['mean_gevoelscore']}{extra}")
+    print("   MWU vs neither: "
+          + "; ".join(f"{k}: {('p='+str(t['p_value'])+' d='+str(t['cohens_d_vs_neither'])) if t else 'n<5'}"
+                      for k, t in mwu_tests.items()))
     print("\n4. NOTES corroboration of POTS-signature days")
     if "error" in notes:
         print(f"   {notes['error']}")

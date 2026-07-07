@@ -31,13 +31,17 @@ weeks and phase 3 drop out).
 
 ## 1. Headline
 
-**PEM and POTS are separable in this body's watch data - they are essentially
-independent day-markers, not the same signal twice.** And the two carry felt-state
-differently: the **PEM** marker tracks lower gevoelscore, the **POTS** marker does
-not. The orthostatic U-dip pattern is the "dysregulated but not necessarily feeling
-bad" signature Wiggers warns about ("don't be fooled by good values"); the PEM
-autonomic load is the one that coincides with feeling worse, and the two together
-mark the lowest felt-state.
+**PEM and POTS are largely distinct in this body's watch data - the two markers
+share under 1% of variance and signature-days are mostly one mechanism or the
+other.** They are **weakly positively correlated, not independent** (Pearson
+r = +0.09, 95% CI [+0.03, +0.15], which excludes zero; Spearman p = 0.047), so the
+honest word is "largely distinct," not "unrelated." And they carry felt-state
+differently: the **PEM** marker tracks lower gevoelscore (real, and it survives a
+crash-drop check); the **POTS** marker does not (a genuine null). The orthostatic
+U-dip pattern is the "dysregulated but not necessarily feeling bad" signature
+Wiggers warns about ("don't be fooled by good values"); the PEM autonomic load is
+the one that coincides with feeling worse. (The "both together = lowest felt-state"
+reading was **dropped on review** - it is an artefact of crashes, see section 4.)
 
 ---
 
@@ -45,16 +49,21 @@ mark the lowest felt-state.
 
 | statistic | value |
 |---|---:|
-| Pearson r (POTS-marker z, PEM-marker z) | **+0.092** |
-| Spearman r | +0.060 |
+| Pearson r (POTS-marker z, PEM-marker z) | **+0.092**, 95% CI **[+0.033, +0.151]** |
+| shared variance (r^2) | **0.85%** |
+| Spearman r (p) | +0.060 (**p = 0.047**) |
 | Pearson r (POTS-marker, PEM-*variability* z) | +0.014 |
 | contingency phi (POTS-day x PEM-day) | +0.050 |
+| crash-drop sensitivity (r with crash days removed, section 3.4) | +0.072 (delta -0.020, CLEAN) |
 
 Contingency of signature-days: **both 77 / POTS-only 169 / PEM-only 219 /
-neither 625**. The two markers share almost no variance (r ~ 0.09), and most
-signature-days are one mechanism or the other, not both. **They are distinguishable,
-not heavily correlated** - which is the empirical warrant for looking for both
-separately rather than collapsing them into one "autonomic dysregulation" axis.
+neither 625**. The correlation is **weak but statistically non-zero** - the 95% CI
+excludes zero and Spearman p = 0.047, so the markers are **not independent**; they
+are **weakly positively** related. But they share **under 1% of variance** and most
+signature-days are one mechanism or the other, so they are **largely distinct** -
+the empirical warrant for looking for both separately rather than collapsing them
+into one "autonomic dysregulation" signal. The weak positive correlation survives
+the crash-drop check (r 0.092 -> 0.072).
 
 ---
 
@@ -67,32 +76,45 @@ separately rather than collapsing them into one "autonomic dysregulation" axis.
 | `citalopram_modulated` | 5 | 584 | **18.7%** | 24.8% | **+0.14** | +0.04 |
 
 The POTS (U-dip) signature is **stronger in the pre-citalopram pacing-habit era
-(4b) and recedes into the citalopram era (5)** - both its day-rate (27% -> 18.7%)
-and its mean level fall. This matches HA11 (U-dip crash-discrimination SUPPORTED in
-the early era, receding later) and the participant's lived report that the POTS
-picture waxes and wanes as symptoms change. Phase 3 (`lc_pre_ergo`) and the earliest
-days have no computable baseline and drop out; phase 4a (n=6) is noise.
+(4b) and lower in the citalopram era (5)** - both its day-rate (27% -> 18.7%) and
+its mean level fall. This is consistent with HA11 and the participant's lived report
+that the POTS picture waxes and wanes as symptoms change. **Important confound (read
+inline, not as a footnote):** the only two informative phase cells (4b, 5) straddle
+the **2024-04-08/09 boundary, which is exactly citalopram onset** - so this "recedes
+over time" read is *not* an independent time-trend; it is the retired era-split in
+another guise, and it inherits the R19 discipline (descriptive phase-to-phase
+variation, never a verdict). It is reported as a suggestive descriptive pattern, not
+a clean temporal decline. Phase 3 (`lc_pre_ergo`) and the earliest days have no
+computable baseline and drop out; phase 4a (n=6) is noise.
 
 ---
 
 ## 4. Are POTS-signature days lower in felt-state?
 
-| group | n | mean gevoelscore |
-|---|---:|---:|
-| neither | 625 | 4.48 |
-| **POTS-only** | 169 | **4.57** |
-| **PEM-only** | 219 | **4.15** |
-| **both** | 77 | **4.03** |
-| any POTS | 246 | 4.40 |
-| any PEM | 296 | 4.12 |
+| group | n | mean gevoelscore | MWU vs neither | crash-days | crash-dropped mean |
+|---|---:|---:|---|---:|---:|
+| neither | 625 | 4.48 | - | 4.3% | 4.55 |
+| **POTS-only** | 169 | **4.57** | p = 0.19 (**null**), d = +0.11 | 3.0% | 4.62 |
+| **PEM-only** | 219 | **4.15** | **p < 0.0001, d = -0.40** | 13.2% | 4.39 |
+| both | 77 | 4.03 | p = 0.0006, d = -0.54 | **24.7%** | **4.52** |
 
-**No - POTS-only days are not lower; if anything marginally higher than neither
-(4.57 vs 4.48).** It is the **PEM** marker that tracks lower felt-state (PEM-only
-4.15), and the **lowest** felt-state is when both co-occur (4.03). The direction is
-consistent and interpretable - the orthostatic pattern is the "quiet dysregulation"
-that need not feel bad, the PEM load is what coincides with feeling worse - but the
-magnitudes are **small** (4.0 to 4.6 on the realised 1-6 felt-state range), the
-markers are proxies, and this is an association at wide error, not a mechanism.
+Two claims survive review; one does not:
+
+- **POTS-signature days are NOT lower** - POTS-only sits at 4.57, marginally *above*
+  neither (4.48), and the Mann-Whitney test is a **genuine null** (p = 0.19). The
+  orthostatic pattern is "quiet dysregulation" that need not feel bad.
+- **PEM-signature days ARE lower** - 4.15 vs neither 4.48, a real effect (MWU
+  p < 0.0001, Cohen d = -0.40) that **survives the crash-drop check** (with crash
+  days removed the gap narrows but holds, 4.39 vs 4.55). This is the robust
+  felt-state finding.
+- **"Both together = lowest" is DROPPED on review** - the "both" group is 24.7%
+  crash-days (vs 4.3% for neither), and because `is_crash` is defined partly on low
+  gevoelscore, its low mean (4.03) is largely **circular**: with crash days removed
+  it rises to 4.52, essentially equal to neither. So "both mechanisms = worst felt
+  day" is a crash artefact, not a standalone finding.
+
+Magnitudes are small (4.0 to 4.6 on the realised 1-6 range), the markers are
+proxies, and these are associations at n=1 wide error, not mechanism.
 
 ---
 
@@ -115,6 +137,14 @@ future analysis corroborate the watch U-dip against felt orthostatic symptoms.
   "PEM-signature" = the overnight HRV-proxy load. Neither is a clinical label; a
   true orthostatic read would need positional / standing-HR data this device does
   not provide.
+- **The POTS marker is a thin substrate.** `u_dip_count` is a sparse low count -
+  43% of days are zero and the max is 5, so a signature day (z >= 1.0) turns on a
+  small integer difference. This is enough for a descriptive *marker* but does not
+  warrant "axis" / "family" language on its own; the marker is a low-resolution
+  discriminator, flagged as such.
+- **Weakly correlated, not independent.** The markers are weakly *positively*
+  correlated (r = +0.09, CI excludes zero); "separable" here means "share <1% of
+  variance / mostly-different days," not "statistically independent."
 - **Descriptive, no causal marks.** Correlations and group means are associations
   at n=1 with wide error; the felt-state gaps are small on the 1-6 scale.
 - **Threshold sensitivity.** The signature-day rates use z >= 1.0; the robust
@@ -134,7 +164,17 @@ future analysis corroborate the watch U-dip against felt orthostatic symptoms.
   sigma_floor 2.0), `stress_stdev_sleep` (PEM secondary, 0.5); z vs [d-90,d-30]
   trimmed (10/90) mean/std, min 40 prior days.
 - **Surface**: Stratum 4 (2022-09-03 to 2026-06-05); n_days both-computable 1090.
-- **Separability**: Pearson +0.092, Spearman +0.060, phi +0.050.
+- **Separability**: Pearson +0.092 (95% CI [+0.033, +0.151], excludes zero;
+  shared variance 0.85%), Spearman +0.060 (p = 0.047), phi +0.050;
+  crash-drop-robust (r 0.092 -> 0.072).
+- **Felt-state inference**: Mann-Whitney U vs neither -- PEM-only p < 0.0001
+  (d = -0.40), POTS-only p = 0.19 (null), both p = 0.0006 (d = -0.54 but crash-driven).
+- **Peer review (2026-07-07)**: independent fresh-context review
+  (`reviews/pem-pots-reframing-2026-07-07.md`), MAJOR-REVISIONS-NEEDED, folded --
+  softened "not correlated" -> "weakly correlated / largely distinct" (CI excludes
+  zero); added the missing section-3.4 crash-drop and dropped the crash-driven
+  "both = lowest" claim; added the MWU tests; flagged the thin u_dip substrate and
+  the citalopram-onset era-confound on the timing read. Numbers reproduced exactly.
 - **Notes source**: `processed/notes/notes-categorized-v24-clauses.csv`; POTS
   keyword scan (duizel, staan, opstaan, orthostat, hartklop, bloeddruk, flauw,
   zout, electrolyt, bloedvolume).

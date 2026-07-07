@@ -35,34 +35,40 @@ so can this body's data:
 The useful thing for the site: in this body's data these are **two different
 things, on different days** - which is what the rest of this card shows.
 
-## 2. They are separable
+## 2. They are largely distinct
 
 The two watch-markers (a POTS marker = the within-day stress U-dip; a PEM marker =
-overnight stress load) correlate at only **r ≈ 0.09** - essentially independent.
-Of the flagged days, most are one or the other: **169 POTS-only, 219 PEM-only, 77
-both.** A reader can hold them as separate signals, not two names for one bad day.
+overnight stress load) correlate only **weakly** (r ≈ 0.09; they share under 1% of
+variance). The correlation is faintly positive, not zero - so "largely distinct,"
+not "independent." Of the flagged days, most are one or the other: **169 POTS-only,
+219 PEM-only, 77 both.** A reader can hold them as largely-separate signals, not two
+names for one bad day.
 
 ## 3. Which POTS signal did we find, and when?
 
 The one clearly-orthostatic signal on this watch is the **stress U-dip** (the
 pattern Wiggers ties to blood volume and treats with electrolytes). We find it, and
-it is **time-varying**: stronger in the earlier pacing-habit years (about 27% of
-days) and **receding** in the recent medicated years (about 19%). That matches both
-the earlier crash-discrimination result (HA11, where the U-dip separated crashes in
-the early era and faded later) and the lived experience that the POTS picture eases
-as it is managed. The standing-HR / lean-test orthostatic signals Wiggers describes
-are **off-instrument** here (the watch has no posture data), so they are named as
+it appears **more in the earlier pacing-habit years (about 27% of days) than in the
+recent years (about 19%)**, consistent with the earlier crash result (HA11) and the
+lived experience that the POTS picture eases as it is managed. **Honest caveat the
+site must keep inline:** those "recent years" begin exactly at the start of the
+citalopram medication, so this is a *suggestive* pattern, **not a clean independent
+time-trend** - the timeline can't separate "POTS easing" from "the medication era."
+The standing-HR / lean-test orthostatic signals Wiggers describes are
+**off-instrument** here (the watch has no posture data), so they are named as
 "can't see on this device," not tested.
 
 ## 4. The counter-intuitive, honest bit
 
 **POTS-signature days are NOT the low-felt-state days.** On days the orthostatic
 U-dip fires, the felt-state (gevoelscore) is about the same as ordinary days (if
-anything a touch higher). It is the **PEM** signature - the overnight load - that
-coincides with feeling worse, and the worst days are when both fire together. This
-is exactly Wiggers' "don't be fooled by good values": the orthostatic pattern is
-*dysregulation that need not feel bad*, which is why it is easy to miss and worth
-naming as its own thing.
+anything a touch higher) - a **genuine null** (p = 0.19). It is the **PEM**
+signature - the overnight load - that coincides with feeling worse (a real,
+crash-drop-robust difference), which is exactly Wiggers' "don't be fooled by good
+values": the orthostatic pattern is *dysregulation that need not feel bad*, which is
+why it is easy to miss and worth naming as its own thing. (An earlier "both
+mechanisms together = worst day" reading was **dropped on review** - it was an
+artefact of crash days, not a real felt-state effect.)
 
 ## 5. Honesty floor (must ship with it)
 

@@ -176,10 +176,13 @@ Rule for assignment (applied in the catalog edit; proposed labels from the
   C4 / C4b "PEM or low blood volume"; G3 pressure x low-blood-volume).
 - **neither** for data-quality (I-block) and acute-illness (B5).
 
-The empirical warrant for treating them as separate axes (not one) is the
-separability finding: the two markers correlate at r ~ 0.09 (they are largely
-independent days), so a two-axis catalog is data-supported, not just a taxonomy
-preference.
+The empirical warrant for reading them as separate signals is the separability
+finding: the two markers are only weakly correlated (r ~ 0.09, 95% CI [0.03, 0.15] -
+excludes zero, so weakly positive, not independent; under 1% shared variance), so
+they are largely distinct days, data-supported rather than a taxonomy preference.
+The label is a **signal-level** distinction, not an "axis" claim - the POTS marker
+(u_dip) is a thin, sparse substrate (43% zeros), so it is a low-resolution
+discriminator, not a construct that could carry an "axis" on its own.
 
 ---
 

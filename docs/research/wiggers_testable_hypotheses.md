@@ -166,11 +166,16 @@ A–I. **POTS / orthostatic** = the blood-volume / positional axis (RHR rising w
 lying still, the stress U-dip, stress stuck on standing / after eating, standing-HR
 rise) — treated by the guide **mostly descriptively**, and (her point) **waxing and
 waning as symptoms are managed** with electrolytes / salt / compression. We look
-for both; the POTS reads are mainly descriptive. **Empirical warrant for a two-axis
-split, not one**: the PEM and POTS day-markers correlate at only **r ≈ 0.09**
+for both; the POTS reads are mainly descriptive. **Empirical warrant for reading
+both separately**: the PEM and POTS day-markers are only **weakly** correlated
+(r ≈ 0.09, 95% CI [0.03, 0.15] - excludes zero, so weakly *positive*, not
+independent; <1% shared variance)
 ([`analyses/descriptive/pem_pots_separability/`](analyses/descriptive/pem_pots_separability/)),
-so they are largely independent days, and the POTS marker is **time-varying**
-(stronger early era, receding into the citalopram era).
+so they are **largely distinct days**. The POTS marker is a thin, sparse substrate
+(u_dip is 43% zeros), so it is a low-resolution *signal*, not an "axis" in its own
+right. It is descriptively **more frequent in the earlier pacing phase than the
+citalopram phase**, but that boundary IS citalopram onset, so this read is
+era-confounded (R19 discipline: descriptive variation, not a time-trend verdict).
 
 ### J.1 Mechanism label per existing hypothesis (from the 2026-07-07 re-read)
 
