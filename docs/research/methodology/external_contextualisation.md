@@ -1,17 +1,59 @@
 # External contextualisation — Stage S₂ guide
 
-**Status**: **LOCKED r3** by user acceptance 2026-06-26. r2 → r3
-absorbed the 2026-06-26 Phase A re-open's construct-validity-of-
-named-metric miss on `topic-stress-fatigue-pacing.md` — adds NEW
-§4.3.5 Construct-identity check interpolated between §4.3 and §4.4
-(no renumbering of §4.4-§4.10 to preserve LOCKED-r2 cross-references
-in downstream artefacts), wires the §4.3.5 verdict into §4.4
-Measurement fault-line constraint via a §4.4 lead-in cross-reference,
-and adds NEW §7.13 anti-pattern. Wiggers-stress-score × Garmin-
-`all_day_stress_avg` is the §4.3.5 worked example anchor (cautionary
-tale + corrected CONSTRUCT-IDENTICAL verdict). r3 absorbed a fresh-
-session `/research-methodology-review` (verdict REVISION RECOMMENDED
-(mild), report at
+**Status**: **LOCKED r4** by user acceptance 2026-07-08. r3 → r4
+absorbed the 2026-07-08 Stage S₂ user-acceptance lock session's
+retroactive-friction-fix on
+[`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md)
+DRAFT r1 (2026-07-08) — adds NEW §5.6 Cascade-inheriting topic
+constellation as peer to §5.5 Multi-subclaim aggregation (no
+renumbering of §5.5 or §6+ to preserve LOCKED-r3 cross-references
+in [`internal_synthesis.md`](internal_synthesis.md) §5.5 +
+[`_plan_results_analysis_layer.md`](_plan_results_analysis_layer.md) §3.10
++ [`_open_inputs.md`](_open_inputs.md) OI-025 + downstream artefacts).
+§5.6 formalises the S₂-layer mirror-application of
+[`internal_synthesis.md`](internal_synthesis.md) §5.5 cascade-
+handling rule; adds three-way anti-pattern boundary (NOT external-
+literature comparator; NOT strengthening / weakening evidence;
+IS bounded qualifier that travels), three concrete downstream
+propagation consequences (Stage A construct; Stage T translation
+tracks; cross-test synthesis pass), a concrete phrasing template
+for the §4.5 topic-level positioning summary paragraph, an
+anti-pattern verification checklist at §9.6 walk, a cross-
+references-block naming rule at §4.10 for cascade-inheriting
+topics, a cross-topic scope preservation clause, and a first-ever
+operational instance pointer at
+[`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md).
+The addition is a RETROACTIVE FRICTION-FIX per subagent friction
+observation F1 (surfaced at the 2026-07-08 Stage S₂ dispatch's
+completion report as a skill-r5-revision-candidate that the user
+elected to fix at the guide layer at same-commit-cycle rather than
+defer to a future skill revision). Fresh-session
+`/research-methodology-review` NOT dispatched pre-lock —
+user-authorized deviation matching earlier producer-mode
+methodology-MD-addition pattern (rationale: targeted addition of
+one §5.6 subsection at a peer level to LOCKED-r3 §5.5, preserving
+all LOCKED-r3 cross-references; §5.6 is derived by mirror-
+application of `internal_synthesis.md` §5.5 whose peer-review
+already validated the parent rule shape; §5.6 first-ever
+operational instance already exists at LOCKED r1
+[`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md)
+where the discipline was independently derived by first
+principles — the guide r4 formalises what the artefact already
+demonstrates). Retained as retrospective drift-trigger per plan
+§3.7. See §11 lock log for the full change summary.
+
+**r3 history (preserved for context)**: r2 → r3 absorbed the
+2026-06-26 Phase A re-open's construct-validity-of-named-metric
+miss on `topic-stress-fatigue-pacing.md` — adds NEW §4.3.5
+Construct-identity check interpolated between §4.3 and §4.4
+(no renumbering of §4.4-§4.10 to preserve LOCKED-r2 cross-
+references in downstream artefacts), wires the §4.3.5 verdict
+into §4.4 Measurement fault-line constraint via a §4.4 lead-in
+cross-reference, and adds NEW §7.13 anti-pattern. Wiggers-stress-
+score × Garmin-`all_day_stress_avg` is the §4.3.5 worked example
+anchor (cautionary tale + corrected CONSTRUCT-IDENTICAL verdict).
+r3 absorbed a fresh-session `/research-methodology-review`
+(verdict REVISION RECOMMENDED (mild), report at
 [`reviews/methodology-external_contextualisation-r2-to-r3-2026-06-26.md`](../reviews/methodology-external_contextualisation-r2-to-r3-2026-06-26.md))
 that caught one required (R1: dispatch-mode placeholder vocabulary
 realignment to SKILL.md r4 locked names) and two recommended (A1:
@@ -1334,6 +1376,166 @@ averaging:
 The summary respects the §4.5 hard rule at the per-subclaim
 level and does NOT invent a new topic-level label.
 
+### 5.6 Cascade-inheriting topic constellation — mirror-application of `internal_synthesis.md` §5.5
+
+*Added at r4 (2026-07-08) upon first-ever operational firing.
+The pattern was derived from first principles at
+[`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md)
+DRAFT r1 drafting time 2026-07-08 (subagent friction observation
+F1). r4 formalises the derivation so future cascade-inheriting
+Stage S₂ topics do NOT re-derive the discipline from first
+principles.*
+
+**When this section fires**: a topic whose
+[`synthesis_structure_map.md`](synthesis_structure_map.md) §4 row
+declares a **cascade-arrow constellation** — one primary
+constituent cluster (`X (primary)`) plus a second constituent
+cluster named as **upstream calibration precondition per cascade
+arrow** (`Y as upstream calibration precondition`). The cascade
+arrow is a structural property of the topic's constellation,
+established at map-lock time by the pre-declared cluster
+relationships (see [`internal_synthesis.md`](internal_synthesis.md)
+§5.5 for the S₁-layer cascade-source ↔ cascade-receiver rule; §5.6
+here is the S₂ layer mirror-application of that rule).
+
+**The rule (mirror-application of `internal_synthesis.md` §5.5
+at the S₂ layer)**: when a cascade-arrow constellation is present
+per map §4 row wording, the cascade-source cluster's LOCKED joint
+claim enters the topic-level §4.5 positioning summary as **bounded
+qualifier that TRAVELS with the topic-level licensed claim
+downstream**, NOT as co-equal verdict, NOT as external-literature
+comparator, NOT as strengthening or weakening evidence for the
+receiver-cluster's own licensed claim. The bounded-qualifier
+discipline is a mirror-application of the S₁-layer §5.5 rule
+shape — same rule shape, same discipline, one layer up.
+
+**Three-way anti-pattern boundary the rule prevents** (each is a
+distinct discipline violation the mirror-application forbids):
+
+1. **NOT external-literature comparator** (§7.5 anti-pattern
+   applied): the cascade-source cluster is cluster-internal work,
+   NOT part of the external-literature scope declared in the map
+   §4 row "External literature topic for S₂" cell. Placing the
+   cascade-source verdict alongside the four (or however many)
+   primary literature anchors would be a category error — the
+   external-literature scope is bounded by the map row, and
+   cluster-internal cascade artefacts are not in that scope.
+   The consensus map (§4.3) walks the external anchors; the
+   cascade-source enters at §4.5 topic-level positioning summary
+   as bounded qualifier, distinct from the §4.3 consensus-map
+   walk.
+
+2. **NOT strengthening / weakening evidence** (double-counting
+   anti-pattern): the cascade-source cluster's LOCKED verdict
+   already served its function at S₁ (bounded the cascade-receiver
+   cluster's licensed claim per S₁ §5.5). Re-invoking the same
+   verdict at S₂ as strengthening / weakening evidence for the
+   receiver-cluster's licensed claim would double-count the
+   evidence within the same cascade. The receiver-cluster's
+   licensed claim is what it is at S₁ lock; S₂ takes it as input
+   and contextualises it against external literature. The
+   cascade-source cluster's role at S₂ is to make the operand-
+   fitness / methodology-fitness / whatever-precondition-it-
+   established EXPLICIT and TRAVELING with the topic-level
+   positioning downstream — not to re-weight the receiver-
+   cluster's licensed claim itself.
+
+3. **IS bounded qualifier that travels** (the discipline the
+   rule enforces): the cascade-source cluster's verdict enters
+   the §4.5 topic-level positioning summary as an explicit
+   qualifier of the receiver-cluster's licensed claim. The
+   qualifier does not modify the AGREES / EXTENDS / DIVERGES /
+   CANNOT-SAY positioning itself — it BOUNDS what the positioning
+   claims by making the cascade-established precondition
+   explicit. And it TRAVELS: every downstream artefact that
+   consumes this topic's positioning (Stage A construct;
+   Stage T translation tracks; any cross-test synthesis pass)
+   MUST carry the qualifier alongside any citation of the
+   topic-level positioning.
+
+**Three concrete downstream propagation consequences** (each is a
+hard binding on downstream artefacts, not a discretionary
+option):
+
+- **At Stage A (construct)**: any tier-1 / tier-2 / §3.12 subject-
+  narrative-commentary language for the K-* construct downstream
+  of this topic MUST include the cascade-source qualifier
+  verbatim (or in structurally-equivalent form). The construct
+  cannot present the topic-level positioning as if the
+  cascade-established precondition were fully rather than
+  partially established.
+- **At Stage T (translation tracks)**: research-audience carries
+  the qualifier verbatim; patient-audience carries it in
+  plain-language equivalent. No Stage T copy on any surface can
+  present the topic-level positioning without the cascade-source
+  qualifier. This applies at every audience layer per
+  [`translation_to_audience.md`](translation_to_audience.md).
+- **At any future cross-test synthesis pass**: when the deferred
+  cross-test interpretation pass consumes this topic's positioning
+  as input, it MUST cite the cascade-source qualifier alongside
+  any citation of the topic-level AGREES / EXTENDS / DIVERGES /
+  CANNOT-SAY label. Cross-test cannot cite the topic-level
+  positioning without the qualifier riding along.
+
+**Concrete phrasing template for the §4.5 topic-level positioning
+summary paragraph** (when cascade arrow is present):
+
+> *"[TOPIC-LEVEL POSITIONING per §5.5 aggregation]. Bounded
+> qualifier from cascade-source (`Y` as upstream calibration
+> precondition per map §4 row wording): the `Y` §4.7a joint
+> claim ([verbatim quote of `Y`'s §4.7a bounded-qualifier
+> sentence]) enters as bounded qualifier on the [operand-fitness
+> / methodology-fitness / whatever-precondition-`Y`-established]
+> precondition of the topic-level positioning. Per this §5.6
+> mirror-application at the S₁-to-S₂ boundary, this is NOT
+> co-equal external-literature comparator; it is cluster-
+> internal upstream calibration bounding entering the topic-
+> level positioning as bounded qualifier per the map's pre-
+> declared cascade-arrow constellation."*
+
+**Anti-pattern verification at §9.6 refuse-to-lock walk**:
+producer verifies at §9.6 walk that (a) §7.5 (smuggling cross-
+topic context) has not fired via the cascade-source treated as
+external-literature comparator — the cascade-source is bounded-
+qualifier per this §5.6, not a competing external anchor; (b) no
+double-counting fired via the cascade-source treated as
+strengthening / weakening evidence for the receiver-cluster's
+licensed claim; (c) the bounded qualifier is present at §4.5
+topic-level positioning summary and travels visibly through §4.9
+`open_inputs` cross-references + §4.10 cross-references to
+downstream Stage A + Stage T + cross-test consumers.
+
+**Cross-references at §4.10 for cascade-inheriting topics**: the
+topic's §4.10 cross-references block MUST cite both constituent
+clusters explicitly, with the cascade-source cluster labelled as
+"upstream calibration precondition (cascade-source) constituent"
+distinct from the "primary constituent". The distinct labelling
+prevents future readers from misreading the two cluster inputs as
+symmetric constituent evidence.
+
+**Cross-topic scope preservation**: this §5.6 rule applies within
+a single topic's cascade-arrow constellation only. Cross-topic
+cascade-arrow constellations (e.g., a construct that consumes
+multiple topics with different cascade structures) are handled at
+the Stage A construct layer per
+[`actionability_translation.md`](actionability_translation.md),
+NOT at Stage S₂. This §5.6 rule does not permit smuggling of one
+topic's cascade-source verdict into a sister topic's §4.5
+positioning summary; §7.5 anti-pattern still applies.
+
+**First-ever operational instance** (LOCKED r1 2026-07-08):
+[`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md)
+§4.5 topic-level positioning summary consumes
+[`cluster-C-bout-framework.md`](../analyses/synthesis/cluster-C-bout-framework.md)
+§4.7a joint claim as bounded qualifier on the operand-fitness
+precondition of the topic-level AGREES + EXTENDS + CANNOT-SAY
+positioning, per map §4 row wording declaring **C-bout-substance
+(primary); C-bout-framework as upstream calibration precondition**.
+The bounded qualifier travels through §4.5 topic-level positioning
+summary + §4.9 `open_inputs` cross-references + §4.10 cross-
+references. Every future cascade-inheriting Stage S₂ topic uses
+this instance as structural template alongside the r4 §5.6 rule.
+
 ## 6. Conflict rules
 
 The contextualisation MUST apply the following conflict rules
@@ -1957,3 +2159,4 @@ each L-ID cited in §4.7 (manual until skill lands).
 | 2026-06-26 | Fresh-session `/research-methodology-review` (scoped to r2→r3 diff) | Verdict REVISION RECOMMENDED (mild). Report: [`reviews/methodology-external_contextualisation-r2-to-r3-2026-06-26.md`](../reviews/methodology-external_contextualisation-r2-to-r3-2026-06-26.md). One required (R1: §4.3.5 dispatch-mode placeholder names diverged from SKILL.md r4's locked vocabulary — invented `LITERATURE-GAP-FROM-§4.3` and `PROXY-CITED-USER-ACCEPTED-{date}` instead of reusing `LITERATURE-GAP` upstream-inherit and `PROXY-CITED-IN-DRY-RUN`). Two recommended (A1: hard rule 2's default-to-CONSTRUCT-RELATED cites internal_synthesis §4.4 as analogue but that analogue defaults to CONFLICT — the design-divergence warrants one explicit sentence; A2: worked-example's L3 attribution covers three semantically distinct fault-lines that stretch L3's hardware-upgrade-triggered scope — flag as L3-expansion-vs-L8 decision for limitations-doc maintainer). Reviewer independently verified the Wiggers-stress = Garmin-Connect-UI claim via three textual anchors in the §C C3 verbatim; CONSTRUCT-IDENTICAL verdict warranted. All five design-choice rulings: 4 sound + 1 sound-with-concern (the A1 default-divergence). |
 | 2026-06-26 | Revised r2 → r3 (post-review) | All three findings absorbed. R1: renamed §4.3.5 dispatch-mode placeholder block to reuse SKILL.md r4 vocabulary verbatim — `LITERATURE-GAP-FROM-§4.3` → `LITERATURE-GAP` (upstream-inherit from §4.3 fourth-label status; no §4.3.5-specific name); `PROXY-CITED-USER-ACCEPTED-{date}` → `PROXY-CITED-IN-DRY-RUN` (SKILL.md Stage S₂ vocabulary; verification date moved to accompanying one-sentence cite); `DEFAULTED-PENDING-USER-INPUT` + `SKIPPED-AS-DRY-RUN-DEFAULT` retained verbatim. Block lead-in explicitly names "no §4.3.5-specific placeholder names; SKILL.md is the single source of truth" to prevent future vocabulary drift. A1: hard rule 2 expanded with one-sentence rationale acknowledging the divergence from internal_synthesis §4.4's most-conservative default and naming the bidirectional §7.13 failure mode as the reason the middle is right for construct-identity specifically. A2: worked-example L3 enumeration expanded with one sentence flagging L3-expansion-vs-L8 (vendor-algorithm-population-validity) decision to the limitations-doc maintainer as separate from this r3 lock cycle. |
 | 2026-06-26 | **LOCKED r3** | User acceptance ("all" — absorb all three findings, lock r3). Status of all sections LOCKED including the three r3 additions (§4.3.5, §4.4 lead-in cross-ref, §7.13). **Drift triggers registered** (manual-pending-skill r5 absorption): SKILL.md r5+ dispatch-mode vocabulary changes (R1 absorption pinned §4.3.5 to SKILL.md r4 names — vocabulary drift re-opens §4.3.5); `research_line_limitations.md` L3 expansion or L8 addition lands (A2 worked-example attribution re-evaluates); constituent `cluster-*.md` re-examined; new literature-gap fill via `/fetch-paper`; ≥6 months elapse since lock. **Next action downstream**: Phase A re-open of `topic-stress-fatigue-pacing.md` (+ inheriting artefacts) using §4.3.5 as the authority for the construct-validity correction; skill r5 absorption queues a fourth friction item — "before introducing dispatch-mode placeholders in any methodology MD, grep SKILL.md for locked vocabulary and reuse names verbatim" (the R1 failure mode). |
+| 2026-07-08 | **LOCKED r4** by user acceptance at Stage S₂ user-acceptance lock session on [`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md) | User elected to retroactively patch the guide at same-commit-cycle rather than defer to a future skill revision (Q B1 more-detail-briefing on §5.5 mirror-application surfaced the discipline was walked interactively at lock; user chose to fix the F1 skill-r5-revision-candidate at the guide layer now so future cascade-inheriting Stage S₂ topics do NOT have to derive the discipline from first principles). r3 → r4 change: **NEW §5.6 Cascade-inheriting topic constellation** added as peer to §5.5 (no renumbering of §5.5 or §6+; preserves LOCKED-r3 cross-references from §7.12 + §9.6 + [`internal_synthesis.md`](internal_synthesis.md) §5.5 + [`_plan_results_analysis_layer.md`](_plan_results_analysis_layer.md) §3.10 + downstream artefacts). §5.6 formalises the S₂-layer mirror-application of `internal_synthesis.md` §5.5 cascade-handling rule with (a) three-way anti-pattern boundary (NOT external-literature comparator; NOT strengthening/weakening evidence; IS bounded qualifier that travels); (b) three concrete downstream propagation consequences at Stage A construct + Stage T translation tracks + cross-test synthesis pass; (c) a concrete phrasing template for the §4.5 topic-level positioning summary paragraph; (d) an anti-pattern verification checklist at §9.6 walk; (e) a cross-references-block naming rule at §4.10 for cascade-inheriting topics; (f) a cross-topic scope preservation clause; (g) a first-ever operational instance pointer at [`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md) LOCKED r1 2026-07-08 same commit-cycle. **RETROACTIVE FRICTION-FIX** per subagent friction observation F1 surfaced at the 2026-07-08 Stage S₂ dispatch's completion report as skill-r5-revision-candidate. Fresh-session `/research-methodology-review` NOT dispatched pre-lock — user-authorized deviation matching earlier producer-mode methodology-MD-addition pattern (rationale: targeted addition of one §5.6 peer subsection preserving all LOCKED-r3 cross-references; §5.6 is derived by mirror-application of `internal_synthesis.md` §5.5 whose peer-review already validated the parent rule shape; §5.6 first-ever operational instance already exists at LOCKED r1 `topic-within-day-recovery.md` where the discipline was independently derived by first principles — the guide r4 formalises what the artefact already demonstrates). Retained as retrospective drift-trigger per plan §3.7. **Drift triggers registered** (per skill responsibility #10): (1) [`internal_synthesis.md`](internal_synthesis.md) §5.5 changes lock-version → this §5.6 mirror-application re-examinable; (2) a new cascade-arrow constellation added at [`synthesis_structure_map.md`](synthesis_structure_map.md) §4 by future map revision → this §5.6 rule fires on the new topic at dispatch time; (3) `research_line_limitations.md` L3 expansion or L8 addition lands → §5.6 references may need updating alongside the r3 A2 dependency; (4) constituent `cluster-*.md` re-examined that produces cascade-source or cascade-receiver changes → this §5.6 re-examinable at affected topic level; (5) new literature-gap fill via `/fetch-paper` that materially changes a topic's constellation → this §5.6 rule fires at re-examination; (6) ≥6 months elapse since r4 lock. **Next action downstream**: [`topic-within-day-recovery.md`](../analyses/contextualisation/topic-within-day-recovery.md) LOCKED r1 same-commit-cycle uses r4 §5.6 as the guide-explicit source of the bounded-qualifier discipline (retroactively — the artefact was drafted 2026-07-08 pre-r4 and independently derived the discipline; the r4 formalisation makes future derivation unnecessary). |
