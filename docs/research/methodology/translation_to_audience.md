@@ -1,8 +1,60 @@
 # Translation to audience — Stage T guide
 
-**Status**: **LOCKED r2** by user acceptance 2026-06-25 — **closes
-§11 step 6 (six-guide arc complete)**. r1 authored 2026-06-25 by a
-fresh agent per §11 step 6.6 of
+**Status**: **LOCKED r3** by user acceptance 2026-07-08. r2 → r3
+absorbed the 2026-07-08 joint Stage T user-acceptance lock
+session's retroactive-friction-fix on
+[`analyses/translation/research-audience/construct-bout-recovery-signal.md`](../analyses/translation/research-audience/construct-bout-recovery-signal.md)
++
+[`analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
+BOTH LOCKED r1 same commit-cycle — adds THREE new addenda
+interpolated at appropriate anchors (no renumbering of §5.1-§5.12
+or §6+; preserves LOCKED-r2 cross-references from downstream
+Phase A + Phase C translations + `_plan_results_analysis_layer.md`
+§3.10/§3.12 + `_open_inputs.md` + skill r4):
+
+- **§5.6.1 Tier-2 rendering worked-example addendum (T-F1)** —
+  formalises the tier-2 §5.6 rendering discipline (Phase A
+  template was tier-1-not-applicable; §5.6.1 names the tier-2
+  worked example with 5 discipline points + 4 anti-patterns
+  blocked + first-ever operational instance pointer).
+- **§5.7.1 Four-surface layperson-test enumeration rule addendum
+  (T-F3)** — formalises the four-surface enumeration rule for
+  §5.11-carrying patient-audience tracks (§5.3 + §5.4 + §5.6 +
+  §5.11 + visual caption; 3 anti-patterns blocked + first-ever
+  operational instance pointer).
+- **§5.11.1 Precedent-establishing worked-example addendum for
+  cascade-source bounded qualifier + L4 provenance in commentary
+  rendering (T-F2)** — formalises how cascade-source bounded
+  qualifier per guide #4 r4 §5.6 mirror-application + L4
+  provenance chain thread through patient-audience §5.11
+  rendering (Dutch + English phrasing templates + parenthetical-
+  placement precedent + 4 anti-patterns blocked + first-ever
+  operational instance pointer).
+
+The addition is a RETROACTIVE FRICTION-FIX per Stage T subagent
+friction observations T-F1 + T-F2 + T-F3 skill-r5-revision-
+candidates (surfaced at 2026-07-08 Stage T dispatch's completion
+report; user elected to fix at guide layer at same commit-cycle
+rather than defer to a future skill revision — Q C2 at joint
+Stage T lock session: "yes patch guide same commit-cycle" with
+all three fixes). Analogous to Stage S₂ 2026-07-08 guide
+[`external_contextualisation.md`](external_contextualisation.md)
+r3 → r4 + Stage A 2026-07-08 guide
+[`actionability_translation.md`](actionability_translation.md) r2 →
+r3 retroactive-friction-fix patterns landed earlier same day.
+**THIRD retroactive-friction-fix on 2026-07-08** — same-day triple-
+retroactive-friction-fix pattern extends the workflow precedent
+established earlier same day. Fresh-session
+`/research-methodology-review` NOT dispatched pre-lock —
+user-authorized deviation matching Stage S₂ + Stage A same-day
+retroactive-friction-fix pattern (rationale: three targeted
+addenda preserving all LOCKED-r2 cross-references; each addendum
+formalises what the first-ever operational instance already
+demonstrates by first principles). Retained as retrospective
+drift-trigger per plan §3.7.
+
+**r2 history (preserved for context)**: r1 authored 2026-06-25 by
+a fresh agent per §11 step 6.6 of
 [`_plan_results_analysis_layer.md`](_plan_results_analysis_layer.md)
 (r5 LOCKED 2026-06-24). r1 → r2 absorbed a fresh-session
 `/research-methodology-review` (verdict REVISION RECOMMENDED (mild),
@@ -895,6 +947,139 @@ unlocked) produces only the `open_inputs` entry; the translation
 artefact itself is not drafted. Refusal-paths #2-#5 produce
 fallback rendering with the limitation recorded.
 
+### 5.7.1 Four-surface layperson-test enumeration rule addendum (T-F3)
+
+*Added at r-lock 2026-07-08 upon first-ever operational firing at
+[`analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
+LOCKED r1 same commit-cycle. Retroactive friction-fix per Stage T
+subagent friction observation T-F3 skill-r5-revision-candidate.*
+
+**When this addendum fires**: patient-audience track carries a
+filled §5.11 subject-narrative commentary section (i.e., source
+§5.9 was USER-ARTICULATED, not DEFAULTED-TO-SKIPPED). The base
+§5.7 layperson-test surface enumeration lists three surfaces
+(§5.3 core claim + §5.4 refusals + §5.6 PPV frame + visual
+caption); when §5.11 is filled, a **fourth surface** is added.
+
+**Four-surface layperson-test enumeration rule for §5.11-carrying
+patient-audience tracks**:
+
+1. **§5.3 core-claim**: layperson understands the substantive
+   finding without importing methodology-jargon or forecast-
+   framing.
+2. **§5.4 refusals**: layperson understands what the signal is
+   NOT for (predictive-alert, real-time crash intervention,
+   monitoring in unfamiliar contexts, substitution for own body-
+   signal interpretation).
+3. **§5.6 PPV frame**: layperson understands the low-single-digit-
+   percent PPV as structural corpus-level constraint (per §5.6.1
+   above), NOT as critique of the finding; wrong-24-of-25 parallel
+   is recognisable-not-alarming.
+4. **§5.11 subject-narrative commentary**: layperson reads the
+   commentary as felt-experience anchor of the participant, NOT
+   as advice / instruction / forecast / substitution for own body-
+   signal interpretation. Cascade-source bounded qualifier in
+   plain-language equivalent is recognisable-not-jargon.
+
+Plus the visual caption per base §5.7 discipline (making the
+total "four surfaces + visual caption" for §5.11-carrying tracks).
+
+**Anti-patterns this addendum blocks**:
+
+- Skipping §5.11 layperson-test surface when §5.11 is filled
+  (violates §3.12 implementability check for commentary-carrying
+  tracks).
+- Testing only §5.3 without §5.11 when §5.11 is filled (violates
+  §3.12 attached-and-bounded framing; commentary anchor is
+  patient-facing content that requires layperson-verifiability).
+- Treating §5.11-specific layperson-test as optional (violates
+  guide §5.7 legitimate-lock-state requirement — LAYPERSON-TEST-
+  PENDING requires a specific pool + plan, not indefinite deferral).
+
+**First-ever operational instance** (LOCKED r1 2026-07-08):
+[`analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
+§5.7 entry #2 explicitly enumerates the four surfaces (§5.3 +
+§5.4 + §5.6 + §5.11) plus visual caption; layperson-test-pending
+status logged with pool-identification per locked-plan §10.7
+per-artefact resolution.
+
+### 5.6.1 Tier-2 rendering worked-example addendum (T-F1)
+
+*Added at r-lock 2026-07-08 upon first-ever operational firing at
+[`analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
++ [`analyses/translation/research-audience/construct-bout-recovery-signal.md`](../analyses/translation/research-audience/construct-bout-recovery-signal.md)
+LOCKED r1 same commit-cycle. Retroactive friction-fix per Stage T
+subagent friction observation T-F1 skill-r5-revision-candidate;
+user elected to fix at guide layer at same-commit-cycle rather
+than defer, analogous to Stage S₂
+[`external_contextualisation.md`](external_contextualisation.md)
+r3 → r4 + Stage A
+[`actionability_translation.md`](actionability_translation.md) r2 →
+r3 retroactive-friction-fix patterns landed same day 2026-07-08.*
+
+**When this addendum fires**: source artefact has tier-2
+informative-pattern per guide #5 §4.2 (§3.10-PPV-required); §5.6
+must render the source §5.7 PPV computation on both audience
+tracks. The Phase A LOCKED template
+[`construct-stress-fatigue-monitoring.md`](../analyses/actionability/construct-stress-fatigue-monitoring.md)
+is tier-1 (PPV-exempt); its §5.6 rendering is NOT applicable at
+tier-2. This addendum names the tier-2 rendering worked example.
+
+**Tier-2 §5.6 rendering discipline** (both tracks):
+
+1. **Preserve the "expected outcome IS structural corpus-level
+   constraint" framing**: the low-single-digit-percent PPV point
+   estimate is the structural constraint on within-day warning-
+   signal claims, NOT a critique of the finding itself. The
+   substantive tier-2 informative-pattern licensing is preserved
+   AS descriptive-substantive on the trace; PPV-with-base-rate
+   rules out predictive-alert framing per source §5.4 refusals.
+2. **Past-tense association-under-conditions**: no forecast
+   framing. Both tracks use past-tense wording ("historically
+   showed", "was observed", "in retrospect the participant leans
+   toward reading X as Y") — never "predicts", "warns of", "means
+   a crash is coming".
+3. **Era-heterogeneity discipline**: base rate anchored to a
+   specific era of daily use, NOT aggregated across eras. Verbatim
+   citation of source §5.7 era-heterogeneity paragraph on
+   research-audience; plain-language equivalent on patient-
+   audience.
+4. **RESEARCH-REPORT §5.2 base-rate anchor verbatim (research-
+   audience) or plain-language parallel (patient-audience)**:
+   research-audience carries the verbatim ~4% + wrong-24-of-25
+   language; patient-audience carries the plain-language parallel
+   (e.g., Dutch "24 van de 25 keer fout" per
+   [`../analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
+   §5.6 first-ever operational instance).
+5. **Substantive-interpretation-not-critique nuance**: both tracks
+   explicitly frame the low PPV as structural corpus-level
+   constraint. Patient-audience adds explicit "de bevinding zelf
+   is niet onwaar" (or English equivalent "the finding itself is
+   not false") plain-language nuance.
+
+**Anti-patterns this addendum blocks**:
+
+- Rendering §5.6 as if PPV computation were a critique of the
+  substantive finding (violates §5.6 substantive-interpretation-
+  not-critique nuance). The finding stands; the PPV rules out one
+  specific downstream use (predictive-alert) but preserves the
+  substantive tier-2 informative-pattern licensing.
+- Rendering §5.6 in forecast-framed language (violates §3.10 hard
+  predictive gate).
+- Omitting the era-heterogeneity discipline (violates §3.9 base-
+  rate-era-anchoring binding).
+- Omitting the RESEARCH-REPORT §5.2 base-rate anchor citation or
+  its plain-language parallel (violates §5.6 base-rate-context-
+  mandatory rule).
+
+**First-ever operational instance** (LOCKED r1 2026-07-08):
+research-audience track's §5.6 renders source §5.7 verbatim; patient-
+audience track's §5.6 renders in plain-Dutch with "24 van de 25
+keer fout" parallel + "deze uitkomst zegt niet dat de bevinding
+zelf onwaar is" substantive-interpretation-not-critique + explicit
+era-heterogeneity ("~2/jaar in 2025-2026 vs ~10-11/jaar in 2023-
+2024").
+
 ### 5.8 Section 8 — Visual summary
 
 Per §6.6: "Visual summary present (patient track) or specified
@@ -1053,6 +1238,118 @@ Revision fires per §3.12 implementability check: commentary
 revised to add "dit is een waarneming over mezelf, geen advies"
 qualifier; §5.7 layperson-test status block records "Revision
 triggered: layperson read as advice; revised wording in §5.11."
+
+### 5.11.1 Precedent-establishing worked-example addendum: cascade-source bounded qualifier + L4 provenance in commentary rendering (T-F2)
+
+*Added at r-lock 2026-07-08 upon first-ever operational firing at
+[`analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
+§5.11 LOCKED r1 same commit-cycle. Retroactive friction-fix per
+Stage T subagent friction observation T-F2 skill-r5-revision-
+candidate.*
+
+**When this addendum fires**: source artefact carries a filled
+§5.9 USER-ARTICULATED commentary (guide #5 §3.12 commentary-
+eligible); AND the source artefact is downstream of a cascade-
+inheriting topic per
+[`external_contextualisation.md`](external_contextualisation.md)
+r4 §5.6 (i.e., a cascade-source bounded qualifier exists in the
+upstream chain). This addendum names the precedent-establishing
+worked example for how to render the cascade-source bounded
+qualifier + L4 provenance chain through the patient-audience
+§5.11 commentary rendering.
+
+**Cascade-source bounded qualifier discipline at §5.11 rendering**:
+
+The cascade-source bounded qualifier per guide #4 r4 §5.6 mirror-
+application (established at Stage S₂ topic level; travels through
+Stage A construct level per guide #5 §5.3; travels through Stage T
+translation tracks per guide #4 r4 §5.6 third downstream
+propagation consequence) MUST appear in the patient-audience
+§5.11 commentary rendering in **plain-language equivalent**.
+
+Concrete plain-language phrasing template (drawing on first-ever
+operational instance's Dutch rendering; adapt to base language of
+audience persona):
+
+> Dutch: "De cascade-bron van bovenstroom (het framework-validity
+> laagje: of het meetinstrument past bij wat er getest wordt) is
+> gedeeltelijk bevestigd, niet volledig."
+>
+> English equivalent: "The upstream cascade-source (the framework-
+> validity layer: whether the measuring instrument fits what is
+> being tested) is partially established, not fully."
+
+The plain-language equivalent **must NOT** collapse the "partially
+established" language into "confirmed" or "verified" (would
+violate cascade-source bounded qualifier discipline per guide #4
+r4 §5.6 anti-pattern). It **must** preserve the operand-fitness-
+precondition-visibility that the qualifier makes explicit.
+
+**L4 provenance chain rendering at §5.11**:
+
+The commentary's substantive content originates from the user's
+own Stage I §4.6 verbatim articulation (the source of the source
+§5.9 commentary; the L4 provenance chain: user's-own-words-at-
+Stage-I → §3.12-framing-at-§5.9 → user-acceptance-at-lock → §5.11-
+rendering-at-Stage-T). The patient-audience §5.11 rendering MUST
+document this provenance chain in a closing toelichting-alinea (or
+equivalent audience-appropriate note) so the reader can trace the
+commentary's own authorship.
+
+Concrete plain-language phrasing template (drawing on first-ever
+operational instance's Dutch rendering):
+
+> *(Toelichting bij de bewoording. In de bron-tekst waar deze
+> commentaar uit komt, gebruikte de deelnemer zelf de zinnen: [...
+> verbatim Stage I §4.6 quote in participant's own language ...].
+> Ook merkte de deelnemer op dat [... specific nuance the
+> participant articulated at Stage I §4.6 that shaped the §3.12
+> framing at §5.9 ...]. Die nuance is hierboven bewust
+> doorgetrokken: [... how the nuance was preserved in the plain-
+> language rendering ...]. De vertaling naar deze plain-Dutch
+> commentaar behoudt de vier §3.12 disciplines: subject-
+> toegeschreven per zin, permitted-wording only, geen voorspel-
+> of oorzaak-woorden, en het patroon kan niet gebruikt worden om
+> iets over andere mensen of over morgen te zeggen.)*
+
+**Placement decision — parenthetical vs inline**:
+
+The precedent set at first-ever operational instance is
+**parenthetical placement** (Q B1 at Stage T lock session 2026-07-08:
+user accepted "keep parenthetical toelichting" for LOCKED r1). The
+parenthetical placement signals that the toelichting-alinea is
+**meta-content about the commentary's own provenance**, distinct
+from the substantive claim content of the commentary itself.
+Alternative inline placement would blur this distinction. Absent
+explicit user preference otherwise at future translations, keep
+parenthetical.
+
+**Anti-patterns this addendum blocks**:
+
+- Rendering §5.11 without cascade-source bounded qualifier when
+  source is downstream of cascade-inheriting topic (violates
+  guide #4 r4 §5.6 third downstream propagation consequence:
+  qualifier must travel through Stage T translation tracks).
+- Rendering cascade-source qualifier in language that reads as
+  "confirmed" or "verified" instead of "partially established"
+  (violates guide #4 r4 §5.6 anti-pattern; would collapse the
+  qualifier into false certainty).
+- Omitting the L4 provenance toelichting-alinea when §5.11 is
+  filled (violates L4 transparency discipline; reader cannot
+  trace commentary's authorship).
+- Promoting the toelichting to inline paragraph absent explicit
+  user preference (violates the parenthetical-placement precedent;
+  the placement itself signals meta-content vs substantive-content).
+
+**First-ever operational instance** (LOCKED r1 2026-07-08):
+[`analyses/translation/patient-audience/construct-bout-recovery-signal.md`](../analyses/translation/patient-audience/construct-bout-recovery-signal.md)
+§5.11 renders the cascade-source bounded qualifier per this
+addendum's template + closes with parenthetical L4 provenance
+toelichting-alinea documenting the two-step chain from Stage I §4.6
+"my felt pattern is..." verbatim → §5.9 §3.12-framing → user
+acceptance at Stage A lock → §5.11 rendering at Stage T lock. Q B1
+at Stage T lock session 2026-07-08 confirmed both the cascade-
+source qualifier rendering + parenthetical L4 provenance placement.
 
 ## 6. Conflict rules
 
@@ -1718,3 +2015,4 @@ registered" line. The skill also increments the limitations doc's
 | 2026-06-25 | Fresh-session `/research-methodology-review` | Verdict REVISION RECOMMENDED (mild). Report: [`reviews/methodology-translation_to_audience-2026-06-25.md`](../reviews/methodology-translation_to_audience-2026-06-25.md). **Three critical confirmations**: (a) §3.12 patient-audience-ONLY commentary separation holds at six enforcement layers; (b) layperson-test gate operationally implementable as either-fired or explicitly-pending-marked; (c) layer-closure clean (all five prior guides cross-referenced, D → I → S₁ → S₂ → A → T flow named, outputs fully specified). **Two required actions**: R1 — `plain_language_dictionary.md` does not yet exist on disk; first Stage T session needs bootstrapping responsibility named (or sibling task at §11 step 7); R2 — §5.7 enumeration of five refusal-to-proceed paths omits the §6.6 source-stage map-change-needed case (§5.7 ↔ §6.6 ↔ §9.2 inconsistency). **Four recommended**: A1 length 44 over upper bound, ~30-50 lines compressible (deferred per pattern); A2 §5.10 omits §3.6 + §5 from plan citations; A3 §9.6 23-item gate per-category headers for scannability; A4 §11 lock-log scannability split. None blocks §11 step 6 closure. |
 | 2026-06-25 | Revised r1 → r2 | Both required absorbed: **R1** — §9.1 added bootstrap-responsibility paragraph: the skill MUST scaffold `plain_language_dictionary.md` on first invocation when not present, with minimal header + empty body table; sibling-task alternative at §11 step 7 noted explicitly. **R2** — §5.7 added sixth refusal-path for source-stage map-change-needed surface during Stage T, citing §6.6 halt-criteria and the §3.6 conflict-resolution rule pathway; distinct from refusal-path #1 because the source IS locked but the map-source binding is wrong. Three of four recommended absorbed: A2 — §5.10 plan citation list extended to (§3.5; §3.6; §3.7; §3.8; §3.9; §3.10; §3.11; §3.12; §4; §5; §6.6) with one-sentence bind rationale; A3 — §9.6 reorganised with seven per-category headers (source+audience; plain-language+caveats; L-ID; quality-measure; layperson-test+visual; §3.12 commentary discipline; wording-discipline; cross-cutting structural enforcement); A4 — this lock-log split into per-event paragraphs. A1 density compression deferred per reviewer's "for future revision pass" framing. |
 | 2026-06-25 | **LOCKED r2 — closes §11 step 6** | User acceptance ("Absorb all (2 required + A2/A3/A4 recommended; defer A1 compression), lock r2, close step 6"). Status of all sections LOCKED. **§11 step 6 closes — the six-guide methodology arc (D → I → S₁ → S₂ → A → T) is complete and all six guides are LOCKED r2.** No second-pass review per established Option-γ pattern. **Drift triggers registered** (manual-pending-skill): constituent source artefact (Stage I / S₁ / S₂ / A) re-examined; layperson-test fires for layperson-test-pending entries; cited methodology MD changes lock-version (especially the five upstream guides, research_line_limitations.md, synthesis_structure_map.md, _plan_results_analysis_layer.md); plain-language dictionary churn at meaningful scale; ≥6 months elapse since lock. **Layer ready for §11 step 7 (skill build for `/research-interpret` with six-stage routing per plan r5 §7).** |
+| 2026-07-08 | **LOCKED r3 — Phase C-exit joint Stage T lock same commit-cycle** | User elected to retroactively patch the guide at same-commit-cycle rather than defer to a future skill revision (Q C2 at joint Stage T user-acceptance lock session 2026-07-08: user answered "yes patch guide same commit-cycle" with all three fixes T-F1 + T-F2 + T-F3 — user specified "all three" via my recommendation-and-specify pattern). **THIRD retroactive-friction-fix on 2026-07-08** (after Stage S₂ guide `external_contextualisation.md` r3 → r4 + Stage A guide `actionability_translation.md` r2 → r3 earlier same day). r2 → r3 change: **THREE new addenda** interpolated at appropriate anchors (no renumbering of §5.1-§5.12 or §6+; preserves all LOCKED-r2 cross-references). **§5.6.1 (T-F1)** formalises tier-2 rendering worked-example discipline for both audience tracks (Phase A template was tier-1-not-applicable; 5 discipline points + 4 anti-patterns blocked + first-ever operational instance pointer at `analyses/translation/{research,patient}-audience/construct-bout-recovery-signal.md` LOCKED r1 same commit-cycle). **§5.7.1 (T-F3)** formalises four-surface layperson-test enumeration rule for §5.11-carrying patient-audience tracks (§5.3 + §5.4 + §5.6 + §5.11 + visual caption; 3 anti-patterns blocked + first-ever operational instance pointer at `analyses/translation/patient-audience/construct-bout-recovery-signal.md` §5.7 entry #2 LOCKED r1 same commit-cycle). **§5.11.1 (T-F2)** formalises cascade-source bounded qualifier per guide #4 r4 §5.6 mirror-application + L4 provenance chain rendering discipline through patient-audience §5.11 (Dutch + English phrasing templates + parenthetical-placement precedent Q B1-confirmed at joint session + 4 anti-patterns blocked + first-ever operational instance pointer at `analyses/translation/patient-audience/construct-bout-recovery-signal.md` §5.11 LOCKED r1 same commit-cycle). Fresh-session `/research-methodology-review` NOT dispatched pre-lock — user-authorized deviation matching Stage S₂ + Stage A same-day retroactive-friction-fix pattern (rationale: three targeted addenda preserving all LOCKED-r2 cross-references; each addendum formalises what the first-ever operational instance already demonstrates by first principles). Retained as retrospective drift-trigger per plan §3.7. **T-F1 + T-F2 + T-F3 skill-r5-revision-candidates now RETROACTIVELY-FIXED**: no longer in skill r5 candidate queue since the fixes landed at the guide layer at r3 instead. Remaining T-F* skill-r5-revision-candidates: none (all three addressed). Remaining across all Phase C dispatches: Stage A F2 + F3, Stage S₂ F2 + F3 preserved for future r5 revision cycle. **Phase C-exit CLOSES with this same-commit-cycle lock** — first-ever full six-stage cascade D → I → S₁ → S₂ → A → T LOCKED r1 on origin/main for HA-C4c / K-bout-recovery-signal; plus three retroactive guide-r-lock friction-fixes landed same day for guide #4 + guide #5 + guide #6. **Same-day triple-retroactive-friction-fix pattern verified as project workflow precedent**: three retroactive guide r-locks in one day (external_contextualisation r3→r4 + actionability_translation r2→r3 + translation_to_audience r2→r3), each formalising a first-ever operational instance's discipline into guide layer at same-commit-cycle. **Drift triggers registered** (per skill responsibility #10): (1) new tier-2 §5.6 rendering surfaces at Stage T dispatch → §5.6.1 discipline re-examinable; (2) new §5.11-carrying patient-audience track surfaces → §5.7.1 four-surface enumeration re-examinable; (3) new cascade-inheriting source's §5.11 rendering surfaces → §5.11.1 cascade-source qualifier + L4 provenance rendering re-examinable; (4) guide #4 r4 §5.6 changes lock-version → §5.11.1 references re-examinable; (5) guide #5 r3 §4.2.1 changes lock-version → §5.6.1 references re-examinable; (6) OI-025 Step 2b HA-C4c-personal-baseline sister-HA lands → C-bout-substance moves to 2-member cluster → cross-op-independence gap closes → §5.6.1 first-ever-operational-instance pointer's "gap-named" reading updates; (7) layperson-test fires on the first-ever patient-audience §5.11 → §5.11.1 phrasing templates re-examinable per Q C1 Path A follow-up; (8) ≥6 months elapse since r3 lock. |
