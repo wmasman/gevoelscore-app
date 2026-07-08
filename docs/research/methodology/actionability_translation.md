@@ -1,6 +1,48 @@
 # Actionability translation — Stage A guide
 
-**Status**: **LOCKED r2** by user acceptance 2026-06-25. r1 authored
+**Status**: **LOCKED r3** by user acceptance 2026-07-08. r2 → r3
+absorbed the 2026-07-08 Stage A user-acceptance lock session's
+retroactive-friction-fix on
+[`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md)
+DRAFT r1 — adds NEW §4.2.1 Cross-op-independence bar for single-
+member cascade-inheriting clusters interpolated between §4.2 and
+§4.3 (no renumbering of §4.3-§4.4 or §5+ to preserve LOCKED-r2
+cross-references in downstream artefacts). §4.2.1 formalises the
+"gap-named + future-closeable-via-named-OI" reading for tier-2
+evidence-floor under single-member cascade-inheriting clusters
+with (a) four mandatory conditions (map §5 pre-declared tier-2
+aspiration knowing cluster was single-member + concrete OI names
+closure pathway + §5.2 flags gap as informative shape not blocking
++ cascade-source bounded qualifier per guide #4 r4 §5.6 travels
+through all downstream propagation surfaces); (b) two anti-
+patterns prevented (silent-gap tier-2 inflation + over-conservative
+tier-1 downgrade); (c) first-ever operational instance pointer at
+[`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md)
+LOCKED r1 same commit-cycle citing OI-025 as closure pathway; (d)
+cross-topic scope preservation clause; (e) §9.6 refuse-to-lock
+verification checklist. The addition is a RETROACTIVE FRICTION-FIX
+per subagent friction observation F1 (surfaced at the 2026-07-08
+Stage A dispatch's completion report as skill-r5-revision-candidate
+that the user elected to fix at the guide layer at same-commit-
+cycle rather than defer to a future skill revision, analogous to
+the Stage S₂ 2026-07-08 guide
+[`external_contextualisation.md`](external_contextualisation.md)
+r3 → r4 retroactive friction-fix pattern). Fresh-session
+`/research-methodology-review` NOT dispatched pre-lock —
+user-authorized deviation matching earlier producer-mode
+methodology-MD-addition pattern (rationale: targeted addition of
+one §4.2.1 interpolated subsection preserving all LOCKED-r2 cross-
+references; §4.2.1 formalises what the first-ever operational
+instance
+[`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md)
+already demonstrates by first principles — the guide r3 formalises
+what the artefact already carries; §4.2.1 aligns with guide #4 r4
+§5.6 mirror-application pattern whose peer-review already
+validated the cascade-inheriting rule shape). Retained as
+retrospective drift-trigger per plan §3.7. See §11 lock log for
+the full change summary.
+
+**r2 history (preserved for context)**: r1 authored
 2026-06-24 by a fresh agent per §11 step 6.5 of
 [`_plan_results_analysis_layer.md`](_plan_results_analysis_layer.md)
 (r5 LOCKED 2026-06-24). r1 → r2 absorbed a fresh-session
@@ -15,7 +57,7 @@ density compression — deferred per reviewer "for a future revision
 pass" framing; A2 §5.7 → §7.4 binding-loop completion; A3 §11 lock-
 log scannability). Hard predictive gate per §3.10 preserved at five
 enforcement layers without weakening; §3.12 commentary discipline
-fully implemented. Implementation proceeds to §11 step 6.6 (guide #6
+fully implemented. Implementation proceeded to §11 step 6.6 (guide #6
 `translation_to_audience.md` — the last guide).
 
 This guide is the fifth of six binding methodology MDs for the
@@ -444,6 +486,116 @@ discipline; base-rate context is non-negotiable. If PPV cannot
 compute against the residual-crash base rate, §3.10 conflict rule
 routes the tier to tier-1; §5.6 logs the missing PPV; §5.7
 records the downgrade explicitly.
+
+### 4.2.1 Cross-op-independence bar for single-member cascade-inheriting clusters
+
+*Added at r-lock 2026-07-08 upon first-ever operational firing at
+[`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md)
+LOCKED r1 same commit-cycle. Retroactive friction-fix per subagent
+F1 skill-r5-revision-candidate surfaced at 2026-07-08 Stage A
+dispatch completion report; user elected to fix at guide layer at
+same commit-cycle rather than defer to skill r5, analogous to the
+Stage S₂ 2026-07-08 guide
+[`external_contextualisation.md`](external_contextualisation.md)
+r3 → r4 retroactive friction-fix pattern.*
+
+The §4.2 tier-2 evidence-floor's cross-operationalisation
+independence bar ("two-or-more independent HAs in the cluster, NOT
+three on the same column") does NOT strictly apply as a blocking
+gate when the constituent cluster is **single-member AND the
+topic (feeding the construct) is cascade-inheriting** per
+[`external_contextualisation.md`](external_contextualisation.md)
+r4 §5.6. In this case, the tier-2 evidence-floor is met via a
+**"gap-named + future-closeable-via-named-OI" reading** provided
+ALL FOUR conditions hold:
+
+1. **Map §5 row pre-declared tier-2 aspiration** knowing the
+   cluster was single-member — aspiration is not post-hoc
+   inflation. This is verified by checking the map row's
+   declared-date + lock-version against the cluster-membership
+   declaration at map §3.
+
+2. **A concrete OI names the closure pathway** to future cross-op-
+   independence — for example, a sister-HA pre-reg per CONVENTIONS
+   §3.1 personal-baseline discipline (analogous to the HA-C3 v2 /
+   HA-C3p sister-pre-reg pattern that established personal-
+   baseline sister-HAs alongside Wiggers-verbatim pre-regs);
+   OR a within-cluster HA-*-v2 operand-refinement pre-reg per pre-
+   reg §9.2 OPTIONAL path. The OI's closure is tracked at
+   [`_open_inputs.md`](_open_inputs.md) with the specific pathway
+   named.
+
+3. **§5.2 evidence-layer flags the gap as informative shape not
+   blocking** — the cross-op-independence gap is named explicitly
+   with the OI closure pathway cross-referenced. NOT silently
+   omitted. The §5.2 walk MUST include a paragraph explaining what
+   the gap is + why the map §5 row pre-declared tier-2 knowing the
+   gap + which OI names the closure pathway.
+
+4. **Cascade-source bounded qualifier per guide #4 r4 §5.6
+   mirror-application travels** through the §5.3 tier-2 formal
+   claim + §5.4 refusals + §5.11 L-ID block + any §5.9 commentary
+   anchor. The bounded qualifier makes the operand-fitness
+   precondition visible at every downstream propagation surface;
+   Stage T translation tracks (patient-audience + research-
+   audience) MUST carry the qualifier in appropriate register per
+   guide #4 r4 §5.6 three downstream propagation consequences.
+
+**The rule prevents two anti-patterns**:
+
+- **Anti-pattern A — silent-gap tier-2 inflation**: taking tier-2
+  for a single-member cluster without flagging the cross-op-
+  independence gap or naming the closure pathway. Blocked by
+  conditions 3 + 2. Any Stage A `construct-*.md` that claims
+  tier-2 without a §5.2 evidence-layer paragraph naming the
+  cross-op-independence gap + citing a specific OI closure
+  pathway fails §9.6 refuse-to-lock gate walk.
+
+- **Anti-pattern B — over-conservative tier-1 downgrade for
+  single-member cascade-inheriting clusters**: downgrading tier-2
+  to tier-1 because the strict cross-op-independence bar cannot be
+  met at single-member cluster + guide #4 r4 §5.6 forbids cascade-
+  source as co-equal evidence. The gap-named-with-closure-pathway
+  reading preserves the map's pre-declared aspiration ceiling
+  without over-conservatism. Downgrading in this configuration
+  would lose the §5.7 PPV-with-base-rate anti-overclaim boundary
+  (which is only mandatory at tier-2, not tier-1) without adding
+  safety — nothing about the substantive finding changes under
+  downgrade, but the anti-overclaim reasoning weakens.
+
+**First-ever operational instance** (LOCKED r1 2026-07-08):
+[`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md)
+§5.2 evidence-layer walk names the cross-op-independence gap +
+cites OI-025 (bout-return stringency descriptive companion +
+personal-baseline sister two-step study; Step 2b HA-C4c-personal-
+baseline sister-pre-reg pathway) as concrete closure pathway;
+§5.3 tier-2 formal claim preserves the cascade-source bounded
+qualifier per guide #4 r4 §5.6; §5.6 open_inputs cross-references
+OI-025 as LOAD-BEARING with the "keeps §6.1 downgrade-to-tier-1
+pathway closed" annotation.
+
+**Cross-topic scope preservation** (mirrors guide #4 r4 §5.6
+cross-topic scope preservation clause): this §4.2.1 rule applies
+specifically to **single-member cascade-inheriting clusters**. It
+does NOT apply to:
+
+- **Multi-member clusters**: these meet the strict cross-op-
+  independence bar directly per §4.2 base rule; no §4.2.1
+  invocation needed.
+- **Standalone (non-cascade-inheriting) single-member clusters**:
+  these lack a cascade-source bounded qualifier to travel and
+  therefore should be routed to tier-1 (per §6.1 conflict rule) or
+  the map §5 row aspiration should be revised. §4.2.1 does NOT
+  apply as a workaround for standalone single-member cluster
+  tier-2 aspiration.
+
+**Verification at §9.6 refuse-to-lock gate walk**: producer
+verifies that (a) all four conditions above hold; (b) both anti-
+patterns are not fired; (c) §5.7 PPV-with-base-rate is computed
+per §3.10 (tier-2 discipline); (d) §5.11 L-ID block covers all
+seven L-IDs per the map §5 row; (e) any §5.9 commentary (if
+articulated) carries the cascade-source bounded qualifier via
+Stage T translation propagation obligation per guide #4 r4 §5.6.
 
 ### 4.3 Tier 3 — Predictive use
 
@@ -1816,3 +1968,4 @@ in §5.11 (manual until skill lands).
 | 2026-06-24 | Fresh-session `/research-methodology-review` | Verdict REVISION RECOMMENDED (mild). Report: [`reviews/methodology-actionability_translation-2026-06-24.md`](../reviews/methodology-actionability_translation-2026-06-24.md). Two required (R1: §5.5 needs seventh PPV-floor anchoring discipline element to prevent trivially-passable floor backdooring §3.10 gate; R2: §5.10 cross-ref to §6.1+§6.2+§6.4 downgrade-mechanics). Three recommended (A1: ~50-80-line density compression — flagged "for future revision pass"; A2: §5.7 → §7.4 binding-loop completion; A3: §11 lock-log scannability). **Hard predictive gate preserved at 5 enforcement layers** without weakening; **§3.12 commentary discipline** with all four hard separations operationalised across §5.9 + §6.4 + §7.7-§7.9 + §7.14 + §9.6 gates 10-13. Both worked examples handle upstream state correctly. **All-seven L-ID discipline** (most rigorous in layer) spot-checked verbatim against limitations doc r3 §3 + map r3 §5. |
 | 2026-06-25 | Revised r1 → r2 | Both required absorbed: **R1** — §5.5 added seventh element "PPV floor anchoring discipline" requiring the floor anchor to null base rate by default OR tier-2 point estimate when cross-op evidence exists; floor cannot sit at or below null base rate without backdooring the §3.10 gate; both worked examples updated with explicit anchoring (K-stress-fatigue-monitoring at uniform-three-bin null ~0.33; K-bout-recovery-signal at-or-above cross-op tier-2 point estimate per RESEARCH-REPORT §5.2 base-rate frame). **R2** — §5.10 added downgrade-mechanics rule book cross-referencing §6.1 (tier-condition-unmet → tier downgrade), §6.2 (forward-validation REJECTED → tier-3 → tier-2), §6.4 (commentary-vs-evidence → commentary revised, no tier change). Two of three recommended absorbed: A2 — §5.7 closing paragraph added explicit "§7.4 anti-pattern enforces" binding-loop language; A3 — this lock-log split into per-event paragraphs. **A1 density compression deferred** per reviewer's "for a future revision pass (not blocking)" framing; future r3 may execute the ~50-80-line compression if friction surfaces during dry-run. |
 | 2026-06-25 | **LOCKED r2** | User acceptance ("Absorb all (2 required + 3 recommended), lock r2, dispatch guide #6 with density signal"). Status of all sections LOCKED. Implementation proceeds to §11 step 6.6 (guide #6 `translation_to_audience.md` — the last guide). No second-pass review per established Option-γ pattern. **Drift triggers registered** (manual-pending-skill): constituent `topic-*.md` re-examined; forward-validation HA verdict landing; cited methodology MD changes lock-version (especially research_line_limitations.md, synthesis_structure_map.md); ≥6 months elapse since lock. |
+| 2026-07-08 | **LOCKED r3** by user acceptance at Stage A user-acceptance lock session on [`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md) | User elected to retroactively patch the guide at same-commit-cycle rather than defer to a future skill revision (Q C2 at Stage A user-acceptance lock session 2026-07-08: user answered "yes patch guide r-lock same commit-cycle (specify direction after B1)"; B1 path (a) direction confirmed as the formalisation direction — "gap-named + future-closeable-via-named-OI" reading for tier-2 evidence-floor under single-member cascade-inheriting clusters). Analogous to the Stage S₂ 2026-07-08 guide `external_contextualisation.md` r3 → r4 retroactive friction-fix pattern (user precedent-established at same day earlier for same-commit-cycle retroactive friction-fix). r2 → r3 change: **NEW §4.2.1 Cross-op-independence bar for single-member cascade-inheriting clusters** interpolated between §4.2 and §4.3 (no renumbering of §4.3-§4.4 or §5+; preserves LOCKED-r2 cross-references from downstream `construct-stress-fatigue-monitoring.md` + this new `construct-bout-recovery-signal.md` LOCKED r1 same commit-cycle + `_plan_results_analysis_layer.md` §3.10 + `_open_inputs.md` + `translation_to_audience.md` — guide #6). §4.2.1 formalises the "gap-named + future-closeable-via-named-OI" reading for tier-2 evidence-floor under single-member cascade-inheriting clusters with (a) four mandatory conditions (map §5 pre-declared tier-2 aspiration knowing cluster was single-member + concrete OI names closure pathway + §5.2 flags gap as informative shape not blocking + cascade-source bounded qualifier per guide #4 r4 §5.6 travels through all downstream propagation surfaces); (b) two anti-patterns prevented (Anti-pattern A silent-gap tier-2 inflation blocked by conditions 3 + 2; Anti-pattern B over-conservative tier-1 downgrade for single-member cascade-inheriting clusters); (c) first-ever operational instance pointer at [`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md) LOCKED r1 same commit-cycle citing OI-025 as concrete closure pathway; (d) cross-topic scope preservation clause (rule does NOT apply to multi-member clusters or to standalone non-cascade-inheriting single-member clusters); (e) §9.6 refuse-to-lock verification checklist. **RETROACTIVE FRICTION-FIX** per subagent friction observation F1 surfaced at 2026-07-08 Stage A dispatch completion report. Fresh-session `/research-methodology-review` NOT dispatched pre-lock — user-authorized deviation matching earlier producer-mode methodology-MD-addition pattern (rationale: targeted addition of one §4.2.1 interpolated subsection preserving all LOCKED-r2 cross-references; §4.2.1 formalises what the first-ever operational instance `construct-bout-recovery-signal.md` already demonstrates by first principles — the guide r3 formalises what the artefact already carries; §4.2.1 aligns with guide #4 r4 §5.6 mirror-application pattern whose peer-review already validated the cascade-inheriting rule shape). Retained as retrospective drift-trigger per plan §3.7. **F1 skill-r5-revision-candidate now RETROACTIVELY-FIXED**: no longer in skill r5 candidate queue since the fix landed at the guide layer at r3 instead. Remaining F2 (guide r4 §5.6 downstream Stage A concrete phrasing template) + F3 (§5.7 PPV computation under low-crash-base-rate + extreme-tail-signal structural precision tension) skill-r5-revision-candidates preserved for future r5 revision cycle. **Drift triggers registered** (per skill responsibility #10): (1) [`external_contextualisation.md`](external_contextualisation.md) r4 §5.6 changes lock-version → this §4.2.1 mirror-application re-examinable (§4.2.1 explicitly depends on guide #4 r4 §5.6 cascade-inheriting topic constellation discipline); (2) a new single-member cascade-inheriting cluster gets a tier-2 aspiration at [`synthesis_structure_map.md`](synthesis_structure_map.md) §5 → this §4.2.1 rule fires on the new construct at Stage A dispatch time; (3) [`research_line_limitations.md`](research_line_limitations.md) L-ID expansion lands → §4.2.1 references may need updating; (4) a Stage A `construct-*.md` fires Anti-pattern A or Anti-pattern B in production → §4.2.1 rule shape re-examined; (5) OI-025 Step 2b HA-C4c-personal-baseline sister-HA pre-reg lands → produces second substantive cluster member for C-bout-substance → guide r3 §4.2.1 condition 2 first-ever-operational-instance closure fires → §4.2.1 first-ever-operational-instance pointer wording re-examined at future re-lock; (6) ≥6 months elapse since r3 lock. **Next action downstream**: Stage T translation tracks (research-audience + patient-audience) on K-bout-recovery-signal now UNBLOCKED per this artefact's guidance + [`construct-bout-recovery-signal.md`](../analyses/actionability/construct-bout-recovery-signal.md) LOCKED r1 same commit-cycle — Stage T dispatches when user chooses. |
