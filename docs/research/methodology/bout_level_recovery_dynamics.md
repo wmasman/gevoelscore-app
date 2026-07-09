@@ -166,6 +166,72 @@ If (b) fires, the bout is flagged `did_not_return_flag = True`. This is the Wigg
 - **Fixed 60-minute window post-peak** (no return condition): simpler but loses Wiggers' "stress doesn't decrease" signal. Rejected as primary; reported as sensitivity arm `fixed_60min`.
 - **Return condition based on rate-of-change** (e.g. dStress/dt below threshold): captures "plateau" semantics but is sensitive to the per-minute noise. Rejected as primary; can be derived post-hoc from the per-bout time series if a downstream pre-reg needs it.
 
+#### 3.2.2 Personal-baseline SD-anchored derivative operand family (added 2026-07-09 per OI-025 protocol §5.3 + OI-033 sister-pre-reg pathway)
+
+**Framing**: this subsection defines a **derivative operand family** built on top of the §3.2 primary return-window rule. The primary rule (§3.2 above) flags bouts against a **fixed absolute threshold** (180-min forward cap + `+5` baseline tolerance + ≥ 10-min return-hold, all in raw stress units on the participant's per-minute Firstbeat trace). The derivative family adds **personal-baseline SD-anchored flags** that reference each bout's `tail_length` against the participant's own rolling `[d-90, d-30]` LC-era lagged reference distribution of `tail_length`.
+
+The two operand families are **cross-operationalisation-independent at the operand-family level**. Family-level independence per OI-025 protocol §5.4 four-condition argument: fixed-absolute-threshold vs personal-baseline-rolling-reference differ in reference frame, construct alignment, distributional-drift sensitivity, and low-n failure modes. **At the raw-substrate level**, the two families are NOT independent: both derive from the same Firstbeat-per-minute stress signal via the same bout-detection pipeline, and a shared-substrate correlated failure mode (e.g. per parent MD §2.4 minute-resolution amplification) would affect both families. The independence claim binds at the operand-family level only; this scope-boundary mirrors the HA-C3 v2 / HA-C3p sister-pre-reg pattern that [`actionability_translation.md`](actionability_translation.md#421-condition-2--cross-operationalisation-independence-inside-the-cluster) guide r3 §4.2.1 condition 2 explicitly cites as the canonical model.
+
+**Cross-references**:
+- Original locked pre-commits of the operand family: [OI-025 protocol §5.3 LOCKED r1 2026-07-09](../analyses/hypotheses/HA-C4c-stringency-companion/protocol.md#53-step-2b-operand--personal-baseline-sd-anchored-bout-return-threshold).
+- Cross-operationalisation independence argument: [OI-025 protocol §5.4](../analyses/hypotheses/HA-C4c-stringency-companion/protocol.md#54-cross-operationalisation-independence-argument-for-step-2b).
+- CONVENTIONS [§3.1](../CONVENTIONS.md#31-personal-baseline-not-absolute-thresholds) personal-baseline discipline + [§3.2](../CONVENTIONS.md#32-lagged-baseline-for-sustained-push-hypotheses) lagged-baseline `_lagged_lcera` discipline (v3.2 lesson from HA01b recomputed: baseline excludes candidate day itself).
+- Sister-pre-reg using this family: [HA-C4cp](../analyses/hypotheses/HA-C4cp/hypothesis.md) (co-locked with this MD extension at r3 lock-commit).
+
+##### Reference-distribution construction (LOCKED)
+
+**Reference distribution** `tail_length_lagged_lcera(d)`:
+
+- **Window**: `[d-90, d-30]` lagged, per CONVENTIONS §3.2 `_lagged_lcera` convention. Restricted to LC-era days (`>= 2022-04-04`) with `has_garmin_uds = True` and passing the §3.4 day-validity gate.
+- **Pool granularity**: bout-level (NOT per-day-aggregated). The reference distribution is the pool of per-bout `tail_length` values from bouts detected on all in-window days. Rationale: `tail_length` is a per-bout quantity; z-scoring per-bout against a per-bout reference preserves the direct comparability without an intervening aggregation step that would change the reference frame.
+- **Robust central-tendency**: `subject_lagged_median(d) = median` of the pool.
+- **Robust scale**: `subject_lagged_mad(d) = 1.4826 × MAD` of the pool (median-absolute-deviation scaled to normal-consistent SD equivalent per CONVENTIONS §3.1 prototype).
+- **Reference-window validity bar**: ≥ 30 bouts in the pool over `[d-90, d-30]`. Below the bar, `subject_lagged_median(d) = NaN` and all derivative operands NaN-propagate for day `d`; below-bar days are coverage-gap not analysable-with-shortfall.
+- **Candidate-day exclusion**: the `[d-90, d-30]` window is right-closed at `d-30`, so day `d` is not in the reference pool by construction. This enforces CONVENTIONS §3.2 lesson from HA01b recomputed (baseline excludes candidate day itself) without needing a separate filter.
+- **Right-tail censoring**: `did_not_return_flag == True` bouts have `tail_length = 180` per §3.2. These are INCLUDED in the reference pool as-is; the 180-cap censoring is a known feature of the per-bout distribution and the median + MAD are robust to the right-tail piling at 180. Excluding them would bias the reference toward shorter bouts, artificially deflating `subject_lagged_median(d)` and inflating the derivative flag rate.
+- **April 2024 cluster exclusion**: reference-pool bouts on days inside the April 2024 cluster (`2024-04-09 → 2024-04-16`) are excluded per [`citalopram_phase_stratification.md`](citalopram_phase_stratification.md) structural exclusion. Enforced by the §3.4 day-validity gate.
+
+##### Per-bout derivative features (added to the §4 operand table)
+
+- **`bout_return_time_z`**: `(bout.tail_length − subject_lagged_median(d)) / subject_lagged_mad(d)` — continuous z-score of the bout's `tail_length` against the personal lagged reference on day `d`. NaN-propagates from `subject_lagged_median(d)` NaN. Units: SD-equivalents. Range: `[≈ −2, ≈ +∞)` with a hard right-cap at `(180 − subject_lagged_median) / subject_lagged_mad` because of the 180-min tail_length cap.
+- **`did_not_return_1sd_flag`**: `True` iff `bout.tail_length > (subject_lagged_median(d) + 1 × subject_lagged_mad(d))`. Bool; NaN on reference-window-invalid days.
+- **`did_not_return_2sd_flag`**: `True` iff `bout.tail_length > (subject_lagged_median(d) + 2 × subject_lagged_mad(d))`. Bool; NaN on reference-window-invalid days.
+
+##### Per-day aggregations (added to the §4 operand table)
+
+- **`bout_return_time_z_max_day`**: max over bouts on day `d` of `bout_return_time_z`. NaN if no valid bouts on day `d` OR `subject_lagged_median(d)` NaN.
+- **`bout_n_did_not_return_1sd_day`**: count of bouts on day `d` with `did_not_return_1sd_flag == True`. `0` on valid days with no flagged bouts; NaN on invalid-reference days.
+- **`bout_n_did_not_return_2sd_day`**: count of bouts on day `d` with `did_not_return_2sd_flag == True`. `0` on valid days with no flagged bouts; NaN on invalid-reference days.
+
+**Naming convention**: consistent with §3.5 (per-bout: `bout_<feature>`; per-day: `bout_<feature>_<aggregation>_<window>`; snake_case). Joins to `per_day_master.csv` via the extended [`03_consolidate/build_unified_dataset.py`](../pipeline/03_consolidate/build_unified_dataset.py). Reference-window median + MAD themselves are stored as per-day columns `subject_lagged_median_day` and `subject_lagged_mad_day` for audit traceability.
+
+##### Rationale for locked pre-commits
+
+- **`[d-90, d-30]` window over `[d-28, d-1]`**: matches CONVENTIONS §3.2 `_lagged_lcera` convention. Wider window gives more bouts per reference pool. Corpus-wide empirical bout rates on Stratum 4 anchor the calculation: HA11-bout-redo result §4 landed 4317 bouts across the Stratum 4 unmedicated pool of ~600 valid days, giving a bout-rate median ≈ 4-8 bouts/day (day-level distribution IQR reported at HA11-bout-redo dry-run). A 60-day window at that rate yields ~240-480 reference-pool bouts on typical days — comfortably above the ≥ 30 bar and providing stable robust-statistic estimates. A 28-day window would give ~112-224 bouts (still above ≥ 30 but with more day-to-day variance in the estimate); the wider window trades responsiveness-to-recent-shifts for stability-of-scale-estimate. The 30-day exclusion band protects against contamination from recent PEM episodes shifting the reference.
+- **Bout-level reference pool over day-level aggregation**: `tail_length` is a per-bout quantity; z-scoring against a per-bout distribution preserves direct comparability. Day-level aggregation (daily max, daily median) would require choosing an aggregation rule that itself changes the reference frame.
+- **Robust central-tendency + robust scale (median + MAD)**: `tail_length` has a right-censored distribution at the 180-min cap. Mean + SD would be inflated by the pile-up at 180. Median + MAD are robust to that censoring.
+- **Reference-window validity bar of ≥ 30 bouts**: matches CONVENTIONS §3.1 personal-baseline convention. Days with reference-window shortfall are coverage-gaps, not analysable-with-shortfall; propagating a NaN is the honest signal.
+- **Include `did_not_return_flag` bouts in the reference pool**: excluding them would artificially deflate `subject_lagged_median(d)` and inflate the derivative flag rate. The 180-cap is a known censoring feature; robust statistics handle it.
+- **Enforce candidate-day exclusion via window edge, not separate filter**: makes the exclusion self-evident from the window definition and eliminates a class of implementation error (forgetting the filter).
+
+##### Alternatives considered + why rejected as primary
+
+- **Fixed-window reference `[d-28, d-1]` instead of `[d-90, d-30]`**: borderline pool size at typical bout rates; diverges from the `_lagged_lcera` convention. Available as a sensitivity arm if a downstream pre-reg needs shorter-window responsiveness.
+- **Mean + SD instead of median + MAD**: inflated by 180-cap right-censoring. Reported as descriptive companion at result-time.
+- **Per-day-aggregated reference (daily median `tail_length` z-scored against personal lagged distribution of daily medians)**: changes the reference frame at the aggregation step; the per-bout z-score is the cleanest. Available if a downstream pre-reg needs day-level Z-anchoring.
+- **Exclude `did_not_return_flag` bouts from reference pool**: rejected per rationale above; reported as sensitivity arm.
+- **Include April 2024 cluster in reference pool**: rejected per §3.4 day-validity gate (structural exclusion).
+- **Z-thresholds other than {1, 2}**: {1, 2} covers the two natural stringency levels (`1σ` = mild outlier; `2σ` = tail outlier). Higher Z (e.g. 2.5, 3) would over-thin the count at typical corpus rates; lower Z (0.5) would over-populate. Downstream pre-regs may add sensitivity Z values.
+
+##### Cascade — which HA pre-regs use this family
+
+- **[HA-C4cp](../analyses/hypotheses/HA-C4cp/hypothesis.md)** (sister-pre-reg to HA-C4c, co-locked with this MD extension 2026-07-09): primary operand `bout_n_did_not_return_2sd_day`; sensitivity operands `bout_n_did_not_return_1sd_day` + `bout_return_time_z_max_day`.
+- **Future pre-regs** may add features to this family as sensitivity arms per §3.2 general policy but cannot remove these defaults.
+
+##### Framework-validity gate treatment (§6 unchanged)
+
+The §6 framework-validity gate (HA11 v1 reproduction on the calm-day pool via `bout_n_fast_recovery_day` primary operand) is UNCHANGED by this extension. The SD-anchored family adds NEW derivative operands but does NOT modify the primary operand set used by the §6 gate. HA-C4cp inherits the §6 gate from the parent MD verbatim per parent MD §6.
+
 ### 3.3 Baseline reference for the bout (locked pre-commits)
 
 **Pre-bout local baseline** (`pre_bout_baseline`): mean of `stress(t)` over `t ∈ [t_onset - 30, t_onset - 5]`, restricted to valid minutes (stress in `[1, 100]`). Computed with at least 15 of the 25 minutes valid; otherwise the bout is flagged `baseline_invalid` and dropped from features that depend on `pre_bout_baseline`.
@@ -227,6 +293,9 @@ The per-bout dataset has one row per detected bout. Locked feature set (downstre
 | `multi_peak_flag` | True if §3.4 multi-peak condition fired | bool | {True, False} | always populated |
 | `transient_flag` | True if `t_peak − t_onset < 5 minutes` per §3.1 | bool | {True, False} | always populated |
 | `bout_during_sleep_flag` | True if `t_peak` falls within the sleep window per [`nightly_attribution.md`](nightly_attribution.md) | bool | {True, False} | always populated |
+| `bout_return_time_z` | z-score of `tail_length` against the personal `[d-90, d-30]` lagged reference per §3.2.2 (`(tail_length − subject_lagged_median) / subject_lagged_mad`) | SD-equivalents | `[≈ −2, ≈ +∞)` with hard right-cap `(180 − subject_lagged_median) / subject_lagged_mad` | NaN on reference-window-invalid days (< 30 bouts in `[d-90, d-30]`) |
+| `did_not_return_1sd_flag` | True iff `tail_length > subject_lagged_median + 1 × subject_lagged_mad` per §3.2.2 | bool | {True, False} | NaN on reference-window-invalid days |
+| `did_not_return_2sd_flag` | True iff `tail_length > subject_lagged_median + 2 × subject_lagged_mad` per §3.2.2 | bool | {True, False} | NaN on reference-window-invalid days |
 
 **Comparability across bouts within a day vs across days**: per-bout features are locally referenced (against `pre_bout_baseline`, which is bout-specific). This makes within-day cross-bout comparisons interpretable (same trace, drifting reference) and cross-day comparisons interpretable after dose-adjustment (§5). Raw cross-day comparison without dose-adjustment is **discouraged for cross-phase tests** per [`citalopram_phase_stratification.md` §4](citalopram_phase_stratification.md#4-per-channel-inheritance-rules) — `peak_height` and `pre_bout_baseline` inherit the load-bearing dose-modulation caveat from `all_day_stress_avg` / `stress_mean_sleep` (the parent channels) and require Approach A / B / C treatment per §5.
 
@@ -245,6 +314,13 @@ The per-bout dataset has one row per detected bout. Locked feature set (downstre
 | `bout_AUC_above_baseline_sum_day` | sum of `AUC_above_baseline` over bouts per day | cumulative within-day load |
 | `bout_n_did_not_return_day` | count of bouts with `did_not_return_flag = True` per day | direct count of Wiggers C4-positive within-day events |
 | `bout_n_fast_recovery_day` | count of bouts with `recovery_half_life ≤ 15 min` AND `tail_length ≤ 45 min` per day | HA11-bout-redo framework-validity reference (the "fast-recovery bout" operand; thresholds calibrated in §6.1) |
+| `subject_lagged_median_day` | median of the personal `[d-90, d-30]` lagged reference pool of `tail_length` per §3.2.2 | reference-window audit trace for personal-baseline SD-anchored derivative operand family |
+| `subject_lagged_mad_day` | `1.4826 × MAD` of the same reference pool per §3.2.2 | reference-window audit trace (scale) |
+| `bout_return_time_z_max_day` | max over bouts on day `d` of `bout_return_time_z` per §3.2.2 | per-day continuous SD-anchored operand; NaN if no valid bouts on day `d` OR reference-window invalid |
+| `bout_n_did_not_return_1sd_day` | count of bouts on day `d` with `did_not_return_1sd_flag == True` per §3.2.2 | per-day Z=1 count operand; `0` on valid days with no flagged bouts, NaN on invalid-reference days |
+| `bout_n_did_not_return_2sd_day` | count of bouts on day `d` with `did_not_return_2sd_flag == True` per §3.2.2 | HA-C4cp primary per-day operand; `0` on valid days with no flagged bouts, NaN on invalid-reference days |
+
+**Zero-vs-NaN discipline** (load-bearing for the SD-anchored derivative operands): for `bout_n_did_not_return_1sd_day`, `bout_n_did_not_return_2sd_day`, and `bout_return_time_z_max_day`, **`count = 0` means the reference window is valid (≥ 30 bouts in `[d-90, d-30]`) AND no bouts on day `d` fired the threshold**; **`count = NaN` means the reference window is invalid (< 30 bouts in `[d-90, d-30]`)** or the pipeline §3.4 day-validity gate failed. Downstream consumers (pandas `.fillna(0)` in particular) MUST distinguish these cases — silently promoting NaN to 0 would fold reference-window-invalid days into zero-count days and bias downstream contrasts toward null. Cross-consistency with parent operand: `bout_n_did_not_return_day` (§3.2 primary) uses the same convention (`0` on valid days with no `did_not_return` bouts; NaN on §3.4-invalid days).
 
 The per-day aggregations are the joinable surface for downstream HA pre-regs. The per-bout dataset itself remains accessible for any pre-reg needing the within-day distribution.
 
@@ -509,12 +585,15 @@ Add a one-line `## Future work — bout-level analysis` note (or equivalent colu
 
 **Status**: **r2 LOCKED 2026-06-19** per [CONVENTIONS §2.2 + §2.3](../CONVENTIONS.md#22-methodology-md-before-locking-a-major-choice) + [`hypothesis_lock_process.md §3.6`](hypothesis_lock_process.md) compression. Audit ([`reviews/bout_level_recovery_dynamics-2026-06-19.md`](../reviews/bout_level_recovery_dynamics-2026-06-19.md)) verdict PASS-with-caveats; r2 absorbs are mechanical (no architectural change; multiplicity-deferral user-confirmed pre-r2). Co-locked with sub-MD at this commit.
 
+**Additive extension r3 LOCKED 2026-07-09**: §3.2.2 SD-anchored derivative operand family + §4 feature-table rows added under user Q "lets continue with OI-033 personal-baseline SD-anchored sister-HA pre-reg" 2026-07-09. Scope strictly additive (no r2 pre-commits modified). Fresh-session methodology-review at [`reviews/bout_level_recovery_dynamics-r3-extension-2026-07-09.md`](../reviews/bout_level_recovery_dynamics-r3-extension-2026-07-09.md) returned PASS with three non-blocking clarity refinements; §3.6 compression discipline applied (§3.2.2 framing dual-independence statement tightened + §4 per-day aggregation table `count = 0` vs `NaN` distinguisher footnote added + §3.2.2 rationale block empirical anchor for the ≥ 30-bout validity bar added). Co-locked with [HA-C4cp](../analyses/hypotheses/HA-C4cp/hypothesis.md) pre-reg r2 at Bundle H+ event 7. Full rationale in §10 revision log r3 row below.
+
 ### Revision log
 
 | version | date | change |
 |---|---|---|
 | r1 | 2026-06-19 | Initial draft as producer-mode methodology MD post-HA-C4 v2 REJECTED. Narrow lock scope (C4 + HA11 only), cross-phase IS in scope with Approach A headline, bout-level β re-calibration committed as sub-MD ([`bout_level_dose_response_calibration.md`](bout_level_dose_response_calibration.md)), framework-validity gate via HA11 v1 reproduction restricted to unmedicated stratum × train era × calm days. Educated assessment + forward-pointers for A4 / C1 / C4b / H4 in §9. |
 | r2 | 2026-06-19 | §3.6-compression r2 absorbing audit fires. Parent MD absorbs (10): (1) §2.4 Firstbeat-input amplification at minute resolution surfaced [L2 MEDIUM]; (2) §2.4 pacing-behaviour mask risk foreshadow [L1 minor]; (3) §2.3 event-only column thinning clarification + thickened "Match to Wiggers" row [L1 minor]; (4) §3.4 motion_confound_flag = NaN on no-intensity-record bout-window (downstream filtering treats as coverage-gap, not no-confound) [L2 minor]; (5) §6.2 framework-validity bars vs HA11 v1 three-criterion set cross-cite [L3 minor]; (6) §3.1 transient_flag primary-operand handling pinned (INCLUDED in primary; deterministic) [L3 minor]; (7) §5.2 multiplicity-correction strategy deferral note (PM-confirmed 2026-06-19; closes L4 by explicit confirmation); (8) §6.3 per-bout-n reporting discipline at result-time (CONVENTIONS §3.6 named-counts) [L4 minor]; (9) §5.1 recovery_arc 24dad02 6/7 Stratum-4 factor-of-2 E[L]* empirical anchor [L4 minor]; (10) STOCKTAKE §7 filename mismatch corrected (`methodology-` prefix removed; single-report-for-paired-MDs convention named) [L4 minor]. **LOCKED** 2026-06-19 at co-lock-commit. |
+| r3 | 2026-07-09 | Additive extension for OI-033 sister-pre-reg pathway per user Q "lets continue with OI-033 personal-baseline SD-anchored sister-HA pre-reg" 2026-07-09 (Bundle H+ event 7). Scope: (1) NEW §3.2.2 "Personal-baseline SD-anchored derivative operand family" defining the reference-distribution construction (`[d-90, d-30]` lagged, LC-era, bout-level pool, median + `1.4826 × MAD`, ≥ 30 bouts validity bar, candidate-day exclusion via window edge, `did_not_return_flag` bouts INCLUDED in reference pool, April 2024 exclusion) + per-bout derivative features (`bout_return_time_z`, `did_not_return_1sd_flag`, `did_not_return_2sd_flag`) + per-day aggregations (`bout_return_time_z_max_day`, `bout_n_did_not_return_1sd_day`, `bout_n_did_not_return_2sd_day`, plus reference-window audit traces `subject_lagged_median_day` / `subject_lagged_mad_day`) + rationale + alternatives + cascade + framework-validity treatment; (2) §4 per-bout feature table extended with the three new derivative features; (3) §4 per-day aggregation table extended with the five new columns. **Additive scope only**: no existing pre-commits modified; framework-validity gate §6 explicitly unchanged; §5 inferential framework unchanged; §3.1 peak detection unchanged; §3.2 primary return-window rule unchanged; §3.3 baseline reference unchanged. Load-bearing operand-family pre-commits inherit from LOCKED r1 OI-025 protocol §5.3 (LOCKED 2026-07-09) + §5.4 cross-op-independence argument (LOCKED 2026-07-09). Cross-operationalisation independence at operand-family level (fixed-absolute-threshold vs personal-baseline-rolling-reference) mirrors the HA-C3 v2 / HA-C3p sister-pre-reg pattern the guide r3 §4.2.1 condition 2 explicitly cites as canonical. **Status**: **r3 LOCKED 2026-07-09** by §3.6 compression per fresh-session methodology-review verdict PASS (three non-blocking clarity refinements absorbed at r3 lock: §3.2.2 framing dual-independence-statement tightened into a two-sentence explicit split + §4 per-day aggregation table `count = 0` vs `NaN` distinguisher footnote added protecting against downstream `.fillna(0)` bias + §3.2.2 rationale block empirical anchor for the ≥ 30-bout validity bar added citing HA11-bout-redo result §4 corpus bout rates). Fresh-session methodology-review at [`reviews/bout_level_recovery_dynamics-r3-extension-2026-07-09.md`](../reviews/bout_level_recovery_dynamics-r3-extension-2026-07-09.md) LOCKED same commit-cycle. Co-locked with [HA-C4cp](../analyses/hypotheses/HA-C4cp/hypothesis.md) pre-reg r2 at Bundle H+ event 7. |
 
 ---
 
