@@ -202,6 +202,54 @@ python docs/research/pipeline/audit_for_publication.py
   flag as inventory drift. Either move them external, or — if safe by
   policy — run with `--update-manifest` to refresh the baseline.
 
+### 2.4 Tracking-completeness sweep
+
+Beyond-the-guide work is tracked across several homes that drift if
+maintained by accumulation rather than reconciliation. The R36 history is
+the cautionary tale: a locked+executed test (`post-crash-exertion-relapse`)
+missing from the register entirely, one verdict (C4b) recorded three
+conflicting ways, and a not-ready thread (`best-in-the-middle`) with no
+queue entry — none caught by per-artefact discipline, all caught only by a
+manual sweep. Four legs must stay in sync, with the test index as support:
+
+- **Ledger** — [`personal_hypotheses.md`](personal_hypotheses.md): the `## P#`
+  entries + the crosswalk table (P# ↔ site slug ↔ test-id ↔ R#/Q# ↔
+  kind/stage). This is the **spine**; reconcile the others against it.
+- **Stocktake** — [`STOCKTAKE.md`](STOCKTAKE.md) §2a (state-of-everything).
+- **Queue** — [`methodology/queued_work.md`](methodology/queued_work.md) +
+  [`QUEUED-WORK.md`](QUEUED-WORK.md) (not-ready work).
+- **On-stage** — the site's `data/addendum-register.json` →
+  `/workings/beyond-the-guide-register`.
+- **Test index** — [`analyses/hypotheses/registry.md`](analyses/hypotheses/registry.md)
+  §1a (`register:` provenance tag on every test).
+
+**The invariant.** Every thread appears in the ledger + stocktake; every
+not-ready thread (stage `idea`/`scoped`/`parked`) also in the queue; every
+site-register item projects from a ledger thread; every hypothesis-test
+folder carries a `register:` tag. The membership + numbering rules are
+locked in
+[`methodology/register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md).
+
+**One fact, one home.** A verdict / stat / status lives once (in its
+`result.md` or its ledger row); every other home **links or is generated
+from** it, never re-states it. Derived views (`kind`/`stage`, the site
+export, stocktake summaries) are generated and marked do-not-hand-edit —
+hand-authoring them is how drift starts (the C4b verdict recorded three
+ways is exactly this failure).
+
+**The gate.** Run the mechanical check before any push that touches the
+register system, and periodically:
+
+```bash
+python docs/research/pipeline/tracking_completeness.py --site <path-to-site-repo>
+```
+
+`[PASS]` (0 errors) is the bar. Hard FAILs — ledger↔crosswalk↔stocktake
+drift, an untagged test folder, an invalid/incomplete site register — block.
+WARNs (an uncovered test folder, an unexpected guide-extension) want a human
+glance; `--strict` promotes them to FAILs for a hook. Wire it beside the §2.3
+privacy audit in the pre-push hook once the register system is load-bearing.
+
 ---
 
 ## 3. Statistical hygiene — pre-flight audit hooks
