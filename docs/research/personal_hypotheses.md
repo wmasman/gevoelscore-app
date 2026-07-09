@@ -2,6 +2,19 @@
 
 *n-of-1 hypotheses motivated by lived experience and literature, formulated independent of the Wiggers handleiding's specific claims. Tested against the personal Garmin + gevoelscore corpus.*
 
+## Authorship
+
+**Drafting session**: 2026-07-09, authorized by the repo owner as reviewer-mode-with-authorization per [CONVENTIONS §1.2](CONVENTIONS.md#12-reviewer-mode-claude-reads--critiques--explains-does-not-edit-unless-asked). **Status: LOCKED r1 — 2026-07-09 by user acceptance.** Applies the LOCKED [`methodology/register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) r3 (Guide/Beyond membership rule, numbering, kind/stage) to reconcile this register per site request R36-A. This closes R36-A.
+
+What r1 does:
+
+- Adds the **Register crosswalk & status** section below — one authoritative row per thread (P# ↔ site slug ↔ test id ↔ claim key ↔ R#/Q# ↔ kind ↔ stage). This realises the locked Rule 4 crosswalk as a **consolidated table** rather than per-entry blocks: a deliberate interpretation (a single lookup table better serves Rule 4's "single place" intent and leaves the existing P1–P7 prose surgically untouched). Flagged for the provenance-accuracy check.
+- Mints two new Beyond entries — **P8** (the changing kind of crash) and **P9** (emotional load as a crash trigger) — each citing its provenance rationale inline against source.
+- Records three `/beyond` threads as **Guide-extensions, not Beyond entries** (`what-the-watch-catches`, `best-in-the-middle`, `rest-stress-low-motion`) per the membership rule (§2.1) + user decisions 2026-07-09; they live in the Guide ledger and surface on `/beyond` via `provenance: guide-extension`.
+- Existing P1–P7 are unchanged in substance; their crosswalk + kind/stage live in the table below.
+
+**Review**: this register-layer reconciliation took the agreed **lightweight targeted check** (provenance-accuracy + crosswalk facts, 2026-07-09; not the full 4-layer `/research-review`, since no new verdicts are introduced — every referenced verdict was born and reviewed in its own artefact). The check confirmed every P8/P9 figure and crosswalk fact against source and returned two substantive findings: **Finding A** (`what-the-watch-catches` = guide-extension, not Beyond) and **Finding B** (strict-§5 kind/stage for P8/P9). Both were ruled by the user 2026-07-09 and applied here, with a matching illustrative-example erratum to the locked MD §8/§5. Two line-anchor drifts were also corrected against source.
+
 ## Distinction from the Wiggers register
 
 [`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md) collects hypotheses derived from the Wiggers smartwatch-pacing handleiding (07-2025, ME/cvs Vereniging). It tests Wiggers' specific claims with her specific operationalisations.
@@ -33,6 +46,39 @@ The discipline this register follows:
 - **Forward-collected data is the natural ongoing validation** — no held-out splits required for credibility; onward replication accrues over time.
 - **Validated eras only** — pre-covid / infection / long-covid per [[project-lc-era-boundaries]]. No LC-internal stratification.
 - **Label discipline** — every count states scheme + unit + source per [[feedback-name-count-definition]].
+
+---
+
+## Register crosswalk & status
+
+The authoritative index of this Beyond ledger, per [`methodology/register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) (Rule 4 crosswalk + Rule 6 derived kind/stage). Every subject-authored thread appears here exactly once; `kind`/`stage` are derived from backend state ([STOCKTAKE §2a](STOCKTAKE.md) + each test's result), never hand-set.
+
+| P# | thread | provenance | site slug | test id(s) | R# / Q# | kind | stage |
+|---|---|---|---|---|---|---|---|
+| P1 | sleep-window stress on crashes | beyond | — | none (Personal-register discipline) | — | descriptive | done (d = +0.90) |
+| P2 | exertion-axis signals 4d pre-crash | beyond | — | HA01b, HA01c | Q10 | tested | done (weak; Q10 single-pool recompute queued) |
+| P3 | within-day RHR recovery | **routed → Guide A4** | — | (Guide A4) | — | — | routed-stub |
+| P4a | end-of-day BB floor → next-day crash | beyond | — | H04b-gated | — | tested | parked (blocked: per-minute BB / H04b path C) |
+| P4b | late-afternoon BB drain → next-day crash | beyond | — | H04b-gated | — | tested | parked (blocked: per-minute BB / H04b path C) |
+| P5a | post-exertion rest-stress + motion filter | **routed → Guide C4b** | (→ `rest-stress-low-motion`, guide-ext) | HA-C4b | — | — | routed-stub (HA-C4b NOT-SUPPORTED) |
+| P5b | prevailing rest-stress, evening amplification | beyond | — | primitive-gated | — | tested | parked (blocked: stress-with-motion-by-time-of-day) |
+| P6 | post-crash recovery signature | beyond | `after-the-crash` | HA-P6 | R7, R9 | descriptive | done (HA-P6 v3 executed) |
+| P7 | recovery debt (recent-crash-density) | beyond | `after-the-crash` | HA-P7 | R7 | tested | done (NOT-SUPPORTED) |
+| P8 | the changing kind of crash | beyond | `changing-crash`, `character-flip` | K01, K02 (support); HA-P8 (future) | R7, Q22 | descriptive | done (observation; character-flip test = onward-work / idea) |
+| P9 | emotional load as a crash trigger | beyond | `emotional-trigger` | trigger_types_r4 (descriptive); HA-P9 (future) | R4, Q21 | descriptive | parked (held for pre-reg; suggestive, era-confounded) |
+
+**Guide-extensions surfaced on `/beyond` (NOT Beyond entries).** These are subject *refinements of / lenses on* a Wiggers claim — Guide-provenance by the membership rule ([§2.1](methodology/register_provenance_and_numbering.md)), editorially surfaced on `/beyond`. They live in the Guide ledger ([`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md)); `addendum-register.json` carries them with `provenance: guide-extension`. Listed here so this register is authoritative about what is *not* a P-entry:
+
+| site slug | Guide claim | disposition | decided |
+|---|---|---|---|
+| `rest-stress-low-motion` | Wiggers C4b (HA-C4b) | operational refinement (motion filter on her rest-stress claim); this is the P5a routing | standing (2026-06-14) |
+| `what-the-watch-catches` | Wiggers mental-PEM concession | refinement (emotional/cognitive decomposition of her *visibility* claim; tests it at her operationalisation) | 2026-07-09 |
+| `best-in-the-middle` | Wiggers C3 × C4 | extension (activity-conditioning control on her stress→fatigue curve) | 2026-07-09 |
+
+**Reconciliation with the locked MD §8 (per the 2026-07-09 targeted check).** Two illustrative §8 worked examples in [`register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) are superseded by this Phase-1 outcome:
+
+- `what-the-watch-catches` is a **guide-extension**, not the "Beyond P8" the MD §8 illustratively guessed — placed on the source's own *"refine[s] Wiggers' mental-PEM concession"* framing ([crash_phenotypes_exploratory.md](analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md)) plus the user decision 2026-07-09.
+- The illustrative §8 ids (P8 = what-the-watch-catches, P9 = changing-crash, P10 = emotional-trigger) were flagged "pending Phase-1 minting"; the actual mints are **P8 = changing-crash, P9 = emotional-trigger** (what-the-watch-catches takes no P#, being a guide-extension).
 
 ---
 
@@ -517,6 +563,98 @@ The participant's lived-experience operational protocol (per [garmin_pacing_prac
 - Causal claim that recent crashes elevate next-crash risk via a specific mechanism.
 - Window > 30 days (would conflate recovery-debt with phase-of-life).
 - Predictive classifier framing.
+
+---
+
+## P8. The changing kind of crash
+
+*New Beyond entry, minted 2026-07-09 (Phase 1 / R36-A). Provenance: subject-authored distinct claim — Wiggers names both crash phenotypes but not the temporal flip (see Prior sources §3).*
+
+**Observation (descriptive):** Across the recovery timeline the *character* of a crash shifted, not just its frequency. Early-era crashes ran deeper and longer and skewed "loud" (high-arousal — heart rate up, autonomic storm); later-era crashes are shallower, shorter, and skew "quiet" (heart rate down, autonomically subdued). What is new is not that a crash can deviate in either direction, but that *which direction dominates* appears to have shifted over time.
+
+### Prior sources
+
+1. **Lived experience.** Multi-year recovery tracking: the early illness's "deep dragging weeks" gave way to shorter, shallower bad days. The observation pre-dates the descriptive tests below.
+2. **In-corpus descriptive (K01 + K02).** [`K01-crash-depth/result.md`](analyses/hypotheses/K01-crash-depth/result.md) and [`K02-crash-duration/result.md`](analyses/hypotheses/K02-crash-duration/result.md) characterise depth and duration shifts on independent axes; [`trigger_types_r4/crash_phenotypes_exploratory.md`](analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md) characterises the quiet/loud phenotype split.
+3. **Distinct from Wiggers.** Wiggers notes a crash can deviate in either direction (her quiet-vs-loud phenotypes). She does **not** claim that *which direction dominates* flips across a recovery trajectory. The temporal flip is the subject's own claim about their own recovery — a pattern outside her guide per [`register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) §2.1.
+
+### Predicted direction
+
+Which deviation-direction dominates shifts over the lived recovery phases: early = loud/high-arousal dominant; late = quiet/subdued dominant. Depth and duration both compress over time.
+
+### Descriptive observation
+
+- **Depth (K01):** *"no late-era crash reached the rock-bottom score of 1; the early era had three"* ([K01 result.md:8-9](analyses/hypotheses/K01-crash-depth/result.md)); verdict **suggestive-but-underpowered** (direction clean; permutation p = 0.276 > the 0.10 bar).
+- **Duration (K02):** the long-crash tail (≥5 days) collapsed from **5 of 14 early episodes (36%) to 1 of 15 late (7%)** ([K02 result.md:47-59](analyses/hypotheses/K02-crash-duration/result.md)); median delta −0.5 days fails the strict −1-day bar, but *"every single test points in the same direction, on independent axes"* ([K02 result.md:103](analyses/hypotheses/K02-crash-duration/result.md)).
+
+### Interpretation
+
+The shift is real and directionally consistent across two independent axes (depth, duration) plus the phenotype split, even though each test is underpowered or below its strict pre-reg bar. Per [`methodology/train_validate_split_fate.md`](methodology/train_validate_split_fate.md), an over-time difference on an n=1 design is **a number with wide error, never a per-phase verdict** — the observation stays descriptive. It cannot be cleanly separated from the concurrent citalopram change and coverage evolution.
+
+### Caveats
+
+1. **Small n, wide error.** 14 early / 15 late crash episodes; medians are brittle on the integer nadir scale.
+2. **Confounded shift.** The flip overlaps the citalopram era and the pacing-fidelity improvement; the direction cannot be pinned to the illness alone.
+3. **Never a per-phase verdict.** Descriptive only; coverage artifacts flagged; the recovery-phase axis is a backdrop, not a set of verdicts.
+
+### Onward work (the future test — site `character-flip`)
+
+The tested version is **designed but not yet pre-registered** (`idea` stage per [`register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) §5, not `scoped` — no `hypothesis.md` is locked). A non-circular design is specified in [`crash_phenotypes_exploratory.md`](analyses/descriptive/trigger_types_r4/crash_phenotypes_exploratory.md) §6: *"Prospective lock. Freeze the convergence definition (the three axes + their thresholds) now; apply it to crashes that occur after the lock date"* — or an external-validator form. Pre-registration pending (future `HA-P8`).
+
+### Not in scope
+
+- A per-phase / per-era *verdict* on crash character (the over-time difference is a number, not a narrative).
+- Causal attribution of the flip (illness vs medication vs pacing).
+
+### Crosswalk + status
+
+Thread `P8`; site slugs `changing-crash` (observation) + `character-flip` (the future test); supporting tests K01, K02; site request R7 + queued Q22. `kind: descriptive` — `stage: done` (observation); the character-flip test is onward-work (`idea` stage — designed, not yet a locked pre-reg), not `scoped`. Full row in the Register crosswalk & status table above.
+
+---
+
+## P9. Emotional load as a crash trigger
+
+*New Beyond entry, minted 2026-07-09 (Phase 1 / R36-A). Provenance: subject-authored distinct claim — Wiggers concedes the watch misses mental load (a *visibility* claim) but does not claim emotional load *triggers* crashes (a causal claim); see Prior sources §3.*
+
+**Hypothesis:** In the pre-onset run-up window before a crash, moderate-plus **emotional** load (from note/calendar load-tagging) is elevated relative to matched ordinary windows — i.e. emotional load helps *set off* a crash, not merely co-occur with reduced capacity.
+
+### Prior sources
+
+1. **Lived experience.** The subject's observation that emotional tension in the days before a crash precedes onset — a trigger, not just an energy draw.
+2. **In-corpus descriptive.** [`trigger_types_r4/analysis.md`](analyses/descriptive/trigger_types_r4/analysis.md) ran the run-up-window comparison across physical / cognitive / emotional load.
+3. **Distinct from Wiggers.** Wiggers concedes the watch misses "mental PEM" (a claim about *visibility* / energy draw) and frames mental load as part of the unified capacity envelope — **not** as a predictive precursor that triggers a crash. The trigger-causality claim is the subject's, outside her guide per [`register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) §2.1. *(Distinct from the `what-the-watch-catches` guide-extension, which tests her visibility concession; this thread tests triggering, which she does not claim.)*
+
+### Predicted direction
+
+Moderate-plus emotional load is more frequent in the pre-onset run-up than in matched ordinary windows.
+
+### Descriptive observation
+
+Moderate-plus emotional load **48% pre-crash vs 29% ordinary (+19 pp, permutation p = 0.028 uncorrected)** ([analysis.md:52](analyses/descriptive/trigger_types_r4/analysis.md)). The signal does **not** survive the 3-way multiplicity correction and is **confined to the citalopram era** (severe 45% vs 15%, nC=11), absent in the later pacing-habit phase (13% vs 16%, nC=15) ([analysis.md:76-82](analyses/descriptive/trigger_types_r4/analysis.md)). Physical and cognitive load show nothing at any intensity; infection is not a pre-onset trigger.
+
+### Interpretation
+
+**Suggestive, not established.** The elevation is real in the pre-onset slice but era-confounded (concentrated entirely in the citalopram-modulated window) and does not survive multiplicity — a hypothesis-generating result, not a settled verdict. The honest disposition is to hold it for a pre-registered test with a locked threshold and the era-confound built in.
+
+### Caveats
+
+1. **Multiplicity.** p = 0.028 uncorrected; below the 0.05/3 ≈ 0.017 family bar.
+2. **Era / medication confound.** The signal lives entirely in the citalopram era; a number, not an era verdict.
+3. **Sparse proxy.** Emotional-load tags are note-day-only, moderate-max; not used in conditioning.
+
+### Onward work (the parked pre-reg)
+
+**Parked**, held for a proper pre-registration (site `emotional-trigger` open question; queued Q21). The pre-reg locks the run-up window + threshold in advance and stratifies by citalopram phase (future `HA-P9`).
+
+### Not in scope
+
+- A settled "emotional load triggers crashes" claim (this is suggestive-only).
+- The *visibility* question — whether the watch sees emotional load — which is the `what-the-watch-catches` guide-extension, not this thread.
+- Causal mechanism.
+
+### Crosswalk + status
+
+Thread `P9`; site slug `emotional-trigger`; descriptive analysis in `trigger_types_r4` (no locked HA yet); site request R4 + queued Q21. `kind: descriptive` — `stage: parked` (only the descriptive analysis has run; becomes `tested` when HA-P9 locks). Full row in the Register crosswalk & status table above.
 
 ---
 
