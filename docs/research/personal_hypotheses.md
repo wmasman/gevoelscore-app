@@ -15,6 +15,8 @@ What r1 does:
 
 **Review**: this register-layer reconciliation took the agreed **lightweight targeted check** (provenance-accuracy + crosswalk facts, 2026-07-09; not the full 4-layer `/research-review`, since no new verdicts are introduced — every referenced verdict was born and reviewed in its own artefact). The check confirmed every P8/P9 figure and crosswalk fact against source and returned two substantive findings: **Finding A** (`what-the-watch-catches` = guide-extension, not Beyond) and **Finding B** (strict-§5 kind/stage for P8/P9). Both were ruled by the user 2026-07-09 and applied here, with a matching illustrative-example erratum to the locked MD §8/§5. Two line-anchor drifts were also corrected against source.
 
+**Addendum r1.1 (2026-07-09, Phase 2):** the Phase-2 `registry.md` provenance sweep surfaced `post-crash-exertion-relapse` — a subject-authored, locked + executed (2026-07-04) beyond-the-guide test missing from this register — added below as **P10** per user decision. This is the register-completeness discipline working: tagging the test index caught a Beyond thread the R36-A list had missed.
+
 ## Distinction from the Wiggers register
 
 [`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md) collects hypotheses derived from the Wiggers smartwatch-pacing handleiding (07-2025, ME/cvs Vereniging). It tests Wiggers' specific claims with her specific operationalisations.
@@ -66,6 +68,7 @@ The authoritative index of this Beyond ledger, per [`methodology/register_proven
 | P7 | recovery debt (recent-crash-density) | beyond | `after-the-crash` | HA-P7 | R7 | tested | done (NOT-SUPPORTED) |
 | P8 | the changing kind of crash | beyond | `changing-crash`, `character-flip` | K01, K02 (support); HA-P8 (future) | R7, Q22 | descriptive | done (observation; character-flip test = onward-work / idea) |
 | P9 | emotional load as a crash trigger | beyond | `emotional-trigger` | trigger_types_r4 (descriptive); HA-P9 (future) | R4, Q21 | descriptive | parked (held for pre-reg; suggestive, era-confounded) |
+| P10 | post-crash exertion relapse (danger window) | beyond | — (Layer-4; not on `/beyond`) | post-crash-exertion-relapse (locked + executed) | R9 (builds on) | tested | inconclusive (Cannot-resolve; δ −1.03 CI [−8.58, +5.21], n=24) |
 
 **Guide-extensions surfaced on `/beyond` (NOT Beyond entries).** These are subject *refinements of / lenses on* a Wiggers claim — Guide-provenance by the membership rule ([§2.1](methodology/register_provenance_and_numbering.md)), editorially surfaced on `/beyond`. They live in the Guide ledger ([`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md)); `addendum-register.json` carries them with `provenance: guide-extension`. Listed here so this register is authoritative about what is *not* a P-entry:
 
@@ -655,6 +658,49 @@ Moderate-plus emotional load **48% pre-crash vs 29% ordinary (+19 pp, permutatio
 ### Crosswalk + status
 
 Thread `P9`; site slug `emotional-trigger`; descriptive analysis in `trigger_types_r4` (no locked HA yet); site request R4 + queued Q21. `kind: descriptive` — `stage: parked` (only the descriptive analysis has run; becomes `tested` when HA-P9 locks). Full row in the Register crosswalk & status table above.
+
+---
+
+## P10. Post-crash exertion relapse — the "danger window"
+
+*New Beyond entry, minted 2026-07-09 (R36 Phase-2 addendum). Surfaced by the Phase-2 `registry.md` provenance sweep as a subject-authored, locked + executed beyond test missing from this register. Provenance: subject-authored distinct claim built on the R9/P6 post-crash finding; distinct from P6 (recovery shape) and P7 (recovery debt).*
+
+**Hypothesis (predictive, mechanistic framing):** After a crash, the felt-state rebounds in ~2-3 days but the autonomic system settles over ~2 weeks (R9 / HA-P6); during that mismatch — felt-recovered but autonomically unsettled — the PEM threshold (a cardiac / HR VT1-class threshold) is transiently lowered, so a single supra-threshold cardiac-strain spike is more likely to trip a relapse than the same spike at baseline. *Feeling fine is not the same as being recovered.*
+
+### Prior sources
+
+1. **Lived experience.** The participant's "feeling fine is not being recovered" observation — over-doing it in the days after a crash feels riskier than the same exertion when settled.
+2. **In-corpus prior (R9 / HA-P6).** The post-crash finding that autonomic load keeps settling for ~2 weeks while felt-state snaps back in days ([`HA-P6/result.md`](analyses/hypotheses/HA-P6/result.md); R9) motivates a felt-vs-autonomic mismatch window.
+3. **Mechanism.** A VT1-class cardiac/HR PEM threshold transiently lowered during autonomic under-recovery.
+4. **Distinct from Wiggers.** Wiggers discusses PEM and not-overdoing-it, but does not frame a post-crash *danger window* defined by the felt-vs-autonomic mismatch. Distinct from P6 (recovery *shape*) and P7 (recovery *debt*): this is the *relapse-on-exertion-during-recovery* claim.
+
+### Descriptive observation (the locked, executed test)
+
+Pre-registered 2026-07-04 (locked, no outcome peek) and executed same day; result r2 folded a fresh-session review (ACCEPT-WITH-MINOR-REVISIONS). Primary: peak masked `max_hr_rank_lagged_lcera` × crash arm × 10-day danger window × 4-day relapse window × matched-baseline contrast. **Verdict: Cannot resolve** — standardised danger-window-vs-matched-baseline relapse-rate difference = **−1.03, event-level block-permutation 95% CI [−8.58, +5.21]** (spans null); mean delta −0.116 (if anything slightly negative). Descriptive statement: **danger-window peak cardiac strain did NOT predict relapse above the matched baseline in this subject's 24 usable crash windows** ([`post-crash-exertion-relapse/result.md`](analyses/hypotheses/post-crash-exertion-relapse/result.md)). No causal mark.
+
+### Interpretation
+
+No evidence in the predicted positive direction; the wide CI (spanning the null both ways) is an honest "cannot resolve", not a refutation of the mechanism. The danger-window hypothesis remains mechanistically plausible but is **not resolvable** at n=24 crash windows on this corpus.
+
+### Caveats
+
+1. **Underpowered.** 24 usable crash windows; the CI spans the null widely.
+2. **No causal claim.** The contrast is descriptive; "the spike caused / prevented the relapse" is not claimed.
+3. **Single subject, self-reported crash labels.**
+
+### Onward work (not gating credibility)
+
+- Accrual: as post-crash windows accumulate, re-run; the point estimate + CI tighten.
+- A different exposure operationalisation would require a new pre-reg (a v2) per the locked-pre-reg discipline (peak-primacy is irrevocable in the locked pre-reg).
+
+### Not in scope
+
+- A causal claim that exertion during the danger window trips relapse.
+- Post-hoc re-operationalisation of the primary (creates a v2).
+
+### Crosswalk + status
+
+Thread `P10`; no `/beyond` site slug (Layer-4 test, not surfaced on `/beyond`); test `post-crash-exertion-relapse` (locked + executed 2026-07-04); builds on site request R9. `kind: tested` — `stage: inconclusive` (ran, Cannot-resolve). Full row in the Register crosswalk & status table above.
 
 ---
 

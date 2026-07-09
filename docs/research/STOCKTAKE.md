@@ -26,7 +26,7 @@
 
 ### 2a. Register-only (operationalisation pending)
 
-**Personal register** ([`personal_hypotheses.md`](personal_hypotheses.md)) — P1-P7. Status as of 2026-06-16:
+**Personal register** ([`personal_hypotheses.md`](personal_hypotheses.md)) — P1-P10 (R36 Phase-1/2 reconciliation 2026-07-09; per-test provenance index at [`analyses/hypotheses/registry.md`](analyses/hypotheses/registry.md) §1a). Status:
 
 | ID | claim | status |
 |---|---|---|
@@ -38,6 +38,9 @@
 | P5b | prevailing rest-stress with evening amplification | **blocked** on stress-with-motion-by-time-of-day primitive |
 | P6 | post-crash recovery shape | **HA-P6 LOCKED, awaits run** (§2c) |
 | P7 | recent-crash-density predicts crash | **HA-P7 NOT-SUPPORTED** (§2d) |
+| P8 | the changing kind of crash | descriptive/done (K01+K02 observation); character-flip test = idea (designed, unlocked); added 2026-07-09 |
+| P9 | emotional load as a crash trigger | descriptive/parked (trigger_types_r4; suggestive, era-confounded; held for pre-reg); added 2026-07-09 |
+| P10 | post-crash exertion relapse (danger window) | **tested/inconclusive** (post-crash-exertion-relapse Cannot-resolve, n=24); added 2026-07-09 via Phase-2 sweep |
 
 **Wiggers register** ([`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md)) — A-F sections per Wiggers PDF.
 

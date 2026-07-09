@@ -659,6 +659,30 @@ Not in scope:
 - HRV-derived sub-components (FR245 lacks HRV).
 - Real-time intervention.
 
+### Guide-extensions surfaced on `/beyond` (subject refinements of Wiggers claims)
+
+*Added 2026-07-09 (R36 Phase 2).* Three subject refinements of Wiggers claims are surfaced on the site's `/beyond` layer but are **Guide-provenance** (the claim under test is Wiggers'; the subject supplied a lens or an operational detail). Per [`methodology/register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) §2.1 they are **guide-extensions**, not Beyond P-entries — they live here in the Guide ledger, tag `register: wiggers:<claim>`, and their `addendum-register.json` item carries `provenance: guide-extension`. The [`personal_hypotheses.md`](personal_hypotheses.md) guide-extensions table records that they are *not* P-entries. **C4b** (above) is the first (an inline C-section entry); the two below complete the set.
+
+#### C3×E — "Best in the middle" as an activity map (C3 with activity-conditioning)
+
+**Guide-extension of C3 (× C4). NOT source-verified as a Wiggers claim** — Wiggers couples activity and stress (C4: *"the activity you did was probably too disruptive for how you were feeling"*) and describes the non-linear stress→fatigue curve (C3), but she does **not** frame the two as confounds of each other. The activity-conditioning control is the participant's contribution; the claim under test (the C3 mid-peak curve) is Wiggers'.
+
+- **The rival it tests**: HA-C3's mid-stress peak (felt-state best at mid-stress, worse at both ends) has an untested activity×stress rival — good day → do more → mid activation; shut-down day → low activation; highest readings = real overexertion or illness. So "best in the middle" could be partly an activity map. Test: does the mid-peak curvature survive controlling for activity (covariate and/or activity-tertile stratification of the HA-C3 substrate)?
+- **Provenance**: guide-extension (extends C3 × C4). `register: wiggers:C3` (C4 coupling). Site slug `best-in-the-middle` (site `C3 × E`, provenance *our-extension* in `guide.json`); `provenance: guide-extension`.
+- **Status**: scoped, not run — site request R21; operationalisation proposed there; no locked pre-reg (`idea` stage per the register model). Surfaced on `/workings/not-a-straight-line` + `/beyond`.
+- **Cross-ref**: [`analyses/interpretation/HA-C3.md`](analyses/interpretation/HA-C3.md) (the curve) + R21 in the site's `research-requests.md`.
+
+#### H2b — Autonomic fingerprints of load (H2 mental-PEM concession, emotional/cognitive split)
+
+**Guide-extension of H2 / the mental-PEM concession. Refines (and partly qualifies) Wiggers' claim.** Wiggers concedes the watch misses mental load but *"excessive mental activity can still cause PEM… it will also cause your HRV to drop that night or the following night"* (H2 anchor, PDF lines 1448-1457). This work **splits** that lumped "mental activity" claim emotional vs cognitive (from note/calendar load-tags, non-circular): emotional load *is* watch-visible (daytime stress + body-battery floor, not heart rate, peaking the following night exactly as she times it), while cognitive load stays invisible even overnight (contradicting the concession's "HRV drops that night" for the cognitive half). The claim under test is her mental-PEM concession at her operationalisation; the emotional/cognitive decomposition is the participant's lens.
+
+- **Provenance**: guide-extension (refines H2). `register: wiggers:H2`. Site slug `what-the-watch-catches`; `provenance: guide-extension`.
+- **Status**: descriptive, done — delivered as a cold-reviewed card. Surfaced on `/beyond`.
+- **Cross-ref**: [`analyses/garmin_exploration/cards/autonomic-fingerprints-of-load-export.md`](analyses/garmin_exploration/cards/autonomic-fingerprints-of-load-export.md) + [`analyses/descriptive/trigger_types_r4/`](analyses/descriptive/trigger_types_r4/) + site request R4.
+- **Note**: r1 of `register_provenance_and_numbering.md` §8 illustratively mis-guessed this as "Pure Beyond P8"; the Phase-1 analysis + user decision 2026-07-09 place it here (guide-extension), on the source's own *"refine[s] Wiggers' mental-PEM concession"* framing. See that MD's §11 erratum.
+
+---
+
 ### H1 — Wearable signals lead the gevoelscore crash
 
 **Verified 2026-06-12, batch 3.**

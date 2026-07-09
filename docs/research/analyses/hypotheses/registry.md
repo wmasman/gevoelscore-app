@@ -105,6 +105,32 @@ spurious positive under the null.
 
 ---
 
+## 1a. Register provenance index (`register:` tags)
+
+Per [`methodology/register_provenance_and_numbering.md`](../../methodology/register_provenance_and_numbering.md) Rule 5, every test carries a `register:` provenance tag, so the Guide/Beyond split is queryable where verdicts live. Added 2026-07-09 (R36 Phase 2). Tags: `wiggers:<claim>` · `beyond:<P#>` · `foundational` · `methodological` · `external-comparator`. **Only `beyond:*` threads project to the site's `addendum-register.json`; `wiggers:*` project to `guide-ledger.json`; the rest are Layer-4 workings only.** Wiggers tags are given at the claim-*letter* level (A/B/C/D); the exact sub-code is in each test's own `hypothesis.md`.
+
+| `register:` | tests | note |
+|---|---|---|
+| **`beyond:P2`** | HA01b, HA01c (+ diagnostics) | exertion-axis → crash family (STOCKTAKE §2a; awaits Q10 single-pool recompute) |
+| **`beyond:P6`** | HA-P6 | post-crash recovery signature |
+| **`beyond:P7`** | HA-P7 | recovery debt (NOT-SUPPORTED) |
+| **`beyond:P8`** | K01, K02 | the changing kind of crash (depth, duration) |
+| **`beyond:P10`** | post-crash-exertion-relapse | danger window (Cannot-resolve); **added by this sweep** — see [`personal_hypotheses.md`](../../personal_hypotheses.md) P10 |
+| **`wiggers:A`** | HA06, HA06b | resting-HR deviation |
+| **`wiggers:B`** | HA07, HA07c, HA07d, HA08, HA08c | HRV / sleep-stress HRV-proxy |
+| **`wiggers:C3`** | HA-C3, HA-C3p | non-linear stress→fatigue |
+| **`wiggers:C4`** | HA-C4, HA-C4b, HA-C4c, HA-C4c-stringency-companion | stress-decay / stuck-stress (C4b is a guide-extension) |
+| **`wiggers:D`** | HA10, HA11, HA11-bout-redo | body-battery / within-day u-dip (orthostatic) |
+| **`wiggers:H2`** | *(guide-extension `what-the-watch-catches`)* | mental-PEM concession refinement — homed in [`wiggers_testable_hypotheses.md`](../../wiggers_testable_hypotheses.md) |
+| **`foundational`** | H01, H02, H02b, H02d, H03, H03b, H04, H05; peri-event-covid | pre-split precursor batch (general pacing lit) + the COVID external-validity check (R23) |
+| **`methodological`** | `*-threshold-monotonicity-diagnostic*`, crash_v1 / crash_v2 definitions, S01/S02/S02b/S02c (archived) | instrument / method, not the body |
+
+**Guide-extensions** (Guide-provenance, surfaced on `/beyond` via `provenance: guide-extension`): `rest-stress-low-motion` (C4b), `what-the-watch-catches` (H2), `best-in-the-middle` (C3×C4) — homed in [`wiggers_testable_hypotheses.md`](../../wiggers_testable_hypotheses.md); recorded as non-P-entries in [`personal_hypotheses.md`](../../personal_hypotheses.md).
+
+**Foundational-batch note**: H02b (spike-count) carries a lived-experience prior but is classed `foundational` by the pre-split-batch default (it predates both registers), per the MD §3 rule.
+
+---
+
 ## 2. `crash_v1` — operational definition of a crash
 
 **Locked 2026-06-05: Option B (score-percentile, run-based).**
