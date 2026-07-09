@@ -1399,6 +1399,20 @@ Q30 (recovery-shape sibling).
 
 ---
 
+## Q33. Site R21 -- "best in the middle" as an activity map (C3 × activity-conditioning)
+
+**Status**: queued -- scoped, not run (`idea` stage per [`register_provenance_and_numbering.md`](register_provenance_and_numbering.md) §5; no locked pre-reg). Guide-extension of C3 × C4 (the subject's activity-conditioning lens on her stress→fatigue curve), homed in [`wiggers_testable_hypotheses.md`](../wiggers_testable_hypotheses.md) (the C3×E entry) and surfaced on the site register + `/beyond` as `best-in-the-middle`. Added to the queue 2026-07-09 (R36 Phase-3 tracking-completeness pass -- the one not-ready thread that lacked a Q entry).
+
+**Context (cold-read)**: HA-C3's mid-stress peak (felt-state best at mid-stress, worse at both ends) has an untested activity×stress rival -- good day → do more → mid activation; shut-down day → low activation; the highest readings = real overexertion or acute illness. So "best in the middle" could be partly a map of *how much I did*, exactly what Wiggers' C4 coupling ("the activity you did was probably too disruptive for how you were feeling") implies -- though she does not frame activity and stress as confounds of each other. The distinct-claim-vs-refinement call was resolved 2026-07-09 as **guide-extension** (the lens is the subject's, the claim under test is her C3 curve).
+
+**Why queued**: it is R18 shape-assuming flag (c)'s concrete first case, and it enriches the interpretation of the HA-C3 mid-peak finding; not blocking any locked artefact. Discipline: descriptive-first (curvature statistic net of activity vs raw); n=1 with adjacent-bin gaps inside the self-report noise envelope, so an honest "can't cleanly separate" is a valid publishable outcome.
+
+**When / workflow**: re-fit the HA-C3 substrate `gevoelscore = f(all_day_stress_avg)` with activity added -- as a covariate and/or by stratifying the curve into activity tertiles (`effective_exertion` / `exertion_rank_composite_lagged_lcera`). Report the curvature statistic (S / spline F) net of activity vs raw, whether the peak-location holds, and whether the adjacent-bin steps survive. Same Stratum-4 unmedicated primary cell + 3-condition discipline as HA-C3 where applicable. Lock a pre-reg before running.
+
+**Cross-refs**: site request R21; [`wiggers_testable_hypotheses.md`](../wiggers_testable_hypotheses.md) C3×E (guide-extension home) + C3 + C4; [`../analyses/interpretation/HA-C3.md`](../analyses/interpretation/HA-C3.md) (the curve); [`../personal_hypotheses.md`](../personal_hypotheses.md) guide-extensions table; [`../analyses/hypotheses/registry.md`](../analyses/hypotheses/registry.md) §1a (`wiggers:C3`); site register `best-in-the-middle` (`/workings/not-a-straight-line`).
+
+---
+
 *Add new queued items with a `Q<n>` header following the same shape:
 **status**, **context**, **why queued**, **when / workflow**, **cross-
 refs**. Drop items when they ship by replacing the body with a one-
