@@ -4,6 +4,17 @@ Citalopram dose-response on stress_mean_sleep.
 Implements the spec in
 docs/research/methodology/citalopram_dose_response_stress_mean_sleep.md (v2).
 
+Note on `dose_plasma_mg` materialisation (OI-035, 2026-07-09 confirmation):
+    The PK-smoothed plasma proxy computed here by `dose_plasma_mg(d)` is
+    ALSO materialised as the `dose_plasma_mg` column of `per_day_master.csv`
+    via `pipeline/03_consolidate/build_unified_dataset.py` (added 2026-06-14;
+    see DATA_DICTIONARY.md `Section 6 - Citalopram plasma proxy`). The
+    runtime `dose_plasma_mg(d)` function below is retained here for
+    backward-compatible reproduction of this script and for backfill /
+    off-master derivation; downstream HAs on citalopram-dose-modulated
+    channels should read the master column directly per
+    `methodology/citalopram_phase_stratification.md` §5.B.
+
 Primary: linear regression of stress_mean_sleep on PK-smoothed plasma
 citalopram dose proxy + linear days_from_afbouw_start covariate,
 Newey-West HAC SE with Andrews 1991 lag (~4 at n=70).
@@ -122,6 +133,13 @@ def dose_plasma_mg(d):
 
     Linear superposition of step inputs in first-order kinetics
     (Rowland & Tozer 2011, ch.4; Gabrielsson & Weiner 2016).
+
+    NOTE: this function is a within-window variant that assumes
+    INITIAL_DOSE_MG = 30mg at AFBOUW_START (2026-03-20). For any full-corpus
+    read, use the `dose_plasma_mg` column of `per_day_master.csv` instead
+    (materialised by pipeline/03_consolidate/build_unified_dataset.py per
+    OI-035; that variant starts from 0mg pre-2024-04-09 and applies the
+    full 6-step schedule). See module header for context.
     """
     val = INITIAL_DOSE_MG
     for step_date, delta in DOSE_STEPS:

@@ -1,6 +1,8 @@
-# Cross-channel correlation matrix — load-bearing primitives
+# Cross-channel correlation + corpus near-identity map (load-bearing primitives)
 
-**Computed 2026-06-08** per Tier 2 peer-review action item ([QUEUED-WORK.md](../../QUEUED-WORK.md)). Empirical replacement for the 'channels aren't statistically independent' caveat that appears in synthesis docs.
+**Card scope refresh 2026-07-09** per user Q "Card's headline framing was 'seven-channel primary panel' feel free to also initiate a new name for the card thats more accurate" (Bundle H+ event 6). The card originally opened as a fixed-panel correlation matrix on 2026-06-08 (seven primary channels tied to the Tier 2 peer-review action item at the time); it has since grown into a **corpus-wide near-identity map** as new near-identity pairs are discovered (Key finding 6 landed 2026-07-09 via OI-034 execution absorbing the `stress_mean_sleep` ≡ `asleep_stress_avg_uds` pair from `stress_mean_sleep/findings.md` Q3.1.e). The renamed title reflects both roles: **(a) fixed correlation matrix on the primary 7-channel panel**; **(b) growing corpus-wide near-identity map** absorbing new pairs from downstream operationalisation-support analyses. Filename `cross-channel-correlation.md` preserved to avoid link churn across the corpus; title + intro updated to reflect the map role.
+
+**Computed 2026-06-08** per Tier 2 peer-review action item ([QUEUED-WORK.md](../../QUEUED-WORK.md)). Empirical replacement for the 'channels aren't statistically independent' caveat that appears in synthesis docs. **Primary 7-channel panel state anchored to 2026-06-08 corpus**; post-2026-06-08 near-identity discoveries listed below the primary panel (see "Near-identity pairs discovered post-2026-06-08" section + Key finding 6). Any downstream near-identity discovery (r > +0.90 or ρ > +0.85 per §3.3 threshold) should propagate to this card same commit-cycle as the source discovery lock; the card is the corpus-wide anchor for the "which channels are effectively the same primitive" question.
 
 ## Key findings (headlines)
 
@@ -14,9 +16,11 @@
 
 5. **H02b ↔ HA11: ρ = +0.377** (moderate). Daily max spike duration and U-dip event count share variance (both within-day stress patterns), but at a level that supports treating them as related-but-distinct.
 
+6. **`stress_mean_sleep` ≡ `asleep_stress_avg_uds` at the per-day primitive level (Pearson r = +0.929; Spearman ρ = +0.895; N = 1337)**. Discovered 2026-06-18 in the Strand A `stress_mean_sleep` operationalisation-support analysis (see [`analyses/descriptive/operationalisation_support/stress_mean_sleep/findings.md`](../../descriptive/operationalisation_support/stress_mean_sleep/findings.md) Q3.1.e LOCKED 2026-06-18). The pair is a **methodological-overlap near-identity, not a biological one**: `asleep_stress_avg_uds` is the UDS-side asleep-stress average (whole-night, from `daily_uds.csv`), while `stress_mean_sleep` is the custom-extracted mean of monitoring_b stress samples within the sleep window (from `sleep_stress_nightly.csv`). Both are "average stress during sleep" with slightly different sample-selection rules. **Implication for downstream HAs**: any HA test that uses `stress_mean_sleep` (or its HA07c operationalisation) should NOT also enter `asleep_stress_avg_uds` as a "second autonomic channel". They are the same primitive at the daily resolution. This pair is a UDS-side sister to HA07c and, via HA07c ≡ −HA10, indirectly ties to the autonomic-state cluster (Cluster 2 above).
+
 **Effective N of independent channels**: with these correlations, the project's "seven SUPPORTED on six channels" actually represents roughly **3-4 effectively independent signal clusters**:
 - **Cluster 1 (within-day stress)**: H02b/H02d + HA11 (ρ ≈ 0.38)
-- **Cluster 2 (autonomic state)**: HA07c + HA10 (ρ ≈ −0.92) ± HA06b (ρ ≈ 0.36-0.39)
+- **Cluster 2 (autonomic state)**: HA07c + HA10 (ρ ≈ −0.92) ± HA06b (ρ ≈ 0.36-0.39); UDS-side sister of HA07c is `asleep_stress_avg_uds` (methodological-overlap near-identity, r ≈ +0.93; per Key finding 6)
 - **Cluster 3 (autonomic variability)**: HA07d (moderately tied to Cluster 2 via HA07c at +0.50)
 - HA08c is a slope of Cluster 2's primitive, so adds little independent variance
 
@@ -100,3 +104,18 @@ Channels with HIGH mean |ρ| are 'central' — they share variance with many oth
 **Multi-comparison adjustment**: Bonferroni on 11 primary verdicts at α=0.05 → α=0.0045. But with effective N of channels < 7 due to correlation, the multi-comparison concern is bounded. The Fisher's exact + 95% CI doc ([primary-verdict-statistics.md](primary-verdict-statistics.md)) provides the per-verdict test that this correlation matrix puts in context.
 
 **Caveat about HA10**: HA10's morning BB peak is structurally a fused composite of HR, HRV, and stress per Garmin's BB algorithm. So HA10 ↔ HA06b (RHR), HA10 ↔ HA07c (sleep stress mean), and HA10 ↔ HA07d (sleep stress stdev) correlations are EXPECTED to be non-zero by construction, not just biologically.
+
+## Near-identity pairs discovered post-2026-06-08
+
+The 2026-06-08 seven-channel panel above computed pairwise correlations across the primitive channels of the primary hypothesis grid. Subsequent operationalisation-support analyses have surfaced additional near-identity pairs against neighbouring channels that were not in the original panel. Propagated here for corpus-wide near-identity map completeness.
+
+| pair | Pearson r | Spearman ρ | N | discovered | source | pair type |
+|---|---:|---:|---:|---|---|---|
+| `stress_mean_sleep` ≡ `asleep_stress_avg_uds` | +0.929 | +0.895 | 1337 | 2026-06-18 | [`stress_mean_sleep/findings.md`](../../descriptive/operationalisation_support/stress_mean_sleep/findings.md) Q3.1.e LOCKED 2026-06-18 | methodological-overlap (custom monitoring_b sleep-window mean vs UDS whole-night asleep-stress average) |
+
+**Discipline for downstream HA authors**: near-identity pairs listed here follow the same rule as the primary panel above. Any HA test using either channel should NOT enter the sister as a "second autonomic channel"; they are the same primitive at the daily resolution.
+
+## Status / Lock log
+
+- **2026-06-08**: Seven-channel primary panel computed and locked (headline sections 1-5 + all three matrices + mean |ρ| table).
+- **2026-07-09** (OI-034 execution): Extended Key findings with entry 6 propagating the `stress_mean_sleep` ≡ `asleep_stress_avg_uds` methodological-overlap near-identity pair discovered 2026-06-18 in the Strand A `stress_mean_sleep` operationalisation-support analysis (Q3.1.e); added the "Near-identity pairs discovered post-2026-06-08" table; annotated Cluster 2 with the UDS-side sister pointer. Primary seven-channel panel matrices and mean |ρ| values unchanged. Discharges [`stress_mean_sleep/findings.md`](../../descriptive/operationalisation_support/stress_mean_sleep/findings.md) Status refresh trigger 4 (near-identity-pair propagation into corpus-wide near-identity map).
