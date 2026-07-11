@@ -61,6 +61,39 @@ The Moderate 5-column set:
 Convention: count columns emit 0 on valid days with no bouts; max/AUC emit
 NaN. Invalid days (failing the §3.4 gate) emit NaN on all 5.
 
+## Personal-baseline SD-anchored derivative operand family (per MD §3.2.2 LOCKED r3 2026-07-09)
+
+Additive derivative family co-locked with HA-C4cp r2 pre-reg at Bundle H+
+event 7 (2026-07-09). Reference distribution `tail_length_lagged_lcera(d)`
+constructed per §3.2.2: bout-level pool over `[d-90, d-30]` window,
+restricted to LC-era valid days (April 2024 cluster excluded via the
+§3.4 gate; `did_not_return_flag` bouts INCLUDED as-is per §3.2.2 rationale
+to avoid inflating derivative flag rate; candidate-day exclusion enforced
+by window edge). Robust statistics: `subject_lagged_median(d) = median`;
+`subject_lagged_mad(d) = 1.4826 * MAD`. Validity bar: >= 30 bouts in
+reference pool.
+
+Per-bout derivative features (3 new columns added to per_bout_master.csv):
+- `bout_return_time_z` — continuous z-score
+  `(tail_length - subject_lagged_median) / subject_lagged_mad`
+- `did_not_return_1sd_flag` — bool: `tail_length > median + 1*mad`
+- `did_not_return_2sd_flag` — bool: `tail_length > median + 2*mad`
+
+Per-day aggregations (5 new columns added to per_bout_aggregations_daily.csv):
+- `subject_lagged_median_day` — reference-window median (audit trace)
+- `subject_lagged_mad_day` — reference-window `1.4826 * MAD` (audit trace)
+- `bout_return_time_z_max_day` — max over day's bouts of `bout_return_time_z`
+- `bout_n_did_not_return_1sd_day` — count of `did_not_return_1sd_flag = True`
+- `bout_n_did_not_return_2sd_day` — count of `did_not_return_2sd_flag = True`
+  (HA-C4cp primary per-day operand)
+
+NaN semantics: count columns emit 0 on valid days with valid reference
+window and no flagged bouts; NaN on reference-window-invalid days
+(< 30 bouts in `[d-90, d-30]`) OR §3.4-invalid days. `.fillna(0)` on the
+count columns MUST distinguish these cases per parent MD §4 zero-vs-NaN
+discipline; silently promoting NaN to 0 would fold reference-window-invalid
+days into zero-count days and bias downstream contrasts toward null.
+
 ## Day-validity gate (per MD §3.4)
 
 A day enters the bout dataset if:
@@ -254,9 +287,14 @@ PER_BOUT_FIELDS = [
     "dose_plasma_mg",
     "citalopram_phase",
     "is_unmedicated",
+    # Personal-baseline SD-anchored derivative features (per MD §3.2.2 LOCKED r3)
+    "bout_return_time_z",
+    "did_not_return_1sd_flag",
+    "did_not_return_2sd_flag",
 ]
 
-# === Per-day aggregations schema (5 columns per Decision 2) ===
+# === Per-day aggregations schema (5 + 5 = 10 columns) ===
+# First 5 per Decision 2 (LOCKED 2026-06-22); last 5 per MD §3.2.2 LOCKED r3.
 PER_DAY_AGG_FIELDS = [
     "date",
     "bout_n_fast_recovery_day",
@@ -264,11 +302,23 @@ PER_DAY_AGG_FIELDS = [
     "bout_n_did_not_return",
     "bout_max_peak_height_day",
     "bout_total_AUC_day",
+    # SD-anchored derivative operand family (MD §3.2.2 LOCKED r3)
+    "subject_lagged_median_day",
+    "subject_lagged_mad_day",
+    "bout_return_time_z_max_day",
+    "bout_n_did_not_return_1sd_day",
+    "bout_n_did_not_return_2sd_day",
 ]
 
 # Fast-recovery operand thresholds (per MD §6.1, LOCKED)
 FAST_RECOVERY_HALFLIFE_MAX = 15    # recovery_half_life <= 15
 FAST_RECOVERY_TAIL_MAX = 45        # tail_length <= 45
+
+# SD-anchored operand family constants (per MD §3.2.2 LOCKED r3)
+LAGGED_WINDOW_LOOKBACK_START = 90  # `[d-90, d-30]` left edge (inclusive)
+LAGGED_WINDOW_LOOKBACK_END = 30    # `[d-90, d-30]` right edge (inclusive)
+MIN_REFERENCE_POOL_SIZE = 30       # >= 30 bouts validity bar per §3.2.2
+MAD_SCALE_TO_SD = 1.4826           # normal-consistent scaling per CONVENTIONS §3.1
 
 
 # === Sleep-window loader (mirrors garmin_intraday_hr_stress.py) ===
@@ -674,8 +724,14 @@ def detect_bouts_on_day(
 def aggregate_per_day(
     bouts: list[dict],
     valid_dates: set[date],
+    sd_anchored_per_day: dict[str, dict] | None = None,
 ) -> list[dict]:
-    """Compute the 5 per-day aggregations per Decision 2."""
+    """Compute per-day aggregations.
+
+    First 5 columns per Decision 2 (LOCKED 2026-06-22).
+    Next 5 columns per MD §3.2.2 LOCKED r3 (SD-anchored derivative family)
+    when `sd_anchored_per_day` is provided.
+    """
     by_date: dict[date, list[dict]] = collections.defaultdict(list)
     for b in bouts:
         try:
@@ -684,16 +740,23 @@ def aggregate_per_day(
             continue
         by_date[d].append(b)
 
+    sd_anchored_per_day = sd_anchored_per_day or {}
+
     out: list[dict] = []
     for d in sorted(valid_dates | set(by_date.keys())):
         row: dict[str, object] = {"date": d.isoformat()}
         if d not in valid_dates:
-            # Invalid day -> NaN on all 5 aggregations.
+            # Invalid day -> NaN on all 10 aggregations.
             row["bout_n_fast_recovery_day"] = ""
             row["bout_n_per_day"] = ""
             row["bout_n_did_not_return"] = ""
             row["bout_max_peak_height_day"] = ""
             row["bout_total_AUC_day"] = ""
+            row["subject_lagged_median_day"] = ""
+            row["subject_lagged_mad_day"] = ""
+            row["bout_return_time_z_max_day"] = ""
+            row["bout_n_did_not_return_1sd_day"] = ""
+            row["bout_n_did_not_return_2sd_day"] = ""
             out.append(row)
             continue
         day_bouts = by_date.get(d, [])
@@ -717,8 +780,160 @@ def aggregate_per_day(
         else:
             row["bout_max_peak_height_day"] = ""
             row["bout_total_AUC_day"] = 0.0
+
+        # SD-anchored derivative operand family (per MD §3.2.2). Empty
+        # string on missing (reference-window-invalid); the None -> ""
+        # normalisation is CSV-writer's job downstream.
+        sd = sd_anchored_per_day.get(d.isoformat(), {})
+        for col in (
+            "subject_lagged_median_day",
+            "subject_lagged_mad_day",
+            "bout_return_time_z_max_day",
+            "bout_n_did_not_return_1sd_day",
+            "bout_n_did_not_return_2sd_day",
+        ):
+            v = sd.get(col)
+            row[col] = "" if v is None else v
+
         out.append(row)
     return out
+
+
+# === Personal-baseline SD-anchored derivative operand family (per MD §3.2.2 LOCKED r3) ===
+
+def compute_sd_anchored_features(
+    all_bouts: list[dict],
+    valid_dates: set[date],
+) -> dict[str, dict]:
+    """Compute personal-baseline SD-anchored derivative features per MD §3.2.2.
+
+    For each valid day `d`:
+      1. Build reference pool of `tail_length` values from bouts on days in
+         `[d-90, d-30]` that pass the §3.4 day-validity gate (`valid_dates`
+         already enforces LC-era + April 2024 cluster + device-baseline-lag
+         exclusions).
+      2. If pool size < 30 (MD §3.2.2 validity bar), mark day + its bouts NaN.
+      3. Else compute `subject_lagged_median` = median; `subject_lagged_mad`
+         = 1.4826 * MAD (robust per CONVENTIONS §3.1 prototype).
+      4. For each bout on day `d`: compute `bout_return_time_z`,
+         `did_not_return_1sd_flag`, `did_not_return_2sd_flag`. Mutate the
+         bout dict in place.
+      5. Return per-day aggregations {median, mad, z_max, n_1sd, n_2sd}.
+
+    Reference pool INCLUDES `did_not_return_flag = True` bouts (tail_length =
+    180) as-is per §3.2.2 rationale (excluding them would deflate median and
+    inflate derivative flag rate). Candidate-day exclusion is enforced by
+    the window edge (`[d-90, d-30]` doesn't contain `d`) per §3.2.2.
+
+    Returns per_day_ref_stats: `{date_iso -> {5 columns}}`. Days in
+    `valid_dates` but with reference-window shortfall (< 30 pool) get NaN
+    (None) on all 5 columns.
+
+    NaN semantics on the per-day aggregation columns:
+      - `subject_lagged_median_day` / `subject_lagged_mad_day` / `bout_return_time_z_max_day`:
+        None on reference-window-invalid days OR days with no bouts on day.
+      - `bout_n_did_not_return_1sd_day` / `bout_n_did_not_return_2sd_day`:
+        0 on valid-reference days with no flagged bouts; None on
+        reference-window-invalid days.
+    """
+    # Index bouts by their attributed date.
+    bouts_by_date: dict[date, list[dict]] = collections.defaultdict(list)
+    for b in all_bouts:
+        try:
+            d = date.fromisoformat(b["date"])
+        except (ValueError, TypeError):
+            continue
+        bouts_by_date[d].append(b)
+
+    per_day_ref_stats: dict[str, dict] = {}
+
+    for d in sorted(valid_dates):
+        # Build reference pool from bouts on days in [d-90, d-30] that pass
+        # the §3.4 day-validity gate (valid_dates already enforces LC era +
+        # April 2024 cluster + device-baseline-lag exclusions).
+        ref_tail_lengths: list[float] = []
+        for offset in range(LAGGED_WINDOW_LOOKBACK_END, LAGGED_WINDOW_LOOKBACK_START + 1):
+            ref_d = d - timedelta(days=offset)
+            if ref_d not in valid_dates:
+                continue
+            for b in bouts_by_date.get(ref_d, []):
+                tl = b.get("tail_length")
+                if tl is not None:
+                    ref_tail_lengths.append(float(tl))
+
+        # Reference-window validity check per §3.2.2 (>= 30 bouts).
+        if len(ref_tail_lengths) < MIN_REFERENCE_POOL_SIZE:
+            per_day_ref_stats[d.isoformat()] = {
+                "subject_lagged_median_day": None,
+                "subject_lagged_mad_day": None,
+                "bout_return_time_z_max_day": None,
+                "bout_n_did_not_return_1sd_day": None,
+                "bout_n_did_not_return_2sd_day": None,
+            }
+            for b in bouts_by_date.get(d, []):
+                b["bout_return_time_z"] = None
+                b["did_not_return_1sd_flag"] = None
+                b["did_not_return_2sd_flag"] = None
+            continue
+
+        # Compute robust median + MAD per §3.2.2.
+        median_tl = statistics.median(ref_tail_lengths)
+        abs_devs = [abs(tl - median_tl) for tl in ref_tail_lengths]
+        mad_raw = statistics.median(abs_devs)
+        mad_tl = MAD_SCALE_TO_SD * mad_raw
+
+        # Degenerate case: all reference bouts have identical tail_length
+        # (MAD = 0). Cannot compute z-scores. Route to NaN semantics.
+        if mad_tl == 0:
+            per_day_ref_stats[d.isoformat()] = {
+                "subject_lagged_median_day": round(median_tl, 4),
+                "subject_lagged_mad_day": 0.0,
+                "bout_return_time_z_max_day": None,
+                "bout_n_did_not_return_1sd_day": None,
+                "bout_n_did_not_return_2sd_day": None,
+            }
+            for b in bouts_by_date.get(d, []):
+                b["bout_return_time_z"] = None
+                b["did_not_return_1sd_flag"] = None
+                b["did_not_return_2sd_flag"] = None
+            continue
+
+        threshold_1sd = median_tl + 1 * mad_tl
+        threshold_2sd = median_tl + 2 * mad_tl
+
+        # Per-bout derivative features on day d.
+        day_bouts = bouts_by_date.get(d, [])
+        z_scores: list[float] = []
+        n_1sd = 0
+        n_2sd = 0
+        for b in day_bouts:
+            tl = b.get("tail_length")
+            if tl is None:
+                b["bout_return_time_z"] = None
+                b["did_not_return_1sd_flag"] = None
+                b["did_not_return_2sd_flag"] = None
+                continue
+            z = (float(tl) - median_tl) / mad_tl
+            b["bout_return_time_z"] = round(z, 4)
+            f1 = tl > threshold_1sd
+            f2 = tl > threshold_2sd
+            b["did_not_return_1sd_flag"] = f1
+            b["did_not_return_2sd_flag"] = f2
+            z_scores.append(z)
+            if f1:
+                n_1sd += 1
+            if f2:
+                n_2sd += 1
+
+        per_day_ref_stats[d.isoformat()] = {
+            "subject_lagged_median_day": round(median_tl, 4),
+            "subject_lagged_mad_day": round(mad_tl, 4),
+            "bout_return_time_z_max_day": round(max(z_scores), 4) if z_scores else None,
+            "bout_n_did_not_return_1sd_day": n_1sd,
+            "bout_n_did_not_return_2sd_day": n_2sd,
+        }
+
+    return per_day_ref_stats
 
 
 # === FIT-parsing main loop (mirrors stress_low_motion_extract.py) ===
@@ -1121,9 +1336,26 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"\nTotal bouts detected: {len(all_bouts)}", file=sys.stderr)
 
+    # Personal-baseline SD-anchored derivative operand family (per MD §3.2.2
+    # LOCKED r3). Mutates all_bouts to add 3 per-bout columns; returns per-day
+    # {median, mad, z_max, n_1sd, n_2sd} for the aggregation merge below.
+    print("Computing SD-anchored derivative operand family (MD §3.2.2)...", file=sys.stderr)
+    sd_anchored_per_day = compute_sd_anchored_features(all_bouts, valid_dates)
+    ref_valid_days = sum(
+        1 for stats in sd_anchored_per_day.values()
+        if stats["subject_lagged_median_day"] is not None
+    )
+    ref_invalid_days = len(sd_anchored_per_day) - ref_valid_days
+    print(
+        f"  reference-window valid days: {ref_valid_days}"
+        f"; reference-window invalid days: {ref_invalid_days}"
+        f" (< {MIN_REFERENCE_POOL_SIZE} bouts in [d-90, d-30])",
+        file=sys.stderr,
+    )
+
     # Per-day aggregations
     print("Computing per-day aggregations...", file=sys.stderr)
-    per_day_aggs = aggregate_per_day(all_bouts, valid_dates)
+    per_day_aggs = aggregate_per_day(all_bouts, valid_dates, sd_anchored_per_day)
     print(f"  per-day rows: {len(per_day_aggs)}", file=sys.stderr)
 
     # Write per-bout CSV + parquet

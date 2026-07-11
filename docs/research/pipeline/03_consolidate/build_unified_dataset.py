@@ -963,21 +963,37 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     ud = udip.get(d, {})
     row["u_dip_count"] = ud.get("u_dip_count") or ""
 
-    # --- Bout-level per-day aggregations (5 columns) ---
-    # Per methodology/bout_level_recovery_dynamics.md §4 + user-ratified
-    # Decision 2 (2026-06-22): the Moderate 5-column aggregation set joined
-    # from pipeline/02_features/extract_stress_bouts.py output.
+    # --- Bout-level per-day aggregations (5 + 5 = 10 columns) ---
+    # First 5 columns per methodology/bout_level_recovery_dynamics.md §4 +
+    # user-ratified Decision 2 (2026-06-22): the Moderate 5-column
+    # aggregation set joined from pipeline/02_features/extract_stress_bouts.py.
     # bout_n_fast_recovery_day is the framework-validity operand for
     # HA11-bout-redo per §6.1 (recovery_half_life <= 15 AND tail_length <= 45).
-    # Per the extractor's convention: count columns are 0 on valid days with
-    # no bouts and blank on invalid days (failing the §3.4 gate); max/AUC
-    # are blank on no-bout days too. NaN policy mirrors stress_low_motion.
+    # Next 5 columns per MD §3.2.2 LOCKED r3 (2026-07-09): SD-anchored
+    # derivative operand family co-locked with HA-C4cp r2 pre-reg
+    # (Bundle H+ event 7). bout_n_did_not_return_2sd_day is HA-C4cp's
+    # primary operand.
+    # Per the extractor's convention: count columns are 0 on valid days
+    # with valid reference window + no flagged bouts, and blank on invalid
+    # days (failing the §3.4 gate) OR reference-window-invalid days
+    # (< 30 bouts in [d-90, d-30]); max/AUC/median/mad/z_max are blank on
+    # no-bout or reference-invalid days. NaN policy mirrors stress_low_motion.
+    # Load-bearing zero-vs-NaN discipline per parent MD §4: `.fillna(0)`
+    # on the count columns MUST distinguish these cases; silently
+    # promoting NaN to 0 would fold reference-window-invalid days into
+    # zero-count days and bias downstream contrasts toward null.
     ba = bout_aggs.get(d, {})
     row["bout_n_fast_recovery_day"] = ba.get("bout_n_fast_recovery_day") or ""
     row["bout_n_per_day"] = ba.get("bout_n_per_day") or ""
     row["bout_n_did_not_return"] = ba.get("bout_n_did_not_return") or ""
     row["bout_max_peak_height_day"] = ba.get("bout_max_peak_height_day") or ""
     row["bout_total_AUC_day"] = ba.get("bout_total_AUC_day") or ""
+    # SD-anchored derivative family (per MD §3.2.2 LOCKED r3)
+    row["subject_lagged_median_day"] = ba.get("subject_lagged_median_day") or ""
+    row["subject_lagged_mad_day"] = ba.get("subject_lagged_mad_day") or ""
+    row["bout_return_time_z_max_day"] = ba.get("bout_return_time_z_max_day") or ""
+    row["bout_n_did_not_return_1sd_day"] = ba.get("bout_n_did_not_return_1sd_day") or ""
+    row["bout_n_did_not_return_2sd_day"] = ba.get("bout_n_did_not_return_2sd_day") or ""
 
     # --- v24 rollup (presence-conditioned on has_note) ---
     if row["has_note"] and d in v24_per_day:
