@@ -61,4 +61,4 @@ Read the relevant doc before suggesting anything. Don't restate them here.
 - **Before suggesting a dependency, framework, or pattern**: check it survives all 6 cardinal principles and the no-telemetry rule (per [ADR 0002](docs/decisions/0002-pwa-with-directus-backend.md), "local-first" is no longer the architectural framing — data lives in self-hosted Directus, exports and full delete remain first-class). If it doesn't, propose an alternative.
 - **When the brief and a clean architecture disagree**: the brief wins. The user has 1.363 days of evidence about what works for daily logging.
 - **UX calls (sub-10-second flow, brainfog-friendly)**: ask. They aren't testable in unit tests.
-- **Verify gate is `npm run verify`** (lint + typecheck + Vitest). The pre-push hook runs it. Don't ship without it green.
+- **Verify gate is `npm run verify`** (lint + typecheck + Vitest). Run it before you push. The pre-push hook only enforces `verify:fast` (lint + typecheck) because Vitest 4's worker IPC breaks when the hook runs via Windows Git-Bash sh; the full Vitest suite runs in CI. Don't ship without `verify` green.

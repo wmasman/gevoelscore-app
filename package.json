@@ -23,13 +23,14 @@
     "test:all": "vitest run && playwright test",
     "audit": "npm audit --audit-level=high",
     "verify": "npm run lint && npm run typecheck && npm test",
+    "verify:fast": "npm run lint && npm run typecheck",
     "verify:full": "npm run verify && npm run audit && npm run test:e2e",
     "predeploy": "npm run test:e2e -- tests/e2e/no-console-errors.spec.ts --project=chromium",
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged",
-    "pre-push": "npm run verify"
+    "pre-push": "npm run verify:fast"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,js}": "eslint --max-warnings 0 --no-warn-ignored"
