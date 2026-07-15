@@ -20,7 +20,7 @@ Field mapping:
 - derived bb_overnight_gain_proxy = HIGHEST - SLEEPSTART (HIGHEST sits ~06:00, validated r=0.989 vs truth on n=593)
 - derived bb_overnight_gain_best   = truth where present, proxy otherwise
 - derived bb_overnight_gain_source = "truth" / "proxy" / "" (audit channel for _best)
-- allDayStress.aggregatorList[TOTAL/AWAKE/ASLEEP]           -> all_day_stress_avg/max, awake_stress_avg/max, asleep_stress_avg_uds
+- allDayStress.aggregatorList[TOTAL/AWAKE/ASLEEP]           -> all_day_stress_avg/max, awake_stress_avg/max, asleep_stress_avg_uds, asleep_stress_max_uds, asleep_stress_high_min_uds
 - respiration.{avgWakingRespirationValue,highest,lowest}    -> respiration_avg_waking, respiration_max_24h, respiration_min_24h
 - averageSpo2Value, lowestSpo2Value                         -> spo2_avg_24h, spo2_min_24h
 
@@ -83,7 +83,7 @@ FIELDS = [
     # All-day stress (3 aggregator types)
     "all_day_stress_avg", "all_day_stress_max",
     "awake_stress_avg", "awake_stress_max",
-    "asleep_stress_avg_uds",
+    "asleep_stress_avg_uds", "asleep_stress_max_uds", "asleep_stress_high_min_uds",
     # Respiration (24h / waking)
     "respiration_avg_waking", "respiration_max_24h", "respiration_min_24h",
     # SpO2 (24h)
@@ -158,6 +158,16 @@ def parse_one(p: Path) -> list[dict]:
             row["awake_stress_avg"] = awake.get("averageStressLevel")
             row["awake_stress_max"] = awake.get("maxStressLevel")
             row["asleep_stress_avg_uds"] = asleep.get("averageStressLevel")
+            row["asleep_stress_max_uds"] = asleep.get("maxStressLevel")
+            # highDuration is reported in seconds; convert to minutes.
+            # Present in ~17% of ASLEEP rows (Garmin only emits when high-stress
+            # minutes occurred). Blank when field absent.
+            hd = asleep.get("highDuration")
+            if hd is not None:
+                try:
+                    row["asleep_stress_high_min_uds"] = round(float(hd) / 60, 1)
+                except (ValueError, TypeError):
+                    row["asleep_stress_high_min_uds"] = None
 
         # Respiration
         rsp = item.get("respiration") or {}

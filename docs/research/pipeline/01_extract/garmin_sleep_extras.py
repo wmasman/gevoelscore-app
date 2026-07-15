@@ -19,15 +19,30 @@ by the rest of the master.
 Field mapping:
 - deepSleepSeconds / 60                                  -> sleep_deep_min
 - lightSleepSeconds / 60                                 -> sleep_light_min
+- remSleepSeconds / 60                                   -> sleep_rem_min
 - awakeSleepSeconds / 60                                 -> sleep_awake_min
 - unmeasurableSeconds / 60                               -> sleep_unmeasurable_min
 - averageRespiration / highestRespiration / lowestRespiration  -> respiration_avg_sleep, _max_sleep, _min_sleep
 - spo2SleepSummary.averageSPO2                           -> spo2_avg_sleep
 - spo2SleepSummary.lowestSPO2                            -> spo2_min_sleep
+- spo2SleepSummary.averageHR                             -> sleep_hr_avg_spo2
+- sleepWindowConfirmationType                            -> sleep_window_confirmation_type
 
-Note: this device (Forerunner 245) does NOT produce REM-stage
-classification; sleep stages are deep / light / awake / unmeasurable
-only. A `sleep_rem_min` column is deliberately NOT emitted.
+Note on REM: an earlier version of this extractor asserted that the
+Forerunner 245 does not produce REM-stage classification. That assertion
+was incorrect on this corpus. `remSleepSeconds` is present at 97.2%
+coverage across LC-era nights (1685/1734, mean 115.6 min, range 5-287),
+so `sleep_rem_min` IS emitted. The ~2.8% gap corresponds to nights where
+Garmin fell back to the deep/light/awake-only classifier.
+
+`sleep_window_confirmation_type` is the Garmin sleep-window validity
+flag (ENHANCED_CONFIRMED, ENHANCED_CONFIRMED_FINAL, UNCONFIRMED,
+AUTO_CONFIRMED_FINAL, OFF_WRIST, AUTO_CONFIRMED) — a validity gate for
+downstream analyses that need to exclude non-confirmed windows.
+
+`sleep_hr_avg_spo2` is the overnight-average HR reported inside the
+spo2SleepSummary block (95% coverage). Overnight HR proxy for cardiac
+autonomic contrasts; complements resting_hr (which is a daily value).
 """
 from __future__ import annotations
 
@@ -67,10 +82,12 @@ OUT = DATA_ROOT / "processed" / "garmin" / "sleep_extras_daily.csv"
 
 FIELDS = [
     "date",
-    "sleep_deep_min", "sleep_light_min",
+    "sleep_deep_min", "sleep_light_min", "sleep_rem_min",
     "sleep_awake_min", "sleep_unmeasurable_min",
     "respiration_avg_sleep", "respiration_max_sleep", "respiration_min_sleep",
     "spo2_avg_sleep", "spo2_min_sleep",
+    "sleep_hr_avg_spo2",
+    "sleep_window_confirmation_type",
 ]
 
 
@@ -102,6 +119,7 @@ def parse_one(p: Path) -> list[dict]:
         # Sleep stages (sec -> min)
         row["sleep_deep_min"] = _sec_to_min(item.get("deepSleepSeconds"))
         row["sleep_light_min"] = _sec_to_min(item.get("lightSleepSeconds"))
+        row["sleep_rem_min"] = _sec_to_min(item.get("remSleepSeconds"))
         row["sleep_awake_min"] = _sec_to_min(item.get("awakeSleepSeconds"))
         row["sleep_unmeasurable_min"] = _sec_to_min(item.get("unmeasurableSeconds"))
 
@@ -110,11 +128,15 @@ def parse_one(p: Path) -> list[dict]:
         row["respiration_max_sleep"] = item.get("highestRespiration")
         row["respiration_min_sleep"] = item.get("lowestRespiration")
 
-        # Sleep-window SpO2
+        # Sleep-window SpO2 (+ overnight HR from same block)
         sp = item.get("spo2SleepSummary") or {}
         if isinstance(sp, dict):
             row["spo2_avg_sleep"] = sp.get("averageSPO2")
             row["spo2_min_sleep"] = sp.get("lowestSPO2")
+            row["sleep_hr_avg_spo2"] = sp.get("averageHR")
+
+        # Sleep-window validity gate (Garmin's own confirmation label)
+        row["sleep_window_confirmation_type"] = item.get("sleepWindowConfirmationType")
 
         rows.append(row)
     return rows

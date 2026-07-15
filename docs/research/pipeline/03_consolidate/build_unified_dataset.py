@@ -610,6 +610,88 @@ def main():
                 val += delta * (1.0 - math.exp(-CITALOPRAM_DECAY_K * days_since))
         r["dose_plasma_mg"] = round(val, 4)
 
+    # === Post-pass: sleep + Body Battery derived operands (2026-07-15) ===
+    # Additive extension for the Q24 methodology MD's sleep-metric operand
+    # family. All formulas are point-in-time per-row derivations from raw
+    # columns already present on the row; no rolling windows.
+    #
+    # NaN handling (uniform): emit "" when any input is missing, when the
+    # denominator is zero, or when the ceiling in bb_overnight_gain_frac
+    # is degenerate (bb_sleep_start_value == 100).
+    #
+    # Formulas:
+    #   sleep_efficiency_tib   = (sleep_duration_min - sleep_awake_min) / sleep_duration_min
+    #     Canonical sleep-medicine efficiency: Time-Asleep / Time-in-Bed.
+    #   sleep_efficiency_staged = (deep + light + rem) / sleep_duration_min
+    #     Sensitivity variant using classified-asleep minutes over TIB.
+    #   sleep_rem_frac         = rem / (deep + light + rem)
+    #   sleep_deep_frac        = deep / (deep + light + rem)
+    #     Fraction-of-classified-asleep for architecture contrasts.
+    #   sleep_waso_frac        = sleep_awake_min / sleep_duration_min
+    #     WASO fraction of TIB.
+    #   bb_overnight_recovery_rate = bb_overnight_gain / (sleep_duration_min / 60)
+    #     BB points per hour of sleep (sparse: inherits bb_overnight_gain coverage).
+    #   bb_overnight_gain_frac = bb_overnight_gain / (100 - bb_sleep_start_value)
+    #     Fraction of available headroom recharged (ceiling-corrected).
+    for r in rows:
+        sdur = parse_float_safe(r.get("sleep_duration_min"))
+        sawk = parse_float_safe(r.get("sleep_awake_min"))
+        sdep = parse_float_safe(r.get("sleep_deep_min"))
+        slit = parse_float_safe(r.get("sleep_light_min"))
+        srem = parse_float_safe(r.get("sleep_rem_min"))
+        bb_gain = parse_float_safe(r.get("bb_overnight_gain"))
+        bb_start = parse_float_safe(r.get("bb_sleep_start_value"))
+
+        # sleep_efficiency_tib
+        if sdur is None or sdur == 0 or sawk is None:
+            r["sleep_efficiency_tib"] = ""
+        else:
+            r["sleep_efficiency_tib"] = round((sdur - sawk) / sdur, 4)
+
+        # sleep_efficiency_staged
+        if (sdur is None or sdur == 0 or sdep is None
+                or slit is None or srem is None):
+            r["sleep_efficiency_staged"] = ""
+        else:
+            r["sleep_efficiency_staged"] = round(
+                (sdep + slit + srem) / sdur, 4
+            )
+
+        # sleep_rem_frac + sleep_deep_frac (share denominator)
+        if sdep is None or slit is None or srem is None:
+            r["sleep_rem_frac"] = ""
+            r["sleep_deep_frac"] = ""
+        else:
+            denom = sdep + slit + srem
+            if denom == 0:
+                r["sleep_rem_frac"] = ""
+                r["sleep_deep_frac"] = ""
+            else:
+                r["sleep_rem_frac"] = round(srem / denom, 4)
+                r["sleep_deep_frac"] = round(sdep / denom, 4)
+
+        # sleep_waso_frac
+        if sdur is None or sdur == 0 or sawk is None:
+            r["sleep_waso_frac"] = ""
+        else:
+            r["sleep_waso_frac"] = round(sawk / sdur, 4)
+
+        # bb_overnight_recovery_rate
+        if bb_gain is None or sdur is None or sdur == 0:
+            r["bb_overnight_recovery_rate"] = ""
+        else:
+            r["bb_overnight_recovery_rate"] = round(
+                bb_gain / (sdur / 60.0), 4
+            )
+
+        # bb_overnight_gain_frac (ceiling-corrected)
+        if bb_gain is None or bb_start is None or bb_start == 100:
+            r["bb_overnight_gain_frac"] = ""
+        else:
+            r["bb_overnight_gain_frac"] = round(
+                bb_gain / (100.0 - bb_start), 4
+            )
+
     # === Write ===
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fields = list(rows[0].keys())
@@ -766,6 +848,14 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     # 2 dates have valid FIT sleep + UDS sentinel — analysts should prefer
     # stress_mean_sleep (FIT-derived) when available; see sec 7B note.
     row["asleep_stress_avg_uds"] = drop_neg_sentinel(ue.get("asleep_stress_avg_uds"))
+    # asleep_stress_max_uds: max stress reading during the ASLEEP window
+    # (99.4% coverage). Complements the average with an arousal-peak proxy.
+    row["asleep_stress_max_uds"] = ue.get("asleep_stress_max_uds") or ""
+    # asleep_stress_high_min_uds: minutes classified as high-stress during
+    # the ASLEEP window (Garmin's own high-band count; 17% coverage — Garmin
+    # only emits the field when high-stress minutes occurred, so blank
+    # cannot be distinguished from zero on this channel).
+    row["asleep_stress_high_min_uds"] = ue.get("asleep_stress_high_min_uds") or ""
     row["respiration_avg_waking"] = ue.get("respiration_avg_waking") or ""
     row["respiration_max_24h"] = ue.get("respiration_max_24h") or ""
     row["respiration_min_24h"] = ue.get("respiration_min_24h") or ""
@@ -888,6 +978,10 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     se_extras = sleep_extras.get(d, {})
     row["sleep_deep_min"] = se_extras.get("sleep_deep_min") or ""
     row["sleep_light_min"] = se_extras.get("sleep_light_min") or ""
+    # sleep_rem_min: added 2026-07-15 after the earlier assumption that
+    # FR245 doesn't produce REM was disproved on-corpus (97.2% coverage).
+    # See garmin_sleep_extras.py docstring.
+    row["sleep_rem_min"] = se_extras.get("sleep_rem_min") or ""
     row["sleep_awake_min"] = se_extras.get("sleep_awake_min") or ""
     row["sleep_unmeasurable_min"] = se_extras.get("sleep_unmeasurable_min") or ""
     row["respiration_avg_sleep"] = se_extras.get("respiration_avg_sleep") or ""
@@ -895,6 +989,14 @@ def build_row(d, day_entries, uds, af, sleep, spike, crash, intensity,
     row["respiration_min_sleep"] = se_extras.get("respiration_min_sleep") or ""
     row["spo2_avg_sleep"] = se_extras.get("spo2_avg_sleep") or ""
     row["spo2_min_sleep"] = se_extras.get("spo2_min_sleep") or ""
+    # sleep_hr_avg_spo2: overnight-average HR from spo2SleepSummary block
+    # (95% coverage). Overnight HR proxy complementing daily resting_hr.
+    row["sleep_hr_avg_spo2"] = se_extras.get("sleep_hr_avg_spo2") or ""
+    # sleep_window_confirmation_type: Garmin's validity label for the
+    # sleep window (ENHANCED_CONFIRMED / ENHANCED_CONFIRMED_FINAL /
+    # UNCONFIRMED / AUTO_CONFIRMED_FINAL / OFF_WRIST / AUTO_CONFIRMED).
+    # 100% coverage. Validity gate for downstream analyses.
+    row["sleep_window_confirmation_type"] = se_extras.get("sleep_window_confirmation_type") or ""
 
     # --- Stress spikes ---
     sp = spike.get(d, {})
