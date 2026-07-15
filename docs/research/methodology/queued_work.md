@@ -1099,9 +1099,20 @@ handoff `handoff_back_2026-07-04_HA01c-exertion-verdict-and-framing.md`;
 
 ## Q24. Site R33 -- compensatory rest *after* heavy days, and whether it strengthened over time
 
-**Status**: queued -- logged 2026-07-04 from the site register. `new` (the
-within-day sub-part is `blocked` on per-minute extraction). The flip side of
-R32.
+**Status**: IN-PROGRESS -- Stage -1 heavy-day structural audit LOCKED r1
+2026-07-15 ([`analyses/descriptive/Q24-precursor-heavy-day-structure/audit.md`](../analyses/descriptive/Q24-precursor-heavy-day-structure/audit.md));
+sub-parts 1 (day-after rest, feasible on daily aggregates) + 4 (sleep-after,
+feasible) reframed to trajectory-over-window design with subjective channel
+paired (see design-decisions §7 in the audit card). Locked design: episode-end
+(gap=0 contiguous) as unit; 3-day + 5-day primary windows + 10-day extended;
+strict + inclusive overlap policies reported side-by-side; matched-ordinary
+comparator with no-heavy + no-crash in [D, D+w] + valid outcome data;
+**intensity-stratified sensitivity arm** (very_heavy_only + heavy_only alongside
+combined) at +3d (n=52 clean) + +5d descriptive-with-CI (n=19 clean).
+Methodology MD next session, informed by Stage -1. Sub-parts 2 (within-day)
+remains `blocked` on per-minute extraction; 3 (over time) waits on 1 + 4;
+5 (does resting prevent crashes) remains descriptive-bound-at-best
+(unfalsifiable counterfactual). The flip side of R32.
 
 **Context (cold-read)**: lived experience -- after a heavy day (physical or
 emotional) the participant feels far more tired and rests more; if that's
