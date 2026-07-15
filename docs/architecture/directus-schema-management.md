@@ -173,7 +173,7 @@ gevoelscore-app/
       verify-schema.mjs              — Sanity-checks PostgreSQL types match expectations
       seed-*.mjs / import-*.mjs      — Data-loading scripts
       <feature>-*.mjs                — One-time migrations (kept as historical reference)
-      views/                         — Postgres views (apply via psql or Neon Console)
+      views/                         — Postgres views (apply via psql (fly proxy))
   src/lib/domain/                    — Application validators (separate, already shipped)
   docs/architecture/
     directus-setup.md                — Provisioning runbook
@@ -195,7 +195,11 @@ Use the admin UI to delete the broken field/collection. Re-run the relevant `set
 ### Option B — full wipe
 
 ```bash
-# 1. Drop the Neon DB (via neon UI or `neonctl databases delete neondb && create`)
+# 1. Drop + re-create the database via machine exec (take a dump first — see the
+#    wipe runbook). Connect to the postgres maintenance DB, not the one being dropped.
+fly machine exec 830999a71e2ee8 "psql postgres://postgres:<password>@localhost:5433/postgres -c 'DROP DATABASE gevoelscore'" -a gevoelscore-pg
+fly machine exec 830999a71e2ee8 "psql postgres://postgres:<password>@localhost:5433/postgres -c 'CREATE DATABASE gevoelscore'" -a gevoelscore-pg
+
 # 2. Restart the backend so Directus auto-bootstraps on the empty DB
 fly machine restart --app gevoelscore-backend
 
@@ -208,7 +212,7 @@ node directus/scripts/verify-schema.mjs
 node directus/scripts/import-historical-data.mjs   # (not yet written; comes with the daily-entry feature)
 ```
 
-**Don't drop the entire Neon project** unless you also want to lose the project ID — that ID is in fly secrets and changing it means re-deploying. Wipe the database, not the project.
+**Don't destroy the `gevoelscore-pg` app or its volume** — the volume holds the backup dumps and its snapshots. Wipe the database, not the app.
 
 ---
 

@@ -115,7 +115,7 @@ Not yet deployed. The Fly slot `gevoelscore-frontend` exists; first deploy waits
 When ready: `fly deploy --app gevoelscore-frontend` from the repo root. The Dockerfile and fly.toml are already aligned with [ADR 0003](../decisions/0003-directus-fly-infra-setup.md):
 
 - `NEXT_TELEMETRY_DISABLED=1` (no telemetry)
-- `DIRECTUS_URL=http://gevoelscore-backend.internal:8055` (internal Fly network, no TLS overhead)
+- `DIRECTUS_URL=https://gevoelscore-backend.fly.dev` (via the Fly proxy so a suspended backend wakes on request — [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md); was `.internal` until 2026-07-14)
 - Health check on `/api/health` every 30s
 - Standalone Next build (~50MB runtime image)
 
@@ -130,6 +130,6 @@ When ready: `fly deploy --app gevoelscore-frontend` from the repo root. The Dock
 ## References
 
 - [ADR 0002](../decisions/0002-pwa-with-directus-backend.md) — stack
-- [ADR 0003](../decisions/0003-directus-fly-infra-setup.md) — Fly + Neon deploy shape
+- [ADR 0003](../decisions/0003-directus-fly-infra-setup.md) — Fly deploy shape (Neon then; Fly Postgres since [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md))
 - [.claude/testing.md](../../.claude/testing.md) — testing doctrine
 - [docs/features/login/](../features/login/) — first feature exercising every test layer

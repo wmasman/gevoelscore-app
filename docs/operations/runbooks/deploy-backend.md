@@ -37,7 +37,7 @@ Common failure modes:
 
 | Symptom | Probable cause | Fix |
 |---|---|---|
-| `connect ECONNREFUSED <postgres>` | Neon connection string wrong | Verify `DB_CONNECTION_STRING` Fly secret. See [rotate-credentials.md](rotate-credentials.md). |
+| `connect ECONNREFUSED <postgres>` | Fly Postgres connection string wrong (`DB_CONNECTION_STRING`) | Verify `DB_CONNECTION_STRING` Fly secret. See [rotate-credentials.md](rotate-credentials.md). |
 | `error: missing required environment variable "KEY"` | Fly secret unset | `fly secrets set KEY=<32-hex> --app gevoelscore-backend` |
 | Machine starts but `/server/info` returns 502 forever | Directus crashed inside the machine | `fly ssh console --app gevoelscore-backend`, check process state |
 | Dockerfile change not applied | Cached layer | Add `--no-cache` to the deploy command (rebuilds from scratch, ~5x slower) |

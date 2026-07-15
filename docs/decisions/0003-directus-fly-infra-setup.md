@@ -1,9 +1,18 @@
 # ADR 0003: Directus + Fly.io infrastructure setup
 
 - **Status**: Accepted
-- **Date**: 2026-05-26 (amended 2026-05-27: Postgres provider switched from Fly Postgres to Neon — see "Amendment 2026-05-27" below)
+- **Date**: 2026-05-26 (amended 2026-05-27: Postgres provider switched from Fly Postgres to Neon — see "Amendment 2026-05-27" below; amended 2026-07-14: Neon and the always-on machine commitment superseded — see "Amendment 2026-07-14" below)
 - **Builds on**: [ADR 0002](0002-pwa-with-directus-backend.md) (which chose the stack; this ADR commits to the specific provisioning shape)
 - **Deciders**: Willem Masman (author), Claude (AI collaborator)
+
+## Amendment 2026-07-14: Postgres moved to self-hosted Fly Postgres; machines scale-to-suspend
+
+[ADR 0007](0007-self-hosted-postgres-on-fly.md) supersedes two commitments of this ADR after the Neon free-tier quota outage of 2026-07-10..14:
+
+- The database now runs as the self-hosted Fly Postgres app `gevoelscore-pg` (the Neon project is decommissioned).
+- Both app machines run `auto_stop_machines = 'suspend'` with `min_machines_running = 0` — the always-on posture below was motivated by in-memory sessions, which [ADR 0005](0005-frontend-session-persistence.md) had already removed.
+
+The 2026-05-27 amendment and everything below stand as the historical record.
 
 ## Amendment 2026-05-27: Postgres provider switched to Neon
 

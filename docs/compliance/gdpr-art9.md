@@ -18,7 +18,7 @@ This document is the written declaration of the lawful basis, retention policy, 
 
 | Field | Where stored | Category | Notes |
 |---|---|---|---|
-| `day_entries.score` (1–10) | Neon Postgres (Frankfurt) via Directus | Health — subjective wellbeing | Quantitative self-rating; cannot be derived without consent. |
+| `day_entries.score` (1–10) | Self-hosted Postgres on Fly.io (Amsterdam) via Directus, per [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md); Neon Postgres (Frankfurt) until 2026-07-14 | Health — subjective wellbeing | Quantitative self-rating; cannot be derived without consent. |
 | `day_entries.note` (free text) | Same | Health — symptoms, medications, free narrative | Highest sensitivity in the dataset. May contain prescription names, diagnoses, mood-state words. |
 | `day_entries_tags` (M2M) | Same | Health — categorised symptoms / interventions / activities | Selected from a curated 83-tag set across 8 categories including `fysiek`, `mentaal`, `interventie`. |
 | `day_entries.created_at` / `updated_at` | Same | Behavioural — logging patterns | Could reveal periods of illness via gaps. Treated as part of the health record. |
@@ -37,7 +37,7 @@ The sole data subject (the author) gives explicit consent to processing by virtu
 - Choosing to install and operate the app
 - Authenticating with a personal account they created
 - Manually entering each row (no passive collection)
-- Operating the infrastructure (Fly.io account, Neon account) under their own credentials
+- Operating the infrastructure (Fly.io account; Neon account until 2026-07-14, since decommissioned per [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md)) under their own credentials
 
 Consent is documented by the existence of this declaration, the [REQUIREMENTS.md](../REQUIREMENTS.md) statement that data lives on infrastructure the author controls, and the architectural decision in [ADR 0002](../decisions/0002-pwa-with-directus-backend.md) that no third-party services touch the data.
 

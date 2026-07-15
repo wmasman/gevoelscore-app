@@ -13,16 +13,21 @@ primary_region = "ams"
   PORT = "3000"
   HOSTNAME = "0.0.0.0"
   NEXT_PUBLIC_DIRECTUS_URL = "https://gevoelscore-backend.fly.dev"
-  # Server-side calls go over Fly's internal network — faster, no TLS overhead.
-  DIRECTUS_URL = "http://gevoelscore-backend.internal:8055"
+  # Server-side calls go through the Fly proxy (public hostname), NOT
+  # .internal: proxied traffic auto-starts the suspended backend machine;
+  # .internal DNS bypasses the proxy and would hit a sleeping machine.
+  DIRECTUS_URL = "https://gevoelscore-backend.fly.dev"
   NEXT_PUBLIC_APP_URL = "https://gevoelscore-frontend.fly.dev"
 
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = false
+  # 'suspend' snapshots memory when idle; the Fly proxy resumes the
+  # machine in ~1s on the next request. Accepted tradeoff: first request
+  # after idle carries the resume latency.
+  auto_stop_machines = 'suspend'
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
 
   [[http_service.checks]]
     grace_period = "10s"

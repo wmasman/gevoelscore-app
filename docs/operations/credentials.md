@@ -13,13 +13,6 @@ The `.gitignore` at the repo root excludes `.env*` (with `.env.example` whitelis
 - **Used for**: provisioning + deploying Fly apps; managing secrets; reading logs.
 - **Rotation**: `fly auth logout` then `fly auth login`. Or revoke at https://fly.io/user/personal_access_tokens.
 
-## Neon account
-
-- **Login**: `neonctl me` (browser flow) → authenticated as `user@example.com`
-- **Token location**: stored by `neonctl` in `~/.config/neonctl/` (varies by platform). Never read or modify by hand.
-- **Used for**: provisioning + managing Neon projects, branches, roles, passwords.
-- **Rotation**: `neonctl auth logout` then `neonctl me` (login flow).
-
 ## Directus admin user (Fly secret + Directus DB)
 
 | Item | Where it lives | Notes |
@@ -30,7 +23,7 @@ The `.gitignore` at the repo root excludes `.env*` (with `.env.example` whitelis
 
 **Rotating the admin password**: log into Directus admin UI → user profile → Password → change. No Fly secret update needed.
 
-**Lost-2FA recovery**: if you lose your authenticator and don't have recovery codes saved, the only path back in is to clear `tfa_secret` directly in Postgres (via Neon SQL editor) — `UPDATE directus_users SET tfa_secret = NULL WHERE email = 'user@example.com';` — then re-pair 2FA on next login.
+**Lost-2FA recovery**: if you lose your authenticator and don't have recovery codes saved, the only path back in is to clear `tfa_secret` directly in Postgres (psql via `fly proxy 15432:5432 -a gevoelscore-pg`, or `fly machine exec` on the `gevoelscore-pg` machine — see [runbooks/rotate-credentials.md](runbooks/rotate-credentials.md) §Admin 2FA) — `UPDATE directus_users SET tfa_secret = NULL WHERE email = 'user@example.com';` — then re-pair 2FA on next login.
 
 ## Directus static token (the one used by scripts)
 
@@ -53,19 +46,21 @@ The `.gitignore` at the repo root excludes `.env*` (with `.env.example` whitelis
 
 These were generated as 32-byte hex strings at provisioning. Set via `fly secrets set --app gevoelscore-backend ...`. **Never stored anywhere locally.** If you lost them and need them back: `fly secrets list` shows the names but not the values; `fly machine ssh` into the running machine to read them from the process environment (last resort).
 
-## Neon Postgres password
+## Fly Postgres password
+
+The database is the self-hosted Fly Postgres app `gevoelscore-pg` (since 2026-07-14, see [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md)).
 
 | Item | Where |
 |------|-------|
-| Role | `neondb_owner` |
-| Password | Stored in Fly secret `DB_CONNECTION_STRING` on `gevoelscore-backend` (URL-embedded). The pooler endpoint variant is used. |
-| Used by | Directus connecting to the database. |
+| Role | `postgres` (superuser) |
+| Password | Stored in Fly secret `DB_CONNECTION_STRING` on `gevoelscore-backend` (URL-embedded): `postgres://postgres:<password>@gevoelscore-pg.flycast:5432/gevoelscore`. The same password is embedded in `DATABASE_URL` in the gitignored `.env.local` (local proxy form). |
+| Used by | Directus connecting to the database; local `pg`-based scripts via `fly proxy`. |
 
 **Rotation procedure** (full steps in [runbooks/rotate-credentials.md](runbooks/rotate-credentials.md)):
 
-1. Generate new password in Neon console (Roles → `neondb_owner` → Reset password)
-2. Build new connection string: `postgresql://neondb_owner:<NEW_PWD>@ep-flat-grass-alwa40oq-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require`
-3. `fly secrets set DB_CONNECTION_STRING="<NEW_URI>" --app gevoelscore-backend` — Fly will redeploy machines automatically with the new value
+1. Connect as `postgres` (via `fly proxy` or `fly machine exec`) and run `ALTER USER postgres WITH PASSWORD '<new>'`
+2. `fly secrets set DB_CONNECTION_STRING="postgres://postgres:<new>@gevoelscore-pg.flycast:5432/gevoelscore" -a gevoelscore-backend` — Fly will redeploy machines automatically with the new value (~90 s)
+3. Update `DATABASE_URL` in `.env.local`
 4. Verify Directus comes back up: `curl https://gevoelscore-backend.fly.dev/server/info` → HTTP 200
 
 ## Frontend-app Directus user (does not exist yet)
@@ -89,6 +84,6 @@ For accountability, these three credentials were generated during the bootstrap 
 
 1. Bootstrap admin password — already-or-soon-to-be replaced via Directus admin UI
 2. Static Directus token (the one used by setup scripts) — rotate when you're done running schema scripts for a while
-3. Neon DB password — rotate per the procedure above
+3. DB password — the Neon-era password died with Neon (decommissioned 2026-07-14); the Fly Postgres password rotates per the procedure above
 
 The transcript itself is held in your Claude Code session history; you can clear it (`/clear`) when no longer needed.

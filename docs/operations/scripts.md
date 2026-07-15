@@ -125,15 +125,19 @@ Postgres views for cross-source querying. Three views:
 - `day_tags_flat` — denormalised `(day, tag)` rows with provenance (`source`, `confidence`) for filtering.
 - `tag_correlations` — pre-aggregated per-tag stats: `day_count`, `avg_score`, `stddev`, date range, `confirmed_day_count`.
 
-All views use `CREATE OR REPLACE`, so re-applying after edits is idempotent. Apply with:
+All views use `CREATE OR REPLACE`, so re-applying after edits is idempotent. Apply over the local proxy:
 
 ```powershell
-psql $env:DB_CONNECTION_STRING -f directus/scripts/views/01-daily-observations.sql
-psql $env:DB_CONNECTION_STRING -f directus/scripts/views/02-day-tags-flat.sql
-psql $env:DB_CONNECTION_STRING -f directus/scripts/views/03-tag-correlations.sql
+# Terminal 1: open the proxy to the Fly Postgres app
+fly proxy 15432:5432 -a gevoelscore-pg
+
+# Terminal 2: apply (DATABASE_URL is the proxy-form connection string in the gitignored .env.local)
+psql $env:DATABASE_URL -f directus/scripts/views/01-daily-observations.sql
+psql $env:DATABASE_URL -f directus/scripts/views/02-day-tags-flat.sql
+psql $env:DATABASE_URL -f directus/scripts/views/03-tag-correlations.sql
 ```
 
-Or paste each file into the Neon SQL Editor in the Neon console. (Views live in Postgres directly; Directus is not involved unless you later register them as read-only collections in the admin UI.)
+Without local psql, run the SQL through a `pg`-based script over the same proxy (see [`directus/scripts/lib/sql-migration.mjs`](../../directus/scripts/lib/sql-migration.mjs)). (Views live in Postgres directly; Directus is not involved unless you later register them as read-only collections in the admin UI.)
 
 ### [`directus/scripts/recompute-tag-usage.mjs`](../../directus/scripts/recompute-tag-usage.mjs)
 
@@ -146,7 +150,7 @@ Imports the anonymized 60-day sample at [`docs/sample-data.csv`](../sample-data.
 Uses a deliberately minimal inline CSV parser (sample is 2-column, simple quoted). The canonical 3-column parser at [`src/lib/import/csv-day-entries.ts`](../../src/lib/import/csv-day-entries.ts) is reserved for the user-facing import flow that ships with the daily-entry feature (will run inside Next.js where TS is native).
 
 **When to run**:
-- After initial Directus setup, to validate the full stack (CSV → domain validation → REST → Neon) end-to-end before any UI work.
+- After initial Directus setup, to validate the full stack (CSV → domain validation → REST → Postgres) end-to-end before any UI work.
 - After [wipe-and-rebootstrap](runbooks/wipe-and-rebootstrap.md), to re-seed.
 - Whenever you want a known-state test dataset for screen development.
 
@@ -194,5 +198,5 @@ See [`docs/architecture/directus-schema-management.md`](../architecture/directus
 |--------|---------|---------------|
 | `setup-seed-tags.mjs` | Insert the 25–30 seed tags (mentaal/fysiek/overall/activiteit/gebeurtenis) on a fresh install | When you want one-tap-friendly tag chips on the daily screen from day 1 |
 | `import-historical-csv.mjs` | Wraps [`src/lib/import/csv-day-entries.ts`](../../src/lib/import/csv-day-entries.ts), upserts parsed rows into Directus | When the CSV import feature ships |
-| `rotate-db-password.mjs` | Automate the Neon password rotation steps in [rotate-credentials.md](runbooks/rotate-credentials.md) | If rotation becomes routine (i.e., a schedule, not just incident-response) |
-| `backup-snapshot.mjs` | `neonctl branches create --parent main --name backup-YYYY-MM-DD` for manual snapshot before risky migrations | First time you do a destructive schema change |
+| `rotate-db-password.mjs` | Automate the Fly Postgres password rotation steps in [rotate-credentials.md](runbooks/rotate-credentials.md) (`ALTER USER postgres` + `fly secrets set DB_CONNECTION_STRING`) | If rotation becomes routine (i.e., a schedule, not just incident-response) |
+| `backup-snapshot.mjs` | `pg_dump -Fc` to `/data/backup-YYYY-MM-DD.dump` on the `gevoelscore-pg` volume for a manual snapshot before risky migrations | First time you do a destructive schema change |

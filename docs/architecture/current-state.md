@@ -2,7 +2,7 @@
 
 **Living document — update on every infrastructure change.**
 
-**Last updated**: 2026-05-28 (daily-entry feature Steps 0–6 + 4b **deployed to Fly** at commit `58a3667`; live at https://gevoelscore-frontend.fly.dev; first real entry persisted end-to-end and verified via `scripts/verify-todays-entry.mjs`). App installed as iOS PWA by the single user — feature is in real-usage soak.
+**Last updated**: 2026-07-14 (database migrated from Neon to self-hosted Fly Postgres `gevoelscore-pg`, per [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md)). Previous update 2026-05-28: daily-entry feature Steps 0–6 + 4b **deployed to Fly** at commit `58a3667`; live at https://gevoelscore-frontend.fly.dev; app installed as iOS PWA by the single user — feature is in real-usage soak.
 
 ---
 
@@ -22,7 +22,7 @@
 | `KEY` | Directus encryption key (32-byte hex). Generated at provisioning; rotate only if compromised. |
 | `SECRET` | Directus auth secret (32-byte hex). Same lifecycle as `KEY`. |
 | `DB_CLIENT` | Always `pg`. |
-| `DB_CONNECTION_STRING` | Pooled Neon connection URI with embedded password. Rotate when the Neon password rotates. |
+| `DB_CONNECTION_STRING` | Fly Postgres flycast URI (`postgres://postgres:<password>@gevoelscore-pg.flycast:5432/gevoelscore`) with embedded password. Rotate per [runbooks/rotate-credentials.md](../operations/runbooks/rotate-credentials.md). |
 | `PUBLIC_URL` | `https://gevoelscore-backend.fly.dev`. |
 | `CORS_ENABLED` | `true`. |
 | `CORS_ORIGIN` | `https://gevoelscore-frontend.fly.dev` — exact match, no wildcards. |
@@ -36,18 +36,19 @@
 |------|-------|------|-------|
 | `gevoelscore_uploads` | `/directus/uploads` (in backend container) | 1 GB | Encrypted, automatic snapshots. Empty in v1 (no file uploads yet). |
 
-### Neon (org: `tvo-backend-database`, slug: `org-delicate-lake-28792527`)
+### Fly Postgres (`gevoelscore-pg`)
 
-| Project | Region | Database | Postgres | Branches |
-|---------|--------|----------|----------|----------|
-| `gevoelscore-db` | `aws-eu-central-1` | `neondb` | 17 | `main` (production branch only — no staging branch yet) |
+Self-hosted single-node Postgres on Fly, migrated from Neon on 2026-07-14 — see [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md) for the why. Neon is fully decommissioned.
 
-**Endpoints:**
+| App | Region | Database | Postgres | Nodes |
+|-----|--------|----------|----------|-------|
+| `gevoelscore-pg` (postgres-flex image) | `ams` | `gevoelscore` | 18 | 1 (machine `830999a71e2ee8`) |
 
-- Direct: `ep-flat-grass-alwa40oq.c-3.eu-central-1.aws.neon.tech`
-- Pooler: `ep-flat-grass-alwa40oq-pooler.c-3.eu-central-1.aws.neon.tech` ← **used by Directus** (resilient to scale-to-zero)
+**Volume:** `vol_r68zlzm1qxkqpqp4` — 2 GB, encrypted, automatic daily snapshots with 14-day retention. Holds the day-0 pre-migration dump at `/data/neon.dump`.
 
-**Role:** `neondb_owner` — used by Directus. Auto-created by Neon at project provisioning.
+**Connection:** `gevoelscore-pg.flycast:5432` — org-internal only, no public address. Local access goes through `fly proxy 15432:5432 -a gevoelscore-pg`.
+
+**Role:** `postgres` (superuser) — used by Directus via the `DB_CONNECTION_STRING` secret.
 
 ---
 
@@ -198,12 +199,12 @@ In the order they should be tackled:
    - Keyboard-only flow through row → note → tag headers → expand → chip toggle
    - VoiceOver / TalkBack announces score changes, tag toggles, save status correctly
 3. **Apply the Postgres views** (one-time, deferred until a consumer exists)
-   - Paste each `directus/scripts/views/*.sql` file into the Neon Console SQL editor, OR run with `psql $env:DB_CONNECTION_STRING -f <file>` if psql is installed.
+   - Run `fly proxy 15432:5432 -a gevoelscore-pg`, then apply each `directus/scripts/views/*.sql` file with `psql $env:DATABASE_URL -f <file>` (or a `pg`-based script over the same proxy).
    - Optional: register them as read-only collections in the Directus admin UI so they show up in the data studio.
 4. **Track A3 compliance** ([docs/plans/2026-05-27-audit-remediation-and-standards-enforcement.md](../plans/2026-05-27-audit-remediation-and-standards-enforcement.md))
    - `directus_auth_events` collection for NEN 7510 §12.4 audit trail (route handlers carry `TODO(I3)` markers at the insertion points)
    - GDPR Art 9 special-category data declaration (health data)
-   - Neon at-rest encryption verification record
+   - Postgres at-rest encryption verification record (the `gevoelscore-pg` volume is encrypted)
 5. **Track B4** — wire `npm run verify` to GitHub Actions CI (needs `git push origin main` first; currently no `.github/workflows/`)
 6. **Wire the CSV import UI to Directus** (parser shipped; admin UI form is the gap)
 7. **CSV / JSON export endpoint** + delete-all (cardinal "user-owned data" requirement; separate feature)
@@ -224,6 +225,5 @@ If/when scaling beyond 1 machine is needed, the in-memory stores must move to a 
 ## Maintenance reminders
 
 - **Directus version**: 11.17.2 (one behind 11.17.4). Bump on security advisories. Test on staging first when you set up a staging branch.
-- **Neon free-tier limits**: 3 branches, 0.5 GB storage. Not close to either.
 - **Fly bills**: check ~$5–7/mo. If it spikes, run `fly machine list --app gevoelscore-backend` and `fly volumes list` to see what's running.
-- **Backup verification**: Neon takes daily snapshots automatically. Once a quarter, test a restore (`neonctl branches create --parent main` makes a copy you can poke at without touching production).
+- **Backup verification**: Fly takes daily snapshots of the `gevoelscore-pg` volume automatically (14-day retention). Once a quarter, check `fly volumes snapshots list vol_r68zlzm1qxkqpqp4` and test a restore.

@@ -1,6 +1,8 @@
 # Directus + Fly.io setup runbook
 
-Step-by-step setup instructions for the gevoelscore Directus instance and its (Neon) Postgres backend. Implements [ADR 0003](../decisions/0003-directus-fly-infra-setup.md).
+Step-by-step setup instructions for the gevoelscore Directus instance and its Postgres backend (Neon at the time; self-hosted Fly Postgres since [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md)). Implements [ADR 0003](../decisions/0003-directus-fly-infra-setup.md).
+
+> **2026-07-14**: the Neon Postgres provisioning below is superseded by [ADR 0007](../decisions/0007-self-hosted-postgres-on-fly.md) (self-hosted Fly Postgres app `gevoelscore-pg`). It stands as historical record.
 
 **Status of phases as of 2026-05-27:**
 

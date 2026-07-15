@@ -5,7 +5,7 @@ Where to look for what.
 | Document | Purpose |
 |----------|---------|
 | [system-overview.md](system-overview.md) | High-level view: what runs where, what depends on what, the data path from a daily-entry tap to Postgres |
-| [current-state.md](current-state.md) | **Living document** — concrete deployed resources (Fly app names, Neon project IDs, region, sizes). Update when infrastructure changes. |
+| [current-state.md](current-state.md) | **Living document** — concrete deployed resources (Fly app names, database details, region, sizes). Update when infrastructure changes. |
 | [data-model.md](data-model.md) | Source of truth for every entity (DayEntry, Tag, Project, ...). The Directus schema is a downstream copy of this. |
 | [queries-and-views.md](queries-and-views.md) | **Read-side surface** — how to query the database. Three layers (REST, Postgres views, raw SQL), the date-join principle, tag provenance semantics, the three live views. |
 | [frontend-setup.md](frontend-setup.md) | What's wired up on the Next.js side — dependencies, file layout, test layers (Vitest + Playwright API + Playwright e2e), SDK choice, deployment shape. Bootstrap reference for "what's already done." |

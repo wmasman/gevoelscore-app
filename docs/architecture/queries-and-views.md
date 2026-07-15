@@ -13,8 +13,8 @@ Pick the lowest layer that answers the question.
 | Layer | Use when | Tooling |
 |---|---|---|
 | **Directus REST API** | The screen needs entities with their immediate relations (`day_entry` + its `tags`). User auth applies. | `@directus/sdk`, `/items/{collection}?fields=*,tags.tags_id.*` |
-| **Postgres views** | The screen needs an aggregate, a cross-source join, or a denormalised projection. No user auth — bypass Directus. | psql, Neon Console, or register the view as a read-only collection in Directus |
-| **Raw SQL** | One-off analysis, debugging, ad-hoc exploration. | psql or Neon Console |
+| **Postgres views** | The screen needs an aggregate, a cross-source join, or a denormalised projection. No user auth — bypass Directus. | psql via `fly proxy`, or register the view as a read-only collection in Directus |
+| **Raw SQL** | One-off analysis, debugging, ad-hoc exploration. | psql via `fly proxy`, or `fly machine exec` psql on the `gevoelscore-pg` machine |
 
 The views layer is the middle ground: it captures repeated query patterns once, lives in Postgres (not in application code), and is read-only by definition.
 
@@ -148,8 +148,8 @@ The view recomputes on every SELECT. At v1 scale (1,338 junction rows × 83 tags
 
 1. Edit the SQL in [`directus/scripts/views/*.sql`](../../directus/scripts/views/).
 2. Apply via one of:
-   - **Neon Console** (`console.neon.tech` → project → SQL editor) — paste and run. Works without local tooling.
-   - **psql**: `psql $env:DB_CONNECTION_STRING -f directus/scripts/views/01-daily-observations.sql` (requires psql installed; the dep-free constraint on `directus/scripts/` rules out a Node-based applier).
+   - **psql via `fly proxy`** — run `fly proxy 15432:5432 -a gevoelscore-pg` in one terminal, then in another: `psql $env:DATABASE_URL -f directus/scripts/views/01-daily-observations.sql` (`DATABASE_URL` is the proxy-form connection string in the gitignored `.env.local`). Without local psql, run the SQL through a `pg`-based script over the same proxy (see [`directus/scripts/lib/sql-migration.mjs`](../../directus/scripts/lib/sql-migration.mjs)).
+   - **`fly machine exec`** — `fly machine exec 830999a71e2ee8 "psql postgres://postgres:<password>@localhost:5433/gevoelscore -f <file>" -a gevoelscore-pg` (psql lives on the DB machine; Postgres listens on 5433 there — 5432 is haproxy).
 3. (Optional) Register the view as a Directus read-only collection: admin UI → Settings → Data Model → Add Collection from Database. This makes the view queryable via `/items/<view_name>` with the frontend role's permissions applying.
 
 Re-applying after edits is idempotent (`CREATE OR REPLACE`). No DROP needed.

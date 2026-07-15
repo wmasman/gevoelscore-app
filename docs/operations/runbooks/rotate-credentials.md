@@ -128,12 +128,15 @@ curl -X PATCH -H "Authorization: Bearer <static token>" `
 
 Then log into admin UI, re-pair 2FA in your profile.
 
-**Option B: no static token either.** Open the Neon SQL editor (console.neon.tech → gevoelscore-db → SQL Editor) and run:
+**Option B: no static token either.** Run the SQL directly against Postgres. psql lives on the `gevoelscore-pg` machine (note: Postgres listens on 5433 there — 5432 is haproxy):
 
-```sql
--- Replace <admin-email> with the bootstrap admin's email (from 1Password).
-UPDATE directus_users SET tfa_secret = NULL WHERE email = '<admin-email>';
+```powershell
+# Replace <admin-email> with the bootstrap admin's email (from 1Password).
+# <password> is the postgres password embedded in the DB_CONNECTION_STRING secret / .env.local.
+fly machine exec 830999a71e2ee8 "psql postgres://postgres:<password>@localhost:5433/gevoelscore -c \"UPDATE directus_users SET tfa_secret = NULL WHERE email = '<admin-email>';\"" -a gevoelscore-pg
 ```
+
+Alternatively, run `fly proxy 15432:5432 -a gevoelscore-pg` in one terminal and issue the same `UPDATE` through a `pg`-based script using the `DATABASE_URL` from `.env.local` (local Windows has no psql).
 
 Then log in with password, re-pair 2FA.
 
@@ -141,33 +144,32 @@ Then log in with password, re-pair 2FA.
 
 ---
 
-## Neon database password
+## Fly Postgres database password
 
-Used by Directus to connect to Postgres. Lives in Fly secret `DB_CONNECTION_STRING` (URL-embedded).
+Used by Directus to connect to Postgres (self-hosted `gevoelscore-pg` since 2026-07-14, see [ADR 0007](../../decisions/0007-self-hosted-postgres-on-fly.md)). Lives in Fly secret `DB_CONNECTION_STRING` on `gevoelscore-backend` (URL-embedded); the same password is embedded in `DATABASE_URL` in the gitignored `.env.local` (proxy form).
 
 ### Procedure
 
-1. **Reset the password in Neon**:
+1. **Set a new password** — connect as `postgres` and run `ALTER USER`. Via the machine (psql lives there; Postgres listens on 5433 — 5432 is haproxy):
    ```powershell
-   neonctl roles reset-password neondb_owner --project-id <project-id>
-   # OR: console.neon.tech → gevoelscore-db → Roles → neondb_owner → Reset password
+   fly machine exec 830999a71e2ee8 "psql postgres://postgres:<old-password>@localhost:5433/gevoelscore -c \"ALTER USER postgres WITH PASSWORD '<new>'\"" -a gevoelscore-pg
    ```
-   Copy the new password. **Now's your only chance — Neon won't show it again.**
+   Or via the local proxy (`fly proxy 15432:5432 -a gevoelscore-pg` in one terminal) with a `pg`-based script.
 
-2. **Build the new connection string** using the pooler endpoint:
-   ```
-   postgresql://neondb_owner:<NEW_PWD>@ep-flat-grass-alwa40oq-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require
-   ```
-
-3. **Update the Fly secret** (this triggers a rolling redeploy):
+2. **Update the Fly secret** (this triggers a rolling redeploy, ~90 s):
    ```powershell
-   fly secrets set DB_CONNECTION_STRING="<new URI>" --app gevoelscore-backend
+   fly secrets set DB_CONNECTION_STRING="postgres://postgres:<new>@gevoelscore-pg.flycast:5432/gevoelscore" -a gevoelscore-backend
+   ```
+
+3. **Update `DATABASE_URL` in `.env.local`** (proxy form):
+   ```
+   DATABASE_URL=postgres://postgres:<new>@127.0.0.1:15432/gevoelscore
    ```
 
 4. **Verify Directus comes back up**:
    ```powershell
    curl https://gevoelscore-backend.fly.dev/server/info
-   # Expected: HTTP 200, ~30s after the deploy completes
+   # Expected: HTTP 200, shortly after the redeploy completes
    ```
 
 5. If the deploy fails (Directus can't connect with the new password): you've likely fat-fingered the connection string. Re-check the URL-encoding (passwords with `@`, `:`, `/`, `?` need URL-encoding).
@@ -201,16 +203,13 @@ If you must rotate `KEY` (compromise of at-rest encryption):
 
 ---
 
-## Fly access token / Neon access token
+## Fly access token
 
-If your `fly auth` or `neonctl me` token leaks (e.g. you logged in on someone else's machine and forgot to log out):
+If your `fly auth` token leaks (e.g. you logged in on someone else's machine and forgot to log out):
 
 ```powershell
 fly auth logout
 fly auth login
-
-neonctl auth logout
-neonctl me   # triggers re-login
 ```
 
-Or, more aggressively, revoke all tokens via the web UIs (https://fly.io/user/personal_access_tokens, https://console.neon.tech → Settings → API keys).
+Or, more aggressively, revoke all tokens via the web UI (https://fly.io/user/personal_access_tokens).

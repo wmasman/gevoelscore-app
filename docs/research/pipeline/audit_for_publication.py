@@ -126,6 +126,7 @@ ALLOWLISTED_PATHS = {
     "docs/decisions/0004-tag-provenance-date-joins-and-tag-hierarchy.md",
     "docs/decisions/0005-frontend-session-persistence.md",
     "docs/decisions/0006-three-surface-architecture.md",
+    "docs/decisions/0007-self-hosted-postgres-on-fly.md",
     # Public-facing app copy mentions the project author's business email
     "src/copy.ts",
     "src/__tests__/copy.test.ts",

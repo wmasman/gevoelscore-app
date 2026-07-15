@@ -1,4 +1,4 @@
-# Runbook: wipe Neon DB and re-bootstrap
+# Runbook: wipe the Fly Postgres DB and re-bootstrap
 
 The nuclear option. Used when the schema is in a state that's too tangled to fix surgically.
 
@@ -14,19 +14,15 @@ If those don't fix it, proceed.
 
 ## ⚠ This destroys all user data
 
-The wipe drops the Neon database. Any `day_entries`, `tags`, `projects`, etc. that you've added are gone. **Export anything you want to keep first**:
+The wipe drops the `gevoelscore` database on the `gevoelscore-pg` Fly Postgres app. Any `day_entries`, `tags`, `projects`, etc. that you've added are gone. **Take a dump first** — it lands on the encrypted volume, next to the day-0 pre-migration dump at `/data/neon.dump`:
 
 ```powershell
-neonctl connection-string gevoelscore-db --psql
-# Use the printed psql command to dump:
-pg_dump --no-owner --no-acl --clean --if-exists --schema=public > backup-$(date +%Y-%m-%d).sql
+# <password> is the postgres password from the DB_CONNECTION_STRING secret / .env.local.
+# Postgres listens on 5433 on the machine (5432 is haproxy).
+fly machine exec 830999a71e2ee8 "pg_dump -Fc -d postgres://postgres:<password>@localhost:5433/gevoelscore -f /data/backup-<date>.dump" -a gevoelscore-pg
 ```
 
-Or create a Neon branch — instant snapshot you can restore from:
-
-```powershell
-neonctl branches create --project-id <id> --name pre-wipe-$(date +%Y-%m-%d)
-```
+Fly also snapshots the volume automatically once a day (14-day retention): `fly volumes snapshots list vol_r68zlzm1qxkqpqp4`.
 
 ---
 
@@ -40,24 +36,16 @@ fly scale count 0 --app gevoelscore-backend --yes
 
 Prevents Directus from trying to reconnect during the wipe.
 
-### 2. Wipe the Neon database
+### 2. Wipe the database
 
-**Option A: drop and re-create the database** (preserves the Neon project, role, password):
-
-```powershell
-neonctl databases delete neondb --project-id <project-id>
-neonctl databases create --name neondb --project-id <project-id> --owner-name neondb_owner
-```
-
-**Option B: nuke and re-create the entire Neon project** (gives you a fresh password, requires updating Fly secrets):
+Drop and re-create the `gevoelscore` database via machine exec — connect to the `postgres` maintenance database, not the one you're dropping:
 
 ```powershell
-neonctl projects delete <project-id> --confirm
-neonctl projects create --name gevoelscore-db --region-id aws-eu-central-1 --org-id <org-id>
-# Take the new connection string → fly secrets set DB_CONNECTION_STRING=... --app gevoelscore-backend
+fly machine exec 830999a71e2ee8 "psql postgres://postgres:<password>@localhost:5433/postgres -c 'DROP DATABASE gevoelscore'" -a gevoelscore-pg
+fly machine exec 830999a71e2ee8 "psql postgres://postgres:<password>@localhost:5433/postgres -c 'CREATE DATABASE gevoelscore'" -a gevoelscore-pg
 ```
 
-Option A is usually enough. Option B is for "I think my Neon project metadata is corrupted" scenarios.
+This preserves the role and password — no Fly secret update needed. **Don't destroy the `gevoelscore-pg` app or its volume** (the volume holds the dumps and its snapshots) — wipe the database, not the app.
 
 ### 3. Start the backend again
 
@@ -90,7 +78,7 @@ If everything passes, you're back to a clean v1 schema state.
 
 ### 6. Re-apply the Postgres views
 
-Paste each file from [`directus/scripts/views/`](../../../directus/scripts/views/) into the Neon Console SQL editor, or `psql -f` if available. All three views use `CREATE OR REPLACE` — re-applying is safe.
+Apply each file from [`directus/scripts/views/`](../../../directus/scripts/views/) over the local proxy: run `fly proxy 15432:5432 -a gevoelscore-pg` in one terminal, then run the SQL with a `pg`-based script (or `psql $env:DATABASE_URL -f <file>` if psql is installed) against the `DATABASE_URL` from `.env.local`. All three views use `CREATE OR REPLACE` — re-applying is safe.
 
 ### 7. Re-seed reference data
 
@@ -118,7 +106,7 @@ curl https://gevoelscore-backend.fly.dev/server/info
 
 ## How long this takes
 
-- Backup snapshot: 30 seconds (Neon branching is fast)
+- Backup dump: ~1 minute (`pg_dump` to the volume)
 - Wipe + recreate DB: 30 seconds
 - Backend restart + Directus migrations: ~30 seconds
 - Re-running schema/permissions scripts: ~30 seconds
@@ -135,4 +123,4 @@ Total: ~10 minutes if everything goes smoothly. Plan for 30 minutes if you're st
 | `setup-schema.mjs` says "FORBIDDEN" | Static token tied to old user (deleted) | Generate a new token in admin UI |
 | Backend won't start after wipe | `ADMIN_PASSWORD` was unset; Directus has no admin to create | `fly secrets set ADMIN_PASSWORD=<temporary>`, restart, log in, change password, unset secret again |
 | `verify-schema.mjs` fails on some field | The schema script was modified between wipes, drift between expected and actual | Update either the script or `verify-schema.mjs`'s expectations table |
-| The Neon DB doesn't actually empty | Possibly cached connection in Directus | Restart the backend machine: `fly machine restart <id> --app gevoelscore-backend` |
+| The database doesn't actually empty | Possibly cached connection in Directus | Restart the backend machine: `fly machine restart <id> --app gevoelscore-backend` |

@@ -14,9 +14,12 @@ primary_region = 'ams'
 [http_service]
   internal_port = 8055
   force_https = true
-  auto_stop_machines = 'off'
+  # 'suspend' snapshots memory when idle and resumes in ~1s on the next
+  # request. Requests must arrive via the Fly proxy (public hostname or
+  # flycast) to trigger auto-start — .internal DNS bypasses the proxy.
+  auto_stop_machines = 'suspend'
   auto_start_machines = true
-  min_machines_running = 1
+  min_machines_running = 0
 
 [[vm]]
   memory = '1gb'
@@ -28,5 +31,9 @@ primary_region = 'ams'
   HOST = "::"
   PORT = "8055"
   TZ = "Europe/Amsterdam"
+  # Pool floor 0 so the pool drains during idle (default reap ~30s).
+  # With auto_stop 'suspend', a non-zero floor pins connections that go
+  # stale across suspend/resume and 500 the first requests after wake.
+  DB_POOL__MIN = "0"
   # Secrets (KEY, SECRET, ADMIN_EMAIL, ADMIN_PASSWORD, CORS_*, DATABASE_URL etc.)
   # are set via `fly secrets set` — never committed.
