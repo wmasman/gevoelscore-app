@@ -1099,20 +1099,123 @@ handoff `handoff_back_2026-07-04_HA01c-exertion-verdict-and-framing.md`;
 
 ## Q24. Site R33 -- compensatory rest *after* heavy days, and whether it strengthened over time
 
-**Status**: IN-PROGRESS -- Stage -1 heavy-day structural audit LOCKED r1
-2026-07-15 ([`analyses/descriptive/Q24-precursor-heavy-day-structure/audit.md`](../analyses/descriptive/Q24-precursor-heavy-day-structure/audit.md));
-sub-parts 1 (day-after rest, feasible on daily aggregates) + 4 (sleep-after,
-feasible) reframed to trajectory-over-window design with subjective channel
-paired (see design-decisions §7 in the audit card). Locked design: episode-end
-(gap=0 contiguous) as unit; 3-day + 5-day primary windows + 10-day extended;
-strict + inclusive overlap policies reported side-by-side; matched-ordinary
-comparator with no-heavy + no-crash in [D, D+w] + valid outcome data;
-**intensity-stratified sensitivity arm** (very_heavy_only + heavy_only alongside
-combined) at +3d (n=52 clean) + +5d descriptive-with-CI (n=19 clean).
-Methodology MD next session, informed by Stage -1. Sub-parts 2 (within-day)
-remains `blocked` on per-minute extraction; 3 (over time) waits on 1 + 4;
-5 (does resting prevent crashes) remains descriptive-bound-at-best
-(unfalsifiable counterfactual). The flip side of R32.
+**Status** (2026-07-20 refresh): IN-PROGRESS with substantial landings.
+**Sub-part 5** (rest-adjacency + streak-length predictive of crash-in-5d)
+REFRAMED per MD-beta §1.3 from "unfalsifiable counterfactual" to
+**testably-predictive** and fully descriptively landed via compact descriptive
+assembly LOCKED r1.1 2026-07-20. Three methodology MDs LOCKED 2026-07-15 to
+2026-07-17 (parent + sister + MD-beta) covering sub-parts 1 + 4 + 3 + 5.
+Sub-part 2 (within-day shape) remains `blocked` on per-minute Garmin extraction.
+Historical status paragraph superseded 2026-07-20; landed-deliverables +
+sub-part-by-sub-part status below. The flip side of R32.
+
+**Landed deliverables** (as of 2026-07-20):
+
+*Precursor*: Stage -1 heavy-day structural audit LOCKED r1 2026-07-15
+([`analyses/descriptive/Q24-precursor-heavy-day-structure/audit.md`](../analyses/descriptive/Q24-precursor-heavy-day-structure/audit.md));
+locked design: episode-end (gap=0 contiguous) as unit; 3-day + 5-day primary
+windows + 10-day extended; strict + inclusive overlap policies reported
+side-by-side; matched-ordinary comparator; **intensity-stratified sensitivity
+arm** (very_heavy_only + heavy_only alongside combined) at +3d (n=52 clean) +
++5d descriptive-with-CI (n=19 clean).
+
+*Methodology MDs* (all LOCKED 2026-07-15 to 2026-07-17):
+
+- Parent Q24 MD [`post_heavy_day_compensatory_rest.md`](post_heavy_day_compensatory_rest.md)
+  LOCKED r1 2026-07-15 (sub-parts 1 + 4 trajectory arc; §3.5 pool-split
+  machinery on strict-clean episode-ends by `crash_in_5d`).
+- Sister MD [`post_heavy_day_pacing_learning.md`](post_heavy_day_pacing_learning.md)
+  LOCKED r1 2026-07-16 (sub-part 3 phase-stratification + dose-response
+  pacing trajectory outcomes).
+- MD-beta [`heavy_day_crash_risk_prediction.md`](heavy_day_crash_risk_prediction.md)
+  LOCKED r2 2026-07-17 (sub-part 5; r2 codifies gevoelscore-conditioning
+  definitional-pair extension + joint end_class x gevoelscore-bucket stratifier
+  + pre-cital vs post-cital 2-bucket era stratifier per Wave 2 evidence).
+
+*Wave 2 Stage -1 audits informing MD-beta r2 codification* (all LOCKED r1
+2026-07-16):
+
+- Wave 2B rest-streak precursor.
+- Wave 2C reactive-vs-proactive rest (gevoelscore-conditioning empirical anchor).
+- Wave 2D 2024-residual-tension (joint end_class x gevoelscore stratifier
+  empirical anchor).
+- Wave 2E phase-standardised pre-window covariate probe (deferred descriptive
+  observation per MD-beta §5 post-confound-8).
+
+*Stage D descriptive audits* (post-MD-beta r2 LOCK):
+
+- Stage D §3 rest-adjacency
+  [`analyses/descriptive/Q24-mdbeta-stageD-rest-adjacency/descriptive_audit.md`](../analyses/descriptive/Q24-mdbeta-stageD-rest-adjacency/descriptive_audit.md)
+  LOCKED r1 2026-07-19; fresh-session methodology-review DEFENSIBLE with
+  revision, 6 absorb-tier fires absorbed at r1 LOCK. Headline
+  (strategic x heavy end_class x K=3 rest-after x crash-in-5d, era-pooled)
+  descriptively consistent with MD-beta §3.7 pre-commit direction on heavy
+  end_class only; crisis reciprocal-pair descriptively documents
+  confounding-by-indication mechanism (Salas 2001; Kyriacou and Lewis 2016
+  *JAMA*) at non-trivial magnitude; very-heavy end_class descriptively
+  sign-inverts as expected non-generalisation per MD-beta §6.9
+  generalisation-scope attestation.
+- Stage D §4 streak-length
+  [`analyses/descriptive/Q24-mdbeta-stageD-streak-length/descriptive_audit.md`](../analyses/descriptive/Q24-mdbeta-stageD-streak-length/descriptive_audit.md)
+  LOCKED r1 2026-07-20; fresh-session methodology-review DEFENSIBLE with
+  revision, 4 absorb-tier fires absorbed at r1 LOCK. Per-bin era-pooled
+  pattern non-monotonic; does NOT match MD-beta §4.4 pre-commit direction
+  at descriptive-with-CI resolution; intensity-stratified companion shows
+  sign-inversion by vh_frac stratum with both individual Cochran-Armitage
+  Z p-values above conventional thresholds; E[L]* factor-of-2 flag walked
+  per HA-P7 §4.6 template with verdict robustness confirmed at
+  descriptive-with-CI level.
+
+*Compact descriptive assembly*
+[`analyses/synthesis/Q24-sub-part-5-crash-risk-prediction.md`](../analyses/synthesis/Q24-sub-part-5-crash-risk-prediction.md)
+LOCKED r1.1 2026-07-20 (Q24 sub-part 5 assembly of §3 + §4 Stage D reads);
+fresh-session review DEFENSIBLE with revision, 3 absorb-tier discretionary
+fires absorbed at r1 LOCK + 1 documentation-only §2.5 parsimony-gate
+compliance absorb at r1.1. Two user 2026-07-20 binding directives honoured
+throughout: honesty (§10 enumerates 4 infrastructure gaps + 2 related-arc gaps
++ 9 non-claims) and no-overstatement (no mechanism-implying verbs applied
+positively; every claim held at per-arm-rate + CI + pre-commit-direction-match
+/ mismatch level). Explicitly NOT a full Stage S1 synthesis in the
+[`internal_synthesis.md`](internal_synthesis.md) sense (no per-HA verdicts,
+no cluster pre-registration in
+[`synthesis_structure_map.md`](synthesis_structure_map.md), no Stage I
+interpretation layer, no `/research-interpret synthesise` skill in
+`.claude/commands/`); serves as navigation-and-restatement artefact.
+CONVENTIONS §2.5 parsimony gate compliance verified at r1.1 documentation
+absorb (streak-length null-as-result is a §2.5 positive precedent).
+
+**Sub-part-by-sub-part status** (as of 2026-07-20):
+
+1. **Day-after rest** (sub-part 1) -- addressed at parent MD level
+   (`post_heavy_day_compensatory_rest.md` LOCKED r1); parent Stage D r4
+   descriptive audit at
+   [`analyses/descriptive/Q24-post-heavy-trajectory/descriptive_audit.md`](../analyses/descriptive/Q24-post-heavy-trajectory/descriptive_audit.md)
+   exists; plain-language findings summary + chart script landed at commit
+   `49697b7` 2026-07-20. Downstream stages beyond Stage D at user tempo.
+2. **Within-day shape** (sub-part 2) -- **still `blocked`** on per-minute
+   Garmin extraction (H04b path C; `garmin_pacing_practice.md §8`;
+   QUEUED-WORK C.4 / C.5). Unchanged from original status.
+3. **Over time / phase-stratified pacing** (sub-part 3) -- sister MD
+   `post_heavy_day_pacing_learning.md` LOCKED r1 2026-07-16 covers the
+   design; downstream execution TBD.
+4. **Sleep after a heavy day** (sub-part 4) -- addressed at parent MD level;
+   downstream execution TBD.
+5. **Predictive rest-adjacency + streak-length** (sub-part 5) -- **REFRAMED
+   and fully descriptively landed**: MD-beta r2 LOCKED + Stage D §3 + Stage D
+   §4 + descriptive assembly LOCKED r1.1. Downstream Stage H pre-registration
+   or full Stage S1 synthesis in the `internal_synthesis.md` sense would
+   require the 4 infrastructure gaps at assembly §10.1 to be addressed per
+   user endorsement in a separate reviewer-mode-authorized session.
+
+**Site R33 framing status** (as of 2026-07-20): Q24 has produced the
+descriptive layer that R33 site-framing can draw from (Stage D §3 + Stage D
+§4 + compact assembly + parent Q24 MD Stage D r4 trajectory audit). No
+R33-facing site card has been drafted from these landings yet; user tempo.
+Note: the site-delivery lane map at
+[`_rollout_order_site_delivery_2026-06-30.md`](_rollout_order_site_delivery_2026-06-30.md)
+§3 does NOT include R33 as a row (verified 2026-07-20; that file covers
+R1-R29 only). R33 lives in the site-register-side registry, cross-referenced
+here as this Q24 entry's site correspondent.
 
 **Context (cold-read)**: lived experience -- after a heavy day (physical or
 emotional) the participant feels far more tired and rests more; if that's
