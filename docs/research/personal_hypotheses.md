@@ -17,6 +17,8 @@ What r1 does:
 
 **Addendum r1.1 (2026-07-09, Phase 2):** the Phase-2 `registry.md` provenance sweep surfaced `post-crash-exertion-relapse` — a subject-authored, locked + executed (2026-07-04) beyond-the-guide test missing from this register — added below as **P10** per user decision. This is the register-completeness discipline working: tagging the test index caught a Beyond thread the R36-A list had missed.
 
+**Addendum r1.2 (2026-07-17):** minted **P11** (resilience as a latent slow-state) — a subject-authored latent-reserve construct that extends Wiggers' *descriptively-hedged* capacity/pacing observations (she describes capacity growing during recovery but explicitly declines the causal claim, handleiding p.63) and subsumes P6/P7/P10 under one reserve. Register-only; construct defined in [`methodology/resilience_latent_state.md`](methodology/resilience_latent_state.md) (DRAFT r1). Per §2.1 the causal build-up claim + latent-state formalisation are subject-authored → Beyond, with a reciprocal Guide pointer (§2.2) to the antecedents still **pending**. Lightweight register-layer add per the P10 precedent (no new verdict).
+
 ## Distinction from the Wiggers register
 
 [`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md) collects hypotheses derived from the Wiggers smartwatch-pacing handleiding (07-2025, ME/cvs Vereniging). It tests Wiggers' specific claims with her specific operationalisations.
@@ -69,6 +71,7 @@ The authoritative index of this Beyond ledger, per [`methodology/register_proven
 | P8 | the changing kind of crash | beyond | `changing-crash`, `character-flip` | K01, K02 (support); HA-P8 (future) | R7, Q22 | descriptive | done (observation; character-flip test = onward-work / idea) |
 | P9 | emotional load as a crash trigger | beyond | `emotional-trigger` | trigger_types_r4 (descriptive); HA-P9 (future) | R4, Q21 | descriptive | parked (held for pre-reg; suggestive, era-confounded) |
 | P10 | post-crash exertion relapse (danger window) | beyond | — (Layer-4; not on `/beyond`) | post-crash-exertion-relapse (locked + executed) | R9 (builds on) | tested | inconclusive (Cannot-resolve; δ −1.03 CI [−8.58, +5.21], n=24) |
+| P11 | resilience latent-state — pacing builds a protective reserve; crash depletes, rebuild over weeks (extends Guide capacity/pacing observations; subsumes P6/P7/P10) | beyond | — (register-only) | none yet (R1–R4 axes in [`methodology/resilience_latent_state.md`](methodology/resilience_latent_state.md)) | — | descriptive | idea (construct MD DRAFT r1; R2 re-read done; R1 core untested) |
 
 **Guide-extensions surfaced on `/beyond` (NOT Beyond entries).** These are subject *refinements of / lenses on* a Wiggers claim — Guide-provenance by the membership rule ([§2.1](methodology/register_provenance_and_numbering.md)), editorially surfaced on `/beyond`. They live in the Guide ledger ([`wiggers_testable_hypotheses.md`](wiggers_testable_hypotheses.md)); `addendum-register.json` carries them with `provenance: guide-extension`. Listed here so this register is authoritative about what is *not* a P-entry:
 
@@ -701,6 +704,53 @@ No evidence in the predicted positive direction; the wide CI (spanning the null 
 ### Crosswalk + status
 
 Thread `P10`; no `/beyond` site slug (Layer-4 test, not surfaced on `/beyond`); test `post-crash-exertion-relapse` (locked + executed 2026-07-04); builds on site request R9. `kind: tested` — `stage: inconclusive` (ran, Cannot-resolve). Full row in the Register crosswalk & status table above.
+
+---
+
+## P11. Resilience as a latent slow-state — pacing builds a protective reserve
+
+*New Beyond entry, minted 2026-07-17. Subject-authored latent-state construct: a slowly-varying protective reserve `R(t)` that in-envelope pacing builds and a crash depletes (rebuild over weeks). A **distinct extension** of Wiggers' observations, not a proxy-test of her claims: she describes capacity growing during recovery (handleiding p.62-63, 68-69 case studies: "slowly increase my activities as my capacity to do them increases"; "HR can get higher without getting a PEM") and the pacing strategy (HR near RHR, easy activities, fast HR-return = "small waves"), but explicitly **declines the causal claim** ("I don't know if pacing very well is the reason I'm improving or that I am just one of the lucky people that progresses", p.63). The causal build-up claim + the latent-reserve formalisation are the subject's; per membership rule [§2.1](methodology/register_provenance_and_numbering.md) that is Beyond, with a reciprocal Guide pointer (§2.2) to the antecedents **pending**. Subsumes/reframes P6 (recovery shape), P7 (recovery debt), P10 (danger window). Construct: [`methodology/resilience_latent_state.md`](methodology/resilience_latent_state.md) (DRAFT r1).*
+
+**Hypothesis (latent-state, mechanistic framing):** a slowly-varying hidden reserve `R(t)` sets how much load the system absorbs before a crash. It builds slowly under sustained in-envelope pacing, drops sharply at a crash, and rebuilds over weeks, so felt-state can recover before the reserve does. Decomposes into four reading axes (R1-R4), read by coherence, not as an independent-test family.
+
+### Prior sources
+
+1. **Lived experience.** The participant's model: pace well / stay in envelope / heed body signals → build resilience that protects; after a crash, rebuild it, which takes weeks.
+2. **Wiggers handleiding antecedents (descriptive, causally hedged).** Capacity-grows-during-recovery case studies (p.62-63, 68-69); the pacing strategy (p.63); the 4-week body-battery buffer ("always want some energy left as a buffer", p.45); Guide B2 (multi-day recovery even with rest), B3 (rising baseline = improving), E2 (more activity without more crashes = improvement), C2 (high stress → worse next-day recharge). The guide makes these as observations and **explicitly declines** the causal "pacing builds the reserve" claim (p.63).
+3. **Established literature (verified 2026-07-19; full role-mapped set + DOIs in MD §7.2).** Grounded in pieces, novel in the packaging: nearest formal homes are the fitness-fatigue model (Banister 1975), dynamical-systems resilience (Scheffer 2018; Gijzel 2017), and the Energy Model of Allostatic Load (Bobba-Alves 2022); R1's "envelope expands" claim (Jason 2008) sits against the sign-inversion evidence (Keller 2024; Appelman 2024; NICE NG206).
+4. **In-corpus priors.** Q24 wave-2c (proactive vs reactive rest), HA-P6 (post-crash recovery shape), HA-P7 (recovery debt), bout-level recovery dynamics.
+
+### Predicted direction (R1-R4 reading axes)
+
+- **R1 (build-up-protective):** cumulative in-envelope pacing → lower forward crash-hazard, net of current state. *Untested — the core gap.*
+- **R2 (depletion/vulnerability):** a crash → elevated crash-hazard for weeks. *= HA-P7 + P10 re-read; not closed (MD §6.2).*
+- **R3 (rebuild-timescale):** reserve rebuild lags felt-state recovery. *Descriptively supported (HA-P6).*
+- **R4 (anticipation):** proactive pacing → fewer crashes. *Descriptively supported (Q24 wave-2c RR 0.35 vs 4.29, confounding-by-indication caveat).*
+
+### Descriptive observation (feasibility / power scope, 2026-07-17)
+
+Aggregate probe on `per_day_master.csv`: **29 crash episodes / 103 crash-days**; the felt-recovered-but-recently-crashed day-population is 175 (14d) → 362 (28d) but clusters into **~24-29 independent episode-units**, so R2's hazard claim is ceiling-bound at the ~29-episode wall (matches HA-P7's 27 positives + relapse's n=24) and **rides on R3+R4 coherence** rather than its own verdict. A crude first-crossing probe found **no felt-leads-autonomic lag** (median 0d), so the R3/§2.2 dissociation premise needs a sustained-recovery descriptive check. No inferential test run; nothing outcome-peeked.
+
+### Caveats
+
+1. **The unbreakable confound.** Pacing-maturity and spontaneous recovery share the same monotone-rising temporal shape over the same years; at n=1 they are not separable (MD §4.3). **The guide's own author flags this same confound** (p.63), so it is acknowledged, not merely a methodological worry.
+2. **Active-controller.** The subject paces in response to signals, attenuating observational pacing→crash associations (MD §5.1).
+3. **Single subject; self-reported crash labels; the latent construct is never measured directly (proxies only).**
+
+### Onward work (not gating credibility)
+
+- **R1 pre-reg:** cumulative pacing-quality → forward crash-hazard, trajectory-detrended, with a lapse-dissociation arm (MD §5.2); power-scope first.
+- **R3 descriptive:** sustained-recovery felt-vs-autonomic dissociation (the §2.2 premise).
+- **Reciprocal Guide pointer (§2.2):** add "subject extension: see P11" to the Wiggers antecedents (E2 / B2 / B3 / C2). Pending.
+
+### Not in scope
+
+- Causal identification of pacing-built resilience at n=1 (MD §5.3 ceiling: "consistent-with, confounder-bounded").
+- An explicit latent-state model fit (MD §1.2).
+
+### Crosswalk + status
+
+Thread `P11`; register-only (no `/beyond` slug yet); no test id (R1-R4 are reading axes, not locked tests); construct MD [`resilience_latent_state.md`](methodology/resilience_latent_state.md) DRAFT r1. `kind: descriptive` — `stage: idea` (construct defined, R2 re-read done, R1 untested). Full row in the Register crosswalk & status table above.
 
 ---
 

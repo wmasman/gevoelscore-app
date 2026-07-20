@@ -1424,6 +1424,20 @@ Q30 (recovery-shape sibling).
 
 ---
 
+## Q34. Resilience latent-state (P11) -- R1-R4 pre-registrations
+
+**Status**: queued -- `idea` stage per [`register_provenance_and_numbering.md`](register_provenance_and_numbering.md) §5; no locked pre-reg. Beyond thread **P11** ([`../personal_hypotheses.md`](../personal_hypotheses.md)); construct in [`../methodology/resilience_latent_state.md`](../methodology/resilience_latent_state.md) (DRAFT r1, awaiting fresh-session `/research-methodology-review`). **Gated on the construct MD locking** -- no R-direction pre-reg may cite the MD as a locked anchor until r1 locks (MD §10). Added 2026-07-19.
+
+**Context (cold-read)**: a latent slowly-varying protective reserve R(t) with asymmetric dynamics (builds under in-envelope pacing, drops sharply at a crash, rebuilds over weeks; felt-state recovers before the reserve). Four reading axes: **R1** build-up-protective (cumulative in-envelope pacing → lower forward crash-hazard, net of state -- the core gap, untested), **R2** depletion/vulnerability (= the HA-P7 + relapse resilience-lens re-read, folded into MD §6.2; probed-under-mis-specification, not closed), **R3** rebuild-timescale (descriptively supported, HA-P6), **R4** anticipation (descriptively supported, Q24 wave-2c RR 0.35 vs 4.29). Read by coherence, not as a multiplicity family (MD §6.5).
+
+**Why queued**: (a) construct MD not yet locked; (b) R2's hazard claim is power-ceiling-bound at ~24-29 crash episodes (power scope 2026-07-17), so it rides on R3+R4 triangulation rather than its own verdict -- the binding open question before an R1 pre-reg is whether the corpus can power a mediation test at all; (c) R1 needs a cumulative pacing-quality proxy + trajectory-detrend + a lapse-dissociation arm (MD §5.2) not yet operationalised.
+
+**When / workflow**: after the construct MD locks, and descriptive-first (not a test). (i) The R3/§2.2 sustained-recovery felt-vs-autonomic dissociation check -- the crude first-crossing probe found no lag (median 0d), so the premise needs a proper sustained-recovery read. (ii) A power scope for an R1 cumulative-pacing → forward-hazard pre-reg. The Scheffer/Gijzel "critical slowing down" operationalisation (rising autocorrelation/variance = depleting resilience; MD §7.2) is a candidate route tying into the corpus's `E[L]*` work.
+
+**Cross-refs**: [`../personal_hypotheses.md`](../personal_hypotheses.md) P11; [`../methodology/resilience_latent_state.md`](../methodology/resilience_latent_state.md); [`../analyses/hypotheses/HA-P7/result.md`](../analyses/hypotheses/HA-P7/result.md) (R2 re-read target); [`../analyses/hypotheses/HA-P6/result.md`](../analyses/hypotheses/HA-P6/result.md) (R3); [`../analyses/descriptive/Q24-mdbeta-wave2c-reactive-vs-proactive-rest/`](../analyses/descriptive/Q24-mdbeta-wave2c-reactive-vs-proactive-rest/) (R4); [`../STOCKTAKE.md`](../STOCKTAKE.md) §2a P11.
+
+---
+
 *Add new queued items with a `Q<n>` header following the same shape:
 **status**, **context**, **why queued**, **when / workflow**, **cross-
 refs**. Drop items when they ship by replacing the body with a one-

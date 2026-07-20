@@ -681,6 +681,13 @@ Not in scope:
 - **Cross-ref**: [`analyses/garmin_exploration/cards/autonomic-fingerprints-of-load-export.md`](analyses/garmin_exploration/cards/autonomic-fingerprints-of-load-export.md) + [`analyses/descriptive/trigger_types_r4/`](analyses/descriptive/trigger_types_r4/) + site request R4.
 - **Note**: r1 of `register_provenance_and_numbering.md` §8 illustratively mis-guessed this as "Pure Beyond P8"; the Phase-1 analysis + user decision 2026-07-09 place it here (guide-extension), on the source's own *"refine[s] Wiggers' mental-PEM concession"* framing. See that MD's §11 erratum.
 
+### Subject extensions in the Beyond ledger (reciprocal Guide pointers)
+
+*Added 2026-07-19. Per [`methodology/register_provenance_and_numbering.md`](methodology/register_provenance_and_numbering.md) §2.2: a Beyond entry that is a **distinct extension** of a Guide idea names its antecedent, and the Guide carries a reciprocal pointer. These are **Beyond-provenance** (the tested claim is the subject's, distinct from Wiggers'), NOT guide-extensions — they live in [`personal_hypotheses.md`](personal_hypotheses.md), tagged `register: beyond:<P#>`.*
+
+- **P5b** (prevailing rest-stress with evening amplification) → extends **C4**. Reciprocal note is inline in the C4b "Not in scope" list above.
+- **P11** (resilience as a latent slow-state — pacing builds a protective reserve; a crash depletes it, rebuild over weeks) → a cross-cutting **synthesis** extending the descriptive antecedents in **E2** (rising activity without rising crashes = improvement), **B2** (multi-day recovery even with rest), **B3** (slowly-rising baseline = improving), and **C2** (high stress → worse next-day recharge), plus the handleiding capacity case-studies (p.62-63, 68-69). Wiggers describes these but **declines the causal build-up claim** (handleiding p.63: *"I don't know if pacing very well is the reason I'm improving or that I am just one of the lucky people that progresses"*), so the causal + latent-reserve framing is subject-authored → Beyond. See [`personal_hypotheses.md`](personal_hypotheses.md) P11 + [`methodology/resilience_latent_state.md`](methodology/resilience_latent_state.md) (construct MD DRAFT r1). `register: beyond:P11`; register-only (no test id yet).
+
 ---
 
 ### H1 — Wearable signals lead the gevoelscore crash
