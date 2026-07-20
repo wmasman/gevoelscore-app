@@ -233,6 +233,16 @@ fire if violated.
 - L4.7 — Caveat-class framing kept, a-priori-class framing cut (§4.2).
 - L4.8 — Prior-driven hypothesis framed as confirmatory, not
   exploratory (§4.3); or vice versa when priors are absent.
+- L4.9 — Operationalisation faithful to data (§3.10). If the result
+  *relies on* a column whose stated semantics were inferred /
+  reverse-engineered (Garmin internal UDS fields especially) or whose
+  description names a quantity-kind (peak / mean / net-change / count /
+  rate), confirm the DATA_DICTIONARY row carries a computation-path
+  trace + a corpus identity check — not a single-day inference. A
+  verdict resting on an unverified or single-day-inferred column
+  description → fire; magnitude scales with how load-bearing the column
+  is to the headline claim (blocking if the claim inverts under the
+  correct semantics, as a "peak" read of a net-change column would).
 
 ---
 

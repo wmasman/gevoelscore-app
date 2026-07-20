@@ -586,6 +586,79 @@ is insufficient when the source category is heterogeneous; it must be
 either "the catalog is data-driven AND the category is verified
 homogeneous" or "the catalog is curated via these criteria."
 
+### 3.10 Operationalisation faithful to the data, not just to the description
+
+A column's stated semantics — its DATA_DICTIONARY description, or the
+prose in an operationalisation methodology MD — can silently diverge
+from what the value actually measures. This is distinct from §3.3 (two
+columns colliding): here a *single* column's description is wrong, or an
+inferred semantics doesn't hold. Two failure shapes, both observed on
+this corpus:
+
+- **Wrong noun.** `bb_during_sleep_value` was documented as "BB peak
+  during the sleep window" but is the Garmin `DURINGSLEEP` stat = net
+  change across the window (`SLEEPEND − SLEEPSTART`), verified identical
+  on all 593 co-occurring days. A downstream "morning reserve" reading
+  of it would have been backwards.
+- **Inferred semantics that fit N=1 but fail the corpus.**
+  `all_day_stress_avg` looked like a `totalStressCount`-weighted mean on
+  one spot-checked day; across 1722 days it is a
+  `stressIntensityCount`-weighted mean (valid epochs only), and the
+  `totalStressCount` weighting fails on 914 days. A single-day check is
+  not verification.
+
+Highest-risk columns: any whose semantics were **inferred rather than
+officially documented** (Garmin's internal UDS fields, any
+reverse-engineered source), and any derived column whose description
+names a *kind* of quantity (peak / mean / net-change / count / rate)
+that a reader will build on.
+
+Procedure before locking or relying on a column's description:
+
+1. **Trace the computation path.** Read the extractor / build-script
+   line that produces the column and confirm the description matches
+   what the code actually computes — not what the column *name*
+   suggests.
+2. **Assert at least one identity or invariant on the whole corpus**,
+   not a single day. Partition identities (`TOTAL == AWAKE + ASLEEP`),
+   unit identities (`count × 60 == duration_seconds`), and definitional
+   identities (`DURINGSLEEP == SLEEPEND − SLEEPSTART`) each pin down a
+   distinct claim. State the day-count the identity holds on.
+3. **Where the source is undocumented and no identity pins the
+   semantics** (e.g. `averageStressLevelIntensity`, `totalStressIntensity`
+   — sign conventions differ between aggregators on this corpus), mark
+   the column unusable in the dictionary rather than guessing a
+   definition. Do not build metrics on it.
+4. **Record the verification** in the dictionary row / MD: the identity
+   checked, the day-count, and whether the relationship is definitional
+   or empirical.
+
+**Worked example**: the 2026-07-15 UDS field-semantics pass —
+[DATA_DICTIONARY.md](DATA_DICTIONARY.md) §7B preamble + the
+`bb_during_sleep_value` / `all_day_stress_max` / `all_day_stress_avg`
+row corrections; two Layer-3 ρ = 1.000 pairs promoted from "needs
+verification" to "definitional" by exactly this procedure. The identity
+checks are mechanizable (partition / unit / definitional invariants
+asserted every build); the "wrong noun" half is not — an identity check
+won't flag a mislabelled quantity, so the computation-path read stays a
+human/LLM step.
+
+**Scope:**
+
+- **Applies to**: any DATA_DICTIONARY row or operationalisation
+  methodology MD, especially inferred-semantics / reverse-engineered
+  source fields and derived columns whose description names a
+  quantity-kind.
+- **Does NOT apply to**: raw pass-through columns whose source field is
+  officially documented and whose description quotes that documentation
+  verbatim (the description is the source's own).
+
+**Audit hook**: a dictionary row or operationalisation MD that describes
+a *kind* of quantity (peak / mean / net-change / count / rate) for an
+inferred-semantics field, without a computation-path trace and at least
+one corpus identity check, is a fire. A single-day spot-check standing
+in for a corpus identity is a fire.
+
 ---
 
 ## 4. Stay close to the data — defer interpretation

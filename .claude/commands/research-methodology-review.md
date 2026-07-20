@@ -327,6 +327,16 @@ e.g. `lagged_baseline`, `severity_spec`, `hrv_proxy_via_stress`)
 - A4.7 — If the column is presence-conditioned (v24-derived,
   per_day_intensity), is the `has_note` / `intensity_source`
   companion required (CONVENTIONS §4.4)?
+- A4.8 — **§3.10 operationalisation faithful to data**: does the MD's
+  prose description of the column match the actual extractor /
+  build-script computation (not just the column name), and is at least
+  one corpus identity / invariant asserted (partition / unit /
+  definitional), with the day-count it holds on — *not* a single-day
+  spot-check? For an inferred-semantics source field (Garmin internal
+  UDS, any reverse-engineered source) that no identity pins down, is it
+  marked unusable rather than given a guessed definition? A description
+  naming a quantity-kind (peak / mean / net-change / count / rate) for
+  such a field with no computation-path trace is a fire.
 
 **A5. Effect-size / metric choice MD**
 
@@ -430,6 +440,16 @@ Walk these regardless of MD type:
 - **B10. Reproducibility hook** — script path, output path, seed
   (where relevant), data-source path. The MD should be runnable
   from its own spec.
+- **B11. Operationalisation faithful to data** (CONVENTIONS §3.10) —
+  any MD that names a *kind* of quantity (peak / mean / net-change /
+  count / rate) for a column sourced from an inferred or
+  reverse-engineered field must trace the computation path and assert a
+  corpus identity, not a single-day spot-check. Fire if the
+  description's noun is unverified against the code + data, or if an
+  undocumented-and-unpinned source field is given a guessed definition
+  instead of being marked unusable. (A4.8 is the operationalisation-MD
+  form of this; B11 catches the same failure in any MD that describes a
+  column in passing.)
 
 #### Side observations
 
