@@ -19,6 +19,10 @@ docs/research/**/*.pdf
 docs/research/**/*.fit
 docs/research/**/*.parquet
 docs/research/screenshots/
+# Parked external-ideas staging (dynamical / complex-systems package); kept
+# untracked for post-A-lock absorption into resilience_latent_state.md, never
+# committed as a rival prior. See memory project_dynamical_companion_staged.
+docs/research/external ideas/
 docs/research/notes/02-categorize-clauses/verification.md
 docs/research/notes/02-categorize-clauses/verification-late-positive.md
 docs/research/notes/02-categorize-clauses/prompts/*.yaml
