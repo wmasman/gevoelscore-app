@@ -139,6 +139,9 @@ ALLOWLISTED_PATHS = {
     # the 9-digit BSN pattern (e.g. 10.3390/ijerph191912434 -> 191912434)
     "docs/research/literature/reviews/expected_shapes_autonomic_signals_review.md",
     "docs/research/note_2026-06-29_expected-shapes-literature-anchor.md",
+    # Literature index citing published paper authors (e.g. Wichers & Groot
+    # 2016 Psychother Psychosom; Sarkka & Svensson 2023; Helmich et al 2024)
+    "docs/research/literature/README.md",
     # Byte-faithful Substack source archive per founderandthecity_testable_
     # hypotheses.md discipline; contains embedded Substack CDN asset IDs
     # matching the 9-digit BSN pattern
