@@ -250,6 +250,24 @@ WARNs (an uncovered test folder, an unexpected guide-extension) want a human
 glance; `--strict` promotes them to FAILs for a hook. Wire it beside the §2.3
 privacy audit in the pre-push hook once the register system is load-bearing.
 
+### 2.5 Parsimony — simpler model first, escalate only on earned lift
+
+Prefer the simplest model that fits before adding structure. A more
+complex model, metric, or latent construct must **out-predict the
+simpler read it would replace** to earn its place, and you state that
+bar *before* building it, not after. A well-powered null on the simple
+model is a result, not a failure; structure that only fits better
+in-sample buys overfitting, not insight, and n=1 with a low
+residual-event rate cannot support elaborate models (cf. the ~4%
+crash-PPV ceiling, K01/K02 small-N brittleness).
+
+**Operationally:** descriptive before inferential (§2.1); a level/scalar
+read before a rate/dynamical instrumentation; merge a new idea into the
+existing construct before minting a parallel one (§2.4 drift rationale).
+Precedent: HA-P7's "any latent accumulator must out-predict lagged
+`gevoelscore`" bar; the resilience level-model and its descriptive layer
+preceding any return-dynamics/CSD machinery.
+
 ---
 
 ## 3. Statistical hygiene — pre-flight audit hooks
